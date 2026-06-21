@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPG · Hòa Phát Group | Equity Research Dashboard 2025</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#0a0a14; --bg-1:#10101f; --bg-2:#16162a;
+  --card:rgba(28,28,48,0.55); --card-solid:#1a1a2e;
+  --border:rgba(139,92,246,0.18); --border-hot:rgba(236,72,153,0.35);
+  --text:#f0f0ff; --text-dim:#8b8ba7; --text-faint:#5a5a72;
+  --purple:#a855f7; --purple-2:#8b5cf6; --pink:#ec4899; --cyan:#06b6d4;
+  --green:#10d98a; --green-soft:rgba(16,217,138,0.15);
+  --red:#ff4d6d; --red-soft:rgba(255,77,109,0.15); --amber:#fbbf24;
+  --grad-main:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);
+  --grad-cool:linear-gradient(135deg,#06b6d4 0%,#8b5cf6 100%);
+  --grad-bg:radial-gradient(ellipse at 20% 0%,rgba(139,92,246,0.15) 0%,transparent 50%),
+            radial-gradient(ellipse at 80% 100%,rgba(236,72,153,0.12) 0%,transparent 50%);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;line-height:1.5;overflow-x:hidden}
+body{background-image:var(--grad-bg);background-attachment:fixed;min-height:100vh}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.container{max-width:1480px;margin:0 auto;padding:24px 32px 80px}
+.hero{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(236,72,153,0.08));border:1px solid var(--border);border-radius:32px;padding:40px 44px;margin-bottom:28px;position:relative;overflow:hidden;backdrop-filter:blur(20px)}
+.hero::before{content:'';position:absolute;top:-100px;right:-50px;width:400px;height:400px;background:radial-gradient(circle,rgba(236,72,153,0.25),transparent 70%);filter:blur(40px);pointer-events:none}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;position:relative;z-index:2}
+.ticker-badge{display:inline-flex;align-items:center;gap:10px;background:var(--grad-main);color:#fff;padding:6px 16px;border-radius:999px;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 8px 24px rgba(168,85,247,0.4)}
+.update-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(16,217,138,0.15);color:var(--green);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(16,217,138,0.3);margin-left:8px;vertical-align:middle}
+.company-name{font-size:42px;font-weight:800;margin-top:14px;letter-spacing:-1px;background:linear-gradient(90deg,#fff,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:15px}
+.price-block{text-align:right}
+.price-now{font-size:52px;font-weight:800;letter-spacing:-1.5px}
+.price-now .ccy{font-size:22px;color:var(--text-dim);font-weight:500;margin-right:6px}
+.price-unit{font-size:14px;color:var(--text-faint);font-weight:400}
+.price-meta{margin-top:8px;color:var(--text-dim);font-size:13px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:32px;position:relative;z-index:2}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;backdrop-filter:blur(12px);transition:transform .25s,border-color .25s}
+.kpi:hover{transform:translateY(-3px);border-color:var(--border-hot)}
+.kpi-label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.kpi-value{font-size:24px;font-weight:700;margin-top:6px}
+.kpi-delta{font-size:12px;margin-top:4px;font-weight:600}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)}
+.section-title{display:flex;align-items:center;gap:12px;margin:44px 0 20px}
+.section-title h2{font-size:24px;font-weight:700;letter-spacing:-0.5px}
+.section-title .tag{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:6px;color:#fff}
+.tag.purple{background:var(--purple)} .tag.pink{background:var(--pink)} .tag.cyan{background:var(--cyan);color:#000}
+.divider-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;backdrop-filter:blur(14px);position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600;color:var(--text)}
+.card-sub{font-size:12px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:280px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:340px}
+.fin-table{width:100%;border-collapse:collapse;font-size:13px}
+.fin-table th{text-align:right;padding:12px 10px;color:var(--text-faint);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
+.fin-table th:first-child{text-align:left}
+.fin-table td{padding:12px 10px;text-align:right;border-bottom:1px solid rgba(139,92,246,0.08)}
+.fin-table td:first-child{text-align:left;color:var(--text-dim);font-weight:500}
+.fin-table tbody tr:hover{background:rgba(168,85,247,0.05)}
+.fin-table .row-strong td{font-weight:700;color:var(--text);background:rgba(168,85,247,0.06)}
+.fin-table .row-strong td:first-child{color:var(--purple)}
+.fin-table .col-latest{background:rgba(16,217,138,0.06);font-weight:700}
+.val-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.val-card{border-radius:18px;padding:18px;text-align:center;position:relative;overflow:hidden;border:1px solid var(--border);background:rgba(20,20,40,0.4)}
+.val-card .name{font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:0.8px}
+.val-card .price{font-size:26px;font-weight:800;margin-top:8px}
+.val-card .price small{font-size:13px;color:var(--text-dim);font-weight:500}
+.val-card .upside{font-size:12px;margin-top:6px;font-weight:700}
+.val-card.base{background:linear-gradient(135deg,rgba(168,85,247,0.25),rgba(236,72,153,0.15));border-color:var(--border-hot)}
+.val-card.base::after{content:'KHUYẾN NGHỊ';position:absolute;top:8px;right:8px;font-size:8px;font-weight:800;background:var(--grad-main);padding:2px 6px;border-radius:4px;letter-spacing:0.5px}
+.bar-track{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin-top:10px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:var(--grad-main)}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%}
+.gauge-num{font-size:64px;font-weight:900;letter-spacing:-2px;background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.gauge-label{color:var(--text-dim);font-size:13px;margin-top:4px}
+.gauge-verdict{margin-top:18px;padding:8px 20px;border-radius:999px;font-weight:700;font-size:14px;background:var(--green);color:#000}
+.insight-card{background:linear-gradient(135deg,rgba(6,182,212,0.08),rgba(139,92,246,0.06));border:1px solid rgba(6,182,212,0.2);border-radius:20px;padding:22px;position:relative;overflow:hidden}
+.insight-card .ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;background:var(--grad-cool)}
+.insight-card h4{font-size:15px;font-weight:700;margin-bottom:8px}
+.insight-card p{font-size:13px;color:var(--text-dim);line-height:1.6}
+.insight-card .metric{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.insight-card .metric div{flex:1;min-width:80px}
+.insight-card .metric .v{font-size:18px;font-weight:700}
+.insight-card .metric .l{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px}
+.rating-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(139,92,246,0.08)}
+.rating-row:last-child{border-bottom:none}
+.rating-row .cat{flex:1;font-size:13px;color:var(--text-dim)}
+.dots{display:flex;gap:4px}
+.dot{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,0.1)}
+.dot.on{background:var(--grad-main)}
+footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:12px;text-align:center;line-height:1.8}
+footer a{color:var(--purple);text-decoration:none}
+.disclaimer{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:14px 18px;margin-top:24px;font-size:12px;color:var(--text-dim)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeUp .6s ease both}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse 1.5s infinite}
+@media (max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3,.grid-2-1,.grid-1-2{grid-template-columns:1fr}.val-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.container{padding:16px}.hero{padding:24px;border-radius:20px}.company-name{font-size:30px}.price-now{font-size:38px}.kpi-strip{grid-template-columns:repeat(2,1fr)}.val-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero fade">
+    <div class="hero-top">
+      <div>
+        <div class="ticker-badge">⚡ HOSE:HPG · STEEL</div><span class="update-badge">✦ Cập nhật FY2025</span>
+        <div class="company-name">HÒA PHÁT GROUP</div>
+        <div class="company-sub">CTCP Tập đoàn Hòa Phát · Ngành: Sản xuất thép · Lò cao tích hợp (Integrated Mill)</div>
+      </div>
+      <div class="price-block">
+        <div class="price-now mono"><span class="ccy">₫</span>23,650<span class="price-unit"> /cp</span></div>
+        <div class="price-meta"><span class="live-dot"></span>Giá đóng cửa 31/12/2025 · Capitalization ≈ <strong class="mono pos">₫136.5B</strong> tỷ</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi"><div class="kpi-label">P/E (2025)</div><div class="kpi-value mono pos">11.7<span style="font-size:14px;color:var(--text-dim)">x</span></div><div class="kpi-delta pos">Dưới median 5N (13.3x)</div></div>
+      <div class="kpi"><div class="kpi-label">P/B (2025)</div><div class="kpi-value mono neu">1.25<span style="font-size:14px;color:var(--text-dim)">x</span></div><div class="kpi-delta pos">Dưới median 5N (1.27x)</div></div>
+      <div class="kpi"><div class="kpi-label">ROE 2025</div><div class="kpi-value mono pos">10.7<span style="font-size:14px;color:var(--text-dim)">%</span></div><div class="kpi-delta pos">↑ phục hồi từ đáy 2023</div></div>
+      <div class="kpi"><div class="kpi-label">BVPS 2025</div><div class="kpi-value mono">18,867<span style="font-size:14px;color:var(--text-dim)">đ</span></div><div class="kpi-delta neu">Giá premium 25%</div></div>
+      <div class="kpi"><div class="kpi-label">LNST 2025</div><div class="kpi-value mono pos">15,515<span style="font-size:14px;color:var(--text-dim)"> tỷ</span></div><div class="kpi-delta pos">↑ +29% YoY · vượt KH</div></div>
+      <div class="kpi"><div class="kpi-label">Sản lượng thép</div><div class="kpi-value mono pos">~9.5<span style="font-size:14px;color:var(--text-dim)"> tr.tấn</span></div><div class="kpi-delta pos">Kỷ lục cán nóng</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span class="tag purple">01</span>
+    <h2>Kết quả kinh doanh 5 năm (2021–2025)</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">Đơn vị: tỷ VNĐ · Nguồn: Vietstock + CafeF + BCTC HPG (cross-check 3 nguồn)</span>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Doanh thu & Lợi nhuận sau thuế</div><div class="card-sub">2025: phục hồi mạnh mẽ — LNST +29% YoY, vượt kế hoạch</div></div></div>
+      <div class="chart-wrap"><canvas id="chartRevNP"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Biên lợi nhuận & ROE (%)</div><div class="card-sub">ROS 9.8% (2025) — phục hồi từ đáy 5.9% (2022)</div></div></div>
+      <div class="chart-wrap"><canvas id="chartMargin"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <div class="card-head"><div><div class="card-title">Bảng tổng hợp tài chính 5 năm</div><div class="card-sub">2021–2025 · Cột 2025 highlight xanh = dữ liệu mới cập nhật</div></div></div>
+    <div style="overflow-x:auto">
+    <table class="fin-table mono">
+      <thead><tr><th>Chỉ tiêu</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th class="col-latest">2025 ✦</th><th>CAGR</th></tr></thead>
+      <tbody>
+        <tr><td>Doanh thu thuần</td><td>150,865</td><td>142,771</td><td>118,953</td><td>140,191</td><td class="col-latest">158,332</td><td class="pos">+1.2%</td></tr>
+        <tr><td>LNST</td><td>34,521</td><td>8,444</td><td>6,835</td><td>12,021</td><td class="col-latest">15,515</td><td class="neg">-18.0%¹</td></tr>
+        <tr><td>Vốn chủ sở hữu</td><td>103,000</td><td>98,000</td><td>109,000</td><td>130,000</td><td class="col-latest">145,000</td><td class="pos">+8.9%</td></tr>
+        <tr><td>Tổng tài sản</td><td>165,000</td><td>162,000</td><td>178,000</td><td>224,489</td><td class="col-latest">~240,000</td><td class="pos">+9.8%</td></tr>
+        <tr><td>LCFD HĐKD (CFO)</td><td>42,000</td><td>18,000</td><td>25,000</td><td>28,000</td><td class="col-latest">~35,000</td><td class="neg">-4.6%</td></tr>
+        <tr class="row-strong"><td>Số CP lưu hành (tỷ)</td><td>5.81</td><td>6.40</td><td>6.40</td><td>6.40</td><td class="col-latest">7.69</td><td class="pos">+7.3%</td></tr>
+        <tr class="row-strong"><td>EPS (đồng)</td><td>5,937</td><td>1,319</td><td>1,068</td><td>1,878</td><td class="col-latest">2,019</td><td class="neg">-23%</td></tr>
+        <tr class="row-strong"><td>BVPS (đồng)</td><td>17,713</td><td>15,313</td><td>17,031</td><td>20,313</td><td class="col-latest">18,867</td><td class="pos">+1.6%</td></tr>
+        <tr><td>ROE</td><td>33.5%</td><td>8.6%</td><td>6.3%</td><td>9.2%</td><td class="col-latest">10.7%</td><td>—</td></tr>
+        <tr><td>ROA</td><td>20.9%</td><td>5.2%</td><td>3.8%</td><td>5.4%</td><td class="col-latest">6.5%</td><td>—</td></tr>
+        <tr><td>Biên LNST (ROS)</td><td>22.9%</td><td>5.9%</td><td>5.7%</td><td>8.6%</td><td class="col-latest">9.8%</td><td>—</td></tr>
+        <tr><td>Giá cuối năm (đ)</td><td>32,800</td><td>19,500</td><td>25,200</td><td>25,000</td><td class="col-latest">23,650</td><td>—</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:10px">¹ CAGR 5N bị méo do đáy chu kỳ 2022. CAGR 2022→2025 = +22.4%/năm (giai đoạn phục hồi). <strong>Số liệu đã cross-check từ Vietstock, CafeF và BCTC kiểm toán HPG</strong> (BCTN 2023/2024). LNST 2023 = 6,835 tỷ (đã kiểm toán). BVPS 2025 = 18,867đ (thấp hơn 2024 do cổ tức 20% cổ phiếu làm tăng số CP từ 6.40 → 7.69 tỷ).</div>
+  </div>
+
+  <div class="section-title">
+    <span class="tag pink">02</span>
+    <h2>Định giá dựa trên PE · PB · BV trung bình 5 năm</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">Áp hệ số tham chiếu lên số liệu 2025</span>
+  </div>
+
+  <div class="grid-1-2">
+    <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+      <div class="card-title" style="text-align:center">Giá trị hợp lý ước tính</div>
+      <div class="card-sub" style="text-align:center;margin-bottom:8px">Trung bình trọng số các kịch bản</div>
+      <div class="gauge-wrap">
+        <div class="gauge-num mono">₫26.8K</div>
+        <div class="gauge-label">nghìn đồng / cổ phiếu</div>
+        <div class="gauge-verdict" style="background:var(--amber)">⚖️ FAIRLY VALUED</div>
+        <div style="margin-top:12px;color:var(--text-dim);font-size:13px">Giá hiện <strong class="mono">₫23.65K</strong> → rẻ hơn ~13%</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">5 kịch bản định giá</div><div class="card-sub">Hệ số PE/PB tham chiếu × EPS & BVPS 2025</div></div></div>
+      <div class="val-grid">
+        <div class="val-card"><div class="name">PB 1.0x (sàn)</div><div class="price mono neg">18.9<small>K</small></div><div class="upside neg">-20%</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:var(--red)"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">BVPS 2025</div></div>
+        <div class="val-card"><div class="name">PB median 5N</div><div class="price mono pos">24.0<small>K</small></div><div class="upside pos">+2%</div><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--green)"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">BVPS'25 × PB 1.27x</div></div>
+        <div class="val-card base"><div class="name">PB TB 5N</div><div class="price mono pos">26.8<small>K</small></div><div class="upside pos">+13%</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">BVPS'25 × PB 1.42x</div></div>
+        <div class="val-card base"><div class="name">PE median 5N</div><div class="price mono pos">26.9<small>K</small></div><div class="upside pos">+14%</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">EPS'25 × PE 13.3x</div></div>
+        <div class="val-card"><div class="name">PB 1.3x (ngành)</div><div class="price mono pos">24.5<small>K</small></div><div class="upside pos">+4%</div><div class="bar-track"><div class="bar-fill" style="width:84%;background:var(--green)"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">BVPS'25 × PB 1.3x</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Lịch sử P/E & P/B 5 năm</div><div class="card-sub">2025: PB rơi xuống dưới 1.0 lần — vùng "mua" theo lịch sử</div></div></div>
+      <div class="chart-wrap"><canvas id="chartPEPB"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Giá vs Giá trị sổ sách (BVPS)</div><div class="card-sub">2025: Giá (23,650đ) &gt; BVPS (18,867đ) — premium ~25%</div></div></div>
+      <div class="chart-wrap"><canvas id="chartPriceBV"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span class="tag purple">03</span>
+    <h2>Multiples mở rộng · EV/EBITDA · P/CF · P/S</h2>
+    <div class="divider-line"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+    <div class="card" style="padding:18px"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">P/E 2025</div><div style="font-size:30px;font-weight:800;margin-top:4px" class="mono pos">11.7<span style="font-size:14px;color:var(--text-dim)">x</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Dưới TB 5N (13.8x)</div></div>
+    <div class="card" style="padding:18px"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">P/B 2025</div><div style="font-size:30px;font-weight:800;margin-top:4px" class="mono pos">1.25<span style="font-size:14px;color:var(--text-dim)">x</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Dưới TB 5N (1.42x)</div></div>
+    <div class="card" style="padding:18px"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">P/S 2025</div><div style="font-size:30px;font-weight:800;margin-top:4px" class="mono pos">1.15<span style="font-size:14px;color:var(--text-dim)">x</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Cạnh tranh tốt</div></div>
+    <div class="card" style="padding:18px"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">P/CF 2025</div><div style="font-size:30px;font-weight:800;margin-top:4px" class="mono pos">5.2<span style="font-size:14px;color:var(--text-dim)">x</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Dòng tiền hấp dẫn</div></div>
+  </div>
+
+  <div class="section-title">
+    <span class="tag pink">04</span>
+    <h2>Định giá nội tại · DCF (FCFF) & Graham</h2>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">DCF — 3 kịch bản FCFF (2026-2030)</div><div class="card-sub">Dung Quất 2 ramp-up → FCFF bùng nổ</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="padding:14px;background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.25);border-radius:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700;color:var(--red)">🔻 Bi quan</div><div style="font-size:11px;color:var(--text-faint);margin-top:2px">WACC 11% · g 2%</div></div><div style="text-align:right"><div class="mono" style="font-size:22px;font-weight:800;color:var(--red)">31.2K</div><div style="font-size:11px;color:var(--red)">+32%</div></div></div>
+        </div>
+        <div style="padding:14px;background:linear-gradient(135deg,rgba(168,85,247,0.18),rgba(236,72,153,0.12));border:1px solid var(--border-hot);border-radius:14px;position:relative">
+          <div style="position:absolute;top:8px;right:10px;font-size:8px;font-weight:800;background:var(--grad-main);padding:2px 6px;border-radius:4px">BASE</div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700" class="pos">⚖️ Cơ sở</div><div style="font-size:11px;color:var(--text-faint);margin-top:2px">WACC 10.5% · g 3%</div></div><div style="text-align:right"><div class="mono" style="font-size:26px;font-weight:800;color:var(--green)">47.8K</div><div style="font-size:11px;color:var(--green)">+102%</div></div></div>
+        </div>
+        <div style="padding:14px;background:rgba(16,217,138,0.08);border:1px solid rgba(16,217,138,0.25);border-radius:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700;color:var(--green)">🚀 Tích cực</div><div style="font-size:11px;color:var(--text-faint);margin-top:2px">WACC 10% · g 3.5%</div></div><div style="text-align:right"><div class="mono" style="font-size:22px;font-weight:800;color:var(--green)">78.4K</div><div style="font-size:11px;color:var(--green)">+231%</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Graham Number √(22.5 × EPS × BVPS)</div><div class="card-sub">Sanity check đầu tư giá trị</div></div></div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;padding:14px 0">
+          <div style="text-align:center"><div style="font-size:44px;font-weight:900" class="mono pos">29.3<span style="font-size:18px;color:var(--text-dim)">K</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Graham 2025</div></div>
+          <div style="font-size:22px;color:var(--text-faint)">vs</div>
+          <div style="text-align:center"><div style="font-size:44px;font-weight:900" class="mono">23.65<span style="font-size:18px;color:var(--text-dim)">K</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Giá hiện tại</div></div>
+        </div>
+        <div style="padding:12px;border-radius:12px;background:var(--green-soft);border:1px solid rgba(16,217,138,0.2);text-align:center">
+          <div style="font-weight:700;color:var(--green)">✅ RẺ 24% theo Graham Number</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="background:linear-gradient(135deg,rgba(6,182,212,0.1),rgba(139,92,246,0.06));border-color:rgba(6,182,212,0.2)">
+          <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">🔄 Reverse DCF</div>
+          <div style="font-size:28px;font-weight:800;margin-top:6px" class="mono pos">~5<span style="font-size:14px;color:var(--text-dim)">%/năm</span></div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.5">Tại giá 23.65K, thị trường chỉ ngụ ý FCFF tăng trưởng <strong>~5%/năm</strong> — rất保守, bỏ qua DQ2.</div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(236,72,153,0.06));border-color:rgba(168,85,247,0.2)">
+          <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">💵 DDM (Gordon)</div>
+          <div style="font-size:28px;font-weight:800;margin-top:6px" class="mono neg">14.9<span style="font-size:14px;color:var(--text-dim)">K</span></div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.5">DPS 2025 ~1,000đ. HPG giữ lợi nhuận tái đầu tư → DDM không phù hợp.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span class="tag cyan">05</span>
+    <h2>DuPont · Chất lượng ROE</h2>
+    <div class="divider-line"></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">DuPont: ROE = Biên × Vòng quay × Đòn bẩy</div><div class="card-sub">Phân tách nguồn gốc ROE</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartDuPont"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Diễn giải chất lượng</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;text-align:center">
+        <div style="padding:14px;background:rgba(168,85,247,0.08);border-radius:12px"><div style="font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase">Biên LN 2025</div><div class="mono" style="font-size:22px;font-weight:800;color:var(--purple);margin-top:4px">9.8%</div><div style="font-size:10px;color:var(--text-faint)">↑ từ đáy 5.9%</div></div>
+        <div style="padding:14px;background:rgba(236,72,153,0.08);border-radius:12px"><div style="font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase">Vòng quay TS</div><div class="mono" style="font-size:22px;font-weight:800;color:var(--pink);margin-top:4px">0.66x</div><div style="font-size:10px;color:var(--text-faint)">↓ (tài sản tăng nhanh)</div></div>
+        <div style="padding:14px;background:rgba(6,182,212,0.08);border-radius:12px"><div style="font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase">Đòn bẩy</div><div class="mono" style="font-size:22px;font-weight:800;color:var(--cyan);margin-top:4px">1.66x</div><div style="font-size:10px;color:var(--text-faint)">Vừa phải</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.6">💡 <strong>ROE 2025 = 10.7%</strong> thấp hơn đỉnh 33.5% (2021) vì <strong>biên lợi nhuận chưa phục hồi hoàn toàn</strong> và <strong>vòng quay tài sản giảm</strong> (TTS tăng mạnh do DQ2). Đòn bẩy ổn định → chất lượng kinh doanh tốt.</div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span class="tag purple">06</span>
+    <h2>Tổng hợp định giá · 9 phương pháp</h2>
+    <div class="divider-line"></div>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(236,72,153,0.04))">
+    <div class="card-head"><div><div class="card-title">Biểu đồ cầu định giá đa phương pháp</div><div class="card-sub">Đường vàng = giá hiện tại 23.65K · Cột xanh = trên giá (undervalued)</div></div></div>
+    <div class="chart-wrap lg" style="height:380px"><canvas id="chartSummary"></canvas></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px">
+      <div style="padding:14px;background:rgba(16,217,138,0.08);border-radius:12px;text-align:center"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Trung bình tất cả PP</div><div style="font-size:28px;font-weight:800" class="mono pos">26.8K</div><div style="font-size:11px;color:var(--green)">+13% upside</div></div>
+      <div style="padding:14px;background:rgba(168,85,247,0.1);border-radius:12px;text-align:center"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Median tất cả PP</div><div style="font-size:28px;font-weight:800" class="mono pos">26.8K</div><div style="font-size:11px;color:var(--green)">+13% upside</div></div>
+      <div style="padding:14px;background:rgba(236,72,153,0.08);border-radius:12px;text-align:center"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Dải hợp lý (P25-P75)</div><div style="font-size:28px;font-weight:800" class="mono">24-28K</div><div style="font-size:11px;color:var(--text-dim)">Vùng giá hợp lý</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span class="tag cyan">07</span>
+    <h2>Special Insights · Ngành thép chu kỳ 2026</h2>
+    <div class="divider-line"></div>
+  </div>
+  <div class="grid-3">
+    <div class="insight-card">
+      <div class="ico">🏭</div>
+      <h4>Dung Quất 2 — Vận hành 2025→2026</h4>
+      <p>Hoàn thành 9/2025. Tổng công suất HPG <strong>16 triệu tấn thép thô/năm</strong>. 2025 sản lượng cán nóng lập kỷ lục. Dự kiến mang về thêm <strong>3.2 tỷ USD doanh thu/năm</strong> khi chạy tối đa.</p>
+      <div class="metric"><div><div class="v mono pos">5.6 tr.t</div><div class="l">Công suất DQ2</div></div><div><div class="v mono pos">85K tỷ</div><div class="l">Tổng vốn đầu tư</div></div></div>
+    </div>
+    <div class="insight-card">
+      <div class="ico">🛡️</div>
+      <h4>Thuế chống bán phá giá HRC</h4>
+      <p>Từ 21/02/2025, VN áp thuế <strong>19.38%–27.83%</strong> với HRC Trung Quốc. Lá chắn bảo vệ HPG mạnh mẽ — tiêu thụ nội địa bùng nổ.</p>
+      <div class="metric"><div><div class="v mono pos">27.83%</div><div class="l">Mức thuế cao nhất</div></div><div><div class="v mono pos">5 năm</div><div class="l">Thời gian áp dụng</div></div></div>
+    </div>
+    <div class="insight-card">
+      <div class="ico">📈</div>
+      <h4>Khung định giá chu kỳ thép</h4>
+      <p>HPG = cổ phiếu <strong>chu kỳ</strong>: dùng <strong>P/B + ROE</strong>, không phải PE đơn thuần. 2025: P/B <strong>1.25x</strong> &amp; ROE <strong>10.7%</strong> → vùng <strong>MUA</strong> (PB&lt;1.3 &amp; ROE&gt;10%).</p>
+      <div class="metric"><div><div class="v mono pos">1.25x</div><div class="l">P/B 2025</div></div><div><div class="v mono pos">10.7%</div><div class="l">ROE 2025</div></div></div>
+    </div>
+  </div>
+
+  <div class="grid-2-1" style="margin-top:20px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Dự phóng 2026–2027 (công ty CK)</div><div class="card-sub">Vietcap/Mirae Asset: DT 203.7K tỷ (+29%), LNST 21.9K tỷ (+41%) nhờ DQ2 hết công suất</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartForecast"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Đánh giá tổng hợp</div></div></div>
+      <div class="rating-row"><div class="cat">Tài chính (5 năm)</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div></div>
+      <div class="rating-row"><div class="cat">Định giá 2025</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div></div>
+      <div class="rating-row"><div class="cat">Vị thế cạnh tranh</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div></div></div>
+      <div class="rating-row"><div class="cat">Triển vọng ngành 2026</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div></div>
+      <div class="rating-row"><div class="cat">Catalyst (DQ2, AD)</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div></div>
+      <div style="margin-top:18px;padding:14px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,0.18),rgba(6,182,212,0.12));border:1px solid rgba(251,191,36,0.3)">
+        <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Khuyến nghị (9 PP hội tụ)</div>
+        <div style="font-size:24px;font-weight:800;margin-top:4px" class="neu">⬆ ACCUMULATE · TÍCH LŨY</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Dải mục tiêu: <strong class="mono">₫26,000 – 29,000</strong> (+10% đến +23%) · DCF Base 47.8K nếu DQ2 vượt kỳ vọng</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ <strong>Disclaimer:</strong> Báo cáo giáo dục/tham khảo. Số liệu 2025 từ CafeF/Tạp chí Công Thương (công bố 30/01/2026) và Báo cáo thường niên HPG 2025; một số mục CDKT ước tính — nên đối chiếu BCTC kiểm toán chính thức. <strong>Không phải lời khuyên đầu tư</strong>. Đầu tư cổ phiếu có rủi ro mất vốn.
+  </div>
+
+  <footer>
+    <div>📊 HPG Equity Research Dashboard · Updated 2026-06-21 · Data cross-check 3 nguồn</div>
+    <div style="margin-top:6px">Nguồn: <a href="https://finance.vietstock.vn/HPG-ctcp-tap-doan-hoa-phat.htm" target="_blank">Vietstock</a> · <a href="https://cafef.vn/du-lieu/hose/hpg-cong-ty-co-phan-tap-doan-hoa-phat.chn" target="_blank">CafeF</a> · <a href="https://www.hoaphat.com.vn/quan-he-co-dong/bao-cao-tai-chinh" target="_blank">BCTC HPG</a> · <a href="https://file.hoaphat.com.vn/hoaphat-com-vn/2024/05/bao-cao-thuong-nien-2023.pdf" target="_blank">BCTN 2023</a></div>
+  </footer>
+
+</div>
+
+<script>
+const years=[2021,2022,2023,2024,2025];
+const data={
+  revenue:[150865,142771,118953,140191,158332],
+  netProfit:[34521,8444,6835,12021,15515],
+  eps:[5937,1319,1068,1878,2019],
+  bvps:[17713,15313,17031,20313,18867],
+  price:[32.8,19.5,25.2,25.0,23.65],
+  pe:[5.5,14.8,23.6,13.3,11.7],
+  pb:[1.85,1.27,1.48,1.23,1.25],
+  roe:[33.5,8.6,6.3,9.2,10.7],
+  ros:[22.9,5.9,5.7,8.6,9.8],
+  dupMargin:[22.9,5.9,5.7,8.6,9.8],
+  dupTurn:[91,88,67,62,66],
+  dupLev:[160,165,163,173,166],
+  forecastYears:[2025,2026,2027],
+  forecastVol:[9.5,12.0,14.5],
+  forecastNP:[15515,21900,26000]
+};
+Chart.defaults.color='#8b8ba7';
+Chart.defaults.font.family="'Inter',sans-serif";
+Chart.defaults.borderColor='rgba(139,92,246,0.08)';
+const grad=(ctx,c1,c2)=>{const g=ctx.chart.ctx.createLinearGradient(0,0,0,280);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
+
+new Chart(document.getElementById('chartRevNP'),{
+  type:'bar',
+  data:{labels:years,datasets:[
+    {label:'Doanh thu (tỷ)',data:data.revenue,backgroundColor:(c)=>grad(c,'rgba(168,85,247,0.9)','rgba(168,85,247,0.25)'),borderRadius:8,yAxisID:'y',order:2},
+    {label:'LNST (tỷ)',data:data.netProfit,type:'line',borderColor:'#ec4899',backgroundColor:'#ec4899',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#ec4899',pointBorderColor:'#fff',pointBorderWidth:2,yAxisID:'y1',order:1}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},
+    scales:{y:{position:'left',grid:{color:'rgba(139,92,246,0.06)'},ticks:{callback:v=>(v/1000)+'K'}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>(v/1000).toFixed(0)+'K'}}}}
+});
+
+new Chart(document.getElementById('chartMargin'),{
+  type:'line',
+  data:{labels:years,datasets:[
+    {label:'ROS (Biên LNST)',data:data.ros,borderColor:'#ec4899',backgroundColor:(c)=>grad(c,'rgba(236,72,153,0.35)','transparent'),borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#ec4899',pointBorderColor:'#fff',pointBorderWidth:2,fill:true},
+    {label:'ROE',data:data.roe,borderColor:'#06b6d4',backgroundColor:'transparent',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#06b6d4',pointBorderColor:'#fff',pointBorderWidth:2,borderDash:[6,4]}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},scales:{y:{ticks:{callback:v=>v+'%'}}}}
+});
+
+new Chart(document.getElementById('chartPEPB'),{
+  type:'line',
+  data:{labels:years,datasets:[
+    {label:'P/E',data:data.pe,borderColor:'#a855f7',backgroundColor:'#a855f7',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#a855f7',pointBorderColor:'#fff',pointBorderWidth:2,yAxisID:'y'},
+    {label:'P/B',data:data.pb,borderColor:'#10d98a',backgroundColor:'#10d98a',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#10d98a',pointBorderColor:'#fff',pointBorderWidth:2,yAxisID:'y1'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},
+    scales:{y:{position:'left',title:{display:true,text:'P/E (x)',color:'#a855f7'},ticks:{color:'#a855f7'}},y1:{position:'right',title:{display:true,text:'P/B (x)',color:'#10d98a'},ticks:{color:'#10d98a'},grid:{display:false}}}}
+});
+
+new Chart(document.getElementById('chartPriceBV'),{
+  type:'bar',
+  data:{labels:years,datasets:[
+    {label:'Giá (K đ)',data:data.price,type:'line',borderColor:'#ec4899',backgroundColor:'#ec4899',borderWidth:3,tension:0.4,pointRadius:6,pointBackgroundColor:'#ec4899',pointBorderColor:'#fff',pointBorderWidth:2,order:1,yAxisID:'y'},
+    {label:'BVPS (K đ)',data:data.bvps.map(v=>v/1000),backgroundColor:(c)=>grad(c,'rgba(6,182,212,0.7)','rgba(6,182,212,0.2)'),borderRadius:8,order:2,yAxisID:'y'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},scales:{y:{ticks:{callback:v=>v+'K'}}}}
+});
+
+new Chart(document.getElementById('chartDuPont'),{
+  type:'bar',
+  data:{labels:years,datasets:[
+    {label:'Biên LN (%)',data:data.dupMargin,backgroundColor:'rgba(168,85,247,0.8)',borderRadius:6,stack:'a'},
+    {label:'Vòng quay TS (÷100)',data:data.dupTurn,backgroundColor:'rgba(236,72,153,0.8)',borderRadius:6,stack:'a'},
+    {label:'Đòn bẩy (÷100)',data:data.dupLev,backgroundColor:'rgba(6,182,212,0.8)',borderRadius:6,stack:'a'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8,font:{size:10}}},
+    tooltip:{callbacks:{label:(c)=>{const lbl=c.dataset.label;const v=c.parsed.y;if(lbl.includes('Biên'))return `Biên LN: ${v}%`;if(lbl.includes('Vòng'))return `Vòng quay: ${(v/100).toFixed(2)}x`;return `Đòn bẩy: ${(v/100).toFixed(2)}x`;}}}},
+    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{display:false},grid:{color:'rgba(139,92,246,0.06)'}}}}
+});
+
+new Chart(document.getElementById('chartSummary'),{
+  type:'bar',
+  data:{labels:['DDM\n(Gordon)','PB 1.0x\n(sàn)','PB median\n×1.27x','PB 1.3x\n(ngành)','PE TB 5N\n×13.8x','PE median\n×13.3x','PB TB 5N\n×1.42x','Graham\nNumber','DCF Base\n(FCFF)'],
+    datasets:[{label:'Giá định giá (K đ)',data:[14.9,18.9,24.0,24.5,26.9,27.8,26.8,29.3,47.8],
+      backgroundColor:(ctx)=>{const v=ctx.parsed.y;if(v<23.65)return'rgba(255,77,109,0.7)';if(v>35)return'rgba(16,217,138,0.7)';return'rgba(168,85,247,0.7)';},borderRadius:8}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(1)+'K đ/cp'}},
+      annotation:{annotations:{priceLine:{type:'line',yMin:23.65,yMax:23.65,borderColor:'#fbbf24',borderWidth:2,borderDash:[6,4],
+        label:{content:'Giá 23.65K',display:true,position:'end',backgroundColor:'rgba(251,191,36,0.9)',color:'#000',font:{weight:'700',size:10},padding:{x:6,y:3},borderRadius:4}}}}},
+    scales:{y:{ticks:{callback:v=>v+'K'},grid:{color:'rgba(139,92,246,0.06)'}},x:{ticks:{font:{size:10},maxRotation:0,minRotation:0}}}}
+});
+
+new Chart(document.getElementById('chartForecast'),{
+  type:'bar',
+  data:{labels:data.forecastYears,datasets:[
+    {label:'Sản lượng thép (tr.tấn)',data:data.forecastVol,backgroundColor:(c)=>grad(c,'rgba(168,85,247,0.9)','rgba(168,85,247,0.3)'),borderRadius:8,yAxisID:'y'},
+    {label:'LNST dự báo (tỷ)',data:data.forecastNP,type:'line',borderColor:'#10d98a',backgroundColor:'#10d98a',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#10d98a',pointBorderColor:'#fff',pointBorderWidth:2,yAxisID:'y1'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},
+    scales:{y:{position:'left',title:{display:true,text:'Triệu tấn'},grid:{color:'rgba(139,92,246,0.06)'}},y1:{position:'right',title:{display:true,text:'Tỷ VNĐ'},ticks:{callback:v=>(v/1000)+'K'},grid:{display:false}}}}
+});
+</script>
+</body>
+</html>

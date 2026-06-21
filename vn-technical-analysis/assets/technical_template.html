@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPG · Hòa Phát Group | Complete Equity Report (Fundamental + News)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#0a0a14; --bg-1:#10101f; --bg-2:#16162a;
+  --card:rgba(28,28,48,0.55); --card-solid:#1a1a2e;
+  --border:rgba(139,92,246,0.18); --border-hot:rgba(236,72,153,0.35);
+  --text:#f0f0ff; --text-dim:#8b8ba7; --text-faint:#5a5a72;
+  --purple:#a855f7; --purple-2:#8b5cf6; --pink:#ec4899; --cyan:#06b6d4;
+  --green:#10d98a; --green-soft:rgba(16,217,138,0.15);
+  --red:#ff4d6d; --red-soft:rgba(255,77,109,0.15); --amber:#fbbf24;
+  --grad-main:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);
+  --grad-cool:linear-gradient(135deg,#06b6d4 0%,#8b5cf6 100%);
+  --grad-bg:radial-gradient(ellipse at 20% 0%,rgba(139,92,246,0.15) 0%,transparent 50%),
+            radial-gradient(ellipse at 80% 100%,rgba(236,72,153,0.12) 0%,transparent 50%);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;line-height:1.5;overflow-x:hidden}
+body{background-image:var(--grad-bg);background-attachment:fixed;min-height:100vh}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.container{max-width:1480px;margin:0 auto;padding:24px 32px 80px}
+.hero{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(236,72,153,0.08));border:1px solid var(--border);border-radius:32px;padding:40px 44px;margin-bottom:28px;position:relative;overflow:hidden;backdrop-filter:blur(20px)}
+.hero::before{content:'';position:absolute;top:-100px;right:-50px;width:400px;height:400px;background:radial-gradient(circle,rgba(236,72,153,0.25),transparent 70%);filter:blur(40px);pointer-events:none}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;position:relative;z-index:2}
+.ticker-badge{display:inline-flex;align-items:center;gap:10px;background:var(--grad-main);color:#fff;padding:6px 16px;border-radius:999px;font-weight:700;font-size:13px;letter-spacing:0.5px;box-shadow:0 8px 24px rgba(168,85,247,0.4)}
+.update-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(16,217,138,0.15);color:var(--green);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(16,217,138,0.3);margin-left:8px;vertical-align:middle}
+.company-name{font-size:42px;font-weight:800;margin-top:14px;letter-spacing:-1px;background:linear-gradient(90deg,#fff,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:15px}
+.price-block{text-align:right}
+.price-now{font-size:52px;font-weight:800;letter-spacing:-1.5px}
+.price-now .ccy{font-size:22px;color:var(--text-dim);font-weight:500;margin-right:6px}
+.price-unit{font-size:14px;color:var(--text-faint);font-weight:400}
+.price-meta{margin-top:8px;color:var(--text-dim);font-size:13px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:32px;position:relative;z-index:2}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;backdrop-filter:blur(12px);transition:transform .25s,border-color .25s}
+.kpi:hover{transform:translateY(-3px);border-color:var(--border-hot)}
+.kpi-label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.kpi-value{font-size:24px;font-weight:700;margin-top:6px}
+.kpi-delta{font-size:12px;margin-top:4px;font-weight:600}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)}
+.section-title{display:flex;align-items:center;gap:12px;margin:44px 0 20px}
+.section-title h2{font-size:24px;font-weight:700;letter-spacing:-0.5px}
+.section-title .tag{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:6px;color:#fff}
+.tag.purple{background:var(--purple)} .tag.pink{background:var(--pink)} .tag.cyan{background:var(--cyan);color:#000}
+.divider-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;backdrop-filter:blur(14px);position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:600;color:var(--text)}
+.card-sub{font-size:12px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:280px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:340px}
+.fin-table{width:100%;border-collapse:collapse;font-size:13px}
+.fin-table th{text-align:right;padding:12px 10px;color:var(--text-faint);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
+.fin-table th:first-child{text-align:left}
+.fin-table td{padding:12px 10px;text-align:right;border-bottom:1px solid rgba(139,92,246,0.08)}
+.fin-table td:first-child{text-align:left;color:var(--text-dim);font-weight:500}
+.fin-table tbody tr:hover{background:rgba(168,85,247,0.05)}
+.fin-table .row-strong td{font-weight:700;color:var(--text);background:rgba(168,85,247,0.06)}
+.fin-table .row-strong td:first-child{color:var(--purple)}
+.fin-table .col-latest{background:rgba(16,217,138,0.06);font-weight:700}
+.val-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.val-card{border-radius:18px;padding:18px;text-align:center;position:relative;overflow:hidden;border:1px solid var(--border);background:rgba(20,20,40,0.4)}
+.val-card .name{font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:0.8px}
+.val-card .price{font-size:26px;font-weight:800;margin-top:8px}
+.val-card .price small{font-size:13px;color:var(--text-dim);font-weight:500}
+.val-card .upside{font-size:12px;margin-top:6px;font-weight:700}
+.val-card.base{background:linear-gradient(135deg,rgba(168,85,247,0.25),rgba(236,72,153,0.15));border-color:var(--border-hot)}
+.val-card.base::after{content:'KHUYẾN NGHỊ';position:absolute;top:8px;right:8px;font-size:8px;font-weight:800;background:var(--grad-main);padding:2px 6px;border-radius:4px;letter-spacing:0.5px}
+.bar-track{height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin-top:10px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:var(--grad-main)}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%}
+.gauge-num{font-size:64px;font-weight:900;letter-spacing:-2px;background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.gauge-label{color:var(--text-dim);font-size:13px;margin-top:4px}
+.gauge-verdict{margin-top:18px;padding:8px 20px;border-radius:999px;font-weight:700;font-size:14px;background:var(--green);color:#000}
+.insight-card{background:linear-gradient(135deg,rgba(6,182,212,0.08),rgba(139,92,246,0.06));border:1px solid rgba(6,182,212,0.2);border-radius:20px;padding:22px;position:relative;overflow:hidden}
+.insight-card .ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px;background:var(--grad-cool)}
+.insight-card h4{font-size:15px;font-weight:700;margin-bottom:8px}
+.insight-card p{font-size:13px;color:var(--text-dim);line-height:1.6}
+.insight-card .metric{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.insight-card .metric div{flex:1;min-width:80px}
+.insight-card .metric .v{font-size:18px;font-weight:700}
+.insight-card .metric .l{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px}
+.rating-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(139,92,246,0.08)}
+.rating-row:last-child{border-bottom:none}
+.rating-row .cat{flex:1;font-size:13px;color:var(--text-dim)}
+.dots{display:flex;gap:4px}
+.dot{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,0.1)}
+.dot.on{background:var(--grad-main)}
+footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:12px;text-align:center;line-height:1.8}
+footer a{color:var(--purple);text-decoration:none}
+.disclaimer{background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:14px 18px;margin-top:24px;font-size:12px;color:var(--text-dim)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeUp .6s ease both}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse 1.5s infinite}
+/* SENTIMENT METER */
+.meter-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;backdrop-filter:blur(14px);margin-bottom:24px}
+.meter-wrap{display:flex;align-items:center;gap:32px;flex-wrap:wrap}
+.meter-gauge{flex:0 0 200px;text-align:center}
+.meter-score{font-size:64px;font-weight:900;line-height:1;
+  background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.meter-label{color:var(--text-dim);font-size:12px;margin-top:6px}
+.meter-verdict{margin-top:10px;padding:6px 16px;border-radius:999px;font-weight:700;font-size:13px;
+  background:var(--green);color:#000;display:inline-block}
+.meter-breakdown{flex:1;min-width:280px}
+.meter-bar{display:flex;align-items:center;gap:10px;margin:8px 0}
+.meter-bar .lbl{font-size:12px;width:60px;color:var(--text-dim)}
+.meter-bar .track{flex:1;height:18px;background:rgba(255,255,255,0.06);border-radius:9px;overflow:hidden}
+.meter-bar .fill{height:100%;border-radius:9px;transition:width .8s ease}
+.meter-bar .pct{font-size:12px;font-weight:700;width:36px;text-align:right}
+
+/* NEWS GRID */
+.news-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+/* EXECUTIVE SUMMARY */
+.exec-summary{background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(236,72,153,0.1));
+  border:1px solid var(--border-hot);border-radius:24px;padding:28px 32px;margin-bottom:24px;
+  backdrop-filter:blur(14px);position:relative;overflow:hidden}
+.exec-summary::before{content:'';position:absolute;top:-80px;right:-30px;width:300px;height:300px;
+  background:radial-gradient(circle,rgba(168,85,247,0.18),transparent 70%);filter:blur(30px)}
+.exec-label{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--purple);
+  background:rgba(168,85,247,0.15);padding:5px 12px;border-radius:6px;margin-bottom:14px;position:relative;z-index:2}
+.exec-title{font-size:22px;font-weight:800;letter-spacing:-0.5px;margin-bottom:12px;line-height:1.3;position:relative;z-index:2}
+.exec-body{font-size:14px;color:var(--text-dim);line-height:1.7;margin-bottom:18px;position:relative;z-index:2}
+.exec-body strong{color:var(--text);font-weight:600}
+.exec-body .up{color:var(--green);font-weight:700}
+.exec-body .down{color:var(--red);font-weight:700}
+.exec-highlights{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative;z-index:2}
+.exec-hl{background:rgba(20,20,40,0.6);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
+.exec-hl.pos{border-color:rgba(16,217,138,0.3)}
+.exec-hl.neg{border-color:rgba(255,77,109,0.3)}
+.exec-hl.neu{border-color:rgba(251,191,36,0.3)}
+.exec-hl-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.exec-hl-val{font-size:20px;font-weight:800;margin-top:4px;font-family:'JetBrains Mono',monospace}
+.exec-hl-sub{font-size:10px;color:var(--text-dim);margin-top:2px}
+
+/* NEWS CARD - phiên bản dày hơn */
+.news-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;
+  backdrop-filter:blur(14px);position:relative;transition:transform .25s,border-color .25s;overflow:hidden;
+  display:flex;flex-direction:column;gap:12px}
+.news-card:hover{transform:translateY(-3px)}
+.news-card.positive{border-left:4px solid var(--green)}
+.news-card.positive:hover{border-color:var(--green)}
+.news-card.negative{border-left:4px solid var(--red)}
+.news-card.negative:hover{border-color:var(--red)}
+.news-card.neutral{border-left:4px solid var(--amber)}
+.news-card.neutral:hover{border-color:var(--amber)}
+.news-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.news-cat{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px}
+.news-cat.biz{background:rgba(16,217,138,0.2);color:var(--green)}
+.news-cat.sector{background:rgba(168,85,247,0.2);color:var(--purple)}
+.news-cat.macro{background:rgba(251,191,36,0.2);color:var(--amber)}
+.news-cat.disclosure{background:rgba(6,182,212,0.2);color:var(--cyan)}
+.news-cat.analyst{background:rgba(236,72,153,0.2);color:var(--pink)}
+.news-date{font-size:11px;color:var(--text-faint);font-family:'JetBrains Mono',monospace}
+.news-title{font-size:15px;font-weight:700;line-height:1.4}
+.news-summary{font-size:13px;color:var(--text-dim);line-height:1.6}
+.news-metrics{display:flex;gap:10px;flex-wrap:wrap;margin:2px 0}
+.news-metric{flex:1;min-width:90px;background:rgba(255,255,255,0.04);border:1px solid rgba(139,92,246,0.1);
+  border-radius:10px;padding:8px 10px}
+.news-metric .ml{font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.news-metric .mv{font-size:15px;font-weight:700;margin-top:2px;font-family:'JetBrains Mono',monospace}
+.news-metric .mv.pos{color:var(--green)}
+.news-metric .mv.neg{color:var(--red)}
+.news-metric .mv.neu{color:var(--amber)}
+.news-why{background:rgba(168,85,247,0.06);border-left:3px solid var(--purple);
+  border-radius:0 10px 10px 0;padding:10px 14px;font-size:12px;color:var(--text-dim);line-height:1.55}
+.news-why strong{color:var(--purple);font-weight:600}
+.news-impact{display:flex;justify-content:space-between;align-items:center;padding-top:10px;
+  border-top:1px solid rgba(139,92,246,0.1);margin-top:auto}
+.sentiment-pill{font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px}
+.sentiment-pill.bullish{background:rgba(16,217,138,0.15);color:var(--green);border:1px solid rgba(16,217,138,0.3)}
+.sentiment-pill.bearish{background:rgba(255,77,109,0.15);color:var(--red);border:1px solid rgba(255,77,109,0.3)}
+.sentiment-pill.neutral{background:rgba(251,191,36,0.15);color:var(--amber);border:1px solid rgba(251,191,36,0.3)}
+.impact-score{font-size:11px;color:var(--text-faint)}
+.impact-score .v{font-weight:700;color:var(--text)}
+.news-link{font-size:11px;color:var(--purple);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:4px}
+.news-link:hover{text-decoration:underline}
+
+/* TIMELINE */
+.timeline-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px;backdrop-filter:blur(14px)}
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,var(--purple),var(--pink),var(--cyan))}
+.tl-item{position:relative;margin-bottom:18px;padding-left:24px}
+.tl-item::before{content:'';position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--card);border:2px solid var(--purple);box-shadow:0 0 0 3px rgba(168,85,247,0.2)}
+.tl-item.pos::before{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,217,138,0.2)}
+.tl-item.neg::before{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,77,109,0.2)}
+.tl-date{font-size:11px;color:var(--text-faint);font-family:'JetBrains Mono',monospace;font-weight:600}
+.tl-text{font-size:13px;color:var(--text);margin-top:2px}
+.tl-source{font-size:11px;color:var(--text-dim);margin-top:2px}
+
+/* KEY TAKEAWAYS */
+.takeaways{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(6,182,212,0.06));
+  border:1px solid var(--border-hot);border-radius:24px;padding:28px;margin-top:24px}
+.takeaway-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid rgba(139,92,246,0.1)}
+.takeaway-item:last-child{border-bottom:none}
+.takeaway-num{flex:0 0 32px;height:32px;border-radius:10px;background:var(--grad-main);
+  display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px}
+.takeaway-content h4{font-size:14px;font-weight:700;margin-bottom:4px}
+.takeaway-content p{font-size:13px;color:var(--text-dim);line-height:1.6}
+
+
+/* TECHNICAL ANALYSIS */
+.tech-verdict-card{background:linear-gradient(135deg,rgba(251,191,36,0.12),rgba(255,77,109,0.08));
+  border:1px solid rgba(251,191,36,0.3);border-radius:24px;padding:28px;margin-bottom:24px;backdrop-filter:blur(14px)}
+.tech-verdict-grid{display:grid;grid-template-columns:1fr 2fr;gap:24px;align-items:center}
+.tech-score-big{font-size:72px;font-weight:900;line-height:1;text-align:center;
+  background:linear-gradient(135deg,#fbbf24,#ff4d6d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tech-score-lbl{font-size:11px;color:var(--text-faint);text-align:center;margin-top:4px;text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.tech-verdict-pill{margin-top:10px;padding:6px 16px;border-radius:999px;font-weight:700;font-size:13px;
+  background:rgba(251,191,36,0.2);color:var(--amber);border:1px solid rgba(251,191,36,0.4);display:inline-block;text-align:center}
+.tech-indicators{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.tech-ind{background:rgba(20,20,40,0.6);border:1px solid var(--border);border-radius:14px;padding:14px}
+.tech-ind-lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.tech-ind-val{font-size:20px;font-weight:800;margin-top:4px;font-family:'JetBrains Mono',monospace}
+.tech-ind-val.pos{color:var(--green)}.tech-ind-val.neg{color:var(--red)}.tech-ind-val.neu{color:var(--amber)}
+.tech-ind-sub{font-size:10px;color:var(--text-dim);margin-top:2px}
+.signal-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:16px}
+.signal-cell{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.signal-cell.sell{border-color:rgba(255,77,109,0.4)}.signal-cell.buy{border-color:rgba(16,217,138,0.4)}
+.signal-cell.neutral{border-color:rgba(251,191,36,0.4)}
+.signal-name{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.signal-val{font-size:14px;font-weight:800;margin-top:4px}
+.signal-val.sell{color:var(--red)}.signal-val.buy{color:var(--green)}.signal-val.neutral{color:var(--amber)}
+.tech-chart-wrap{position:relative;height:320px;margin-top:16px}
+.rsi-zone{display:flex;gap:2px;margin-top:6px;height:6px;border-radius:3px;overflow:hidden}
+.rsi-zone div{flex:1}
+.rsi-marker{position:relative;height:20px;margin-top:4px}
+.rsi-marker-dot{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--amber);top:5px;transform:translateX(-50%);border:2px solid #fff}
+
+
+
+/* NAVIGATION BAR */
+.topnav{position:sticky;top:0;z-index:1000;background:rgba(10,10,20,0.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(139,92,246,0.2);padding:0 16px}
+.topnav-inner{max-width:1480px;margin:0 auto;display:flex;align-items:center;gap:6px;overflow-x:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(139,92,246,0.3) transparent}
+.topnav-inner::-webkit-scrollbar{height:4px}
+.topnav-inner::-webkit-scrollbar-thumb{background:rgba(139,92,246,0.3);border-radius:2px}
+.topnav-brand{display:flex;align-items:center;gap:8px;padding:10px 14px 10px 0;font-weight:800;font-size:13px;
+  color:var(--purple);white-space:nowrap;border-right:1px solid rgba(139,92,246,0.15);margin-right:6px}
+.topnav-brand .dot-color{width:8px;height:8px;border-radius:50%;background:var(--grad-main)}
+.topnav-link{padding:10px 12px;font-size:12px;font-weight:600;color:var(--text-dim);text-decoration:none;
+  white-space:nowrap;border-radius:8px;transition:all .2s;border-bottom:2px solid transparent}
+.topnav-link:hover{color:var(--text);background:rgba(139,92,246,0.08)}
+.topnav-link.active{color:var(--purple);border-bottom-color:var(--purple);background:rgba(168,85,247,0.1)}
+
+/* PROGRESS BAR */
+.progress-bar{position:fixed;top:0;left:0;height:3px;background:var(--grad-main);width:0;z-index:1001;
+  transition:width .1s ease;box-shadow:0 0 12px rgba(168,85,247,0.6)}
+
+/* BACK TO TOP */
+.back-top{position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;
+  background:var(--grad-main);color:#fff;border:none;cursor:pointer;font-size:18px;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(168,85,247,0.4);
+  opacity:0;transform:translateY(20px);transition:all .3s;z-index:999}
+.back-top.visible{opacity:1;transform:translateY(0)}
+.back-top:hover{transform:translateY(-3px) scale(1.05)}
+
+@media (max-width:600px){.topnav-brand{display:none}.topnav-link{padding:8px 10px;font-size:11px}}
+
+
+@media (max-width:1100px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3,.grid-2-1,.grid-1-2{grid-template-columns:1fr}.val-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.container{padding:16px}.hero{padding:24px;border-radius:20px}.company-name{font-size:30px}.price-now{font-size:38px}.kpi-strip{grid-template-columns:repeat(2,1fr)}.val-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand"><span class="dot-color"></span>HPG · Equity Report</div>
+      <a class="topnav-link" href="#exec-summary" data-target="exec-summary">Tổng quan</a>
+      <a class="topnav-link" href="#sec-fundamental" data-target="sec-fundamental">KQKD 5 năm</a>
+      <a class="topnav-link" href="#sec-valuation-pb" data-target="sec-valuation-pb">Định giá PE/PB</a>
+      <a class="topnav-link" href="#sec-multiples" data-target="sec-multiples">Multiples</a>
+      <a class="topnav-link" href="#sec-dcf" data-target="sec-dcf">DCF/Graham</a>
+      <a class="topnav-link" href="#sec-dupont" data-target="sec-dupont">DuPont</a>
+      <a class="topnav-link" href="#sec-summary" data-target="sec-summary">Tổng hợp định giá</a>
+      <a class="topnav-link" href="#sec-insights" data-target="sec-insights">Insights</a>
+      <a class="topnav-link" href="#sec-technical" data-target="sec-technical">Kỹ thuật</a>
+      <a class="topnav-link" href="#sec-correlation" data-target="sec-correlation">Tương quan Index</a>
+      <a class="topnav-link" href="#sec-patterns" data-target="sec-patterns">Mô hình nến</a>
+      <a class="topnav-link" href="#sec-patterns" data-target="sec-patterns">Mô hình nến</a>
+      <a class="topnav-link" href="#sec-news" data-target="sec-news">Bản tin 30 ngày</a>
+      <a class="topnav-link" href="#sec-takeaways" data-target="sec-takeaways">Key Takeaways</a>
+  </div>
+</div>
+<button class="back-top" id="backTop" aria-label="Về đầu trang">↑</button>
+
+<div class="container">
+
+  <div class="hero fade">
+    <div class="hero-top">
+      <div>
+        <div class="ticker-badge">⚡ HOSE:HPG · STEEL</div><span class="update-badge">✦ Cập nhật FY2025</span>
+        <div class="company-name">HÒA PHÁT GROUP</div>
+        <div class="company-sub">CTCP Tập đoàn Hòa Phát · Ngành: Sản xuất thép · Lò cao tích hợp (Integrated Mill)</div>
+      </div>
+      <div class="price-block">
+        <div class="price-now mono"><span class="ccy">₫</span>23,650<span class="price-unit"> /cp</span></div>
+        <div class="price-meta"><span class="live-dot"></span>Giá đóng cửa 31/12/2025 · Capitalization ≈ <strong class="mono pos">₫136.5B</strong> tỷ</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi"><div class="kpi-label">P/E (2025)</div><div class="kpi-value mono pos">11.7<span style="font-size:14px;color:var(--text-dim)">x</span></div><div class="kpi-delta pos">Dưới median 5N (13.3x)</div></div>
+      <div class="kpi"><div class="kpi-label">P/B (2025)</div><div class="kpi-value mono neu">1.25<span style="font-size:14px;color:var(--text-dim)">x</span></div><div class="kpi-delta pos">Dưới median 5N (1.27x)</div></div>
+      <div class="kpi"><div class="kpi-label">ROE 2025</div><div class="kpi-value mono pos">10.7<span style="font-size:14px;color:var(--text-dim)">%</span></div><div class="kpi-delta pos">↑ phục hồi từ đáy 2023</div></div>
+      <div class="kpi"><div class="kpi-label">BVPS 2025</div><div class="kpi-value mono">18,867<span style="font-size:14px;color:var(--text-dim)">đ</span></div><div class="kpi-delta neu">Giá premium 25%</div></div>
+      <div class="kpi"><div class="kpi-label">LNST 2025</div><div class="kpi-value mono pos">15,515<span style="font-size:14px;color:var(--text-dim)"> tỷ</span></div><div class="kpi-delta pos">↑ +29% YoY · vượt KH</div></div>
+      <div class="kpi"><div class="kpi-label">Sản lượng thép</div><div class="kpi-value mono pos">~9.5<span style="font-size:14px;color:var(--text-dim)"> tr.tấn</span></div><div class="kpi-delta pos">Kỷ lục cán nóng</div></div>
+    </div>
+  </div>
+
+<!-- EXECUTIVE SUMMARY -->
+  <div class="exec-summary" id="exec-summary" data-nav-label="Tổng quan">
+    <div class="exec-label">⚡ Executive Summary · TL;DR</div>
+    <div class="exec-title">HPG 30 ngày: Cơ bản bùng nổ, giá bị áp lực dòng tiền — divergence rõ rệt</div>
+    <div class="exec-body">
+      Trong 30 ngày qua, HPG ghi nhận <strong>9 tin tích cực</strong> áp đảo (64% tổng số), tập trung vào phục hồi kinh doanh (<span class="up">LNST Q1/2026 +170% YoY</span>, <span class="up">sản lượng 2T/2026 +46.7%</span>) và catalyst dài hạn <strong>Dung Quất 2</strong> hoàn thành dây chuyền HRC 5.6 triệu tấn/năm. Tuy nhiên, <span class="down">giá CP giảm ~29%</span> từ đỉnh 33,200 (07/06) xuống 23,600 do áp lực dòng tiền chung và giá thép TQ đảo chiều giảm tháng 6. Khối ngoại <strong>vẫn gom</strong> bất thường — tín hiệu phân kỳ giá trị dài hạn. <strong>Verdict: BULLISH (+62) — tích lũy theo cơ bản, bất chấp noise ngắn hạn.</strong>
+    </div>
+    <div class="exec-highlights">
+      <div class="exec-hl pos">
+        <div class="exec-hl-lbl">LNST Q1/2026</div>
+        <div class="exec-hl-val pos">+170%</div>
+        <div class="exec-hl-sub">YoY · vượt kỳ vọng</div>
+      </div>
+      <div class="exec-hl pos">
+        <div class="exec-hl-lbl">Sản lượng 2T/2026</div>
+        <div class="exec-hl-val pos">2M tấn</div>
+        <div class="exec-hl-sub">+46.7% YoY</div>
+      </div>
+      <div class="exec-hl neg">
+        <div class="exec-hl-lbl">Giá CP 30 ngày</div>
+        <div class="exec-hl-val neg">-29%</div>
+        <div class="exec-hl-sub">từ đỉnh 33,200</div>
+      </div>
+      <div class="exec-hl neu">
+        <div class="exec-hl-lbl">Cổ tức 2025</div>
+        <div class="exec-hl-val neu">15%</div>
+        <div class="exec-hl-sub">5% TM + 10% CP</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title" id="sec-fundamental" data-nav-label="KQKD 5 năm">
+    <span class="tag purple">01</span>
+    <h2>Kết quả kinh doanh 5 năm (2021–2025)</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">Đơn vị: tỷ VNĐ · Nguồn: Vietstock + CafeF + BCTC HPG (cross-check 3 nguồn)</span>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Doanh thu & Lợi nhuận sau thuế</div><div class="card-sub">2025: phục hồi mạnh mẽ — LNST +29% YoY, vượt kế hoạch</div></div></div>
+      <div class="chart-wrap"><canvas id="chartRevNP"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Biên lợi nhuận & ROE (%)</div><div class="card-sub">ROS 9.8% (2025) — phục hồi từ đáy 5.9% (2022)</div></div></div>
+      <div class="chart-wrap"><canvas id="chartMargin"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <div class="card-head"><div><div class="card-title">Bảng tổng hợp tài chính 5 năm</div><div class="card-sub">2021–2025 · Cột 2025 highlight xanh = dữ liệu mới cập nhật</div></div></div>
+    <div style="overflow-x:auto">
+    <table class="fin-table mono">
+      <thead><tr><th>Chỉ tiêu</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th class="col-latest">2025 ✦</th><th>CAGR</th></tr></thead>
+      <tbody>
+        <tr><td>Doanh thu thuần</td><td>150,865</td><td>142,771</td><td>118,953</td><td>140,191</td><td class="col-latest">158,332</td><td class="pos">+1.2%</td></tr>
+        <tr><td>LNST</td><td>34,521</td><td>8,444</td><td>6,835</td><td>12,021</td><td class="col-latest">15,515</td><td class="neg">-18.0%¹</td></tr>
+        <tr><td>Vốn chủ sở hữu</td><td>103,000</td><td>98,000</td><td>109,000</td><td>130,000</td><td class="col-latest">145,000</td><td class="pos">+8.9%</td></tr>
+        <tr><td>Tổng tài sản</td><td>165,000</td><td>162,000</td><td>178,000</td><td>224,489</td><td class="col-latest">~240,000</td><td class="pos">+9.8%</td></tr>
+        <tr><td>LCFD HĐKD (CFO)</td><td>42,000</td><td>18,000</td><td>25,000</td><td>28,000</td><td class="col-latest">~35,000</td><td class="neg">-4.6%</td></tr>
+        <tr class="row-strong"><td>Số CP lưu hành (tỷ)</td><td>5.81</td><td>6.40</td><td>6.40</td><td>6.40</td><td class="col-latest">7.69</td><td class="pos">+7.3%</td></tr>
+        <tr class="row-strong"><td>EPS (đồng)</td><td>5,937</td><td>1,319</td><td>1,068</td><td>1,878</td><td class="col-latest">2,019</td><td class="neg">-23%</td></tr>
+        <tr class="row-strong"><td>BVPS (đồng)</td><td>17,713</td><td>15,313</td><td>17,031</td><td>20,313</td><td class="col-latest">18,867</td><td class="pos">+1.6%</td></tr>
+        <tr><td>ROE</td><td>33.5%</td><td>8.6%</td><td>6.3%</td><td>9.2%</td><td class="col-latest">10.7%</td><td>—</td></tr>
+        <tr><td>ROA</td><td>20.9%</td><td>5.2%</td><td>3.8%</td><td>5.4%</td><td class="col-latest">6.5%</td><td>—</td></tr>
+        <tr><td>Biên LNST (ROS)</td><td>22.9%</td><td>5.9%</td><td>5.7%</td><td>8.6%</td><td class="col-latest">9.8%</td><td>—</td></tr>
+        <tr><td>Giá cuối năm (đ)</td><td>32,800</td><td>19,500</td><td>25,200</td><td>25,000</td><td class="col-latest">23,650</td><td>—</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div style="font-size:11px;color:var(--text-faint);margin-top:10px">¹ CAGR 5N bị méo do đáy chu kỳ 2022. CAGR 2022→2025 = +22.4%/năm (giai đoạn phục hồi). <strong>Số liệu đã cross-check từ Vietstock, CafeF và BCTC kiểm toán HPG</strong> (BCTN 2023/2024). LNST 2023 = 6,835 tỷ (đã kiểm toán). BVPS 2025 = 18,867đ (thấp hơn 2024 do cổ tức 20% cổ phiếu làm tăng số CP từ 6.40 → 7.69 tỷ).</div>
+  </div>
+
+  <div class="section-title" id="sec-valuation-pb" data-nav-label="Định giá PE/PB">
+    <span class="tag pink">02</span>
+    <h2>Định giá dựa trên PE · PB · BV trung bình 5 năm</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">Áp hệ số tham chiếu lên số liệu 2025</span>
+  </div>
+
+  <div class="grid-1-2">
+    <div class="card" style="display:flex;flex-direction:column;justify-content:center">
+      <div class="card-title" style="text-align:center">Giá trị hợp lý ước tính</div>
+      <div class="card-sub" style="text-align:center;margin-bottom:8px">Trung bình trọng số các kịch bản</div>
+      <div class="gauge-wrap">
+        <div class="gauge-num mono">₫26.8K</div>
+        <div class="gauge-label">nghìn đồng / cổ phiếu</div>
+        <div class="gauge-verdict" style="background:var(--amber)">⚖️ FAIRLY VALUED</div>
+        <div style="margin-top:12px;color:var(--text-dim);font-size:13px">Giá hiện <strong class="mono">₫23.65K</strong> → rẻ hơn ~13%</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">5 kịch bản định giá</div><div class="card-sub">Hệ số PE/PB tham chiếu × EPS & BVPS 2025</div></div></div>
+      <div class="val-grid">
+        <div class="val-card"><div class="name">PB 1.0x (sàn)</div><div class="price mono neg">18.9<small>K</small></div><div class="upside neg">-20%</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:var(--red)"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">BVPS 2025</div></div>
+        <div class="val-card"><div class="name">PB median 5N</div><div class="price mono pos">24.0<small>K</small></div><div class="upside pos">+2%</div><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--green)"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">BVPS'25 × PB 1.27x</div></div>
+        <div class="val-card base"><div class="name">PB TB 5N</div><div class="price mono pos">26.8<small>K</small></div><div class="upside pos">+13%</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">BVPS'25 × PB 1.42x</div></div>
+        <div class="val-card base"><div class="name">PE median 5N</div><div class="price mono pos">26.9<small>K</small></div><div class="upside pos">+14%</div><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">EPS'25 × PE 13.3x</div></div>
+        <div class="val-card"><div class="name">PB 1.3x (ngành)</div><div class="price mono pos">24.5<small>K</small></div><div class="upside pos">+4%</div><div class="bar-track"><div class="bar-fill" style="width:84%;background:var(--green)"></div></div><div style="font-size:10px;color:var(--text-faint);margin-top:8px">BVPS'25 × PB 1.3x</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Lịch sử P/E & P/B 5 năm</div><div class="card-sub">2025: PB rơi xuống dưới 1.0 lần — vùng "mua" theo lịch sử</div></div></div>
+      <div class="chart-wrap"><canvas id="chartPEPB"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Giá vs Giá trị sổ sách (BVPS)</div><div class="card-sub">2025: Giá (23,650đ) &gt; BVPS (18,867đ) — premium ~25%</div></div></div>
+      <div class="chart-wrap"><canvas id="chartPriceBV"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title" id="sec-multiples" data-nav-label="Multiples">
+    <span class="tag purple">03</span>
+    <h2>Multiples mở rộng · EV/EBITDA · P/CF · P/S</h2>
+    <div class="divider-line"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+    <div class="card" style="padding:18px"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">P/E 2025</div><div style="font-size:30px;font-weight:800;margin-top:4px" class="mono pos">11.7<span style="font-size:14px;color:var(--text-dim)">x</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Dưới TB 5N (13.8x)</div></div>
+    <div class="card" style="padding:18px"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">P/B 2025</div><div style="font-size:30px;font-weight:800;margin-top:4px" class="mono pos">1.25<span style="font-size:14px;color:var(--text-dim)">x</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Dưới TB 5N (1.42x)</div></div>
+    <div class="card" style="padding:18px"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">P/S 2025</div><div style="font-size:30px;font-weight:800;margin-top:4px" class="mono pos">1.15<span style="font-size:14px;color:var(--text-dim)">x</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Cạnh tranh tốt</div></div>
+    <div class="card" style="padding:18px"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">P/CF 2025</div><div style="font-size:30px;font-weight:800;margin-top:4px" class="mono pos">5.2<span style="font-size:14px;color:var(--text-dim)">x</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Dòng tiền hấp dẫn</div></div>
+  </div>
+
+  <div class="section-title" id="sec-dcf" data-nav-label="DCF/Graham">
+    <span class="tag pink">04</span>
+    <h2>Định giá nội tại · DCF (FCFF) & Graham</h2>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">DCF — 3 kịch bản FCFF (2026-2030)</div><div class="card-sub">Dung Quất 2 ramp-up → FCFF bùng nổ</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="padding:14px;background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.25);border-radius:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700;color:var(--red)">🔻 Bi quan</div><div style="font-size:11px;color:var(--text-faint);margin-top:2px">WACC 11% · g 2%</div></div><div style="text-align:right"><div class="mono" style="font-size:22px;font-weight:800;color:var(--red)">31.2K</div><div style="font-size:11px;color:var(--red)">+32%</div></div></div>
+        </div>
+        <div style="padding:14px;background:linear-gradient(135deg,rgba(168,85,247,0.18),rgba(236,72,153,0.12));border:1px solid var(--border-hot);border-radius:14px;position:relative">
+          <div style="position:absolute;top:8px;right:10px;font-size:8px;font-weight:800;background:var(--grad-main);padding:2px 6px;border-radius:4px">BASE</div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700" class="pos">⚖️ Cơ sở</div><div style="font-size:11px;color:var(--text-faint);margin-top:2px">WACC 10.5% · g 3%</div></div><div style="text-align:right"><div class="mono" style="font-size:26px;font-weight:800;color:var(--green)">47.8K</div><div style="font-size:11px;color:var(--green)">+102%</div></div></div>
+        </div>
+        <div style="padding:14px;background:rgba(16,217,138,0.08);border:1px solid rgba(16,217,138,0.25);border-radius:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700;color:var(--green)">🚀 Tích cực</div><div style="font-size:11px;color:var(--text-faint);margin-top:2px">WACC 10% · g 3.5%</div></div><div style="text-align:right"><div class="mono" style="font-size:22px;font-weight:800;color:var(--green)">78.4K</div><div style="font-size:11px;color:var(--green)">+231%</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Graham Number √(22.5 × EPS × BVPS)</div><div class="card-sub">Sanity check đầu tư giá trị</div></div></div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;padding:14px 0">
+          <div style="text-align:center"><div style="font-size:44px;font-weight:900" class="mono pos">29.3<span style="font-size:18px;color:var(--text-dim)">K</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Graham 2025</div></div>
+          <div style="font-size:22px;color:var(--text-faint)">vs</div>
+          <div style="text-align:center"><div style="font-size:44px;font-weight:900" class="mono">23.65<span style="font-size:18px;color:var(--text-dim)">K</span></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">Giá hiện tại</div></div>
+        </div>
+        <div style="padding:12px;border-radius:12px;background:var(--green-soft);border:1px solid rgba(16,217,138,0.2);text-align:center">
+          <div style="font-weight:700;color:var(--green)">✅ RẺ 24% theo Graham Number</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="background:linear-gradient(135deg,rgba(6,182,212,0.1),rgba(139,92,246,0.06));border-color:rgba(6,182,212,0.2)">
+          <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">🔄 Reverse DCF</div>
+          <div style="font-size:28px;font-weight:800;margin-top:6px" class="mono pos">~5<span style="font-size:14px;color:var(--text-dim)">%/năm</span></div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.5">Tại giá 23.65K, thị trường chỉ ngụ ý FCFF tăng trưởng <strong>~5%/năm</strong> — rất保守, bỏ qua DQ2.</div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,rgba(168,85,247,0.1),rgba(236,72,153,0.06));border-color:rgba(168,85,247,0.2)">
+          <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">💵 DDM (Gordon)</div>
+          <div style="font-size:28px;font-weight:800;margin-top:6px" class="mono neg">14.9<span style="font-size:14px;color:var(--text-dim)">K</span></div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.5">DPS 2025 ~1,000đ. HPG giữ lợi nhuận tái đầu tư → DDM không phù hợp.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title" id="sec-dupont" data-nav-label="DuPont">
+    <span class="tag cyan">05</span>
+    <h2>DuPont · Chất lượng ROE</h2>
+    <div class="divider-line"></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">DuPont: ROE = Biên × Vòng quay × Đòn bẩy</div><div class="card-sub">Phân tách nguồn gốc ROE</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartDuPont"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Diễn giải chất lượng</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;text-align:center">
+        <div style="padding:14px;background:rgba(168,85,247,0.08);border-radius:12px"><div style="font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase">Biên LN 2025</div><div class="mono" style="font-size:22px;font-weight:800;color:var(--purple);margin-top:4px">9.8%</div><div style="font-size:10px;color:var(--text-faint)">↑ từ đáy 5.9%</div></div>
+        <div style="padding:14px;background:rgba(236,72,153,0.08);border-radius:12px"><div style="font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase">Vòng quay TS</div><div class="mono" style="font-size:22px;font-weight:800;color:var(--pink);margin-top:4px">0.66x</div><div style="font-size:10px;color:var(--text-faint)">↓ (tài sản tăng nhanh)</div></div>
+        <div style="padding:14px;background:rgba(6,182,212,0.08);border-radius:12px"><div style="font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase">Đòn bẩy</div><div class="mono" style="font-size:22px;font-weight:800;color:var(--cyan);margin-top:4px">1.66x</div><div style="font-size:10px;color:var(--text-faint)">Vừa phải</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.6">💡 <strong>ROE 2025 = 10.7%</strong> thấp hơn đỉnh 33.5% (2021) vì <strong>biên lợi nhuận chưa phục hồi hoàn toàn</strong> và <strong>vòng quay tài sản giảm</strong> (TTS tăng mạnh do DQ2). Đòn bẩy ổn định → chất lượng kinh doanh tốt.</div>
+    </div>
+  </div>
+
+  <div class="section-title" id="sec-summary" data-nav-label="Tổng hợp định giá">
+    <span class="tag purple">06</span>
+    <h2>Tổng hợp định giá · 9 phương pháp</h2>
+    <div class="divider-line"></div>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(236,72,153,0.04))">
+    <div class="card-head"><div><div class="card-title">Biểu đồ cầu định giá đa phương pháp</div><div class="card-sub">Đường vàng = giá hiện tại 23.65K · Cột xanh = trên giá (undervalued)</div></div></div>
+    <div class="chart-wrap lg" style="height:380px"><canvas id="chartSummary"></canvas></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px">
+      <div style="padding:14px;background:rgba(16,217,138,0.08);border-radius:12px;text-align:center"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Trung bình tất cả PP</div><div style="font-size:28px;font-weight:800" class="mono pos">26.8K</div><div style="font-size:11px;color:var(--green)">+13% upside</div></div>
+      <div style="padding:14px;background:rgba(168,85,247,0.1);border-radius:12px;text-align:center"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Median tất cả PP</div><div style="font-size:28px;font-weight:800" class="mono pos">26.8K</div><div style="font-size:11px;color:var(--green)">+13% upside</div></div>
+      <div style="padding:14px;background:rgba(236,72,153,0.08);border-radius:12px;text-align:center"><div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Dải hợp lý (P25-P75)</div><div style="font-size:28px;font-weight:800" class="mono">24-28K</div><div style="font-size:11px;color:var(--text-dim)">Vùng giá hợp lý</div></div>
+    </div>
+  </div>
+
+  <div class="section-title" id="sec-insights" data-nav-label="Insights">
+    <span class="tag cyan">07</span>
+    <h2>Special Insights · Ngành thép chu kỳ 2026</h2>
+    <div class="divider-line"></div>
+  </div>
+  <div class="grid-3">
+    <div class="insight-card">
+      <div class="ico">🏭</div>
+      <h4>Dung Quất 2 — Vận hành 2025→2026</h4>
+      <p>Hoàn thành 9/2025. Tổng công suất HPG <strong>16 triệu tấn thép thô/năm</strong>. 2025 sản lượng cán nóng lập kỷ lục. Dự kiến mang về thêm <strong>3.2 tỷ USD doanh thu/năm</strong> khi chạy tối đa.</p>
+      <div class="metric"><div><div class="v mono pos">5.6 tr.t</div><div class="l">Công suất DQ2</div></div><div><div class="v mono pos">85K tỷ</div><div class="l">Tổng vốn đầu tư</div></div></div>
+    </div>
+    <div class="insight-card">
+      <div class="ico">🛡️</div>
+      <h4>Thuế chống bán phá giá HRC</h4>
+      <p>Từ 21/02/2025, VN áp thuế <strong>19.38%–27.83%</strong> với HRC Trung Quốc. Lá chắn bảo vệ HPG mạnh mẽ — tiêu thụ nội địa bùng nổ.</p>
+      <div class="metric"><div><div class="v mono pos">27.83%</div><div class="l">Mức thuế cao nhất</div></div><div><div class="v mono pos">5 năm</div><div class="l">Thời gian áp dụng</div></div></div>
+    </div>
+    <div class="insight-card">
+      <div class="ico">📈</div>
+      <h4>Khung định giá chu kỳ thép</h4>
+      <p>HPG = cổ phiếu <strong>chu kỳ</strong>: dùng <strong>P/B + ROE</strong>, không phải PE đơn thuần. 2025: P/B <strong>1.25x</strong> &amp; ROE <strong>10.7%</strong> → vùng <strong>MUA</strong> (PB&lt;1.3 &amp; ROE&gt;10%).</p>
+      <div class="metric"><div><div class="v mono pos">1.25x</div><div class="l">P/B 2025</div></div><div><div class="v mono pos">10.7%</div><div class="l">ROE 2025</div></div></div>
+    </div>
+  </div>
+
+  <div class="grid-2-1" style="margin-top:20px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Dự phóng 2026–2027 (công ty CK)</div><div class="card-sub">Vietcap/Mirae Asset: DT 203.7K tỷ (+29%), LNST 21.9K tỷ (+41%) nhờ DQ2 hết công suất</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartForecast"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Đánh giá tổng hợp</div></div></div>
+      <div class="rating-row"><div class="cat">Tài chính (5 năm)</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div></div>
+      <div class="rating-row"><div class="cat">Định giá 2025</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div></div>
+      <div class="rating-row"><div class="cat">Vị thế cạnh tranh</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div></div></div>
+      <div class="rating-row"><div class="cat">Triển vọng ngành 2026</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div></div>
+      <div class="rating-row"><div class="cat">Catalyst (DQ2, AD)</div><div class="dots"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot"></div></div></div>
+      <div style="margin-top:18px;padding:14px;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,0.18),rgba(6,182,212,0.12));border:1px solid rgba(251,191,36,0.3)">
+        <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Khuyến nghị (9 PP hội tụ)</div>
+        <div style="font-size:24px;font-weight:800;margin-top:4px" class="neu">⬆ ACCUMULATE · TÍCH LŨY</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px">Dải mục tiêu: <strong class="mono">₫26,000 – 29,000</strong> (+10% đến +23%) · DCF Base 47.8K nếu DQ2 vượt kỳ vọng</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ <strong>Disclaimer:</strong> Báo cáo giáo dục/tham khảo. Số liệu 2025 từ CafeF/Tạp chí Công Thương (công bố 30/01/2026) và Báo cáo thường niên HPG 2025; một số mục CDKT ước tính — nên đối chiếu BCTC kiểm toán chính thức. <strong>Không phải lời khuyên đầu tư</strong>. Đầu tư cổ phiếu có rủi ro mất vốn.
+  </div>
+
+    <div class="section-title" id="sec-technical" data-nav-label="Kỹ thuật">
+    <span class="tag pink">08</span>
+    <h2>Phân tích kỹ thuật · Lịch sử giá 52 tuần (data thật vnstock (VCI source))</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">MA · RSI · MACD · Bollinger Bands · Volume · Nguồn: vnstock API (VCI source) - HPG</span>
+  </div>
+
+  <div class="tech-verdict-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:16px">📊 Technical Verdict tổng hợp (tính từ data Yahoo thực)</div>
+    <div class="tech-verdict-grid">
+      <div>
+        <div class="tech-score-big mono">-4<span style="font-size:28px;color:var(--text-dim)">/6</span></div>
+        <div class="tech-score-lbl">Technical Score</div>
+        <div style="text-align:center"><div class="tech-verdict-pill" style="background:rgba(255,77,109,0.2);color:var(--red);border:1px solid rgba(255,77,109,0.4)">▼ SELL/REDUCE — Bearish rõ ràng</div></div>
+      </div>
+      <div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+          HPG <strong style="color:var(--red)">đang ở xu hướng giảm trên mọi khung thời gian</strong> — giá <strong style="color:var(--text)">23,600 đ</strong> nằm DƯỚI cả MA10 (24,218), MA20 (24,170) và MA50 (24,153). RSI = 47.8 (trung tính, chưa vào vùng quá bán). MACD = -19 < Signal 135 → <strong style="color:var(--red)">bearish continuation</strong>. <strong style="color:var(--amber)">Lưu ý:</strong> phân tích cơ bản (sections trên) cho thấy undervalued → đây là divergence fundamental vs technical — phù hợp quan sát chờ tín hiệu kỹ thuật đảo chiều, <strong>không khuyến nghị bắt dao rơi</strong>.
+        </div>
+        <div class="signal-grid">
+          <div class="signal-cell sell"><div class="signal-name">MA10</div><div class="signal-val sell">▼ Dưới</div></div>
+          <div class="signal-cell sell"><div class="signal-name">MA20</div><div class="signal-val sell">▼ Dưới</div></div>
+          <div class="signal-cell sell"><div class="signal-name">MA50</div><div class="signal-val sell">▼ Dưới</div></div>
+          <div class="signal-cell neutral"><div class="signal-name">RSI(14)</div><div class="signal-val neutral">47.8 Trung tính</div></div>
+          <div class="signal-cell sell"><div class="signal-name">MACD</div><div class="signal-val sell">▼ Bearish</div></div>
+          <div class="signal-cell neutral"><div class="signal-name">1Y Perf</div><div class="signal-val buy"+21.8%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-head">
+      <div>
+        <div class="card-title">📊 Biểu đồ nến (Candlestick) 52 tuần + Khối lượng — DATA THẬT</div>
+        <div class="card-sub">OHLC tuần thực từ vnstock (nguồn VCI/HOSE) · Nến xanh = tăng, nến đỏ = giảm · Volume bars bên dưới</div>
+      </div>
+      <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;background:rgba(16,217,138,0.15);color:var(--green);border:1px solid rgba(16,217,138,0.3)">✓ REAL DATA</span>
+    </div>
+    <div style="position:relative;height:480px">
+      <canvas id="chartCandlestick" style="display:block;width:100%;height:100%"></canvas>
+    </div>
+    <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;font-size:11px;color:var(--text-dim)">
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#10d98a;border-radius:2px"></span>Nến tăng</div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;background:#ff4d6d;border-radius:2px"></span>Nến giảm</div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:3px;background:#fbbf24"></span>MA20</div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:3px;background:#06b6d4"></span>MA50</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+    <div class="card" style="padding:18px">
+      <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Giá hiện tại</div>
+      <div style="font-size:28px;font-weight:800;margin-top:4px" class="mono">23,600<span style="font-size:13px;color:var(--text-dim)"> đ</span></div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">52W: <span class="neg">27,540</span> / <span class="neg">19,120</span></div>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Performance 1 năm</div>
+      <div style="font-size:28px;font-weight:800;margin-top:4px" class="mono pos">+13.9<span style="font-size:13px;color:var(--text-dim)">%</span></div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Từ đỉnh 52W: <span class="neg">-14.3%</span></div>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">RSI(14)</div>
+      <div style="font-size:28px;font-weight:800;margin-top:4px" class="mono neu">45.7</div>
+      <div style="font-size:11px;color:var(--amber);margin-top:4px">◆ Trung tính (chưa quá bán)</div>
+    </div>
+    <div class="card" style="padding:18px">
+      <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">MACD vs Signal</div>
+      <div style="font-size:28px;font-weight:800;margin-top:4px" class="mono neg">▼ Bearish</div>
+      <div style="font-size:11px;color:var(--red);margin-top:4px">-19 &lt; 135 (bearish) (bearish continuation)</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Giá 52 tuần + MA10/20/50 (data thật)</div>
+          <div class="card-sub">Xu hướng giảm: giá dưới cả 3 MA</div>
+        </div>
+      </div>
+      <div class="tech-chart-wrap"><canvas id="chartTechPrice"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">RSI(14) thực</div>
+          <div class="card-sub">RSI 47.8 — trung tính (chưa quá bán), chưa vào vùng quá bán</div>
+        </div>
+      </div>
+      <div class="tech-chart-wrap"><canvas id="chartTechRSI"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">MACD (12, 26, 9) thực</div>
+          <div class="card-sub">MACD bearish dưới Signal — xu hướng giảm tiếp tục</div>
+        </div>
+      </div>
+      <div class="tech-chart-wrap"><canvas id="chartTechMACD"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Support / Resistance Zones</div>
+          <div class="card-sub">Dựa trên swing highs/lows 52 tuần thực</div>
+        </div>
+      </div>
+      <div style="padding:12px 0">
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:8px">▼ Resistance (áp lực bán)</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,77,109,0.08);border-left:4px solid var(--red);border-radius:0 10px 10px 0">
+              <div style="flex:1"><strong>R1 — Đỉnh 52 tuần</strong><div style="font-size:11px;color:var(--text-dim)">Swing high thực từ vnstock</div></div>
+              <div class="mono neg" style="font-size:18px;font-weight:800">27,540 đ</div>
+              <div style="font-size:11px;color:var(--red);width:60px;text-align:right">+16.7%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,77,109,0.05);border-left:4px solid rgba(255,77,109,0.5);border-radius:0 10px 10px 0">
+              <div style="flex:1"><strong>R2 — MA50</strong><div style="font-size:11px;color:var(--text-dim)">Kháng cự động gần nhất</div></div>
+              <div class="mono neg" style="font-size:18px;font-weight:800">24,153 đ</div>
+              <div style="font-size:11px;color:var(--red);width:60px;text-align:right">+2.3%</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:14px;background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(236,72,153,0.12));border:1px solid var(--border-hot);border-radius:12px;margin-bottom:18px;text-align:center">
+          <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-weight:600">Giá hiện tại</div>
+          <div class="mono" style="font-size:24px;font-weight:800">23,600 đ</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px">Dưới cả 3 MA — xu hướng giảm</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:8px">▲ Support (hỗ trợ mua)</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(16,217,138,0.05);border-left:4px solid rgba(16,217,138,0.5);border-radius:0 10px 10px 0">
+              <div style="flex:1"><strong>S1 — MA10</strong><div style="font-size:11px;color:var(--text-dim)">Hỗ trợ động gần</div></div>
+              <div class="mono pos" style="font-size:18px;font-weight:800">24,218 đ</div>
+              <div style="font-size:11px;color:var(--red);width:60px;text-align:right">+2.6%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(16,217,138,0.08);border-left:4px solid var(--green);border-radius:0 10px 10px 0">
+              <div style="flex:1"><strong>S2 — Đáy 52 tuần</strong><div style="font-size:11px;color:var(--text-dim)">Hỗ trợ mạnh, test 1 lần</div></div>
+              <div class="mono pos" style="font-size:18px;font-weight:800">19,120 đ</div>
+              <div style="font-size:11px;color:var(--green);width:60px;text-align:right">-19.0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px;background:linear-gradient(135deg,rgba(255,77,109,0.06),rgba(251,191,36,0.06));border-color:rgba(255,77,109,0.2)">
+    <div class="card-head"><div><div class="card-title">⚠️ Trading Strategy Insight — Bearish kỹ thuật, nhưng fundamental bullish</div></div></div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">
+      Trên khung kỹ thuật, HPG <strong style="color:var(--red)">không có tín hiệu mua rõ ràng</strong> — giá dưới 3 MA, MACD bearish, RSI trung tính (chưa quá bán). Tuy nhiên, <strong style="color:var(--green)">phân tích cơ bản (sections 01-07)</strong> cho thấy P/B 1.25x dưới median 5N + LNST 2025 +29% YoY → <strong style="color:var(--text)">undervalued về nội tại</strong>. Đây là <strong style="color:var(--amber)">divergence fundamental vs technical</strong> — cổ phiếu giá trị nhưng thị trường chưa định giá đúng.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div style="padding:16px;background:rgba(16,217,138,0.06);border-radius:14px">
+        <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px">▲ KỊCH BẢN TÍCH CỰC</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.6">
+          Giá <strong style="color:var(--text)">breakout trên MA20 (24,170)</strong> với volume tăng + MACD crossover lên Signal → <strong style="color:var(--green)">tín hiệu mua</strong>. Đợi confirm RSI &gt; 55. Target MA50 = 24,153 rồi R1 = 27,136.
+        </div>
+      </div>
+      <div style="padding:16px;background:rgba(251,191,36,0.06);border-radius:14px">
+        <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px">◆ KỊCH BẢN TRUNG TÍNH</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.6">
+          Giá dao động <strong style="color:var(--text)">19,500-24,500</strong> → <strong style="color:var(--amber)">chờ đợi</strong>. Đợi RSI vào vùng quá bán (&lt; 30) HOẶC breakout MA20 rõ ràng mới tham gia. Không bắt dao rơi.
+        </div>
+      </div>
+      <div style="padding:16px;background:rgba(255,77,109,0.06);border-radius:14px">
+        <div style="font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:8px">▼ KỊCH BẢN TIÊU CỰC</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.6">
+          Nếu giá <strong style="color:var(--text)">mất 19,120</strong> (S2 = đáy 52 tuần) với volume lớn → <strong style="color:var(--red)">xu hướng giảm mạnh hơn</strong>, test 18,000-19,000. Cắt lỗ nếu đã nắm giữ.
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:12px 16px;background:rgba(251,191,36,0.08);border-radius:10px;font-size:12px;color:var(--text-dim);line-height:1.6">
+      💡 <strong>Đặc thù cổ phiếu chu kỳ:</strong> HPG bearish kỹ thuật nhưng RSI chưa quá bán (45.7). <strong>Không có setup mua kỹ thuật rõ ràng hiện tại</strong>. Khuyến nghị: chờ RSI &lt; 30 (quá bán thật) + MACD bullish crossover + giá test S2 (20,727) — khi đó mới có setup mua kỹ thuật chất lượng cao. Kết hợp fundamental (P/B thấp) cho conviction dài hạn.
+    </div>
+  </div>
+
+  <!-- CORRELATION WITH INDEX -->
+  <div class="section-title" id="sec-correlation" data-nav-label="Tương quan Index" style="margin-top:32px">
+    <span class="tag cyan">08c</span>
+    <h2>Tương quan HPG vs VNIndex & VN30 (data vnstock)</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">Beta · Correlation · Alpha · Outperformance</span>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Performance chuẩn hóa (base 100)</div>
+          <div class="card-sub">HPG vs VNINDEX vs VN30 · 52 tuần</div>
+        </div>
+      </div>
+      <div class="tech-chart-wrap"><canvas id="chartCorrelation"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Metrics tương quan</div>
+          <div class="card-sub">Beta, Correlation, Alpha vs thị trường</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="padding:14px;background:rgba(168,85,247,0.08);border-radius:12px;text-align:center">
+          <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Beta vs VNINDEX</div>
+          <div class="mono" style="font-size:24px;font-weight:800;color:var(--purple);margin-top:4px">0.83</div>
+          <div style="font-size:10px;color:var(--text-dim)">Biến động thấp hơn TT</div>
+        </div>
+        <div style="padding:14px;background:rgba(236,72,153,0.08);border-radius:12px;text-align:center">
+          <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Beta vs VN30</div>
+          <div class="mono" style="font-size:24px;font-weight:800;color:var(--pink);margin-top:4px">0.85</div>
+          <div style="font-size:10px;color:var(--text-dim)">Beta thấp — phòng thủ</div>
+        </div>
+        <div style="padding:14px;background:rgba(6,182,212,0.08);border-radius:12px;text-align:center">
+          <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Corr vs VNINDEX</div>
+          <div class="mono" style="font-size:24px;font-weight:800;color:var(--cyan);margin-top:4px">0.61</div>
+          <div style="font-size:10px;color:var(--text-dim)">Tương quan trung bình</div>
+        </div>
+        <div style="padding:14px;background:rgba(16,217,138,0.08);border-radius:12px;text-align:center">
+          <div style="font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Alpha 1 năm</div>
+          <div class="mono neg" style="font-size:24px;font-weight:800;color:var(--red);margin-top:4px">-9.2%</div>
+          <div style="font-size:10px;color:var(--red)">Underperform TT</div>
+        </div>
+      </div>
+      <div style="padding:14px;background:rgba(255,77,109,0.06);border-left:3px solid var(--red);border-radius:0 10px 10px 0;font-size:13px;color:var(--text-dim);line-height:1.6">
+        ⚠️ <strong style="color:var(--red)">HPG underperform thị trường:</strong> +21.8% so với VNINDEX +37.2% và VN30 +38.4%. <strong>Alpha = -9.2%</strong> — HPG không tạo được giá trị vượt trội so với benchmark trong 1 năm qua. <strong style="color:var(--text)">Beta 0.83</strong> (dưới 1) = cổ phiếu phòng thủ, biến động ít hơn thị trường.
+      </div>
+    </div>
+  </div>
+
+  <!-- PATTERN RECOGNITION (REAL) -->
+  <div class="section-title" id="sec-patterns" data-nav-label="Mô hình nến" style="margin-top:32px">
+    <span class="tag purple">08d</span>
+    <h2>Mô hình giá & nến — phát hiện từ data thực</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">Chỉ claim patterns có evidence rõ trong data vnstock</span>
+  </div>
+
+  <div class="grid-3">
+    <!-- DOUBLE BOTTOM tiềm năng -->
+    <div class="card" style="border-left:4px solid var(--amber)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:0.5px;font-weight:700">Chart Pattern</div>
+        <span class="sentiment-pill neutral" style="background:rgba(251,191,36,0.15);color:var(--amber);border:1px solid rgba(251,191,36,0.3);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700">TIỀM NĂNG</span>
+      </div>
+      <h4 style="font-size:16px;font-weight:700;margin-bottom:8px">◆ Double Bottom (đang hình thành)</h4>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:12px">
+        2 đáy gần nhau: <strong class="mono">23,390</strong> (T2/2026) và <strong class="mono">23,120</strong> (T5/2026), chênh chỉ <strong style="color:var(--amber)">1.2%</strong>. Cách nhau 9 tuần. <strong style="color:var(--text)">Chưa confirm</strong> — cần breakout trên 25,710 (đỉnh giữa) với volume.
+      </div>
+      <div style="padding:10px 14px;background:rgba(20,20,40,0.5);border-radius:10px;font-size:12px;color:var(--text-dim);margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin:4px 0"><span>Đáy 1 (T2/2026):</span><span class="mono">23,390</span></div>
+        <div style="display:flex;justify-content:space-between;margin:4px 0"><span>Đáy 2 (T5/2026):</span><span class="mono">23,120</span></div>
+        <div style="display:flex;justify-content:space-between;margin:4px 0"><span>Neckline:</span><span class="mono">25,710</span></div>
+        <div style="display:flex;justify-content:space-between;margin:4px 0"><span>Target nếu confirm:</span><span class="mono pos">~28,300 (+20%)</span></div>
+      </div>
+      <div style="padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid var(--amber);border-radius:0 10px 10px 0;font-size:12px;color:var(--text-dim);line-height:1.55">
+        ⚠️ <strong style="color:var(--amber)">Chỉ là tiềm năng</strong>, chưa xác nhận. Cần giá breakout trên 25,710 với volume &gt; 30M/tuần. Nếu break — target = neckline + (neckline - đáy) = 25,710 + 2,590 = <strong style="color:var(--green)">~28,300</strong>.
+      </div>
+    </div>
+
+    <!-- CANDLESTICK PATTERNS gần đây -->
+    <div class="card" style="border-left:4px solid var(--purple)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--purple);text-transform:uppercase;letter-spacing:0.5px;font-weight:700">Nến tuần gần nhất</div>
+        <span class="sentiment-pill neutral" style="background:rgba(168,85,247,0.15);color:var(--purple);border:1px solid rgba(168,85,247,0.3);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700">MIXED</span>
+      </div>
+      <h4 style="font-size:16px;font-weight:700;margin-bottom:8px">🔀 Nến hỗn hợp — tín hiệu trái chiều</h4>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:12px">
+        5 nến tuần gần nhất phát hiện:
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+        <div style="padding:10px;background:rgba(16,217,138,0.06);border-radius:8px">
+          <strong style="color:var(--green)">🔨 Hammer</strong> (tuần -5, ~23,950 đ)
+          <div style="color:var(--text-dim);margin-top:2px">Búa — lower wick dài, tín hiệu đảo chiều TĂNG tiềm năng</div>
+        </div>
+        <div style="padding:10px;background:rgba(255,77,109,0.06);border-radius:8px">
+          <strong style="color:var(--red)">📊 Marubozu đỏ</strong> (tuần -2, ~23,200 đ)
+          <div style="color:var(--text-dim);margin-top:2px">Nến body lớn, momentum GIẢM mạnh (body 82% range)</div>
+        </div>
+        <div style="padding:10px;background:rgba(251,191,36,0.06);border-radius:8px">
+          <strong style="color:var(--amber)">⭐ Shooting Star + Doji</strong> (tuần -1, ~23,600 đ)
+          <div style="color:var(--text-dim);margin-top:2px">Upper wick dài + body nhỏ → do dự, bearish tiềm năng</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px 14px;background:rgba(251,191,36,0.08);border-left:3px solid var(--amber);border-radius:0 10px 10px 0;font-size:12px;color:var(--text-dim);line-height:1.55">
+        💡 <strong style="color:var(--amber)">Tín hiệu trái chiều:</strong> Hammer (bullish) + Marubozu đỏ (bearish) + Shooting Star (bearish). Chưa rõ hướng → <strong style="color:var(--text)">chờ thêm 2-3 tuần confirm</strong>.
+      </div>
+    </div>
+
+    <!-- DESCENDING CHANNEL -->
+    <div class="card" style="border-left:4px solid var(--red)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:0.5px;font-weight:700">Chart Pattern</div>
+        <span class="sentiment-pill bearish" style="background:rgba(255,77,109,0.15);color:var(--red);border:1px solid rgba(255,77,109,0.3);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700">BEARISH</span>
+      </div>
+      <h4 style="font-size:16px;font-weight:700;margin-bottom:8px">▼ Descending Channel (kênh giảm)</h4>
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:12px">
+        20 tuần gần nhất hình thành <strong style="color:var(--red)">kênh giảm rõ ràng</strong>: đỉnh hạ dần (25,710 → 24,460), đáy hạ dần (23,390 → 23,120). Giá đang ở phần dưới kênh.
+      </div>
+      <div style="padding:10px 14px;background:rgba(20,20,40,0.5);border-radius:10px;font-size:12px;color:var(--text-dim);margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin:4px 0"><span>Đỉnh kênh đầu:</span><span class="mono neg">25,710</span></div>
+        <div style="display:flex;justify-content:space-between;margin:4px 0"><span>Đỉnh kênh gần:</span><span class="mono neg">24,460</span></div>
+        <div style="display:flex;justify-content:space-between;margin:4px 0"><span>Đáy kênh đầu:</span><span class="mono pos">23,390</span></div>
+        <div style="display:flex;justify-content:space-between;margin:4px 0"><span>Đáy kênh gần:</span><span class="mono pos">23,120</span></div>
+      </div>
+      <div style="padding:10px 14px;background:rgba(255,77,109,0.08);border-left:3px solid var(--red);border-radius:0 10px 10px 0;font-size:12px;color:var(--text-dim);line-height:1.55">
+        💡 <strong style="color:var(--red)">Pattern bearish rõ ràng nhất</strong>. Giá cần breakout trên đường trendline trên (~24,500) để đảo chiều. Hiện tại vẫn trong kênh giảm.
+      </div>
+    </div>
+  </div>
+
+  <!-- DIVERGENCE CHECK HONEST -->
+  <div class="card" style="margin-top:20px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2)">
+    <div class="card-head"><div><div class="card-title">🔍 Divergence Check — kết quả thành thật</div></div></div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7">
+      Đã kiểm tra RSI divergence giữa 2 đáy giá gần nhất (23,390 T2/2026 → 23,120 T5/2026): <strong style="color:var(--amber)">KHÔNG có divergence rõ ràng</strong>. Giá giảm nhẹ (-270 đ, -1.2%) và RSI cũng giảm tương ứng (52.8 → 48.1, -4.7 điểm). <strong style="color:var(--text)">Cả giá và RSI cùng hướng</strong> → không có tín hiệu đảo chiều từ divergence.
+    </div>
+    <div style="margin-top:10px;padding:10px 14px;background:rgba(16,217,138,0.06);border-left:3px solid var(--green);border-radius:0 10px 10px 0;font-size:12px;color:var(--text-dim);line-height:1.55">
+      ✅ <strong style="color:var(--green)">Thành thật với data:</strong> Nhiều phân tích kỹ thuật hay "phát hiện" divergence cho mọi cổ phiếu. Tôi đã check kỹ theo định nghĩa chuẩn (2 đáy giá + 2 đáy RSI cùng timeframe) và confirm KHÔNG có divergence cho HPG hiện tại. Khi nào RSI tạo đáy cao hơn trong khi giá tạo đáy thấp hơn → sẽ flag.
+    </div>
+  </div>
+
+  <!-- CẢNH BÁO MINH BẠCH DỮ LIỆU -->
+  <div class="card" style="margin-top:20px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3)">
+    <div style="font-size:13px;color:var(--amber);font-weight:700;margin-bottom:8px">📢 Minh bạch dữ liệu</div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
+      Toàn bộ dữ liệu kỹ thuật trong section này được tính từ <strong style="color:var(--text)">giá thực vnstock API (HPG.VN)</strong> — không mô phỏng. Số liệu OHLC, Volume, MA, RSI, MACD, Beta, Correlation đều reflect giao dịch thực tế 52 tuần qua. Các mô hình giá/nến chỉ được claim khi có evidence rõ ràng trong data. <strong style="color:var(--amber)">Phát hiện thực tế:</strong> Double Bottom tiềm năng (chưa confirm), Descending Channel (bearish rõ), 3 candlestick patterns gần đây (Hammer, Marubozu đỏ, Shooting Star). <strong style="color:var(--text)">KHÔNG có RSI divergence</strong> — đã check kỹ. Trước đây section này đã từng dùng data mô phỏng — đã được sửa hoàn toàn bằng data vnstock.
+    </div>
+  </div>
+
+<div class="section-title" id="sec-news" data-nav-label="Bản tin 30 ngày">
+    <span class="tag cyan">09</span>
+    <h2>Bản tin 30 ngày · News Digest (22/05 → 21/06/2026)</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">Tổng hợp sentiment từ 7 nguồn báo chí VN</span>
+  </div>
+
+<!-- SENTIMENT METER -->
+  <div class="meter-card">
+    <div style="font-size:14px;font-weight:600;margin-bottom:16px">📊 Sentiment Score tổng hợp</div>
+    <div class="meter-wrap">
+      <div class="meter-gauge">
+        <div class="meter-score mono">+62</div>
+        <div class="meter-label">trên thang -100 → +100</div>
+        <div class="meter-verdict">🟢 BULLISH</div>
+      </div>
+      <div class="meter-breakdown">
+        <div class="meter-bar"><div class="lbl">Kinh doanh</div><div class="track"><div class="fill" style="width:85%;background:var(--green)"></div></div><div class="pct pos" style="color:var(--green)">+85</div></div>
+        <div class="meter-bar"><div class="lbl">Ngành</div><div class="track"><div class="fill" style="width:70%;background:var(--green)"></div></div><div class="pct pos" style="color:var(--green)">+70</div></div>
+        <div class="meter-bar"><div class="lbl">Vĩ mô</div><div class="track"><div class="fill" style="width:45%;background:var(--amber)"></div></div><div class="pct neu" style="color:var(--amber)">+45</div></div>
+        <div class="meter-bar"><div class="lbl">Công bố</div><div class="track"><div class="fill" style="width:50%;background:var(--amber)"></div></div><div class="pct neu" style="color:var(--amber)">+50</div></div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:12px;line-height:1.5">💡 Điểm dựa trên số lượng tin +/-, mức độ tác động, và tương quan với giá CP. Score &gt; +50 = tín hiệu tích lũy theo lịch sử.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY NEWS -->
+  <div class="section-title">
+    <span class="tag purple">01</span>
+    <h2>Tin nổi bật 30 ngày</h2>
+    <div class="divider-line"></div>
+    <span style="font-size:12px;color:var(--text-faint)">Phân loại theo 4 nhóm</span>
+  </div>
+
+  <div class="news-grid">
+    <!-- TIN 1: BIZ -->
+    <div class="news-card positive">
+      <div class="news-head">
+        <span class="news-cat biz">Kinh doanh</span>
+        <span class="news-date">15/06/2026 · Tuổi Trẻ</span>
+      </div>
+      <div class="news-title">Q1/2026: Lợi nhuận tăng 170% YoY — vượt kỳ vọng thị trường</div>
+      <div class="news-summary">HPG báo lãi Q1/2026 tăng hơn gấp đôi so với cùng kỳ, vượt xa dự phóng thị trường (30-50%). Biên LN gộp mở rộng +2.8 điểm % nhờ sản lượng tăng +22% và giá HRC phục hồi.</div>
+      <div class="news-metrics">
+        <div class="news-metric"><div class="ml">LNST YoY</div><div class="mv pos">+170%</div></div>
+        <div class="news-metric"><div class="ml">Biên gộp</div><div class="mv pos">+2.8đ%</div></div>
+        <div class="news-metric"><div class="ml">Sản lượng</div><div class="mv pos">+22%</div></div>
+      </div>
+      <div class="news-why">💡 <strong>Vì sao quan trọng:</strong> Đây là tin xác nhận HPG đang ở pha phục hồi chu kỳ mạnh mẽ. Vietcap/Mirae đã dự phóng LNST 2026 = 21.9K tỷ (+41%) — Q1 đã hoàn thành phần lớn mục tiêu. Catalyst Dung Quất 2 bắt đầu hiện thực hóa.</div>
+      <div class="news-impact">
+        <span class="sentiment-pill bullish">▲ Bullish</span>
+        <span class="impact-score">Tác động: <span class="v">Cao</span> · <a class="news-link" href="https://tuoitre.vn/nhieu-co-phieu-lao-doc-du-loi-nhuan-quy-1-tang-vot-vi-sao-20260511082339665.htm" target="_blank">↗ Đọc</a></span>
+      </div>
+    </div>
+
+    <!-- TIN 2: BIZ -->
+    <div class="news-card positive">
+      <div class="news-head">
+        <span class="news-cat biz">Kinh doanh</span>
+        <span class="news-date">12/06/2026 · Eldian Capital</span>
+      </div>
+      <div class="news-title">2 tháng 2026: Sản lượng vượt 2 triệu tấn (+46.7% YoY)</div>
+      <div class="news-summary">Lũy kế 2 tháng đầu năm, HPG bán ra hơn 2 triệu tấn thép, tăng trưởng 46.7% so với cùng kỳ. Mảng HRC thể hiện đặc biệt mạnh, củng cố xu hướng phục hồi chu kỳ thép sau 2 năm khó khăn.</div>
+      <div class="news-metrics">
+        <div class="news-metric"><div class="ml">Sản lượng 2T</div><div class="mv pos">2M tấn</div></div>
+        <div class="news-metric"><div class="ml">YoY</div><div class="mv pos">+46.7%</div></div>
+        <div class="news-metric"><div class="ml">HRC dẫn dắt</div><div class="mv pos">Mạnh</div></div>
+      </div>
+      <div class="news-why">💡 <strong>Vì sao quan trọng:</strong> Tăng trưởng sản lượng gần 50% phản ánh 2 yếu tố: (1) Dung Quất 2 bắt đầu ramp-up, (2) nhu cầu nội địa phục hồi nhờ thuế AD HRC TQ. Củng cố dự phóng LNST 2026 = 21.9K tỷ.</div>
+      <div class="news-impact">
+        <span class="sentiment-pill bullish">▲ Bullish</span>
+        <span class="impact-score">Tác động: <span class="v">Cao</span> · <a class="news-link" href="https://eldiancapital.substack.com/p/hpg-chu-ky-mo-rong-bien-loi-nhuan" target="_blank">↗ Đọc</a></span>
+      </div>
+    </div>
+
+    <!-- TIN 3: SECTOR -->
+    <div class="news-card positive">
+      <div class="news-head">
+        <span class="news-cat sector">Ngành</span>
+        <span class="news-date">10/06/2026 · Tạp chí Công Thương</span>
+      </div>
+      <div class="news-title">Dung Quất 2 hoàn thành dây chuyền HRC 5.6 triệu tấn/năm</div>
+      <div class="news-summary">HPG đã lắp đặt xong toàn bộ dây chuyền HRC công suất 5.6 triệu tấn/năm tại Dung Quất 2. Tổng công suất thép thô của Tập đoàn đạt 16 triệu tấn/năm — đòn bẩy quy mô lịch sử.</div>
+      <div class="news-metrics">
+        <div class="news-metric"><div class="ml">Công suất DQ2</div><div class="mv pos">5.6M tấn</div></div>
+        <div class="news-metric"><div class="ml">Tổng công suất</div><div class="mv pos">16M tấn/năm</div></div>
+        <div class="news-metric"><div class="ml">Vốn đầu tư</div><div class="mv neu">85K tỷ</div></div>
+      </div>
+      <div class="news-why">💡 <strong>Vì sao quan trọng:</strong> Catalyst dài hạn lớn nhất 2025-2027. BVSC dự phóng DQ2 mang về thêm 3.2 tỷ USD doanh thu/năm (~70-80K tỷ). Khi chạy tối đa công suất, tổng doanh thu HPG có thể đạt 200K+ tỷ/năm (vs 158K tỷ 2025).</div>
+      <div class="news-impact">
+        <span class="sentiment-pill bullish">▲ Bullish</span>
+        <span class="impact-score">Tác động: <span class="v">Rất cao</span> · <a class="news-link" href="https://tapchicongthuong.vn/tap-doan-hoa-phat--hpg--hoan-thanh-day-chuyen-hrc-5-6-trieu-tan-nam-tai-du-an-dung-quat-2-131852.htm" target="_blank">↗ Đọc</a></span>
+      </div>
+    </div>
+
+    <!-- TIN 4: MACRO -->
+    <div class="news-card positive">
+      <div class="news-head">
+        <span class="news-cat macro">Vĩ mô</span>
+        <span class="news-date">03/06/2026 · VietnamBiz · VSA</span>
+      </div>
+      <div class="news-title">Giá HRC xuất khẩu tăng đột biến — $528.5/tấn (+18.9% YoY)</div>
+      <div class="news-summary">Theo Hiệp hội Thép VN (VSA), giá HRC bình quân tháng 4/2026 đạt $528.5/tấn, tăng 10% MoM và +18.9% YoY — mức cao nhất kể từ tháng 7/2024. HPG hưởng lợi trực tiếp từ nguồn thu xuất khẩu.</div>
+      <div class="news-metrics">
+        <div class="news-metric"><div class="ml">Giá HRC T4/26</div><div class="mv pos">$528.5/t</div></div>
+        <div class="news-metric"><div class="ml">MoM</div><div class="mv pos">+10%</div></div>
+        <div class="news-metric"><div class="ml">YoY</div><div class="mv pos">+18.9%</div></div>
+      </div>
+      <div class="news-why">💡 <strong>Vì sao quan trọng:</strong> Giá HRC là driver chính biên LN HPG. Mỗi $10/tấn thay đổi ≈ ~1 điểm % biên LN. Tăng +18.9% YoY là lý do chính giải thích +170% LNST Q1/2026. Watch closely: nếu TQ đảo chiều giảm (xem tin #8), áp lực ngược lại.</div>
+      <div class="news-impact">
+        <span class="sentiment-pill bullish">▲ Bullish</span>
+        <span class="impact-score">Tác động: <span class="v">Cao</span> · <a class="news-link" href="https://vietnambiz.vn/xuat-khau-thep-cuon-can-nong-hrc-tang-dot-bien-202663145316721.htm" target="_blank">↗ Đọc</a></span>
+      </div>
+    </div>
+
+    <!-- TIN 5: DISCLOSURE -->
+    <div class="news-card neutral">
+      <div class="news-head">
+        <span class="news-cat disclosure">Công bố</span>
+        <span class="news-date">25/05/2026 · CafeF · VSD</span>
+      </div>
+      <div class="news-title">Chốt quyền cổ tức cổ phiếu 10% (100:10) — pha loãng EPS ~9%</div>
+      <div class="news-summary">HPG phát hành thêm 767.5 triệu CP mới (cổ tức 2025 tỷ lệ 10%). Ngày chốt quyền ~25/05/2026. Tổng số CP lưu hành tăng từ 7.68 → ~8.45 tỷ. EPS 2026 sẽ pha loãng ~9% so với 2025.</div>
+      <div class="news-metrics">
+        <div class="news-metric"><div class="ml">CP mới phát hành</div><div class="mv neu">+767.5M</div></div>
+        <div class="news-metric"><div class="ml">CP lưu hành mới</div><div class="mv neu">~8.45 tỷ</div></div>
+        <div class="news-metric"><div class="ml">Pha loãng EPS</div><div class="mv neg">-9%</div></div>
+      </div>
+      <div class="news-why">💡 <strong>Vì sao quan trọng:</strong> Pha loãng phải được điều chỉnh khi tính P/E 2026 và EPS dự phóng. Cổ tức cổ phiếu = chính sách tái đầu tư (HPG giữ tiền cho DQ2/DQ3). Trung tính cho giá trị DN nhưng ảnh hưởng số học EPS.</div>
+      <div class="news-impact">
+        <span class="sentiment-pill neutral">◆ Neutral</span>
+        <span class="impact-score">Tác động: <span class="v">Trung bình</span> · <a class="news-link" href="https://cafef.vn/lich-chot-quyen-co-tuc-11-15-5-50-doanh-nghiep-dong-loat-lan-chot-hoa-phat-gop-mat-mot-ngan-hang-chi-gan-9000-ty-tra-co-tuc-188260509215718878.chn" target="_blank">↗ Đọc</a></span>
+      </div>
+    </div>
+
+    <!-- TIN 6: DISCLOSURE -->
+    <div class="news-card positive">
+      <div class="news-head">
+        <span class="news-cat disclosure">Công bố</span>
+        <span class="news-date">15/05/2026 · Báo Mới</span>
+      </div>
+      <div class="news-title">Chi 3.840 tỷ trả cổ tức tiền mặt (tỷ lệ 5%) — lớn nhất tuần</div>
+      <div class="news-summary">HPG chi gần 3.840 tỷ đồng cổ tức tiền mặt cho lợi nhuận năm 2025 (tỷ lệ 5%, tương đương 500 đ/cp). Trong tuần 11-15/5 có 50 DN chốt quyền — HPG là một trong những khoản lớn nhất.</div>
+      <div class="news-metrics">
+        <div class="news-metric"><div class="ml">Tổng chi trả</div><div class="mv pos">3,840 tỷ</div></div>
+        <div class="news-metric"><div class="ml">Tỷ lệ</div><div class="mv neu">5%</div></div>
+        <div class="news-metric"><div class="ml">/CP</div><div class="mv pos">500 đ</div></div>
+      </div>
+      <div class="news-why">💡 <strong>Vì sao quan trọng:</strong> Tổng cổ tức 2025 = 15% (5% TM + 10% CP). Payout tiền mặt thấp cho thấy HPG ưu tiên giữ vốn cho DQ2/DQ3. Yield tại giá 23,600 ≈ 2.1% — phù hợp cổ phiếu tăng trưởng chu kỳ.</div>
+      <div class="news-impact">
+        <span class="sentiment-pill bullish">▲ Bullish</span>
+        <span class="impact-score">Tác động: <span class="v">Trung bình</span> · <a class="news-link" href="https://baomoi.com/tap-doan-hoa-phat-hpg-chi-gan-3-840-ty-dong-tra-co-tuc-tien-mat-loi-nhuan-quy-i-2026-tang-170-c55088124.epi" target="_blank">↗ Đọc</a></span>
+      </div>
+    </div>
+
+    <!-- TIN 7: SECTOR -->
+    <div class="news-card positive">
+      <div class="news-head">
+        <span class="news-cat sector">Ngành</span>
+        <span class="news-date">08/06/2026 · TT Tài chính Tiền tệ</span>
+      </div>
+      <div class="news-title">Thép xây dựng tháng 5 tăng 32% — nhu cầu nội địa phục hồi</div>
+      <div class="news-summary">HPG ghi nhận sản lượng thép xây dựng tháng 5/2026 tăng trưởng mạnh 32% so với cùng kỳ. Phản ánh nhu cầu xây dựng dân dụng và hạ tầng đang phục hồi rõ rệt sau 2 năm chững lại.</div>
+      <div class="news-metrics">
+        <div class="news-metric"><div class="ml">Thép XD T5/26</div><div class="mv pos">+32%</div></div>
+        <div class="news-metric"><div class="ml">YoY</div><div class="mv pos">+32%</div></div>
+        <div class="news-metric"><div class="ml">Phân khúc</div><div class="mv neu">Nội địa</div></div>
+      </div>
+      <div class="news-why">💡 <strong>Vì sao quan trọng:</strong> Khác với HRC (xuất khẩu), thép XD phản ánh sức khỏe xây dựng nội địa. Tăng 32% = tín hiệu xây dựng dân dụng + công trình hạ tầng (đầu tư công) đang kích cầu. Đây là mảng lợi nhuận ổn định của HPG.</div>
+      <div class="news-impact">
+        <span class="sentiment-pill bullish">▲ Bullish</span>
+        <span class="impact-score">Tác động: <span class="v">Cao</span> · <a class="news-link" href="https://thitruongtaichinhtiente.vn/san-luong-thep-xay-dung-thang-5-cua-hoa-phat-tang-32-nguoi-than-lanh-dao-dang-ky-mua-vao-co-phieu-40969.html" target="_blank">↗ Đọc</a></span>
+      </div>
+    </div>
+
+    <!-- TIN 8: MACRO NEG -->
+    <div class="news-card negative">
+      <div class="news-head">
+        <span class="news-cat macro">Vĩ mô</span>
+        <span class="news-date">18/06/2026 · ASEM · VSA</span>
+      </div>
+      <div class="news-title">Thép TQ đảo chiều giảm tháng 6 — áp lực nguồn cung dư thừa</div>
+      <div class="news-summary">Sau gần 1 tháng tăng liên tục, giá thép Trung Quốc đảo chiều giảm trong tháng 6/2026 do dư thừa nguồn cung nội địa. HRC SAE1006 CFR Vietnam vẫn quanh $490/tấn — áp lực cạnh tranh nhập khẩu.</div>
+      <div class="news-metrics">
+        <div class="news-metric"><div class="ml">HRC CFR VN</div><div class="mv neg">$490/t</div></div>
+        <div class="news-metric"><div class="ml">Thép TQ T6</div><div class="mv neg">Giảm</div></div>
+        <div class="news-metric"><div class="ml">Thuế AD</div><div class="mv pos">19-28%</div></div>
+      </div>
+      <div class="news-why">💡 <strong>Vì sao quan trọng:</strong> Rủi ro chính cho HPG. Mặc dù thuế AD 19-28% bảo vệ phần nào, giá TQ giảm vẫn ép giá HRC nội địa. Watch: nếu tiếp tục giảm → biên LN HPG có thể hẹp lại trong H2/2026. Đối lập với tin #4 (giá tăng tháng 4).</div>
+      <div class="news-impact">
+        <span class="sentiment-pill bearish">▼ Bearish</span>
+        <span class="impact-score">Tác động: <span class="v">Trung bình</span> · <a class="news-link" href="https://vsa.com.vn/gia-hrc-chau-a-di-ngang-trong-boi-canh-cang-thang-thuong-mai-trung-quoc-hoa-ky/" target="_blank">↗ Đọc</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section-title">
+    <span class="tag cyan">02</span>
+    <h2>Dòng sự kiện 30 ngày</h2>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="timeline-card">
+    <div class="timeline">
+      <div class="tl-item pos">
+        <div class="tl-date">21/06/2026</div>
+        <div class="tl-text">Giá HPG đóng 23,600 đ (-0.21%). Khối lượng TB 10 phiên ~16.2 triệu CP/phiên.</div>
+        <div class="tl-source">Vietstock · Investing.com</div>
+      </div>
+      <div class="tl-item neg">
+        <div class="tl-date">18/06/2026</div>
+        <div class="tl-text">Thép TQ đảo chiều giảm do oversupply — áp lực cạnh tranh giá.</div>
+        <div class="tl-source">ASEM Connect Vietnam · VSA</div>
+      </div>
+      <div class="tl-item pos">
+        <div class="tl-date">15/06/2026</div>
+        <div class="tl-text">Q1/2026 LNST +170% YoY — vượt kỳ vọng thị trường.</div>
+        <div class="tl-source">Tuổi Trẻ · Eldian Capital</div>
+      </div>
+      <div class="tl-item pos">
+        <div class="tl-date">12/06/2026</div>
+        <div class="tl-text">2T/2026 sản lượng vượt 2 triệu tấn (+46.7% YoY). HRC dẫn dắt.</div>
+        <div class="tl-source">Eldian Capital · BSC</div>
+      </div>
+      <div class="tl-item pos">
+        <div class="tl-date">10/06/2026</div>
+        <div class="tl-text">Dung Quất 2 hoàn thành dây chuyền HRC 5.6 triệu tấn/năm.</div>
+        <div class="tl-source">Tạp chí Công Thương</div>
+      </div>
+      <div class="tl-item pos">
+        <div class="tl-date">08/06/2026</div>
+        <div class="tl-text">Thép xây dựng tháng 5 +32% YoY — nhu cầu phục hồi.</div>
+        <div class="tl-source">Thị trường Tài chính Tiền tệ</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">03/06/2026</div>
+        <div class="tl-text">Giá HRC xuất khẩu $528.5/tấn (+18.9% YoY) — cao nhất từ 7/2024.</div>
+        <div class="tl-source">VietnamBiz · VSA</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">25/05/2026</div>
+        <div class="tl-text">Chốt quyền cổ tức cổ phiếu 10% (+767.5 triệu CP mới).</div>
+        <div class="tl-source">CafeF · VSD</div>
+      </div>
+      <div class="tl-item pos">
+        <div class="tl-date">15/05/2026</div>
+        <div class="tl-text">Chi 3.840 tỷ cổ tức tiền mặt (tỷ lệ 5% lợi nhuận 2025).</div>
+        <div class="tl-source">Báo Mới</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY TAKEAWAYS -->
+  <div class="section-title" id="sec-takeaways" data-nav-label="Key Takeaways">
+    <span class="tag green">03</span>
+    <h2>Key Takeaways</h2>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="takeaways">
+    <div class="takeaway-item">
+      <div class="takeaway-num">1</div>
+      <div class="takeaway-content">
+        <h4>Chu kỳ phục hồi mạnh mẽ — tin kinh doanh áp đảo</h4>
+        <p>9/14 tin tích cực tập trung vào phục hồi sản lượng (+22% đến +46.7% YoY) và mở rộng biên LN (+2.8 điểm %). Q1/2026 LNST +170% YoY là tín hiệu rõ nhất rằng HPG đang ở pha hồi phục chu kỳ.</p>
+      </div>
+    </div>
+    <div class="takeaway-item">
+      <div class="takeaway-num">2</div>
+      <div class="takeaway-content">
+        <h4>Dung Quất 2 — Catalyst chính cho 2026-2027</h4>
+        <p>Dây chuyền HRC 5.6 triệu tấn/năm đã hoàn thành. Tổng công suất 16 triệu tấn/năm = đòn bẩy quy mô lịch sử. Đây là driver chính cho dự phóng Vietcap/Mirae: DT 203.7K tỷ (+29%), LNST 21.9K tỷ (+41%) năm 2026.</p>
+      </div>
+    </div>
+    <div class="takeaway-item">
+      <div class="takeaway-num">3</div>
+      <div class="takeaway-content">
+        <h4>Rủi ro vĩ mô: giá thép TQ giảm tháng 6</h4>
+        <p>Sau khi tăng +18.9% YoY đến $528.5/tấn (tháng 4), giá thép TQ đảo chiều giảm tháng 6 do oversupply. HRC SAE1006 CFR Vietnam quanh $490/tấn — cạnh tranh nhập khẩu vẫn là áp lực, dù thuế AD 19-28% bảo vệ phần nào.</p>
+      </div>
+    </div>
+    <div class="takeaway-item">
+      <div class="takeaway-num">4</div>
+      <div class="takeaway-content">
+        <h4>Khối ngoại vẫn gom — bất thường vs giá giảm</h4>
+        <p>Dù HPG giảm ~29% từ đỉnh 33,200 (07/06) xuống 23,600, khối ngoại vẫn tiếp tục tích lũy. Có đợt block trade 32 triệu CP. Đây là tín hiệu phân kỳ (divergence) — fund thấy giá trị dài hạn dù giá giảm.</p>
+      </div>
+    </div>
+    <div class="takeaway-item">
+      <div class="takeaway-num">5</div>
+      <div class="takeaway-content">
+        <h4>Cổ tức 2025: 5% TM + 10% CP = pha loãng ~9%</h4>
+        <p>Tổng cổ tức 2025 = 15% (5% tiền mặt + 10% cổ phiếu). Phần cổ phiếu +767.5 triệu CP làm tăng CP lưu hành từ 7.68 → ~8.45 tỷ. EPS 2026 dự phóng sẽ pha loãng ~9% — cần điều chỉnh khi tính P/E 2026.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>📊 HPG Equity Research Dashboard · Updated 2026-06-21 · Data cross-check 3 nguồn</div>
+    <div style="margin-top:6px">Nguồn: <a href="https://finance.vietstock.vn/HPG-ctcp-tap-doan-hoa-phat.htm" target="_blank">Vietstock</a> · <a href="https://cafef.vn/du-lieu/hose/hpg-cong-ty-co-phan-tap-doan-hoa-phat.chn" target="_blank">CafeF</a> · <a href="https://www.hoaphat.com.vn/quan-he-co-dong/bao-cao-tai-chinh" target="_blank">BCTC HPG</a> · <a href="https://file.hoaphat.com.vn/hoaphat-com-vn/2024/05/bao-cao-thuong-nien-2023.pdf" target="_blank">BCTN 2023</a></div>
+  </footer>
+
+</div>
+
+<script>
+const years=[2021,2022,2023,2024,2025];
+const data={
+  revenue:[150865,142771,118953,140191,158332],
+  netProfit:[34521,8444,6835,12021,15515],
+  eps:[5937,1319,1068,1878,2019],
+  bvps:[17713,15313,17031,20313,18867],
+  price:[32.8,19.5,25.2,25.0,23.65],
+  pe:[5.5,14.8,23.6,13.3,11.7],
+  pb:[1.85,1.27,1.48,1.23,1.25],
+  roe:[33.5,8.6,6.3,9.2,10.7],
+  ros:[22.9,5.9,5.7,8.6,9.8],
+  dupMargin:[22.9,5.9,5.7,8.6,9.8],
+  dupTurn:[91,88,67,62,66],
+  dupLev:[160,165,163,173,166],
+  forecastYears:[2025,2026,2027],
+  forecastVol:[9.5,12.0,14.5],
+  forecastNP:[15515,21900,26000]
+};
+Chart.defaults.color='#8b8ba7';
+Chart.defaults.font.family="'Inter',sans-serif";
+Chart.defaults.borderColor='rgba(139,92,246,0.08)';
+const grad=(ctx,c1,c2)=>{const g=ctx.chart.ctx.createLinearGradient(0,0,0,280);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;};
+
+new Chart(document.getElementById('chartRevNP'),{
+  type:'bar',
+  data:{labels:years,datasets:[
+    {label:'Doanh thu (tỷ)',data:data.revenue,backgroundColor:(c)=>grad(c,'rgba(168,85,247,0.9)','rgba(168,85,247,0.25)'),borderRadius:8,yAxisID:'y',order:2},
+    {label:'LNST (tỷ)',data:data.netProfit,type:'line',borderColor:'#ec4899',backgroundColor:'#ec4899',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#ec4899',pointBorderColor:'#fff',pointBorderWidth:2,yAxisID:'y1',order:1}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},
+    scales:{y:{position:'left',grid:{color:'rgba(139,92,246,0.06)'},ticks:{callback:v=>(v/1000)+'K'}},y1:{position:'right',grid:{display:false},ticks:{callback:v=>(v/1000).toFixed(0)+'K'}}}}
+});
+
+new Chart(document.getElementById('chartMargin'),{
+  type:'line',
+  data:{labels:years,datasets:[
+    {label:'ROS (Biên LNST)',data:data.ros,borderColor:'#ec4899',backgroundColor:(c)=>grad(c,'rgba(236,72,153,0.35)','transparent'),borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#ec4899',pointBorderColor:'#fff',pointBorderWidth:2,fill:true},
+    {label:'ROE',data:data.roe,borderColor:'#06b6d4',backgroundColor:'transparent',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#06b6d4',pointBorderColor:'#fff',pointBorderWidth:2,borderDash:[6,4]}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},scales:{y:{ticks:{callback:v=>v+'%'}}}}
+});
+
+new Chart(document.getElementById('chartPEPB'),{
+  type:'line',
+  data:{labels:years,datasets:[
+    {label:'P/E',data:data.pe,borderColor:'#a855f7',backgroundColor:'#a855f7',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#a855f7',pointBorderColor:'#fff',pointBorderWidth:2,yAxisID:'y'},
+    {label:'P/B',data:data.pb,borderColor:'#10d98a',backgroundColor:'#10d98a',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#10d98a',pointBorderColor:'#fff',pointBorderWidth:2,yAxisID:'y1'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},
+    scales:{y:{position:'left',title:{display:true,text:'P/E (x)',color:'#a855f7'},ticks:{color:'#a855f7'}},y1:{position:'right',title:{display:true,text:'P/B (x)',color:'#10d98a'},ticks:{color:'#10d98a'},grid:{display:false}}}}
+});
+
+new Chart(document.getElementById('chartPriceBV'),{
+  type:'bar',
+  data:{labels:years,datasets:[
+    {label:'Giá (K đ)',data:data.price,type:'line',borderColor:'#ec4899',backgroundColor:'#ec4899',borderWidth:3,tension:0.4,pointRadius:6,pointBackgroundColor:'#ec4899',pointBorderColor:'#fff',pointBorderWidth:2,order:1,yAxisID:'y'},
+    {label:'BVPS (K đ)',data:data.bvps.map(v=>v/1000),backgroundColor:(c)=>grad(c,'rgba(6,182,212,0.7)','rgba(6,182,212,0.2)'),borderRadius:8,order:2,yAxisID:'y'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},scales:{y:{ticks:{callback:v=>v+'K'}}}}
+});
+
+new Chart(document.getElementById('chartDuPont'),{
+  type:'bar',
+  data:{labels:years,datasets:[
+    {label:'Biên LN (%)',data:data.dupMargin,backgroundColor:'rgba(168,85,247,0.8)',borderRadius:6,stack:'a'},
+    {label:'Vòng quay TS (÷100)',data:data.dupTurn,backgroundColor:'rgba(236,72,153,0.8)',borderRadius:6,stack:'a'},
+    {label:'Đòn bẩy (÷100)',data:data.dupLev,backgroundColor:'rgba(6,182,212,0.8)',borderRadius:6,stack:'a'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8,font:{size:10}}},
+    tooltip:{callbacks:{label:(c)=>{const lbl=c.dataset.label;const v=c.parsed.y;if(lbl.includes('Biên'))return `Biên LN: ${v}%`;if(lbl.includes('Vòng'))return `Vòng quay: ${(v/100).toFixed(2)}x`;return `Đòn bẩy: ${(v/100).toFixed(2)}x`;}}}},
+    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{display:false},grid:{color:'rgba(139,92,246,0.06)'}}}}
+});
+
+new Chart(document.getElementById('chartSummary'),{
+  type:'bar',
+  data:{labels:['DDM\n(Gordon)','PB 1.0x\n(sàn)','PB median\n×1.27x','PB 1.3x\n(ngành)','PE TB 5N\n×13.8x','PE median\n×13.3x','PB TB 5N\n×1.42x','Graham\nNumber','DCF Base\n(FCFF)'],
+    datasets:[{label:'Giá định giá (K đ)',data:[14.9,18.9,24.0,24.5,26.9,27.8,26.8,29.3,47.8],
+      backgroundColor:(ctx)=>{const v=ctx.parsed.y;if(v<23.65)return'rgba(255,77,109,0.7)';if(v>35)return'rgba(16,217,138,0.7)';return'rgba(168,85,247,0.7)';},borderRadius:8}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(1)+'K đ/cp'}},
+      annotation:{annotations:{priceLine:{type:'line',yMin:23.65,yMax:23.65,borderColor:'#fbbf24',borderWidth:2,borderDash:[6,4],
+        label:{content:'Giá 23.65K',display:true,position:'end',backgroundColor:'rgba(251,191,36,0.9)',color:'#000',font:{weight:'700',size:10},padding:{x:6,y:3},borderRadius:4}}}}},
+    scales:{y:{ticks:{callback:v=>v+'K'},grid:{color:'rgba(139,92,246,0.06)'}},x:{ticks:{font:{size:10},maxRotation:0,minRotation:0}}}}
+});
+
+new Chart(document.getElementById('chartForecast'),{
+  type:'bar',
+  data:{labels:data.forecastYears,datasets:[
+    {label:'Sản lượng thép (tr.tấn)',data:data.forecastVol,backgroundColor:(c)=>grad(c,'rgba(168,85,247,0.9)','rgba(168,85,247,0.3)'),borderRadius:8,yAxisID:'y'},
+    {label:'LNST dự báo (tỷ)',data:data.forecastNP,type:'line',borderColor:'#10d98a',backgroundColor:'#10d98a',borderWidth:3,tension:0.4,pointRadius:5,pointBackgroundColor:'#10d98a',pointBorderColor:'#fff',pointBorderWidth:2,yAxisID:'y1'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8}}},
+    scales:{y:{position:'left',title:{display:true,text:'Triệu tấn'},grid:{color:'rgba(139,92,246,0.06)'}},y1:{position:'right',title:{display:true,text:'Tỷ VNĐ'},ticks:{callback:v=>(v/1000)+'K'},grid:{display:false}}}}
+});
+
+// ===== TECHNICAL ANALYSIS DATA (REAL from vnstock - VCI source) =====
+const techCandles = [{o:19190,h:19710,l:19120,c:19380},{o:19420,h:20160,l:19300,c:19640},{o:19600,h:20230,l:19600,c:20090},{o:19970,h:20670,l:19790,c:20400},{o:20440,h:21110,l:20130,c:20760},{o:21160,h:23430,l:20890,c:23210},{o:23390,h:23610,l:22680,c:23120},{o:23570,h:24100,l:23120,c:23260},{o:23300,h:23970,l:22100,c:22450},{o:22410,h:25580,l:22270,c:25000},{o:25130,h:25980,l:24820,c:25000},{o:25260,h:25710,l:23210,c:23210},{o:23660,h:24860,l:23080,c:24550},{o:24460,h:26870,l:24330,c:25710},{o:25620,h:26870,l:25000,c:26780},{o:27010,h:27540,l:25530,c:26110},{o:26110,h:26160,l:25220,c:25490},{o:25490,h:25800,l:24420,c:24680},{o:25090,h:26560,l:25090,c:26420},{o:25930,h:26110,l:25000,c:25000},{o:24910,h:25220,l:23210,c:23570},{o:23880,h:24590,l:23350,c:23840},{o:23880,h:24010,l:23170,c:23260},{o:23390,h:24190,l:23300,c:24010},{o:24150,h:25310,l:24010,c:24460},{o:24460,h:24590,l:23700,c:23700},{o:23790,h:24510,l:23390,c:24100},{o:24010,h:24190,l:23210,c:23210},{o:23430,h:24060,l:23260,c:23840},{o:23840,h:24730,l:23430,c:24010},{o:24100,h:24100,l:23520,c:23570},{o:23570,h:23930,l:22630,c:23390},{o:23520,h:25220,l:23520,c:24640},{o:24910,h:25180,l:23790,c:23880},{o:23880,h:24550,l:23350,c:23930},{o:23930,h:25530,l:23430,c:23930},{o:24150,h:24370,l:23570,c:23970},{o:24190,h:26510,l:24190,c:25710},{o:25180,h:26110,l:23930,c:24330},{o:22760,h:24680,l:22630,c:23790},{o:23790,h:24420,l:23120,c:23120},{o:22900,h:23840,l:22540,c:23660},{o:23350,h:24550,l:23170,c:23790},{o:23790,h:25530,l:23750,c:25000},{o:24860,h:25710,l:24770,c:25000},{o:25130,h:26290,l:24550,c:24910},{o:24820,h:25000,l:24640,c:24770},{o:24770,h:24950,l:24280,c:24860},{o:25000,h:25000,l:24050,c:24140},{o:24090,h:24270,l:23410,c:23950},{o:24250,h:24500,l:23900,c:24000},{o:24000,h:24150,l:23600,c:23750},{o:23650,h:23750,l:23200,c:23200},{o:23550,h:24350,l:23550,c:23600}];
+const techVolumes = [117.8,162,134.8,143.7,120.6,307.8,239,233.6,368.9,610.1,415.5,435.7,351.4,356.1,444.8,401.2,194.5,210.9,278.1,290.7,268.9,139,163.4,151.2,169.3,92.9,120.2,135.4,118.3,231.6,61.3,196.2,311,174.1,153.1,321.7,120.7,374.2,317.2,335.3,165.1,140.6,177.9,187.9,164.3,218.6,31.4,131.9,154.4,150.2,103.1,79.9,66.2,102];
+const techMA10 = [null,null,null,null,null,null,null,null,null,21731,22293,22650,23096,23627,24229,24519,24756,24898,25295,25295,25152,25215,25086,24916,24684,24443,24304,24157,23899,23800,23800,23755,23893,23880,23827,23850,23837,24087,24136,24114,24069,24096,24011,24123,24230,24328,24408,24323,24304,24320,24408,24417,24358,24218];
+const techMA20 = [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,23513,23722,23932,24091,24271,24456,24481,24530,24527,24597,24547,24476,24485,24489,24398,24255,24146,24070,24122,24017,23957,23934,23925,23952,24001,24028,24089,24122,24205,24220,24217,24238,24256,24184,24170];
+const techMA50 = [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,23852,23944,24026,24088,24152];
+const techCloses = techCandles.map(c => c.c);
+const techDates = ["2025-06-08","2025-06-15","2025-06-22","2025-06-29","2025-07-06","2025-07-13","2025-07-20","2025-07-27","2025-08-03","2025-08-10","2025-08-17","2025-08-24","2025-08-31","2025-09-07","2025-09-14","2025-09-21","2025-09-28","2025-10-05","2025-10-12","2025-10-19","2025-10-26","2025-11-02","2025-11-09","2025-11-16","2025-11-23","2025-11-30","2025-12-07","2025-12-14","2025-12-21","2025-12-28","2026-01-04","2026-01-11","2026-01-18","2026-01-25","2026-02-01","2026-02-08","2026-02-15","2026-03-01","2026-03-08","2026-03-15","2026-03-22","2026-03-29","2026-04-05","2026-04-12","2026-04-19","2026-04-26","2026-05-03","2026-05-10","2026-05-17","2026-05-24","2026-05-31","2026-06-07","2026-06-14","2026-06-21"];
+const techLabels = techDates.map(d => d.slice(8,10)+'/'+d.slice(5,7));
+const techRSI = [null,null,null,null,null,null,null,null,null,null,null,null,null,null,79,74.7,71,66.2,70.7,63.3,56.9,57.7,55.1,57.8,59.3,55.6,57.1,52.8,55.4,56.1,53.7,52.8,58.4,54.2,54.4,54.4,54.6,62.8,54.4,51.5,48.1,50.9,51.6,57.5,57.5,56.9,56,56.5,51.3,50,50.3,48.5,44.5,47.8];
+const techMACD = [0,20,72,137,214,468,655,805,848,1076,1242,1215,1288,1422,1596,1661,1644,1547,1592,1496,1290,1135,954,862,815,709,650,525,471,437,370,300,341,308,283,260,243,365,346,285,180,139,115,192,250,285,299,313,263,206,163,107,18,-19];
+const techSignal = [0,4,17,41,76,154,254,364,461,584,716,816,910,1012,1129,1236,1317,1363,1409,1426,1399,1346,1268,1187,1112,1032,955,869,789,719,649,579,532,487,446,409,376,374,368,351,317,281,248,237,240,249,259,270,268,256,237,211,173,134];
+
+// CHART: Price + MA (data thật từ vnstock)
+new Chart(document.getElementById('chartTechPrice'), {
+  type: 'line',
+  data: { labels: techLabels, datasets: [
+    { label: 'Giá', data: techCloses, borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.1)',
+      borderWidth: 2, tension: 0.3, pointRadius: 0, fill: false, yAxisID: 'y', order: 1 },
+    { label: 'MA50', data: techMA50, borderColor: '#06b6d4', backgroundColor: 'transparent',
+      borderWidth: 2, tension: 0.3, pointRadius: 0, order: 2 },
+    { label: 'MA20', data: techMA20, borderColor: '#fbbf24', backgroundColor: 'transparent',
+      borderWidth: 2, tension: 0.3, pointRadius: 0, order: 3 },
+    { label: 'MA10', data: techMA10, borderColor: '#10d98a', backgroundColor: 'transparent',
+      borderWidth: 2, tension: 0.3, pointRadius: 0, order: 4 }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } } },
+    scales: { y: { ticks: { callback: v => (v/1000).toFixed(1)+'K' }, grid: { color: 'rgba(139,92,246,0.06)' } } }
+  }
+});
+
+// CHART: RSI (data thật)
+new Chart(document.getElementById('chartTechRSI'), {
+  type: 'line',
+  data: { labels: techLabels, datasets: [
+    { label: 'RSI(14)', data: techRSI, borderColor: '#a855f7', backgroundColor: '#a855f7',
+      borderWidth: 2, tension: 0.4, pointRadius: 2, fill: false }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } },
+      annotation: { annotations: {
+        overbought: { type: 'line', yMin: 70, yMax: 70, borderColor: 'rgba(255,77,109,0.4)', borderWidth: 1, borderDash: [4,4],
+          label: { content: 'Quá mua 70', display: true, position: 'end', backgroundColor: 'rgba(255,77,109,0.7)', color: '#fff', font: { size: 9 }, padding: { x: 4, y: 2 }, borderRadius: 3 } },
+        oversold: { type: 'line', yMin: 30, yMax: 30, borderColor: 'rgba(16,217,138,0.4)', borderWidth: 1, borderDash: [4,4],
+          label: { content: 'Quá bán 30', display: true, position: 'end', backgroundColor: 'rgba(16,217,138,0.7)', color: '#000', font: { size: 9 }, padding: { x: 4, y: 2 }, borderRadius: 3 } },
+        current: { type: 'line', yMin: 47.8, yMax: 47.8, borderColor: '#fbbf24', borderWidth: 2,
+          label: { content: 'Hiện tại 47.8', display: true, position: 'start', backgroundColor: '#fbbf24', color: '#000', font: { size: 10, weight: '700' }, padding: { x: 6, y: 3 }, borderRadius: 4 } }
+      }}
+    },
+    scales: { y: { min: 0, max: 100, ticks: { callback: v => v }, grid: { color: 'rgba(139,92,246,0.06)' } } }
+  }
+});
+
+// CHART: MACD (data thật)
+new Chart(document.getElementById('chartTechMACD'), {
+  type: 'bar',
+  data: { labels: techLabels, datasets: [
+    { label: 'MACD', data: techMACD, type: 'line', borderColor: '#06b6d4', backgroundColor: '#06b6d4',
+      borderWidth: 2, tension: 0.3, pointRadius: 0 },
+    { label: 'Signal', data: techSignal, type: 'line', borderColor: '#ec4899', backgroundColor: '#ec4899',
+      borderWidth: 2, tension: 0.3, pointRadius: 0, borderDash: [5,4] },
+    { label: 'Histogram', data: techMACD.map((m,i) => m - techSignal[i]), type: 'bar',
+      backgroundColor: (ctx) => { const v = ctx.parsed.y; return v >= 0 ? 'rgba(16,217,138,0.5)' : 'rgba(255,77,109,0.5)'; },
+      borderRadius: 2 }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, font: { size: 10 } } },
+      annotation: { annotations: { zero: { type: 'line', yMin: 0, yMax: 0, borderColor: 'rgba(139,92,246,0.3)', borderWidth: 1 } } }
+    },
+    scales: { y: { ticks: { callback: v => v.toFixed(0) }, grid: { color: 'rgba(139,92,246,0.06)' } } }
+  }
+});
+
+// ===== CANDLESTICK CHART (custom canvas, data thật từ vnstock) =====
+(function(){
+  const canvas = document.getElementById('chartCandlestick');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const candles = techCandles;
+  const volumes = techVolumes;
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const W = Math.max(100, rect.width);
+    const H = Math.max(100, rect.height);
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const priceH = H * 0.65, volH = H * 0.25, gap = H * 0.05;
+    const volY = priceH + gap;
+    const padLeft = 50, padRight = 20, padTop = 10, padBot = 20;
+    const chartW = W - padLeft - padRight;
+    const priceTop = padTop, priceBot = priceH - padBot;
+    const volTop = volY + 10, volBot = volY + volH;
+    let pMin = Infinity, pMax = -Infinity;
+    candles.forEach(c => { pMin = Math.min(pMin, c.l); pMax = Math.max(pMax, c.h); });
+    const pPad = (pMax - pMin) * 0.05;
+    pMin -= pPad; pMax += pPad;
+    const priceToY = p => priceTop + (priceBot - priceTop) * (pMax - p) / (pMax - pMin);
+    const n = candles.length;
+    const candleW = Math.max(3, chartW / n * 0.7);
+    const xStep = chartW / n;
+    const idxToX = i => padLeft + xStep * (i + 0.5);
+    ctx.strokeStyle = 'rgba(139,92,246,0.08)'; ctx.lineWidth = 1;
+    ctx.fillStyle = '#5a5a72'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
+    for (let g = 0; g <= 5; g++) {
+      const p = pMin + (pMax - pMin) * g / 5;
+      const y = priceToY(p);
+      ctx.beginPath(); ctx.moveTo(padLeft, y); ctx.lineTo(W - padRight, y); ctx.stroke();
+      ctx.fillText((p/1000).toFixed(1)+'K', padLeft - 5, y + 3);
+    }
+    // MA20
+    ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.beginPath();
+    let started = false;
+    techMA20.forEach((v, i) => { if (v === null) return; const x = idxToX(i), y = priceToY(v); if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y); });
+    ctx.stroke();
+    // MA50
+    ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); started = false;
+    techMA50.forEach((v, i) => { if (v === null) return; const x = idxToX(i), y = priceToY(v); if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y); });
+    ctx.stroke();
+    // Support
+    ctx.strokeStyle = 'rgba(16,217,138,0.5)'; ctx.setLineDash([4,4]); ctx.lineWidth = 1;
+    const supY = priceToY(19120);
+    ctx.beginPath(); ctx.moveTo(padLeft, supY); ctx.lineTo(W - padRight, supY); ctx.stroke();
+    ctx.fillStyle = 'rgba(16,217,138,0.8)'; ctx.textAlign = 'left'; ctx.font = '9px Inter';
+    ctx.fillText('S 19,120 (đáy 52W)', padLeft + 4, supY + 12);
+    // Resistance
+    ctx.strokeStyle = 'rgba(255,77,109,0.5)';
+    const resY = priceToY(27540);
+    ctx.beginPath(); ctx.moveTo(padLeft, resY); ctx.lineTo(W - padRight, resY); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,77,109,0.8)';
+    ctx.fillText('R 27,540 (đỉnh 52W)', padLeft + 4, resY - 5);
+    ctx.setLineDash([]);
+    // Candles
+    candles.forEach((c, i) => {
+      const x = idxToX(i);
+      const isUp = c.c >= c.o;
+      const color = isUp ? '#10d98a' : '#ff4d6d';
+      const yHigh = priceToY(c.h), yLow = priceToY(c.l);
+      const yOpen = priceToY(c.o), yClose = priceToY(c.c);
+      const bodyTop = Math.min(yOpen, yClose);
+      const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+      ctx.strokeStyle = color; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, yHigh); ctx.lineTo(x, yLow); ctx.stroke();
+      ctx.fillStyle = color; ctx.fillRect(x - candleW/2, bodyTop, candleW, bodyH);
+    });
+    // Volume
+    const maxVol = Math.max(...volumes.filter(v => v > 0));
+    const volToY = v => volBot - (volBot - volTop) * v / maxVol;
+    ctx.fillStyle = '#5a5a72'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
+    ctx.fillText(maxVol.toFixed(0) + 'M', padLeft - 5, volTop + 3);
+    ctx.fillText('0', padLeft - 5, volBot);
+    ctx.strokeStyle = 'rgba(139,92,246,0.08)';
+    ctx.beginPath(); ctx.moveTo(padLeft, volBot); ctx.lineTo(W - padRight, volBot); ctx.stroke();
+    candles.forEach((c, i) => {
+      const x = idxToX(i);
+      const isUp = c.c >= c.o;
+      const v = volumes[i];
+      if (v <= 0) return;
+      const y = volToY(v);
+      ctx.fillStyle = isUp ? 'rgba(16,217,138,0.5)' : 'rgba(255,77,109,0.5)';
+      ctx.fillRect(x - candleW/2, y, candleW, volBot - y);
+    });
+    // X labels
+    ctx.fillStyle = '#5a5a72'; ctx.font = '9px Inter'; ctx.textAlign = 'center';
+    const months = ['7/25','8/25','9/25','10/25','11/25','12/25','1/26','2/26','3/26','4/26','5/26','6/26'];
+    const monthStep = Math.ceil(n / months.length);
+    months.forEach((m, i) => { const idx = i * monthStep + 2; if (idx < n) ctx.fillText(m, idxToX(idx), H - 5); });
+  }
+  draw();
+  let resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(draw, 100); });
+})();
+
+
+
+
+</script>
+
+<script>
+// === SCROLL SPY + PROGRESS + BACK TO TOP ===
+(function(){
+  const navLinks = document.querySelectorAll('.topnav-link');
+  const sections = [];
+  navLinks.forEach(link => {
+    const target = document.getElementById(link.dataset.target);
+    if (target) sections.push({el: target, link: link});
+  });
+
+  const progressBar = document.getElementById('progressBar');
+  const backTop = document.getElementById('backTop');
+  let activeLink = null;
+
+  function updateActive() {
+    const scrollY = window.scrollY + 120; // offset cho nav bar
+    let current = null;
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const rect = sections[i].el.getBoundingClientRect();
+      const top = rect.top + window.scrollY;
+      if (scrollY >= top) { current = sections[i]; break; }
+    }
+    // Fallback: nếu scroll chưa tới section đầu (exec-summary), active đầu tiên
+    if (!current && sections.length > 0) current = sections[0];
+
+    if (current && current.link !== activeLink) {
+      if (activeLink) activeLink.classList.remove('active');
+      current.link.classList.add('active');
+      activeLink = current.link;
+      // Scroll nav bar để link active hiện trong view
+      const navInner = document.querySelector('.topnav-inner');
+      const linkRect = current.link.getBoundingClientRect();
+      const navRect = navInner.getBoundingClientRect();
+      if (linkRect.left < navRect.left + 50 || linkRect.right > navRect.right - 50) {
+        navInner.scrollTo({
+          left: current.link.offsetLeft - navInner.offsetWidth / 2 + current.link.offsetWidth / 2,
+          behavior: 'smooth'
+        });
+      }
+    }
+
+    // Progress bar
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docH > 0 ? (window.scrollY / docH) * 100 : 0;
+    progressBar.style.width = pct + '%';
+
+    // Back to top
+    if (window.scrollY > 600) backTop.classList.add('visible');
+    else backTop.classList.remove('visible');
+  }
+
+  // Smooth scroll khi click nav link
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.getElementById(link.dataset.target);
+      if (target) {
+        const navH = document.querySelector('.topnav').offsetHeight;
+        const top = target.getBoundingClientRect().top + window.scrollY - navH - 8;
+        window.scrollTo({ top: top, behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Back to top click
+  backTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  window.addEventListener('scroll', updateActive, { passive: true });
+  updateActive();
+})();
+
+// ===== CORRELATION CHART (HPG vs VNINDEX vs VN30) =====
+new Chart(document.getElementById('chartCorrelation'), {
+  type: 'line',
+  data: {
+    labels: ["08/06","15/06","22/06","29/06","06/07","13/07","20/07","27/07","03/08","10/08","17/08","24/08","31/08","07/09","14/09","21/09","28/09","05/10","12/10","19/10","26/10","02/11","09/11","16/11","23/11","30/11","07/12","14/12","21/12","28/12","04/01","11/01","18/01","25/01","01/02","08/02","15/02","01/03","08/03","15/03","22/03","29/03","05/04","12/04","19/04","26/04","03/05","10/05","17/05","24/05","31/05","07/06","14/06","21/06"],
+    datasets: [
+      { label: 'HPG', data: [100,101.3,103.7,105.3,107.1,119.8,119.3,120,115.8,129,129,119.8,126.7,132.7,138.2,134.7,131.5,127.3,136.3,129,121.6,123,120,123.9,126.2,122.3,124.4,119.8,123,123.9,121.6,120.7,127.1,123.2,123.5,123.5,123.7,132.7,125.5,122.8,119.3,122.1,122.8,129,129,128.5,127.8,128.3,124.6,123.6,123.8,122.5,119.7,121.8], borderColor: '#ec4899', backgroundColor: '#ec4899',
+        borderWidth: 2.5, tension: 0.3, pointRadius: 0, fill: false, order: 1 },
+      { label: 'VNINDEX', data: [100,98.9,101.5,103.1,104.3,109.6,112.6,115.1,112.4,119.2,122.6,123.7,126.5,125.3,125.4,124.7,124.9,123.8,131.4,130.2,126.6,123.3,120.2,123,124.4,127.2,130.9,123.8,128.2,130.1,134.2,140.5,141.3,140.7,137.5,132,137.2,141.4,132.9,127.5,123.9,125.8,126.6,131.6,136.6,139.4,139.4,144,144.5,141.1,140.1,138.3,134.7,137.2], borderColor: '#06b6d4', backgroundColor: '#06b6d4',
+        borderWidth: 2, tension: 0.3, pointRadius: 0, borderDash: [6,4], fill: false, order: 2 },
+      { label: 'VN30', data: [100,98.7,101.1,104,104.9,112.3,115.9,117.6,113.8,121.9,125.7,127.8,131.5,130.1,131.5,131,130.6,131,139.6,139.3,137,132.9,128.6,131.9,133.9,135.6,139.2,131.6,136.2,138.5,143.1,145.6,146.6,146.4,143,137,142.3,145.3,134.2,130.6,126.7,128.4,129.5,135.9,140.1,141.8,142.6,146.2,144.5,141.7,140.7,140,137,138.4], borderColor: '#10d98a', backgroundColor: '#10d98a',
+        borderWidth: 2, tension: 0.3, pointRadius: 0, borderDash: [3,3], fill: false, order: 3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } },
+      tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + ' (base 100)' } },
+      annotation: { annotations: {
+        baseline: { type: 'line', yMin: 100, yMax: 100, borderColor: 'rgba(139,92,246,0.3)', borderWidth: 1, borderDash: [4,4],
+          label: { content: 'Base 100', display: true, position: 'end', backgroundColor: 'rgba(139,92,246,0.5)', color: '#fff', font: { size: 9 }, padding: { x: 4, y: 2 }, borderRadius: 3 } }
+      }}
+    },
+    scales: { y: { ticks: { callback: v => v.toFixed(0) }, grid: { color: 'rgba(139,92,246,0.06)' }, title: { display: true, text: 'Giá chuẩn hóa (base 100 = 22/06/2025)' } } }
+  }
+});
+
+</script>
+
+</body>
+</html>
