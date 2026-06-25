@@ -4,7 +4,7 @@
 >
 > File này chứa phần pattern scoring không cần dependency ngoài. Chỉ cần daily OHLCV từ vnstock là tính được toàn bộ.
 >
-> Port công thức từ `scripts/build_current_pattern_setups.py` (8 setup heuristic).
+> Methodology 8 setup heuristic (đã port sang Python, self-contained).
 > Triết lý: **"Cấu trúc đang hình thành chỉ là cấu trúc cần quan sát, không phải tín hiệu mua bán."** (non_advice_boundary)
 
 ## Mục lục
@@ -18,7 +18,7 @@
 
 ## Helpers chung <a name="helpers"></a>
 
-Port từ `build_current_pattern_setups.py:34-58`.
+Helpers chuẩn (xử lý số + slope tuyến tính) dùng cho cả setups và pattern scoring.
 
 ```python
 import math
@@ -52,7 +52,7 @@ def slope(values):
 
 ## 8 Setup detection heuristic <a name="setups"></a>
 
-Source: `build_current_pattern_setups.py:142-274`. **Chỉ phát hiện mẫu CHIỀU TĂNG**. Mỗi hàm trả dict qua `setup()` (xem [Status](#status)).
+**Chỉ phát hiện mẫu CHIỀU TĂNG**. Mỗi hàm trả dict qua `setup()` (xem [Status](#status)).
 
 Yêu cầu input: `rows` = daily OHLCV, cần ≥75 phiên cho cup_with_handle, ≥65 cho các mẫu khác.
 
@@ -219,7 +219,7 @@ def scan_setups(rows):
 
 ## Setup status + reader_note <a name="status"></a>
 
-Source: `build_current_pattern_setups.py:88-139`.
+
 
 ```python
 def status_from_score(score, distance_pct, noisy=False):
@@ -279,7 +279,7 @@ def reader_note(pattern_name, status, distance):
 
 ## 5 Pattern family classification <a name="family"></a>
 
-Source: `build_stock_pattern_personality_profiles.py:38-75, 109-120`. Map pattern_id → family. **Portable** (chỉ dict lookup).
+Map pattern_id → family. **Portable** (chỉ dict lookup).
 
 ```python
 CONTINUATION_PATTERNS = {

@@ -371,7 +371,7 @@ grep -iE "bullish|bearish|tín hiệu|khuyến nghị|nên mua|nên bán" {outpu
 - `assets/technical_template.html` — Template HTML (candlestick canvas + Chart.js + correlation)
 
 **Mode PROFILE (mới):**
-- `references/stock_profile_blocks.md` — 17 block profile cốt lõi (price_behavior, volatility, drawdown, VPCI/OBV/CMF, effort-result, VAP, VaR/ES, PVI/NVI, regime) + code Python port từ `build_stock_profile_foundation.mjs`. **100% portable với vnstock.**
+- `references/stock_profile_blocks.md` — 17 block profile cốt lõi (price_behavior, volatility, drawdown, VPCI/OBV/CMF, effort-result, VAP, VaR/ES, PVI/NVI, regime) + code Python (methodology từ dashboard phân tích nội bộ, đã port). **100% portable với vnstock.**
 - `references/pattern_scoring.md` — 8 setup detection heuristic (chiều tăng) + 5 pattern family + 4 stock archetype. **100% portable với vnstock.**
 - `references/metric_guardrails.md` — 13 metric dictionary (label_vi + guardrail) + CONSUMER_LABELS + scrubCopy rules + 4 điểm non-conclusion + bảng dịch thuật ép buộc + cấm list + glossary 30 term. **100% portable.**
 - `assets/profile_template.html` — **Template dashboard HTML single-page** (mode PROFILE). Dark theme + Chart.js (4 chart: rolling/dist/VAP/benchmark). Dùng `{{TOKEN}}` placeholder. Đồng nhất visual với `technical_template.html`. Pattern hấp thụ từ skill `longform`.

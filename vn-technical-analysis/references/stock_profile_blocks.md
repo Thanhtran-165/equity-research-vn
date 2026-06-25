@@ -1,6 +1,6 @@
 # Stock Profile Blocks — Methodology 15 block cốt lõi
 
-> Reference cho **mode PROFILE**. Port công thức chính xác từ `market_stats/build_stock_profile_foundation.mjs`.
+> Reference cho **mode PROFILE**. Methodology từ dashboard phân tích thị trường nội bộ (đã port sang Python).
 >
 > Triết lý: **"What I See"** — mô tả lịch sử giá-khối lượng. MỌI block kèm `interpretation_guardrail` cảnh báo đây là quan sát quá khứ, KHÔNG phải tín hiệu/dự báo/khuyến nghị.
 >
@@ -30,7 +30,7 @@
 
 ## Helpers dùng chung <a name="helpers"></a>
 
-Port trực tiếp từ `build_stock_profile_foundation.mjs:36-189`. Đây là nền cho mọi block.
+Methodology nền cho mọi block (helpers chuẩn hóa OHLCV + thống kê).
 
 ```python
 import math
@@ -246,7 +246,7 @@ def drawdown_episodes(rows):
 
 ## B1. price_behavior_profile <a name="b1"></a>
 
-Source: `build_stock_profile_foundation.mjs:1566-1585`.
+
 
 ```python
 def price_behavior_profile(rows):
@@ -320,7 +320,7 @@ def threshold_counts(values):
 
 ## B2. volatility_profile <a name="b2"></a>
 
-Source: `build_stock_profile_foundation.mjs:1586-1595`.
+
 
 ```python
 def volatility_profile(rows):
@@ -347,7 +347,7 @@ def volatility_profile(rows):
 
 ## B3. drawdown_profile <a name="b3"></a>
 
-Source: `build_stock_profile_foundation.mjs:1596-1607` + `drawdownEpisodeProfile`.
++ `drawdownEpisodeProfile`.
 
 ```python
 def drawdown_profile(rows):
@@ -398,7 +398,7 @@ def max_runup_profile(rows):
 
 ## B4. liquidity_profile <a name="b4"></a>
 
-Source: `build_stock_profile_foundation.mjs:1608-1618`.
+
 
 ```python
 def liquidity_profile(rows):
@@ -432,7 +432,7 @@ def liquidity_profile(rows):
 
 ## B5. return_distribution_profile <a name="b5"></a>
 
-Source: `build_stock_profile_foundation.mjs:981-1021`.
+
 
 ```python
 def return_distribution_profile(rows):
@@ -476,7 +476,7 @@ def return_distribution_profile(rows):
 
 ## B6. tail_risk_profile <a name="b6"></a>
 
-Source: `build_stock_profile_foundation.mjs:1023-1046`. Historical VaR/ES (không phải mô hình).
+Historical VaR/ES (không phải mô hình).
 
 ```python
 def tail_risk_profile(rows):
@@ -506,7 +506,7 @@ def tail_risk_profile(rows):
 
 ## B7. liquidity_risk_profile <a name="b7"></a>
 
-Source: `build_stock_profile_foundation.mjs:1062-1099`. Stress test theo value lịch sử.
+Stress test theo value lịch sử.
 
 ```python
 def liquidity_risk_profile(rows):
@@ -555,7 +555,7 @@ def liquidity_risk_profile(rows):
 
 ## B8. relative_strength + dynamic_beta + correlation <a name="b8"></a>
 
-Source: `build_stock_profile_foundation.mjs:1350-1375, 1452-1501`. Cần benchmark (VNINDEX) series.
+Cần benchmark (VNINDEX) series.
 
 ```python
 def paired_rows(stock_rows, bench_rows):
@@ -673,7 +673,7 @@ def relative_strength_profile(stock_rows, bench_rows, benchmarks=("VNINDEX", "VN
 
 ## B9. regime_profile <a name="b9"></a>
 
-Source: `build_stock_profile_foundation.mjs:1377-1450, 1494-1500`. Phân loại trạng thái thị trường theo VNINDEX.
+Phân loại trạng thái thị trường theo VNINDEX.
 
 ```python
 def classify_regime(r60, r120, drawdown, vol_rank):
@@ -751,7 +751,7 @@ def regime_profile(stock_rows, vnindex_rows):
 
 ## B10. volume_price_profile <a name="b10"></a>
 
-Source: `build_stock_profile_foundation.mjs:298-324` (compact). Đo up/down value & correlation.
+(compact). Đo up/down value & correlation.
 
 ```python
 def volume_price_profile(rows):
@@ -791,7 +791,7 @@ def volume_price_profile(rows):
 
 ## B11. volume_price_confirmation_profile (VPCI) <a name="b11"></a>
 
-Source: `build_stock_profile_foundation.mjs:464-550`. VPCI = VPC × VPR × VM.
+VPCI = VPC × VPR × VM.
 
 ```python
 def vpci_profile(rows, short_window=20, long_window=100):
@@ -853,7 +853,7 @@ def confirmation_label(vpci_latest, vpci_change_20d, price_vs_sma_long, volume_r
 
 ## B12. money_flow_pressure_profile (OBV/VPT/CMF) <a name="b12"></a>
 
-Source: `build_stock_profile_foundation.mjs:552-642`.
+
 
 ```python
 def money_flow_profile(rows):
@@ -932,7 +932,7 @@ def money_flow_label(cmf20, cmf60, vpt_chg, obv_chg):
 
 ## B13. effort_result_profile (Wyckoff) <a name="b13"></a>
 
-Source: `build_stock_profile_foundation.mjs:644-731`.
+
 - **Effort** = mean(normalized_volume_20d, normalized_value_20d) — mức nỗ lực giao dịch so trung bình.
 - **Result** = max(|return|, intraday range) — kết quả giá.
 
@@ -1000,7 +1000,7 @@ def effort_result_label(low_cnt, high_cnt, he_cnt, latest_effort, latest_rpe, me
 
 ## B14. high_volume_behavior_profile <a name="b14"></a>
 
-Source: `build_stock_profile_foundation.mjs:733-825`. Event study: forward returns sau volume ≥ 2x avg20.
+Event study: forward returns sau volume ≥ 2x avg20.
 
 ```python
 def high_volume_behavior_profile(rows, threshold=2):
@@ -1073,7 +1073,7 @@ def high_volume_behavior_label(stats20, event_count):
 
 ## B15. pvi_nvi_participation_profile <a name="b15"></a>
 
-Source: `build_stock_profile_foundation.mjs:827-894`. PVI cập nhật phiên volume tăng; NVI phiên volume giảm; base=1000.
+PVI cập nhật phiên volume tăng; NVI phiên volume giảm; base=1000.
 
 ```python
 def pvi_nvi_profile(rows):
@@ -1133,7 +1133,7 @@ def pvi_nvi_label(pvi_chg20, nvi_chg20, pvi_nvi_ratio):
 
 ## B16. volume_at_price_profile <a name="b16"></a>
 
-Source: `build_stock_profile_foundation.mjs:906-979`. Xấp xỉ VAP: gán volume/value vào bin theo typical-price, 12 bins trên 252 phiên.
+Xấp xỉ VAP: gán volume/value vào bin theo typical-price, 12 bins trên 252 phiên.
 
 ```python
 def volume_at_price_profile(rows, window=252, bin_count=12):
@@ -1201,7 +1201,7 @@ def typical_price(row):
 
 ## B17. industry_peer_profile <a name="b17"></a>
 
-Source: `build_stock_profile_foundation.mjs:1252-1281`. Cần data ngành. **Guardrail**: peer theo phân loại hiện tại, KHÔNG point-in-time.
+Cần data ngành. **Guardrail**: peer theo phân loại hiện tại, KHÔNG point-in-time.
 
 ```python
 def industry_peer_profile(symbol, symbol_metrics, peer_metrics_list):

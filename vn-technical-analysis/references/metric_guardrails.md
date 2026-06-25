@@ -1,10 +1,6 @@
 # Metric Dictionary & Non-Advice Guardrails
 
-> Reference cho **mode PROFILE** — ngôn ngữ `neutral_descriptive_non_advice`. Port từ:
-> - `market_stats/generate_simple_stats.py:2238` (`metric_dictionary()`)
-> - `market_stats/FRONTEND_V2_STYLE_GUIDE.md`
-> - `market_stats/web/help_module.js`
-> - `market_stats/web/stock_history_academic_module.js` (`nonConclusionPanel`)
+> Reference cho **mode PROFILE** — ngôn ngữ `neutral_descriptive_non_advice`. Methodology từ dashboard phân tích thị trường nội bộ (đã port sang Python, self-contained).
 >
 > **Quy tắc tối thượng:** Mọi output mode profile là MÔ TẢ quá khứ, không phải tín hiệu/dự báo/khuyến nghị.
 
@@ -22,7 +18,7 @@
 
 ## 15 Metric dictionary <a name="dict"></a>
 
-Port nguyên văn từ `generate_simple_stats.py:2238-2325`. Mỗi metric có 4 trường. **Bắt buộc** đọc cùng guardrail khi trình bày.
+Methodology: 13 metric với 4 trường mỗi metric (label_vi + formula + meaning + guardrail). **Bắt buộc** đọc cùng guardrail khi trình bày.
 
 ```python
 def metric_dictionary():

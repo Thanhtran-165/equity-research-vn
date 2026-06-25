@@ -12,8 +12,8 @@ Nâng cấp `vn-technical-analysis` thêm lớp phân tích thứ 2 — **mode P
 
 ### ✨ Added — mode PROFILE
 
-- **17 block profile định lượng** (port từ `build_stock_profile_foundation.mjs`): price_behavior, volatility, drawdown, liquidity, return_distribution, tail_risk, liquidity_risk, VPCI, money_flow (OBV/VPT/CMF), effort-result (Wyckoff), high_volume_behavior, PVI/NVI, volume-at-price, relative_strength, dynamic_beta, correlation, regime
-- **8 setup detection heuristic** chiều tăng (port từ `build_current_pattern_setups.py`): bull_flag, bull_pennant, ascending_triangle, falling_wedge, cup_with_handle, rectangle_bottom, double_bottom, measured_move_up — mỗi mẫu có score 0-100, status, watch_zone, reader_note
+- **17 block profile định lượng** (methodology từ dashboard phân tích thị trường nội bộ): price_behavior, volatility, drawdown, liquidity, return_distribution, tail_risk, liquidity_risk, VPCI, money_flow (OBV/VPT/CMF), effort-result (Wyckoff), high_volume_behavior, PVI/NVI, volume-at-price, relative_strength, dynamic_beta, correlation, regime
+- **8 setup detection heuristic** chiều tăng: bull_flag, bull_pennant, ascending_triangle, falling_wedge, cup_with_handle, rectangle_bottom, double_bottom, measured_move_up — mỗi mẫu có score 0-100, status, watch_zone, reader_note
 - **5 pattern family** classification + **4 stock archetype** (trend_following / accumulation_breakout / trap_prone / mixed)
 - **13 metric dictionary** với guardrail Việt + CONSUMER_LABELS + scrubCopy rules + 4 điểm non-conclusion bắt buộc
 - **Dashboard HTML single-page** (`profile_template.html`): dark theme + Chart.js + custom candlestick canvas + scrollspy. Pattern hấp thụ từ skill `longform` (component + chart recipe). Đồng nhất visual với `technical_template.html` (mode ACTIVE)
@@ -53,16 +53,6 @@ Nâng cấp `vn-technical-analysis` thêm lớp phân tích thứ 2 — **mode P
 - `vn-technical-analysis/agents/openai.yaml` — description 2-mode
 
 **Giữ nguyên (4):** indicators.md, pattern_detection.md, vnstock_usage.md, technical_template.html (mode ACTIVE)
-
-### 📁 research/ — Nguồn gốc methodology (reproducibility)
-
-- **5 file source gốc** port vào skill (KHÔNG cần để chạy, chỉ để kiểm chứng độc lập):
-  - `build_stock_profile_foundation.mjs` — 17 block profile
-  - `build_current_pattern_setups.py` — 8 setup heuristic
-  - `build_stock_pattern_profiles.py` — 4 sub-score (đã loại khỏi skill, cần scanner)
-  - `build_stock_pattern_personality_profiles.py` — family + archetype
-  - `generate_simple_stats_metric_dictionary.py` (excerpt) — 13 metric dictionary
-- `research/README.md` — map research ↔ skill (file nào port từ đâu, dòng nào)
 
 ### 🗺️ Roadmap cập nhật
 
