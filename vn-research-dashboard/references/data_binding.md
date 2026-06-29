@@ -2,6 +2,35 @@
 
 Danh sách toàn bộ điểm cần fill trong template. Theo thứ tự xuất hiện trong HTML.
 
+## ⚠️ Template đã được tokenize (refactor 2026-06)
+
+Template `dashboard_template.html` giờ dùng **placeholder `{{UPPER_TOKEN}}`** (trước đây hard-code HPG → phải edit tay mỗi lần chạy → nguồn gốc của các bug "placeholder không replace"). Pattern fill = `str.replace` thuần (KHÔNG f-string/.format — xung đột brace với JS).
+
+**Composite blocks** (KPI strip, fin table, val cards, insights, DCF/Graham, disclaimer, footer) = 1 token chứa nguyên khối HTML (`{{KPI_STRIP}}`, `{{FIN_TABLE_HTML}}`, `{{VAL_CARDS_HTML}}`, ...). Cách fill: build HTML string trong Python rồi inject.
+
+**Token danh sách đầy đủ** (xem `references/data_binding_tokens.md` cho bảng map đầy đủ):
+- Identity: `{{TICKER}}`, `{{COMPANY_NAME}}`, `{{TICKER_BADGE}}`, `{{COMPANY_SUB}}`, `{{PRICE_DISPLAY}}`, `{{PRICE_META}}`, `{{YEAR_RANGE}}`, `{{LATEST_YEAR}}`
+- Composite HTML: `{{KPI_STRIP}}`, `{{FIN_TABLE_HTML}}`, `{{FIN_TABLE_FOOTNOTE}}`, `{{VAL_CARDS_HTML}}`, `{{MULTIPLES_GRID_HTML}}`, `{{DCF_GRAHAM_HTML}}`, `{{DUPONT_INTERPRETATION_HTML}}`, `{{SUMMARY_STATS_HTML}}`, `{{INSIGHTS_GRID_HTML}}`, `{{RATING_HTML}}`, `{{DISCLAIMER_HTML}}`, `{{FOOTER_HTML}}`
+- Chart subs (text): `{{CHART_REVNP_SUB}}`, `{{CHART_MARGIN_SUB}}`, `{{CHART_PEPB_SUB}}`, `{{CHART_PRICEBV_SUB}}`, `{{TABLE5Y_SUB}}`, `{{SECTION01_NOTE}}`, `{{SUMMARY_CHART_SUB}}`, `{{INSIGHTS_TITLE}}`, `{{FORECAST_YEARS}}`, `{{FORECAST_SUB}}`
+- Gauge: `{{FAIR_VALUE}}`, `{{GAUGE_VERDICT}}`, `{{GAUGE_DIFF_NOTE}}`
+- Chart data (JSON/raw JS): `{{YEARS}}`, `{{CHART_DATA}}`, `{{SUMMARY_CHART_DATA}}`, `{{SUMMARY_ANNOTATION}}`
+
+⚠️ **Token mà chứa JS function** (vd `backgroundColor:(ctx)=>{...}` trong `{{SUMMARY_CHART_DATA}}`) — KHÔNG JSON-stringify được. Phải emit raw JS object literal (xem `render_hpg_sample.py` trong project mẫu).
+
+⚠️ **VIZ_CSS / VIZ_JS**: đây là design-time placeholder, **inject.py** (từ `_viz-shared/`) đã fill trước khi template đến tay LLM. Đừng đụng tới khi fill data.
+
+## Verify contract
+
+```python
+import re
+remaining = sorted(set(re.findall(r"\{\{[A-Z_0-9]+\}\}", html)))
+assert not remaining, f"unreplaced tokens: {remaining}"
+```
+
+---
+
+## Danh sách chi tiết (theo thứ tự HTML)
+
 ## Hero section
 
 ```html

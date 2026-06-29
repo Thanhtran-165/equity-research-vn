@@ -214,17 +214,28 @@ body {
 
 ## Cách apply variant
 
-Khi user yêu cầu đổi style, **replace CSS variables ở `:root`** (toàn bộ). Không cần sửa HTML structure.
+**Refactor 2026-06:** 3 variants giờ được định nghĩa trong `_viz-shared/tokens.css` dưới dạng `[data-theme="..."]` selectors. Apply = thêm 1 attribute lên thẻ `<html>`, KHÔNG cần rewrite `:root` nữa.
 
-```javascript
-// Trong workflow
-if (userStyle === 'bloomberg') {
-  replaceCssVariables(bloombergVars);
-} else if (userStyle === 'corporate') {
-  replaceCssVariables(corporateVars);
-}
-// default: giữ nguyên fintech
+```html
+<!-- Default (Fintech) — không cần attribute -->
+<html lang="vi">
+
+<!-- Bloomberg Terminal -->
+<html lang="vi" data-theme="bloomberg">
+
+<!-- Corporate sáng -->
+<html lang="vi" data-theme="corporate">
 ```
+
+Vì `_viz-shared/viz.js` đọc màu từ CSS custom properties (`--chart-primary`, `--chart-grid`...) và mỗi theme override các property này, **Chart.js tự đổi màu theo theme** — không cần mapping tay.
+
+```python
+# Trong render pipeline:
+theme_attr = ' data-theme="bloomberg"' if user_style == 'bloomberg' else (' data-theme="corporate"' if user_style == 'corporate' else '')
+html = html.replace('<html lang="vi">', f'<html lang="vi"{theme_attr}>')
+```
+
+> ⚠️ Chart colors đã render sẽ **không** tự đổi nếu swap theme *sau* khi chart vẽ xong. Swap theme phải xảy ra **trước** khi `viz.chart()` chạy (trang load). Để re-render runtime: gọi `viz.refreshTheme()` rồi `chart.update()` — nhưng không cần cho use case static export.
 
 Chart.js colors cũng cần đổi theo variant. Quick mapping:
 - Fintech: `#a855f7, #ec4899, #06b6d4` (neon)

@@ -18,6 +18,16 @@ Cần output từ 4 skill trước:
 
 ## Workflow
 
+### Bước 0: Design system (refactor 2026-06)
+
+Template dùng **`_viz-shared/`** design system (`../_viz-shared/`):
+- CSS/JS shared đã được `inject.py` inline sẵn vào `dashboard_template.html` (single-file, không phụ thuộc runtime)
+- Template đã **tokenize** — thay hard-code HPG cũ bằng `{{UPPER_TOKEN}}`. Pattern fill = `str.replace` thuần
+- Theme switching = thêm `data-theme="bloomberg"`/`"corporate"` lên `<html>` (xem `references/style_variants.md`)
+- Chart rendering qua `viz.chart(id, {type,data,options})` registry (pattern "chart as plugin")
+
+Khi cần sửa design chung (palette, component, chart helper): sửa `../_viz-shared/*.css|js` rồi chạy `python3 ../_viz-shared/inject.py`. KHÔNG sửa inline trong template.
+
 ### Bước 1: Copy template HTML
 
 Đường dẫn template: `assets/dashboard_template.html`

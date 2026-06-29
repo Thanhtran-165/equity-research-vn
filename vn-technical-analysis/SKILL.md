@@ -7,6 +7,17 @@ description: Phân tích kỹ thuật cổ phiếu VN từ data giá THẬT (vns
 
 Phân tích kỹ thuật từ **data giá thực vnstock** — trả lời câu hỏi "khi nào mua/bán" (timing, mode ACTIVE) hoặc "hồ sơ hành vi giá-khối lượng" (mode PROFILE) mà fundamental và news không trả lời được.
 
+## Design system (refactor 2026-06)
+
+Cả 2 template (`technical_template.html` mode ACTIVE, `profile_template.html` mode PROFILE) giờ dùng **`../_viz-shared/`** design system:
+- CSS/JS shared đã `inject.py` inline sẵn (single-file, không phụ thuộc runtime)
+- Cả 2 template đã **tokenize** (`{{TECH_CANDLES}}`, `{{TECH_RSI}}`, `{{ROLLING_DATA}}`, ...) — fill qua `str.replace` thuần, KHÔNG edit inline
+- Candlestick chart qua `viz.renderCandlestick(canvas, {candles,volumes,ma20,ma50,high52w,low52w,months})` (trước đây ~100 dòng trùng lặp)
+- Chart.js qua `viz.chart(id, spec)` registry; navigation qua `viz.setupNav()`
+- Theme (Bloomberg/Corporate) = `data-theme="..."` attribute trên `<html>`
+
+Sửa design chung: edit `../_viz-shared/*.{css,js}` → chạy `python3 ../_viz-shared/inject.py` → tái sinh templates.
+
 ## ⚠️ Nguyên tắc tối thượng: KHÔNG NGỤY TẠO DATA
 
 **Tuyệt đối không** tự tạo chuỗi giá OHLC "mô phỏng" rồi trình bày như phân tích thật. Đây là lỗi nghiêm trọng đã từng xảy ra. Data giá PHẢI đến từ:

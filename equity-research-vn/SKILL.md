@@ -45,15 +45,35 @@ Slash command chạy pipeline 6 skill equity research cho cổ phiếu Việt Na
 - Hội tụ → median + dải P25-P75 → khuyến nghị
 - Đọc `vn-valuation-engine/references/valuation_formulas.md` + `wacc_estimates.md`
 
-### Bước 4: Phân tích kỹ thuật → skill `vn-technical-analysis` — **DATA THẬT vnstock**
-- Fetch giá thực từ vnstock `Quote.history()` (KHÔNG mô phỏng)
-- Kỳ: 52 tuần (22/06/2025 → 21/06/2026)
+### Bước 4: Phân tích kỹ thuật → skill `vn-technical-analysis` — **DATA THẬT vnstock + CHẠY CẢ 2 MODE**
+
+⚠️ **QUAN TRỌNG: Phải chạy CẢ HAI mode** của skill `vn-technical-analysis`. Đây là 2 góc nhìn khác nhau, KHÔNG thay thế nhau:
+
+#### Mode 4a — ACTIVE (timing, verdict mua/bán)
+- Fetch giá **weekly** 52 tuần (22/06/2025 → 21/06/2026) qua `Quote.history(interval='1W')`
 - Lấy VNINDEX + VN30 qua `Quote(symbol='VNINDEX')` để tính Beta/Correlation/Alpha
 - Market cap, số CP, 52W high/low từ `Company.overview()`
 - Tính: MA10/20/50, RSI(14), MACD, Bollinger, Beta
-- Phát hiện patterns CHỈ KHI có evidence
-- **TUYỆT ĐỐI KHÔNG mô phỏng data**
+- Phát hiện patterns (Double Bottom, Channel, Candlestick, Divergence) CHỈ KHI có evidence
+- Output: **Tech Score -6→+6, Verdict (STRONG SELL → STRONG BUY)**, trading strategy 3 kịch bản
 - Đọc `vn-technical-analysis/references/vnstock_usage.md` + `indicators.md` + `pattern_detection.md`
+
+#### Mode 4b — PROFILE (hồ sơ giá-khối lượng, mô tả, NON-ADVICE)
+- Fetch giá **daily** ~2 năm (≥252 phiên, lý tưởng ~537 phiên) qua `Quote.history(interval='1D')` cho `[TICKER]` + VNINDEX + VN30
+- ⚠️ `value = close × volume × 1000` (vnstock giá = nghìn đồng, ×1000 ra đồng)
+- Tính **15 block profile** (port Python từ `references/stock_profile_blocks.md`, 100% portable với vnstock):
+  - price_behavior, volatility (HV20/60/120/252), drawdown (episodes, underwater days)
+  - liquidity, return_distribution, tail_risk (historical VaR/ES), liquidity_risk
+  - volume_price, VPCI (xác nhận giá-volume), money_flow (OBV/VPT/CMF)
+  - effort_result (Wyckoff), high_volume_behavior (event study), pvi_nvi, volume_at_price (VAP)
+- Tính **8 setup heuristic** + **archetype** (trend_following / accumulation_breakout / trap_prone / mixed) từ `references/pattern_scoring.md`
+- Output: **profile JSON schema `vn-technical-profile-v1`**, KHÔNG verdict mua/bán
+- **NGÔN NGỮ BẮT BUỘC: `neutral_descriptive_non_advice`** — KHÔNG dùng "bullish/bearish/tín hiệu/khuyến nghị/strong buy/sell". Mỗi block kèm `interpretation_guardrail`. Kết thúc bằng 4 điểm non-conclusion
+- Đọc `vn-technical-analysis/references/stock_profile_blocks.md` + `pattern_scoring.md` + `metric_guardrails.md`
+
+#### Nguyên tắc chung cả 2 mode:
+- **TUYỆT ĐỐI KHÔNG mô phỏng data** — data thật từ vnstock
+- Nếu không fetch được → nói thẳng "không có data", KHÔNG tự bổ sung
 
 ### Bước 5: Bản tin 30 ngày → skill `vn-news-digest`
 - Kỳ: 22/05/2026 → 21/06/2026
@@ -64,7 +84,7 @@ Slash command chạy pipeline 6 skill equity research cho cổ phiếu Việt Na
 - Đọc `vn-news-digest/references/sentiment_scoring.md` + `news_sources.md`
 
 ### Bước 6: Dashboard HTML → skill `vn-research-dashboard`
-- Tạo file `[TICKER]_Complete_Report.html` với **10-12 sections** (mở rộng tùy ngành):
+- Tạo file `[TICKER]_Complete_Report.html` với **11-13 sections** (mở rộng tùy ngành):
   1. Hero + 6 KPI cards
   2. Executive Summary (TL;DR + 4 highlight boxes)
   3. Kết quả kinh doanh 5 năm
@@ -73,15 +93,18 @@ Slash command chạy pipeline 6 skill equity research cho cổ phiếu Việt Na
   6. DCF & Graham
   7. DuPont
   8. Special Insights ngành (Bull + Bear Case + Catalyst Roadmap) — **CÂN BẰNG**, không chỉ bullish
-  9. Technical Analysis (data vnstock: candlestick + volume + indicators + correlation vs VNINDEX/VN30 + patterns + divergence check + trading strategy + minh bạch dữ liệu)
+  9. Technical Analysis **mode ACTIVE** (data vnstock: candlestick + volume + indicators + correlation vs VNINDEX/VN30 + patterns + divergence check + trading strategy + Tech Score + Verdict + minh bạch dữ liệu)
+  9b. **🧬 Pro Stock Profile mode PROFILE** (15 block định lượng + 8 setups + archetype + 4 điểm non-conclusion; ngôn ngữ non-advice; TÁCH BẠCH với section 9 — KHÔNG trộn ACTIVE/PROFILE)
   9.5. **🛢️ Tương quan giá dầu** (CHỈ cho ngành lọc hóa dầu/dầu khí — case BSR): crack spread analysis, BSR vs Brent scatter, annual + quarterly LNST correlation
   10. News Digest 30 ngày
   11. **🎯 Quan điểm độc lập** (luôn có): điều quan trọng nhất với doanh nghiệp này / hiểu nhầm thường mắc / quan điểm giá — tổng hợp sau toàn bộ phân tích, không lặp lại báo cáo CTCK
 - **Section 8 (Insights) phải cân bằng**: 3 insight cards bullish + 3 insight cards bearish + catalyst timeline + case study warning (nếu có precedent giảm kế hoạch LNST)
+- **⚠️ Section 9 vs 9b KHÔNG trộn ngôn ngữ**: Section 9 (ACTIVE) dùng Tech Score/Verdict/bullish-bearish. Section 9b (PROFILE) dùng mô tả + guardrail, KHÔNG verdict. Đọc `metric_guardrails.md` forbidden list
 - Thêm navigation bar (sticky top nav + scroll-spy) + progress bar + back-to-top
 - **Intent Router**: auto-detect sector từ `Company.overview()['sector']` → chọn sections ưu tiên (xem `vn-research-dashboard/references/style_variants.md` Layout Router). Ngành dầu khí → thêm Section 9.5 tương quan giá dầu
 - Verify JS syntax (`node --check`) trước khi hoàn tất
 - **Verify placeholders ĐÃ THAY THẾ**: `grep -o "{{[A-Z_]*}}" file.html | sort -u` phải trả empty (xem `data_binding.md` Template + inject pattern)
+- **Verify ngôn ngữ non-advice ở section PROFILE**: `grep -iE "bullish|bearish|strong buy|strong sell|khuyến nghị mua|khuyến nghị bán|tín hiệu vào|tín hiệu ra"` trong nội dung section PROFILE phải trả empty
 - **Automated QA**: chạy `scripts/qa_dashboard.js` (Playwright) → verify canvas render + 0 errors + screenshots
 - Phong cách: fintech hiện đại (dark + gradient tím-hồng, glassmorphism) — trừ khi user chọn `--style bloomberg` hoặc `--style corporate`
 - Đọc `vn-research-dashboard/references/data_binding.md` (ESPECIALLY phần Template + inject pattern) + `chart_recipes.md` + `style_variants.md`
@@ -94,7 +117,7 @@ Slash command chạy pipeline 6 skill equity research cho cổ phiếu Việt Na
 
 | Tùy chọn | Ví dụ | Action |
 |---|---|---|
-| Bỏ technical/news | `/equity-research-vn VCB --fundamental-only` | Chỉ bước 1-3 + 6 (7 sections) |
+| Bỏ technical/news | `/equity-research-vn VCB --fundamental-only` | Chỉ bước 1-3 + 6 (7 sections) — bỏ cả 2 mode kỹ thuật (ACTIVE + PROFILE) + news |
 | Đổi phong cách | `/equity-research-vn FPT --style bloomberg` | Phong cách Bloomberg Terminal tối |
 | Đổi kỳ phân tích | `/equity-research-vn MWG --period 3y` | Kỳ 3 năm (2023-2025) |
 | Thêm peer comparison | `/equity-research-vn VCB --peers BID,CTG,TCB` | So sánh với peer ngành |
@@ -104,8 +127,8 @@ Nếu không có tùy chọn → chạy full pipeline mặc định.
 
 ## Output cuối cùng
 
-1. **File `[TICKER]_Complete_Report.html`** (dashboard đầy đủ 10 sections, ~100-130 KB)
-2. **Tóm tắt JSON** kết quả (data + indicators + valuation + tech verdict + sentiment)
+1. **File `[TICKER]_Complete_Report.html`** (dashboard đầy đủ 11-13 sections, ~100-130 KB) — gồm cả Technical ACTIVE (section 9) + Pro Stock Profile (section 9b)
+2. **Tóm tắt JSON** kết quả (data + indicators + valuation + tech verdict + sentiment + **profile JSON schema `vn-technical-profile-v1`**)
 3. **URL Vercel** (nếu deploy)
 
 ## Nguyên tắc cốt lõi (áp dụng cho mọi bước)
@@ -124,9 +147,9 @@ Sau mỗi bước, báo cáo ngắn:
 - ✅ Bước 1: Data thu thập (X nguồn, Y bẫy áp dụng)
 - ✅ Bước 2: Cơ bản (ROE X%, DuPont pattern Y)
 - ✅ Bước 3: Định giá (median X đ, khuyến nghị Y)
-- ✅ Bước 4: Kỹ thuật (score X/6, verdict Y, Z patterns)
+- ✅ Bước 4: Kỹ thuật — **báo CẢ 2 mode**: ACTIVE (score X/6, verdict Y, Z patterns) + PROFILE (archetype W, N setups, block highlights)
 - ✅ Bước 5: News (sentiment X, Y tin)
-- ✅ Bước 6: Dashboard (Z KB, X charts)
+- ✅ Bước 6: Dashboard (Z KB, X charts, N sections — verify đủ cả Technical ACTIVE + Pro Profile)
 - ✅ Bước 7: Deploy (URL)
 
 ## Lưu ý thực thi
@@ -137,7 +160,7 @@ Sau mỗi bước, báo cáo ngắn:
 - **Vercel deploy**: cần đã login (`vercel login`) — 1 lần duy nhất
 - Nếu 1 bước fail → báo lỗi rõ, KHÔNG tự bỏ qua hoặc fake data
 
-## ⚠️ Lessons learned (từ case BSR 2026)
+## ⚠️ Lessons learned (từ case BSR 2026 + FPT 2026)
 
 Các lỗi đã mắc và cách phòng tránh:
 
@@ -156,5 +179,20 @@ Các lỗi đã mắc và cách phòng tránh:
 7. **Ngành đặc thù cần section riêng** — Refining (BSR) cần Section "Tương quan giá dầu" với crack spread analysis (không phải Brent trực tiếp). Ngành khác có thể cần section tương tự (BĐS = NAV, ngân hàng = NIM).
 
 8. **Verify placeholders trước khi deploy** — `grep -o "{{[A-Z_]*}}" file.html | sort -u` phải trả empty. QA script chỉ check canvas/sections, không check placeholder chưa replace.
+
+9. **⚠️ Chạy CẢ 2 mode kỹ thuật (ACTIVE + PROFILE)** — Case FPT 2026: đã mặc định mode ACTIVE (Tech Score/Verdict) mà bỏ sót mode PROFILE (15 block pro stock profile + archetype). Skill `vn-technical-analysis` có 2 mode TÁCH BIỆT, KHÔNG thay thế nhau:
+   - **Mode ACTIVE** (section 9): timing mua/bán, Tech Score, verdict, dùng ngôn ngữ "bullish/bearish/tín hiệu"
+   - **Mode PROFILE** (section 9b): hồ sơ giá-khối lượng, mô tả, **NON-ADVICE**, dùng ngôn ngữ "đang tăng/đang giảm/quan sát" + guardrail. Tính 15 block định lượng (HV, drawdown, VPCI, money flow, effort-result, VAP...) + 8 setup heuristic + archetype
+   - **Cần 2 nguồn data khác nhau**: ACTIVE dùng weekly 52 tuần, PROFILE dùng **daily ~2 năm (≥252 phiên)** cho rolling/percentile có ý nghĩa
+   - **KHÔNG trộn ngôn ngữ**: verify `grep -iE "bullish|bearish|strong buy|khuyến nghị mua"` trong section PROFILE phải trả empty
+   - **Port Python** từ `references/stock_profile_blocks.md` + `pattern_scoring.md` — 100% portable với vnstock, tái dùng được cho mọi mã
+
+10. **✅ Template đã tokenize + dùng `_viz-shared/` design system (refactor 2026-06)** — Giải quyết root cause của bug #4 (placeholder không replace). Trước đây `dashboard_template.html` + `technical_template.html` hard-code HPG → mỗi lần chạy phải edit tay → sót placeholder. Giờ:
+    - Cả 2 template dùng `{{UPPER_TOKEN}}` (`{{TICKER}}`, `{{COMPANY_NAME}}`, `{{KPI_STRIP}}`, ...) — fill qua `str.replace`, KHÔNG bao giờ edit inline
+    - CSS palette + components + chart helper + candlestick renderer gom vào `../_viz-shared/` (single source of truth, DRY)
+    - Chart rendering qua `viz.chart(id, spec)` registry — base options (legend/grid) tự merge, KHÔNG lặp
+    - Theme switch (Bloomberg/Corporate) = `data-theme="..."` attribute, KHÔNG rewrite `:root`
+    - **Sửa design chung**: edit `_viz-shared/*.{css,js}` → chạy `python3 _viz-shared/inject.py` → tái sinh templates self-contained
+    - Verify: `grep -oE "\{\{[A-Z_0-9]+\}\}" file.html` phải empty sau fill
 
 ## Báo cáo tiến độ
