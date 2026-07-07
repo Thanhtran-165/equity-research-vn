@@ -4,6 +4,32 @@ Tất cả thay đổi đáng chú ý của bộ skill `equity-research-vn`.
 
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), versioning theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.2.2] — 2026-07-07
+
+### 🐛 Fix từ CTD test round 2 — subagent qualitative claims sai
+
+Sau khi build CTD report đầy đủ, user phát hiện claim sai: "HBC thuộc hệ sinh thái Nguyễn Bá Dương". Thực tế ông Dương là **cựu** Chủ tịch CTD (rời 2020), HBC độc lập (ông Lê Viết Hải).
+
+#### ✨ Added — Bẫy 8: Subagent qualitative claims sai
+
+- **`vn-financial-data-collector/references/data_pitfalls.md`**: Thêm Bẫy 8 (7→8 bẫy) — "Subagent qualitative claims sai — tin blind"
+  - Dấu hiệu: subagent trả narrative về sở hữu/governance, LLM đưa thẳng không verify
+  - Cách phòng: verify ≥2 nguồn, flag VERIFY, cross-check BCTC "bên liên quan"
+  - Rule cốt lõi: subagent = input KHÔNG phải truth
+
+#### 📚 Lesson
+
+| Sai lầm | Khắc phục |
+|---|---|
+| Tin subagent blind "HBC = hệ sinh thái NBD" | Verify ownership claims qua WebSearch trước khi đưa vào report |
+| Insight 17 premise sai (related-party → thực ra là đối thủ cạnh tranh) | Cross-check với press (Dân Trí, ZNews) confirm "cựu Chủ tịch" |
+
+#### 🧪 Trigger
+
+Đây là silent failure kinh điển mà `skill-premortem` + `data_pitfalls.md` cảnh báo, nhưng vẫn mắc khi build nhanh. Lesson: **claims qualitative (narrative) khó detect hơn claims quantitative** — cần rule riêng.
+
+---
+
 ## [2.2.1] — 2026-07-07
 
 ### 🐛 Fix từ CTD test — vnstock 4.0 sponsor detection
