@@ -17,6 +17,22 @@ Slash command chạy pipeline 6 skill equity research cho cổ phiếu Việt Na
 
 `[TICKER]` = mã cổ phiếu HOSE/HNX/UPCOM (VCB, FPT, HPG, MWG, VNM, VIC, VHM, GAS, ACB, MBB...)
 
+## ⚠️ Phase 0 BẮT BUỘC — Hỏi user trước khi chạy
+
+**KHÔNG mặc định bất kỳ tham số nào.** Trước khi fetch data, hỏi user:
+
+1. **Số vốn dự kiến giải ngân** (VND hoặc USD) — ví dụ "200 triệu VND", "$5,000", "$33,000". **KHÔNG default $33,000.** Mỗi nhà đầu tư có vốn khác nhau.
+2. **Kỳ vọng thời gian** — 1 năm? 3-5 năm? Dài hạn?
+3. **Mục tiêu** — đầu tư giá trị? Tăng trưởng? Cổ tức?
+4. **Risk tolerance** — chịu được drawdown bao nhiêu %?
+
+Các tham số này ảnh hưởng trực tiếp:
+- **Section "Góc nhìn vốn"** — số cổ phiếu, drawdown tolerance, DCA framework
+- **Disclaimer** — "nếu là tiền của tôi" gắn với số vốn thật
+- **Checklist** — câu hỏi tolerance phù hợp vốn thật
+
+**Nếu user không trả lời**, dùng placeholder `[VỐN_CỦA_BẠN]` + flag "vui lòng cho biết số vốn để cá nhân hóa" — KHÔNG bịa số default.
+
 ## Pipeline 6 skill (chạy tuần tự)
 
 ### Bước 0: Detect sponsor package (BẮT BUỘC trước khi fetch — học từ CTD test 7/2026)
