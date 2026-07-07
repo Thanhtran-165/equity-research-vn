@@ -242,3 +242,80 @@ Cho mỗi frame đã chọn (Phase 0 archetype routing):
 - [ ] 6. KPI watchlist 3-5 points — cụ thể, measurable, quarterly
 - [ ] 7. Reframe cho nhà đầu tư — closer gắn insight với vốn
 - [ ] 8. KHÔNG cheerlead — nếu chỉ bull không challenge → fail
+
+---
+
+## F. ⭐ Đặc thù ngành — đọc số tài chính đúng cách (BẮT BUỘC — học từ CTD test 7/2026)
+
+> **Nguyên tắc cốt lõi**: Đọc số tài chính mà không hiểu bản chất ngành = **bias chắc chắn**.
+> Mỗi ngành có "đặc thù" mà nếu không biết, nhà đầu tư sẽ hiểu sai con số → ra quyết định sai.
+> Section này LIỆT KÊ đặc thù theo ngành — đọc BẮT BUỘC trước khi analyze.
+
+### F.1 Xây dựng (CTD, HBC, VCG, RIC, CCC)
+
+| Đặc thù | Bias nếu không hiểu | Đọc đúng cách |
+|---|---|---|
+| **Doanh thu ≠ tiền** (ghi theo % hoàn thành, CĐT trả chậm) | Tưởng LNST = tiền mặt | Check CFO vs LNST. CFO âm + LNST dương = red flag |
+| **Backlog ≠ revenue đảm bảo** (HĐ có thể hủy) | Tương backlog = tiền chắc chắn | Convert rate VN 60-80%. Check công nợ CĐT |
+| **Working capital nặng** (phải thu + phải trả) | Bỏ qua công nợ, chỉ xem LNST | Theo dõi "phải thu khách hàng" YoY |
+| **Biên gộp thấp (~3-5%)** | So với tech (60%+) → tưởng tệ | So với peer ngành (2-4%) |
+| **Chu kỳ BĐS quyết định** (70-80% DT) | Treat như "stable growth" | Theo dõi index BĐS + tín dụng |
+| **D/E cao bình thường** (vốn nặng) | Treat D/E 2+ = vỡ nợ | So với peer ngành |
+| **Trích lập nợ xấu** | Treat = thất bại | Là kế toán đúng khi CĐT gặp khó |
+| **Niên độ tài chính khác** (CTD = 30/6, HBC = 31/12) | So sánh FY vs CY lộn | Luôn flag "FY kết thúc MM/DD" |
+
+**Bias dễ mắc nhất**: Thấy LNST tăng mạnh → tưởng "công ty bùng nổ". Thực tế FCF âm + D/E tăng + công nợ phồng.
+**Nguyên tắc**: Đọc LNST + CFO + công nợ CĐT CÙNG LÚC. LNST dương mà CFO âm = red flag.
+
+### F.2 Ngân hàng (VCB, BID, CTG, TCB, MBB, ACB, VPB)
+
+| Đặc thù | Bias nếu không hiểu | Đọc đúng cách |
+|---|---|---|
+| **NIM = net interest margin** | Không hiểu NIM, chỉ xem LNST | NIM cao = tốt, nhưng check NPL đi kèm |
+| **NPL ẩn** (restructure, evergreening) | Tin NPL báo cáo = thấp | Check nợ M&A, nợ BĐS, nợ nhớt ngoài BCTC |
+| **CASA = funding cost rẻ** | Không phân biệt CASA vs term deposit | CASA cao = lợi thế cấu trúc (MB, TCB) |
+| **Provision coverage** | Bỏ qua, chỉ xem LNST | Coverage < 100% = rủi ro if NPL tăng |
+| **Tier-1 capital** | Không hiểu Basel | Tier-1 thấp = rủi ro vỡ vốn |
+| **LnD ratio** | Không biết mức an toàn | LnD > 90% = rủi ro thanh khoản |
+| **Đặc thù nhà nước vs tư nhân** (VCB vs TCB) | So sánh ngang hàng | VCB có lợi thế nhà nước (depozit rẻ) |
+
+### F.3 Dầu khí / lọc hóa dầu (BSR, PLX, GAS, PVC, PVD)
+
+| Đặc thù | Bias nếu không hiểu | Đọc đúng cách |
+|---|---|---|
+| **Crack spread** (biên lọc) | So sánh với giá dầu trực tiếp | Crack spread mới là biên thật |
+| **Tỷ suất công suất refinary** | Không hiểu capacity utilization | < 80% = biên giảm |
+| **Counterparty NOC** (EVN, Petrovietnam) | Treat như khách hàng thương mại | NOC có rủi ro thanh khoản (EVN loss) |
+| **Khoản phải thu aging** | Bỏ qua | Phải thu lớn + aging dài = risk |
+| **Bẫy 5B split** (BSR chia cổ phiếu) | Quên adjust EPS | Luôn audit split đầu tiên |
+
+### F.4 Bất động sản (VIC, VHM, NVL, MGR, KDH, DIG)
+
+| Đặc thù | Bias nếu không hiểu | Đọc đúng cách |
+|---|---|---|
+| **NAV = giá trị tài sản ròng** | Chỉ dùng P/E | NAV mới đúng cho BĐS |
+| **Land bank** (đất trống) | Treat land bank = tiền | Land bank non-prime khó monetize |
+| **Pre-sales / off-plan** | Tương pre-sales = revenue | Buyer default risk + delivery delay |
+| **Hàng tồn kho = đất + dự án》 | Treat như inventory retail | Inventory BĐS = đất + DXd tạo |
+| **Chu kỳ BĐS + chính sách** | Treat như growth stable | Phụ thuộc land law, credit room |
+| **Cổ tức bằng cổ phiếu phổ biến** | Quên adjust | Thường phát hành cp thưởng |
+
+### F.5 Thép (HPG, HSG, NKG, TLH)
+
+| Đặc thù | Bias nếu không hiểu | Đọc đúng cách |
+|---|---|---|
+| **Chu kỳ giá HRC** (giá thép quốc tế) | Treat như growth | HRC quyết định biên + LNST |
+| **Cost quặng sắt** (tích hợp dọc) | Không hiểu cost advantage | HPG có quặng sắt riêng = cost thấp hơn peer nhập khẩu |
+| **Capacity utilization** | Bỏ qua | Capex cao → fixed cost spread thin nếu demand yếu |
+| **By-product** (HPG có điện, cảng) | Không credit | By-product giảm cost chính |
+| **Xuất khẩu vs nội địa** | Treat như 1 mảng | Biên xuất khẩu khác nội địa |
+
+### F.6 Khi gặp ngành mới (chứng khoán, bảo hiểm, điện, cảng, viễn thông, y tế, bán lẻ, công nghệ)
+
+**Handler BẮT BUỘC**:
+1. **Hỏi user**: "Ngành X có đặc thù gì cần chú ý khi đọc số tài chính?" (user có thể biết > AI)
+2. **WebSearch**: "[ngành] investing Vietnam pitfalls / accounting red flags"
+3. **Tạo bảng đặc thù** (như F.1-F.5) trước khi analyze
+4. **Flag bias có thể mắc** ở đầu báo cáo
+
+**Rule cốt lõi**: Không có "template 1 size fits all". Mỗi ngành có lens riêng. Phân tích không hiểu đặc thù = số liệu đúng nhưng kết luận sai.

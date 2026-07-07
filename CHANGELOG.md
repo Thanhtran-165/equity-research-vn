@@ -4,6 +4,36 @@ Tất cả thay đổi đáng chú ý của bộ skill `equity-research-vn`.
 
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), versioning theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.2.3] — 2026-07-07
+
+### ✨ Added — Đặc thù ngành (bản chất ngành nghề)
+
+User insight: "phải nhìn vào bản chất dn để phân tích các con số tài chính, nếu không sẽ bias".
+
+#### Thêm vào insight_frames_vn.md
+
+- **Section F: Đặc thù ngành — đọc số tài chính đúng cách** (BẮT BUỘC)
+- 6 ngành có bảng đặc thù + bias dễ mắc:
+  - **F.1 Xây dựng** (CTD, HBC, VCG): Doanh thu ≠ tiền, Backlog ≠ revenue, Working capital risk, Chu kỳ BĐS, D/E cao bình thường, Trích lập, Niên độ khác
+  - **F.2 Ngân hàng** (VCB, TCB...): NIM, NPL ẩn, CASA, Provision coverage, Tier-1, LnD
+  - **F.3 Dầu khí** (BSR, PLX): Crack spread, Capacity utilization, Counterparty NOC
+  - **F.4 BĐS** (VIC, VHM): NAV, Land bank, Pre-sales, Chu kỳ chính sách
+  - **F.5 Thép** (HPG, HSG): HRC price, Cost quặng sắt, By-product
+  - **F.6 Ngành mới**: Handler hỏi user + WebSearch pitfalls + tạo bảng đặc thù
+
+#### Thêm vào dashboard (CTD report)
+
+- Section 4 giờ có 4.4 Lợi thế vượt trội + 4.5 Yếu sơn + 4.6 Đặc thù ngành xây dựng (8 dòng bảng)
+
+#### 📚 Lesson
+
+| User insight | Khắc phục |
+|---|---|
+| "phải nhìn bản chất dn để đọc số tài chính" | Section F — mỗi ngành có lens riêng, không template 1 size fits all |
+| "không hiểu đặc thù = bias chắc chắn" | Rule: phân tích không hiểu đặc thù = số liệu đúng nhưng kết luận sai |
+
+---
+
 ## [2.2.2] — 2026-07-07
 
 ### 🐛 Fix từ CTD test round 2 — subagent qualitative claims sai
