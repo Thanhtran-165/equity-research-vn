@@ -4,6 +4,31 @@ Tất cả thay đổi đáng chú ý của bộ skill `equity-research-vn`.
 
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), versioning theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.2.5] — 2026-07-07
+
+### ⚠️ CHẤT LƯỢNG > TỐC ĐỘ — Quality Gate cứng
+
+User insight: "vì sao gap vẫn xảy ra dù đã học hỏi?" → vì lessons đi vào reference files nhưng khi build KHÔNG đọc lại.
+
+#### Added — 4 rules structural
+
+- **Rule 1**: Đọc lại reference files TRƯỚC mỗi phase (table phase → reference BẮT BUỘC)
+- **Rule 2**: Quality Gate 12 checks (grep verify) trước deploy — BLOCK nếu fail
+  - Charts ≥10, Citations ≥10, Sections ≥20, Callouts ≥5, Honest corrections ≥3
+  - DQ rows ≥10, Source refs ≥10, Tokens=0, PROFILE non-advice, Div balance, GAAP flag, FY flag
+- **Rule 3**: Benchmark comparison — nếu <80% benchmark → BLOCK deploy
+- **Rule 4**: KHÔNG "xong vội" — chất lượng > tốc độ, "hoàn thành" = pass ALL gates
+
+#### Root cause fix
+
+| Vấn đề | Khắc phục structural |
+|---|---|
+| Lessons vào reference nhưng không đọc khi build | Rule 1: ép mở reference trước mỗi phase |
+| Build theo "nhớ" → thiếu charts/citations | Rule 2: grep verify 12 metrics |
+| Không benchmark comparison | Rule 3: so sánh vs ORCL/NEM, <80% = BLOCK |
+| Ưu tiên tốc độ | Rule 4: KHÔNG "xong vội" |
+
+---
 ## [2.2.4] — 2026-07-07
 
 ### 🐛 Fix từ CTD test round 3 — báo cáo thiếu charts

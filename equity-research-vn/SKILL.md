@@ -188,6 +188,94 @@ Nếu không có tùy chọn → chạy full pipeline mặc định.
 - ❌ **KHÔNG claim** divergence/pattern nếu data không show
 - ❌ **KHÔNG dùng data cũ** (>1 năm) cho phân tích "gần nhất"
 
+## ⚠️ CHẤT LƯỢNG > TỐC ĐỘ (v2.2.5 — học từ CTD test 7/2026)
+
+> **Nguyên tắc tối thượng**: KHÔNG ưu tiên "xong nhanh". Ưu tiên "đúng spec + đủ chất lượng".
+> Một báo cáo thiếu charts/citations/depth nhưng deploy nhanh = **thất bại**, không phải thành công.
+
+### Rule 1: Đọc lại reference files TRƯỚC mỗi phase
+
+KHÔNG build theo "nhớ đại khái". Trước mỗi phase, **mở và đọc** reference file liên quan:
+
+| Phase | Reference BẮT BUỘC đọc trước khi build |
+|---|---|
+| Phase 0 Discovery | `insight_frames_vn.md` Section A (archetype router) + Section F (đặc thù ngành) |
+| Phase 1 Data | `data_pitfalls.md` (9 bẫy) + `vnstock_api.md` |
+| Phase 3 Sections | `insight_frames_vn.md` Section B-H + `analyst_research.md` pattern |
+| Phase 5 Render | `dashboard_design.md` (22 section map + chart recipes) + benchmark report |
+| Phase 6 Deploy | **Quality Gate checklist bên dưới** |
+
+### Rule 2: Quality Gate BẮT BUỘC trước deploy — KHÔNG SKIP
+
+```bash
+# Chạy TẤT CẢ checks. Nếu bất kỳ FAIL → BLOCK deploy, fix trước.
+
+# 1. Charts minimum (Bẫy 9)
+CHART_COUNT=$(grep -c 'new Chart\|viz.chart' [output].html)
+[ "$CHART_COUNT" -ge 10 ] || echo "❌ FAIL: chỉ $CHART_COUNT charts (minimum 10)"
+
+# 2. Citations minimum
+REF_COUNT=$(grep -oE 'class="ref"' [output].html | wc -l)
+[ "$REF_COUNT" -ge 10 ] || echo "❌ FAIL: chỉ $REF_COUNT citations (minimum 10)"
+
+# 3. Sections count
+SEC_COUNT=$(grep -c '<section' [output].html)
+[ "$SEC_COUNT" -ge 20 ] || echo "❌ FAIL: chỉ $SEC_COUNT sections (minimum 20)"
+
+# 4. Callout "Nói cách khác" minimum (3-layer language)
+CALLOUT_COUNT=$(grep -c 'Nói cách khác' [output].html)
+[ "$CALLOUT_COUNT" -ge 5 ] || echo "❌ FAIL: chỉ $CALLOUT_COUNT callouts (minimum 5)"
+
+# 5. Honest corrections (mỗi insight phải có)
+HONEST_COUNT=$(grep -c 'HONEST CORRECTION\|honest correction' [output].html)
+[ "$HONEST_COUNT" -ge 3 ] || echo "❌ FAIL: chỉ $HONEST_COUNT honest corrections (minimum 3)"
+
+# 6. Data Quality Matrix rows
+DQ_ROWS=$(sed -n '/Data Quality/,/<\/table>/p' [output].html | grep -c '<tr')
+[ "$DQ_ROWS" -ge 10 ] || echo "❌ FAIL: chỉ $DQ_ROWS DQ rows (minimum 10)"
+
+# 7. Source Appendix có numbered citations
+SOURCE_REFS=$(grep -oE 'id="ref-[0-9]+"' [output].html | wc -l)
+[ "$SOURCE_REFS" -ge 10 ] || echo "❌ FAIL: chỉ $SOURCE_REFS numbered sources (minimum 10)"
+
+# 8. Placeholder tokens empty
+TOKENS=$(grep -oE '\{\{[A-Z_0-9]+\}\}' [output].html | wc -l)
+[ "$TOKENS" -eq 0 ] || echo "❌ FAIL: $TOKENS unreplaced tokens"
+
+# 9. JS syntax OK
+# Extract <script> with 'new Chart' → node --check
+
+# 10. Non-advice PROFILE check
+PROFILE_ADVICE=$(sed -n '/sec-tech-profile/,/sec-analyst/p' [output].html | grep -ciE 'bullish|bearish|khuyến nghị mua|khuyến nghị bán|strong buy|strong sell')
+[ "$PROFILE_ADVICE" -eq 0 ] || echo "❌ FAIL: PROFILE has advice language"
+
+# 11. Div balance
+OPENS=$(grep -oE '<div[ >]' [output].html | wc -l)
+CLOSES=$(grep -oE '</div>' [output].html | wc -l)
+[ "$OPENS" -eq "$CLOSES" ] || echo "❌ FAIL: div imbalance $OPENS/$CLOSES"
+```
+
+### Rule 3: Benchmark comparison BẮT BUỘC
+
+Trước deploy, **so sánh với benchmark report** (CTD cho VN, ORCL/NEM cho US):
+
+| Metric | Benchmark (ORCL/NEM/CTD) | New report minimum | Nếu < minimum |
+|---|---|---|---|
+| Size | ~130-250KB | ≥ 120KB | BLOCK |
+| Charts | 13 | ≥ 10 | BLOCK |
+| Sections | 22 | ≥ 20 | BLOCK |
+| Citations | 16-69 | ≥ 10 | BLOCK |
+| Callouts | 7-8 | ≥ 5 | BLOCK |
+| Data Quality rows | 13-14 | ≥ 10 | BLOCK |
+
+**Nếu new report <80% benchmark ở bất kỳ metric nào → BLOCK deploy. Fix cho đủ rồi deploy.**
+
+### Rule 4: KHÔNG "xong vội"
+
+- User không phản đối đợi thêm 10-15 phút nếu cần đạt quality
+- Thà deploy chậm nhưng đúng spec, hơn deploy nhanh nhưng thiếu charts/citations/depth
+- **"Hoàn thành" = pass ALL quality gates, KHÔNG phải "deploy xong"**
+
 ## Báo cáo tiến độ
 
 Sau mỗi bước, báo cáo ngắn:
