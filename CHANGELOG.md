@@ -4,6 +4,26 @@ Tất cả thay đổi đáng chú ý của bộ skill `equity-research-vn`.
 
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), versioning theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.2.7] — 2026-07-07
+
+### Gap closure — ORCL benchmark comparison (14 gap fix total)
+
+User: "tự so sánh và đưa ra gap, anh sẽ duyệt". Em tự compare toàn diện ORCL vs CTD → tìm 14 gap, fix hết.
+
+#### 7 gap cuối fixed
+- Gap 8: Insight depth (convert analysis + concentration risk table)
+- Gap 9: Citations inline trong text (16→34)
+- Gap 10: Callouts expand (55→67)
+- Gap 11: Scenario depth (probability table + expected value + evidence to watch)
+- Gap 12: Technical ACTIVE depth (patterns + strategy + minh bạch)
+- Gap 13: Tables phụ (dividend + capex history)
+- Gap 14: Bug chartReturns canvas trùng
+
+#### Lesson root cause
+Build theo "nhớ" thay vì mở benchmark report so sánh. Fix: benchmark comparison SAU mỗi phase.
+
+---
+
 ## [2.2.5] — 2026-07-07
 
 ### ⚠️ CHẤT LƯỢNG > TỐC ĐỘ — Quality Gate cứng
