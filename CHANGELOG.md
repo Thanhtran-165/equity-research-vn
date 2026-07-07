@@ -4,6 +4,33 @@ Tất cả thay đổi đáng chú ý của bộ skill `equity-research-vn`.
 
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), versioning theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.2.1] — 2026-07-07
+
+### 🐛 Fix từ CTD test — vnstock 4.0 sponsor detection
+
+Sau khi test CTD (smoke test), phát hiện territory bác bỏ map: vnstock 4.0 có 2 gói khác nhau (community 8 kỳ vs sponsor 40+ kỳ) nhưng skill spec v2.2.0 chỉ mention `from vnstock import` (community).
+
+#### ✨ Added — Sponsor detection
+
+- **`equity-research-vn/SKILL.md` Step 0 (BẮT BUỘC)**: Detect sponsor qua `~/.vnstock/auth_state.json` (tier=golden). Nếu sponsor OK → dùng `from vnstock_data import` + sponsor venv Python. Nếu community → fallback `from vnstock import` + WebFetch bổ sung.
+- **`vn-financial-data-collector/SKILL.md` Bước 2**: 2 cách import rõ ràng + cấu trúc data khác nhau (sponsor: cột tiếng Anh HOA + report_period; community: cột item/item_en + period columns).
+- **`scripts/preflight.py`**: Auto-detect sponsor (try `from vnstock_data` first, fallback `from vnstock.api`). Thêm `vnstock_tier` vào output JSON. Nếu sponsor auth có nhưng import fail → gợi ý dùng sponsor venv Python.
+
+#### 📚 Học từ đâu
+
+| Cái | Nguồn |
+|---|---|
+| 2 cách import vnstock 4.0 | CTD test 7/2026 — fetch chỉ 8 kỳ vs sponsor 41 kỳ |
+| Sponsor venv path | `~/.vnstock/auth_state.json` tier=golden + `/Users/bobo/dev/main-sonet-runtime/.venv-vnstock-sponsor311/` |
+| Cấu trúc data khác nhau | CTD income_statement sponsor (cột HOA) vs community (cột item) |
+
+#### 🧪 Verified
+
+- `python3 preflight.py CTD` (community, system python) → flag COMMUNITY_TIER
+- `/Users/bobo/.../venv-vnstock-sponsor311/bin/python preflight.py CTD` → sponsor_gold active, fetch 41 kỳ
+
+---
+
 ## [2.2.0] — 2026-07-07
 
 ### 🛡️ Học từ `us-equity-research` + `skill-premortem`

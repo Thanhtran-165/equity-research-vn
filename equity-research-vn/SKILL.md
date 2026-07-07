@@ -19,6 +19,37 @@ Slash command chạy pipeline 6 skill equity research cho cổ phiếu Việt Na
 
 ## Pipeline 6 skill (chạy tuần tự)
 
+### Bước 0: Detect sponsor package (BẮT BUỘC trước khi fetch — học từ CTD test 7/2026)
+
+⚠️ **vnstock 4.0 có 2 cách dùng, khác biệt cực lớn:**
+
+| Cách import | Tier | Số kỳ BCTC | Khi nào dùng |
+|---|---|---|---|
+| `from vnstock import ...` (community) | Free | **8 kỳ** (~2 năm) | Mặc định, không cần config |
+| `from vnstock_data import ...` (sponsor) | Gold/Platinum | **40+ kỳ** (10+ năm) | Cần sponsor package + đã auth |
+
+**Detect sponsor:**
+```bash
+# Check ~/.vnstock/auth_state.json — nếu "tier": "golden" → sponsor OK
+cat ~/.vnstock/auth_state.json 2>/dev/null | grep tier
+
+# Hoặc test import trong Python:
+python3 -c "from vnstock_data import Finance; print('sponsor OK')" 2>/dev/null
+# Nếu lỗi (vnstock 3.x / chưa cài sponsor package) → dùng `from vnstock import ...`
+```
+
+**Quy tắc:**
+- Nếu sponsor OK → **dùng `from vnstock_data import Finance, Company, Quote`** + **dùng sponsor venv Python** (vd `/Users/bobo/dev/main-sonet-runtime/.venv-vnstock-sponsor311/bin/python`). Fetch 5 năm đầy đủ.
+- Nếu sponsor KHÔNG có → dùng `from vnstock import ...` (community, 8 kỳ) + **WebFetch CafeF/Vietstock bổ sung 12 kỳ cũ**. Flag "community edition, history limited".
+
+**⚠️ venv sponsor** thường nằm ở `/Users/bobo/dev/main-sonet-runtime/.venv-vnstock-sponsor311/`. Khi chạy script Python (preflight, audit_split, fetch), dùng path Python sponsor venv này thay vì `python3` system.
+
+**Cấu trúc data khác nhau** giữa 2 gói:
+- `vnstock` 4.0 (community): DataFrame có cột `item`, `item_en`, `item_id` + period columns
+- `vnstock_data` 3.x (sponsor): DataFrame có cột tiếng Anh HOA (`Net sales`, `Attributable to parent company`, `EPS basic (VND)`, `Total Assets`, `Owner's Equity`...) + `report_period` = 'year'/'quarter'
+
+→ **Code fetch phải handle cả 2 format.** Tham khảo `scripts/preflight.py` đã handle cả 2 (v2.2.1).
+
 ### Bước 1: Thu thập data → skill `vn-financial-data-collector`
 - Kỳ phân tích 5 năm gần nhất: **2021-2025** (tháng hiện tại ≥ 4 → N-1 đã có BCTC)
 - **NGUỒN #1: vnstock API** — fetch BCTC, ratios, info qua `Finance` + `Company` modules

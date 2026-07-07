@@ -77,7 +77,14 @@ def preflight(ticker: str, period_years: int = 5) -> dict:
 
     # === Fetch overview cho các check sau ===
     try:
-        info = c.overview()
+        info_df = c.overview()
+        # vnstock 4.0 trả DataFrame 1 row — convert sang dict
+        if hasattr(info_df, 'iloc') and len(info_df) > 0:
+            info = info_df.iloc[0].to_dict()
+        elif isinstance(info_df, dict):
+            info = info_df
+        else:
+            info = {}
     except Exception as e:
         result["flags"].append({
             "id": "OVERVIEW_FETCH_FAILED",
@@ -87,39 +94,50 @@ def preflight(ticker: str, period_years: int = 5) -> dict:
         result["go_no_go"] = "STOP"
         return result
 
-    result["company_name"] = info.get('company_name') or info.get('organ_name') or 'NOT FOUND'
-    result["sector"] = info.get('sector')
-    result["industry"] = info.get('industry')
-    result["exchange"] = info.get('exchange')
+    result["company_name"] = info.get('organ_name') or info.get('organ_short_name') or info.get('company_name') or 'NOT FOUND'
+    result["sector"] = info.get('sector') or info.get('icb_name') or info.get('industry_name')
+    result["industry"] = info.get('industry') or info.get('icb_name')
+    result["exchange"] = info.get('exchange') or info.get('comGroupCode')
 
     # === CHECK 1: NEGATIVE EARNINGS (LNST âm) ===
     try:
         f = Finance(symbol=ticker, source='VCI')
         income = f.income_statement()
         if income is not None and hasattr(income, 'iterrows'):
-            # Tìm dòng LNST thuộc CĐ mẹ
+            # vnstock 4.0: rows = item, có cột 'item'/'item_en'. Filter theo tên.
+            # vnstock 3.x: rows = index = tên metric.
             lnst_row = None
-            for idx in income.index:
-                idx_lower = str(idx).lower()
-                if ('lợi nhuận của cổ đông' in idx_lower or 'net profit' in idx_lower) and 'cổ đông' in idx_lower:
+            period_cols = []
+            for col in income.columns:
+                if str(col).startswith('20') or str(col).startswith('19'):
+                    period_cols.append(col)
+
+            for idx, row in income.iterrows():
+                item_text = str(row.get('item', '')) + ' ' + str(row.get('item_en', '')) if 'item' in income.columns else str(income.index[idx]).lower() if idx < len(income.index) else ''
+                item_lower = item_text.lower()
+                if ('lợi nhuận của cổ đông' in item_lower or 'net profit' in item_lower or 'net income' in item_lower) and ('cổ đông' in item_lower or 'parent' in item_lower):
                     lnst_row = idx
                     break
 
-            if lnst_row and len(income.columns) > 0:
-                latest_col = income.columns[0]
-                latest_lnst = float(income.loc[lnst_row, latest_col])
-
-                # Tính số năm lỗ
-                loss_years = 0
-                for col in income.columns[:period_years]:
+            if lnst_row is not None and len(period_cols) > 0:
+                # Lấy giá trị LNST các kỳ
+                lnst_values = []
+                for col in period_cols[:period_years*4]:  # mỗi năm ~4 quý
                     try:
-                        lnst_val = float(income.loc[lnst_row, col])
-                        if lnst_val < 0:
-                            loss_years += 1
+                        if 'item' in income.columns:
+                            val = float(income.iloc[lnst_row][col])
+                        else:
+                            val = float(income.loc[lnst_row, col])
+                        lnst_values.append(val)
                     except (ValueError, TypeError):
                         continue
 
-                if loss_years >= 2:
+                # Cộng gộp theo năm nếu là quarterly (Q1+Q2+Q3+Q4)
+                # Hoặc chỉ check dấu (nếu âm = lỗ)
+                loss_count = sum(1 for v in lnst_values if v < 0)
+                latest_lnst = lnst_values[0] if lnst_values else 0
+
+                if loss_count >= 8 or (loss_count >= 4 and latest_lnst < 0):  # ≥2 năm lỗ hoặc gần nhất lỗ
                     result["flags"].append({
                         "id": "NEGATIVE_EARNINGS",
                         "severity": "WARN",
@@ -131,7 +149,7 @@ def preflight(ticker: str, period_years: int = 5) -> dict:
                     result["recommendations"].append(
                         "Valuation path B: dùng EV/Revenue + P/B + P/S thay PE median."
                     )
-                elif loss_years == 1 and latest_lnst < 0:
+                elif loss_count >= 4 and latest_lnst < 0:
                     result["flags"].append({
                         "id": "RECENT_LOSS",
                         "severity": "WARN",
@@ -150,12 +168,15 @@ def preflight(ticker: str, period_years: int = 5) -> dict:
         f = Finance(symbol=ticker, source='VCI')
         income = f.income_statement()
         if income is not None and hasattr(income, 'columns'):
-            years_available = len(income.columns)
+            # Đếm số cột period (bắt đầu bằng 20xx hoặc 19xx)
+            period_cols = [c for c in income.columns if str(c).startswith(('20', '19'))]
+            # Quy đổi: 4 quý/năm → years = period_cols / 4 (annual) hoặc period_cols (nếu annual)
+            years_available = max(1, len(period_cols) // 4) if len(period_cols) > 5 else len(period_cols)
             if years_available < period_years:
                 result["flags"].append({
                     "id": "HISTORY_TOO_SHORT",
                     "severity": "WARN",
-                    "msg": f"Chỉ có {years_available} năm history (yêu cầu {period_years}). IPO gần đây hoặc data thiếu.",
+                    "msg": f"Chỉ có ~{years_available} năm history (yêu cầu {period_years}). IPO gần đây hoặc data thiếu.",
                     "impact": f"Median {period_years}N vô nghĩa với sample {years_available} năm.",
                     "fix": f"Giảm period xuống {max(2, years_available)} năm. Flag 'history limited to {years_available}y'."
                 })
@@ -170,7 +191,8 @@ def preflight(ticker: str, period_years: int = 5) -> dict:
         f = Finance(symbol=ticker, source='VCI')
         income = f.income_statement()
         if income is not None and hasattr(income, 'columns'):
-            latest_period = str(income.columns[0])
+            period_cols = [c for c in income.columns if str(c).startswith(('20', '19'))]
+            latest_period = str(period_cols[0]) if period_cols else ''
             # Quy tắc: tháng hiện tại ≥ 4 → kỳ gần nhất = N-1
             current_month = date.today().month
             current_year = date.today().year
@@ -179,7 +201,7 @@ def preflight(ticker: str, period_years: int = 5) -> dict:
             else:
                 expected_year = current_year - 2
 
-            # Parse năm từ latest_period (format có thể là '2024', '2024-12-31', etc.)
+            # Parse năm từ latest_period (format có thể là '2024', '2024-Q4', etc.)
             try:
                 latest_year = int(latest_period[:4])
                 if latest_year < expected_year:
