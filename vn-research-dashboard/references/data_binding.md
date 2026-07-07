@@ -29,6 +29,75 @@ assert not remaining, f"unreplaced tokens: {remaining}"
 
 ---
 
+## {{DISCLAIMER_HTML}} — content template (v2.2.0, học từ us-equity-research)
+
+Block disclaimer đã có CSS trong template (line 651) + placeholder `{{DISCLAIMER_HTML}}` ở line 826. **Fill content dưới đây** vào token — chống "ảo giác model" cho nhà đầu tư đọc:
+
+```html
+<div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+<p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai (vnstock, CafeF, Vietstock, BCTC DN). Mặc dù mỗi con số quan trọng đều có nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai đặc thù thị trường VN.</p>
+<div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+<ol>
+  <li><strong>Đếm nguồn.</strong> Mỗi số quan trọng (LNST, EPS, PE, PB, VCSH) nên có ít nhất 2 nguồn độc lập khớp nhau (vnstock + CafeF/BCTC). Chỉ 1 nguồn = chưa chắc.</li>
+  <li><strong>Số bất thường = dừng.</strong> PE 3× hoặc 50× nghe bất thường → verify qua BCTC gốc. Có thể là split-adjustment chưa adjust (Bẫy 5B).</li>
+  <li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt số tiền này dựa trên con số AI đưa ra không?" Nếu chưa dám → verify BCTC kiểm toán.</li>
+</ol>
+<div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+<ul class="qlist">
+  <li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> BCTC kiểm toán + vnstock khớp nhau</li>
+  <li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn (vnstock hoặc CafeF), cần đối chiếu thêm</li>
+  <li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán / WebSearch / chưa verify BCTC</li>
+</ul>
+<p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình. Báo cáo này KHÔNG phải khuyến nghị mua/bán.</p>
+```
+
+**CSS cần có** (đã có trong template, verify không bị thiếu): `.disclaimer`, `.disclaimer-title`, `.qlist`, `.qbadge-HIGHQ/MEDQ/LOWQ`. Nếu thiếu → thêm từ `_viz-shared/components.css`.
+
+---
+
+## Sidebar TOC sticky (v2.2.0 — layout 2 cột, học từ us-equity-research)
+
+**CSS** đã thêm vào `_viz-shared/components.css` (v2.2.0): `.layout-main`, `.layout-content`, `.toc-sidebar`, `.toc-sidebar-item`...
+
+**Cách áp dụng vào template** — bọc section content trong layout-main + thêm aside:
+
+```html
+<!-- Sau hero section, bọc剩余 sections trong layout-main -->
+<div class="layout-main">
+  <div class="layout-content">
+    <!-- Section 2 (TL;DR) đến Section 11 (independent view) ở đây -->
+  </div>
+
+  <!-- TOC sidebar sticky bên phải -->
+  <aside class="toc-sidebar" id="tocSidebar">
+    <div class="toc-sidebar-head">📑 Mục lục</div>
+    <div class="toc-sidebar-hint">{{N_SECTIONS}} phần · click để nhảy đến</div>
+    <ul class="toc-sidebar-list">
+      {{TOC_SIDEBAR_ITEMS}}
+    </ul>
+  </aside>
+</div><!-- /layout-main -->
+
+<!-- Disclaimer + footer OUTSIDE layout-main (full width) -->
+```
+
+**Token mới** `{{TOC_SIDEBAR_ITEMS}}` — generate tự động:
+```python
+# Scan section ids → build list items
+sections = re.findall(r'<section id="(sec-[^"]+)"[^>]*>.*?<h[12][^>]*>(?:<span[^>]*>\d+</span>)?\s*([^<]+)', html, re.DOTALL)
+toc_items = "\n".join(
+    f'    <li><a class="toc-sidebar-item" href="#{sid}">'
+    f'<span class="toc-sidebar-num">{i+1}</span>'
+    f'<span class="toc-sidebar-label">{title.strip()[:40]}</span></a></li>'
+    for i, (sid, title) in enumerate(sections)
+)
+html = html.replace("{{TOC_SIDEBAR_ITEMS}}", toc_items)
+```
+
+**Responsive**: desktop ≥1100px = 2 cột (sidebar phải sticky); tablet/mobile = 1 cột (ẩn sidebar, dùng topnav trên cùng). Đã có `@media (max-width: 1100px)` trong components.css.
+
+---
+
 ## Danh sách chi tiết (theo thứ tự HTML)
 
 ## Hero section

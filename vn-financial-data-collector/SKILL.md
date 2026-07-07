@@ -29,12 +29,23 @@ f = Finance(symbol='HPG', source='VCI')
 income = f.income_statement()      # Doanh thu, LNST, EPS...
 balance = f.balance_sheet()        # VCSH, Tổng TS, Nợ...
 cashflow = f.cash_flow()           # CFO, CapEx...
-ratios = f.ratio()                  # PE/PB/ROE/EV-EBITDA tính sẵn!
+# ⚠️ KHÔNG DÙNG f.ratio() làm nguồn chính — đã từng stale (BSR case).
+# Tự tính EPS/BVPS/ROE/PE/PB từ income + balance + giá hiện tại.
+# f.ratio() CHỈ dùng để cross-check (verify) — nếu chênh >5%, dùng số tự tính.
 
 c = Company(symbol='HPG', source='VCI')
 overview = c.overview()             # market_cap, issue_share, target_price
 events = c.events()                 # công bố thông tin, cổ tức
 ```
+
+**⚠️ QUY TẮC MỚI (v2.2.0 — học từ case BSR)**: KHÔNG dùng `f.ratio()` làm nguồn chính. Tự tính từ `income_statement` + `balance_sheet`:
+- EPS = LNST_CĐ_mẹ / số CP lưu hành (lấy từ `overview['issue_share']`)
+- BVPS = VCSH / số CP
+- ROE = LNST / VCSH
+- PE = giá hiện tại / EPS (tự tính, không tin ratio())
+- PB = giá hiện tại / BVPS
+
+`f.ratio()` **chỉ dùng để cross-check** — nếu chênh >5% với số tự tính → dùng số tự tính, flag ratio() có thể stale.
 
 **Chỉ dùng web scraping khi vnstock thiếu:**
 - BCTC kiểm toán PDF chính thức → trang QHCD DN

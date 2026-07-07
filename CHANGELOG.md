@@ -4,6 +4,51 @@ Tất cả thay đổi đáng chú ý của bộ skill `equity-research-vn`.
 
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), versioning theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.2.0] — 2026-07-07
+
+### 🛡️ Học từ `us-equity-research` + `skill-premortem`
+
+Sau khi so sánh với `us-equity-research` (sau 4 vòng premortem) và chạy `skill-premortem` trên bộ equity-research-vn, áp dụng 5 cái hay + fix 4 bug.
+
+#### ✨ Added — Scripts mới (chống silent failure)
+
+- **`scripts/audit_split.py`** — Automate Bẫy 5B (split-adjustment consistency). Kiểm tra events + capital_history + back-calc CP=LNST/EPS. Silent failure thật đã xảy ra (BSR: PE sai 6.10× → đúng 9.85×, sai 60%).
+- **`scripts/preflight.py`** — Port từ us-equity-research, adapt cho vnstock. 6 checks: split adjustment, LNST âm (PE vô nghĩa), IPO ngắn (< 5 năm), data stale, ticker mismatch (UPCOM/delisted).
+
+#### 🔧 Changed — Workflow cải thiện
+
+- **`vn-financial-data-collector/SKILL.md`**: Xóa `Finance.ratio()` khỏi workflow chính (Lesson #2 BSR stale). Tự tính EPS/BVPS/ROE/PE/PB từ `income_statement` + `balance_sheet`. `f.ratio()` chỉ cross-check, nếu chênh >5% → dùng số tự tính.
+- **`vn-technical-analysis/SKILL.md`**: Tech Score verdict đổi từ "STRONG BUY/SELL" → "TECHNICAL STRONG BULLISH/BEARISH" + guardrail "technical = input, không phải verdict cuối". Học từ us-equity-research.
+
+#### ✨ Added — Dashboard components (học từ us-equity-research)
+
+- **Disclaimer block** — `{{DISCLAIMER_HTML}}` content template (3 kỷ luật + HIGHQ/MEDQ/LOWQ labels). Chống "ảo giác model" cho nhà đầu tư.
+- **Sidebar TOC sticky** — Layout 2 cột (content trái + sidebar phải sticky). CSS thêm vào `_viz-shared/components.css` + `dashboard_template.html`. Responsive: ≥1100px = sidebar, <1100px = ẩn (dùng topnav).
+
+#### ✨ Added — Insight frames library VN
+
+- **`vn-valuation-engine/references/insight_frames_vn.md`** (MỚI) — 35 frames + archetype router cho 12 ngành VN (ngân hàng, dầu khí, BĐS, thép, bán lẻ, công nghệ, chứng khoán, bảo hiểm, điện, cảng, viễn thông, y tế). Học từ us-equity-research 12 frames + commodity extensions, adapt đặc thù VN (NIM/CASA, crack spread, NAV land bank, HRC price, SSSG...). Mỗi frame có "honest correction" BẮT BUỘC.
+
+#### 📚 Học từ đâu
+
+| Cái hay | Nguồn |
+|---|---|
+| Preflight script (7 checks) | us-equity-research/scripts/preflight.py |
+| Disclaimer block (3 kỷ luật + HIGHQ/MEDQ/LOWQ) | us-equity-research/assets/dashboard_skeleton.html |
+| Sidebar TOC sticky (layout 2 cột) | us-equity-research ORCL report |
+| Technical guardrail (STRONG BUY → TECHNICAL STRONG BULLISH) | us-equity-research premortem vòng 3 |
+| Insight frames library (12→35 frames) | us-equity-research/references/insight_frames.md |
+| Audit Bẫy 5B auto | equity-research-vn Lesson #1 + skill-premortem VN |
+
+#### 🐛 Fixed (từ skill-premortem VN)
+
+- **B.3 Bẫy 5B audit manual** → automate `scripts/audit_split.py` (silent failure thật đã xảy ra)
+- **B.1 IPO ngắn silent** → `preflight.py` flag HISTORY_TOO_SHORT
+- **B.2 công ty lỗ PE vô nghĩa** → `preflight.py` flag NEGATIVE_EARNINGS + valuation path B
+- **B.5 ratio() stale** → xóa khỏi workflow chính, chỉ cross-check
+
+---
+
 ## [2.1.0] — 2026-06-29
 
 ### 🎨 `_viz-shared/` — Design system dùng chung (single source of truth)

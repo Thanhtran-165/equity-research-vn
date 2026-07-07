@@ -183,15 +183,20 @@ Tính score từ 6 signals (mỗi signal ±1):
 | MACD vs Signal | Trên (bullish) | Dưới (bearish) |
 | BB Position | > 50% | < 50% |
 
-| Score | Verdict | Khuyến nghị |
-|---|---|---|
-| +4 đến +6 | STRONG BUY | Tích lũy mạnh |
-| +1 đến +3 | BUY | Tích lũy |
-| -1 đến 0 | HOLD/NEUTRAL | Quan sát |
-| -3 đến -2 | SELL/REDUCE | Hạn chế |
-| -6 đến -4 | STRONG SELL | Tránh/Cắt lỗ |
+| Score | Verdict (TECHNICAL only — KHÔNG phải khuyến nghị giao dịch) |
+|---|---|
+| +4 đến +6 | TECHNICAL STRONG BULLISH |
+| +1 đến +3 | TECHNICAL BULLISH |
+| -1 đến 0 | TECHNICAL NEUTRAL |
+| -3 đến -2 | TECHNICAL BEARISH |
+| -6 đến -4 | TECHNICAL STRONG BEARISH |
 
-⚠️ **Cổ phiếu chu kỳ:** Score bearish không phải lúc nào cũng = bán. Kết hợp với fundamental (skill `vn-valuation-engine`) để decide.
+**⚠️ GUARDRAIL BẮT BUỘC** (v2.2.0 — học từ us-equity-research):
+- **KHÔNG dùng "STRONG BUY/BUY/SELL/STRONG SELL"** — đó là khuyến nghị giao dịch, technical alone không đủ.
+- Dùng "TECHNICAL STRONG BULLISH/BEARISH" — mô tả trạng thái kỹ thuật, không phải lệnh.
+- **Verdict technical phải kết hợp fundamental**: "Tech Score +5 NHƯNG valuation đắt → KHÔNG kết luận bullish cho đầu tư 3-5 năm."
+- **Score bearish không tự động = "bán"**: Cổ phiếu chu kỳ ở đáy có thể là accumulation zone cho value investor. Kết hợp với fundamental (skill `vn-valuation-engine`) để decide.
+- Technical = 1 input, không phải verdict cuối. Final verdict = fundamental + valuation + technical.
 
 ## Phối hợp với skills khác
 
