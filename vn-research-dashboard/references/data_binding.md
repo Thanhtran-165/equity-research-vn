@@ -299,3 +299,53 @@ Recommendation mapping (từ `vn-valuation-engine`):
    ```
 
 7. **Chart.js arrow function** trong tooltip/scales callback — dùng `function(v){return ...}` thay vì `v => ...` để tránh parser issue trong một số edge cases.
+
+---
+
+## Xref cross-reference links (BẮT BUỘC — v2.2.6 học từ CTD test 7/2026)
+
+> Mỗi section trong text có reference nội bộ ("xem Section N") PHẢI là link clickable.
+> ORCL benchmark có 31 xref links. CTD ban đầu có 0 → gap navigation rõ.
+
+### Pattern
+
+```html
+<!-- CSS (đã có trong template): -->
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}
+a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+
+<!-- HTML usage: -->
+<a href="#sec-valuation" class="xref">Section 8</a>
+<a href="#sec-risk" class="xref">Section 11</a>
+<a href="#sec-bs" class="xref">Section 10</a>
+```
+
+### Section number → id mapping
+
+| # | id | # | id | # | id |
+|---|---|---|---|---|---|
+| 1 | sec-hero | 8 | sec-valuation | 15 | sec-insight |
+| 2 | sec-exec | 9 | sec-peer | 16 | sec-moat |
+| 3 | sec-biz | 10 | sec-bs | 17 | sec-supply |
+| 4 | sec-industry | 11 | sec-risk | 18 | sec-tech |
+| 5 | sec-history | 12 | sec-33k | 19 | sec-tech-profile |
+| 6 | sec-segment | 13 | sec-scenario | 20 | sec-analyst |
+| 7 | sec-thesis | 14 | sec-checklist | 21 | sec-glossary / 22 sec-source |
+
+### Verify trước deploy
+
+```bash
+XREF_COUNT=$(grep -c 'class="xref"' [output].html)
+[ "$XREF_COUNT" -ge 10 ] || echo "❌ FAIL: chỉ $XREF_COUNT xref links (minimum 10)"
+```
+
+### Chỗ BẮT BUỘC có xref
+
+- Exec Summary → reference sections chi tiết (history, BS, valuation)
+- Risk Matrix → reference scenario analysis
+- Thesis KPI → reference checklist
+- Valuation → reference analyst targets
+- Technical → reference valuation (divergence)
+- Disclaimer → reference data quality
+- Glossary → reference source appendix
+- Mỗi insight → reference risk matrix
