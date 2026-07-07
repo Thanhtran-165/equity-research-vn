@@ -70,7 +70,7 @@ python3 -c "from vnstock_data import Finance; print('sponsor OK')" 2>/dev/null
 - Kỳ phân tích 5 năm gần nhất: **2021-2025** (tháng hiện tại ≥ 4 → N-1 đã có BCTC)
 - **NGUỒN #1: vnstock API** — fetch BCTC, ratios, info qua `Finance` + `Company` modules
 - Web scraping (CafeF/Vietstock/QHCD DN) CHỈ khi vnstock thiếu (BCTC PDF, tin tức >50 bài)
-- Áp dụng **8 bẫy dữ liệu** (số CP từng năm, đơn vị, LNST thuộc CĐ mẹ, data cũ, split-adjusted, vốn hóa, **split-adjustment consistency Bẫy 5B**)
+- Áp dụng **9 bẫy dữ liệu** (số CP từng năm, đơn vị, LNST thuộc CĐ mẹ, data cũ, split-adjusted, vốn hóa, **split-adjustment consistency Bẫy 5B**)
 - **⚠️ AUDIT BẮT BUỘC ĐẦU TIÊN (Bẫy 5B):** Chạy audit split trước khi tính EPS/PE/PB:
   1. Check `Company.events()` cho split/dividend-stock event
   2. Check `Company.capital_history()` (KBS) cho vốn điều lệ tăng đột biến

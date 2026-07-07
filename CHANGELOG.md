@@ -4,6 +4,28 @@ Tất cả thay đổi đáng chú ý của bộ skill `equity-research-vn`.
 
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/), versioning theo [Semantic Versioning](https://semver.org/lang/vi/).
 
+## [2.2.4] — 2026-07-07
+
+### 🐛 Fix từ CTD test round 3 — báo cáo thiếu charts
+
+User so sánh CTD vs ORCL: "số biểu đồ ít hơn, technical kém hơn hẳn".
+
+#### Added
+- **data_pitfalls.md Bẫy 9**: "Báo cáo thiếu biểu đồ — visual gap"
+  - Dashboard report PHẢI có tối thiểu 10 charts
+  - Verify `grep -c 'new Chart'` ≥ 10 trước deploy
+  - Chart data phải thật, không simulate
+- CTD report: thêm 11 charts (Revenue/LNST, CFO vs LNST, Backlog, P/E/P/B, Valuation, Debt/Equity, Peer scatter, Price+MA, RSI, Drawdown, Distribution)
+- 8→9 bẫy pitfalls
+
+#### Lesson
+| Vấn đề | Khắc phục |
+|---|---|
+| CTD 0 charts vs ORCL 13 charts | Bẫy 9: minimum 10 charts requirement |
+| Technical kém (chỉ tables) | Price+MA, RSI, Drawdown, Distribution charts thêm vào |
+
+---
+
 ## [2.2.3] — 2026-07-07
 
 ### ✨ Added — Đặc thù ngành (bản chất ngành nghề)
