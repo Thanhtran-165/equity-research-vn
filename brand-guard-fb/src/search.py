@@ -11,12 +11,16 @@ from bs4 import BeautifulSoup
 from src.models import Brand
 
 
-# Regex: chỉ giữ URL page, loại profile/groups/posts/photos/videos/reel
+# Regex: giữ URL profile/page Facebook.
+# A.1 FIX: chấp nhận profile.php?id=, /people/Name/pfbid (FB gán cho profile mới).
+# Chỉ loại groups/, pages/, watch/, share/, posts/, photos/, videos/ (deep links).
 _PAGE_URL_RE = re.compile(
     r"^https?://(?:www\.|m\.|web\.)?facebook\.com/"
-    r"(?!profile\.php|groups/|people/|pages/|watch/|share/|sharer|sharer\.php|permalink\.php)"
-    r"([\w.\-]+)"
-    r"(?:/?(?:posts|photos|videos|reel|reels|events|shop|live)?/?.*)$",
+    r"(?!groups/|pages/|watch/|share/|sharer|sharer\.php|permalink\.php)"
+    r"(profile\.php\?id=\d+"  # profile.php?id=<numeric>
+    r"|people/[\w%.\-]+/pfbid[\w]+"  # /people/Name/pfbid<hash>
+    r"|[\w.\-]+)"  # /<username>
+    r"(?:/?(?:posts|photos|videos|reel|reels|events|shop|live)?/?.*)?$",
     re.IGNORECASE,
 )
 

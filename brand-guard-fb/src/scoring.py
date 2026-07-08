@@ -42,7 +42,10 @@ def _score_url(page: PageMeta, brand: Brand) -> int:
 
 
 def _phash_distance(image_path_or_url: str) -> imagehash.ImageHash | None:
-    """Compute pHash từ path hoặc URL. Trả về None nếu fail."""
+    """Compute pHash từ path hoặc URL. Trả về None nếu fail.
+
+    B.2 FIX: khi download URL fail (FB CDN 403 signature mismatch), log warning
+    ra stderr để caller biết — không silent fail."""
     if not image_path_or_url:
         return None
     local_temp: str | None = None
@@ -50,15 +53,25 @@ def _phash_distance(image_path_or_url: str) -> imagehash.ImageHash | None:
         if image_path_or_url.startswith(("http://", "https://")):
             local_temp = _download_to_temp(image_path_or_url)
             if not local_temp:
+                import sys
+                print(
+                    f"[!] pHash: avatar download fail (likely FB CDN signature expired): "
+                    f"{image_path_or_url[:80]}...",
+                    file=sys.stderr,
+                )
                 return None
             img = Image.open(local_temp)
         else:
             p = Path(image_path_or_url)
             if not p.exists():
+                import sys
+                print(f"[!] pHash: local file not found: {image_path_or_url}", file=sys.stderr)
                 return None
             img = Image.open(p)
         return imagehash.phash(img)
-    except Exception:
+    except Exception as e:
+        import sys
+        print(f"[!] pHash: error computing hash: {e}", file=sys.stderr)
         return None
     finally:
         if local_temp:
@@ -66,6 +79,7 @@ def _phash_distance(image_path_or_url: str) -> imagehash.ImageHash | None:
                 import os
                 os.remove(local_temp)
             except OSError:
+                pass
                 pass
 
 
@@ -102,13 +116,13 @@ def _bucket_score(distance: int, cfg: dict[str, Any], prefix: str) -> int:
         if distance <= cfg["cover_distance_weak"]:
             return 8
     return 0
-    return 0
 
 
 def _score_avatar(page: PageMeta, brand: Brand, cfg: dict[str, Any]) -> tuple[int, bool]:
     """Returns (score, needs_semantic_check).
-    needs_semantic_check=True khi pHash miss (distance > weak) NHƯNG avatar có
-    → có thể bị edit nhẹ (filter/crop/recolor), agent nên dùng analyze_image."""
+    A.3 FIX: flag semantic check khi distance > moderate (8) thay vì > weak (12).
+    Avatar nhỏ (200x200) pHash variance cao — format khác có thể Hamming 8-12.
+    Hạ ngưỡng để catch nhiều hơn, giảm miss."""
     if not page.avatar_url or not brand.avatar_path:
         return (0, False)
     h1 = _phash_distance(page.avatar_url)
@@ -117,8 +131,8 @@ def _score_avatar(page: PageMeta, brand: Brand, cfg: dict[str, Any]) -> tuple[in
         return (0, False)
     distance = h1 - h2
     score = _bucket_score(distance, cfg, "avatar")
-    # pHash miss (distance > weak) nhưng có avatar → flag semantic check
-    needs_check = score == 0 and distance > cfg["avatar_distance_weak"]
+    # pHash partial miss (distance > moderate) → flag semantic check
+    needs_check = score <= 15 and distance > cfg["avatar_distance_moderate"]
     return (score, needs_check)
 
 
@@ -132,7 +146,7 @@ def _score_cover(page: PageMeta, brand: Brand, cfg: dict[str, Any]) -> tuple[int
         return (0, False)
     distance = h1 - h2
     score = _bucket_score(distance, cfg, "cover")
-    needs_check = score == 0 and distance > cfg["cover_distance_weak"]
+    needs_check = score <= 8 and distance > cfg["cover_distance_moderate"]
     return (score, needs_check)
 
 

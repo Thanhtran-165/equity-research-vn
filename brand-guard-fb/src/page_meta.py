@@ -47,16 +47,30 @@ def _read_cache(url: str, ttl: int = _CACHE_TTL_SECONDS) -> PageMeta | None:
     fetched_ts = data.get("fetched_ts", 0)
     if time.time() - fetched_ts > ttl:
         return None
-    return _meta_from_dict(url, data)
+    meta = _meta_from_dict(url, data)
+    # B.1 FIX: If avatar/cover was cleared (CDN URL expired), cache is stale —
+    # invalidate so caller re-fetches fresh metadata with new CDN URLs.
+    if not meta.avatar_url and not meta.cover_url and meta.title:
+        return None
+    return meta
 
 
 def _write_cache(url: str, meta: PageMeta) -> None:
     p = _cache_path(url)
+    # B.1 FIX: Don't cache CDN URLs — they expire after ~6h (signature mismatch).
+    # Only cache LOCAL file paths (stable). If avatar_url is a CDN URL, clear it
+    # so next run re-fetches fresh metadata instead of using dead URL.
+    avatar_to_cache = meta.avatar_url
+    if avatar_to_cache and avatar_to_cache.startswith(("http://", "https://")):
+        avatar_to_cache = ""  # CDN URL will be dead on cache hit → clear
+    cover_to_cache = meta.cover_url
+    if cover_to_cache and cover_to_cache.startswith(("http://", "https://")):
+        cover_to_cache = ""
     payload = {
         "title": meta.title,
         "description": meta.description,
-        "avatar_url": meta.avatar_url,
-        "cover_url": meta.cover_url,
+        "avatar_url": avatar_to_cache,
+        "cover_url": cover_to_cache,
         "is_verified": meta.is_verified,
         "created_year": meta.created_year,
         "recent_post_count_30d": meta.recent_post_count_30d,
@@ -212,20 +226,21 @@ def fetch_page_meta_with_context(
 
         meta = parse_page_meta(url, html)
 
-        # Extract cover photo URL (chỉ visible khi login)
-        # FB inject cover trong div có class coverPhoto hoặc img có alt="Cover Photo"
+        # B.3 FIX: Extract cover photo bằng DIMENSIONS (>800x250) thay vì alt text.
+        # FB tiếng Việt không gán alt="Cover" → selector cũ miss.
+        # Cover luôn lớn hơn avatar: avatar ~100-500px, cover ~800-1500px.
         try:
             cover_img = page.evaluate("""() => {
-                // Cover photo trong FB profile có thể tìm qua nhiều pattern
-                const imgs = document.querySelectorAll('img');
+                const imgs = [...document.querySelectorAll('img')];
+                // Ưu tiên: ảnh scontent, naturalWidth > 800, naturalHeight > 250,
+                // KHÔNG phải avatar (path /t39.30808-1/ = avatar CDN pattern)
                 for (const img of imgs) {
                     const src = img.src || '';
-                    const alt = (img.alt || '').toLowerCase();
-                    if (alt.includes('cover') || src.includes('/t1.')) {
-                        // Cover thường có dimensions lớn hơn avatar, path /t1. thay /t39.30808-1/
-                        if (src.includes('scontent') && !src.includes('/t39.30808-1/')) {
-                            return src;
-                        }
+                    const w = img.naturalWidth || 0;
+                    const h = img.naturalHeight || 0;
+                    if (src.includes('scontent') && w > 800 && h > 250
+                        && !src.includes('/t39.30808-1/')) {
+                        return src;
                     }
                 }
                 return '';

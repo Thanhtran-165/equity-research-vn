@@ -18,10 +18,22 @@ DEFAULT_SCORING = {
     "cover_distance_strong": 4,
     "cover_distance_moderate": 8,
     "cover_distance_weak": 12,
-    "recent_years": [2025, 2026],
+    # B.4 FIX: recent_years dynamic — compute [now, now-1] at load time.
+    # Prevents silent decay where [2025,2026] becomes stale in 2027+.
+    # User can still override via brands.yaml scoring section.
+    "recent_years": None,  # placeholder — filled by _resolve_defaults()
     # Note: risk band cutoffs (HIGH≥70, MID≥40) are hardcoded in ScoreResult.band
     # (models.py) and are not user-overridable via config.
 }
+
+
+def _resolve_defaults(scoring: dict) -> dict:
+    """Fill dynamic defaults that can't be static (B.4: recent_years)."""
+    if scoring.get("recent_years") is None:
+        from datetime import datetime
+        now = datetime.now().year
+        scoring["recent_years"] = [now, now - 1]
+    return scoring
 
 
 class ConfigError(Exception):
@@ -74,6 +86,8 @@ def load_config(path: Path) -> AppConfig:
     with path.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
     scoring = _deep_merge(DEFAULT_SCORING, (data.get("defaults") or {}).get("scoring", {}))
+    # B.4: fill dynamic recent_years if not overridden by user
+    scoring = _resolve_defaults(scoring)
     raw_brands = data.get("brands", []) or []
     if not raw_brands:
         raise ConfigError("Config must contain at least one brand under 'brands:'")
