@@ -32,40 +32,60 @@ Khi cần sửa design chung (palette, component, chart helper): sửa `../_viz-
 
 Đường dẫn template: `assets/dashboard_template.html`
 
-Template có cấu trúc **10 section** (complete equity report, theo dashboard HPG đã build):
-1. **Hero** — ticker, tên công ty, giá hiện tại, 6 KPI cards
-2. **Executive Summary** — TL;DR + 4 highlight boxes
-2. **Executive Summary** — TL;DR + 4 highlight boxes (tóm tắt nhanh)
-3. **Kết quả kinh doanh** — 2 charts (Doanh thu/LNST, Biên LN) + bảng 5 năm
-4. **Định giá PE/PB** — gauge + 5 kịch bản + 2 charts (PE/PB, Giá/BVPS)
-5. **Multiples mở rộng** — 4 cards (PE, PB, P/S, P/CF)
-6. **DCF & Graham** — 3 kịch bản DCF + Graham comparison
-7. **DuPont** — chart stacked bar + diễn giải
-8. **Special insights ngành** — 3 cards + dự phóng + đánh giá + khuyến nghị
-9. **Technical Analysis** (data thật vnstock) — verdict + candlestick chart + indicators + correlation vs VNINDEX/VN30 + patterns + divergence check + trading strategy
-10. **News Digest 30 ngày** — sentiment meter + news cards + timeline + key takeaways
+⚠️ **Template đã update từ KDH benchmark (2026-07-10)** — thay thế template HPG cũ lỗi thời (0 sections). Template mới có **22 sections chuẩn** (giống KDH/CTD benchmark). Backup template cũ tại `assets/dashboard_template_legacy_hpg.html`.
 
-⚠️ **Section 9 (Technical) yêu cầu data thật từ vnstock** — KHÔNG BAO GIỜ mô phỏng data giá. Nếu không fetch được → bỏ section hoặc ghi "data không khả thi".
+Template có cấu trúc **22 section** (complete equity report, theo dashboard KDH/CTD benchmark):
+1. **sec-hero** — ticker, tên công ty, giá hiện tại, KPI cards
+2. **sec-exec** — Executive Summary (TL;DR + highlight boxes)
+3. **sec-biz** — Mô tả kinh doanh (business model, sản phẩm/dịch vụ)
+4. **sec-industry** — Ngành + thị trường (industry overview, market size, trends)
+5. **sec-history** — Lịch sử hình thành + milestones (IPO, M&A, restructuring)
+6. **sec-segment** — Phân tích phân khúc (revenue breakdown by segment/geography)
+7. **sec-thesis** — Luận điểm đầu tư (investment thesis: growth story, catalysts)
+8. **sec-valuation** — Định giá PE/PB/DCF (gauge + scenarios + charts)
+9. **sec-peer** — So sánh同行 (peer comparison: multiples, growth, margins)
+10. **sec-bs** — Bảng cân đối kế toán (balance sheet health, leverage)
+11. **sec-risk** — Rủi ro (bear case: debt, competition, regulatory, execution)
+12. **sec-33k** — Capital lens (góc nhìn vốn: số vốn giải ngân, DCA framework)
+13. **sec-scenario** — Kịch bản (bull/base/bear scenarios with price targets)
+14. **sec-checklist** — Investment checklist (câu hỏi kiểm chứng trước khi đầu tư)
+15. **sec-insight-1** — Special insight 1 (trigger + analysis + honest correction + verdict)
+16. **sec-insight-2** — Special insight 2 (deep dive 1 chủ đề then chốt)
+17. **sec-insight-3** — Special insight 3 (deep dive 1 chủ đề then chốt)
+18. **sec-tech** — Technical Analysis mode ACTIVE (Tech Score, Verdict, candlestick + indicators)
+19. **sec-tech-profile** — Technical mode PROFILE (15 block định lượng + archetype, NON-ADVICE)
+20. **sec-analyst** — Analyst consensus (target price, rating,所以各家券商观点)
+21. **sec-glossary** — Glossary (thuật ngữ ngành + giải thích)
+22. **sec-source** — Sources & references (numbered citations)
+
+⚠️ **Sections 18-19 (Technical) yêu cầu data thật từ vnstock** — KHÔNG BAO GIỜ mô phỏng data giá. Nếu không fetch được → bỏ section hoặc ghi "data không khả thi".
 
 ### Bước 2: Fill data vào template
 
-Tham khảo `references/data_binding.md` cho danh sách toàn bộ placeholder cần fill:
+Template có **38 tokens** `{{UPPER_TOKEN}}`. **DANH SÁCH TOKENS (chính xác — KHÔNG tự nghĩ tên):**
 
-```javascript
-// Cập nhật object data trong <script>:
-const data = {
-  ticker: "HPG",
-  companyName: "HÒA PHÁT GROUP",
-  priceCurrent: 23650,
-  years: [2021, 2022, 2023, 2024, 2025],
-  revenue: [...], netProfit: [...],
-  eps: [...], bvps: [...], pe: [...], pb: [...],
-  roe: [...], ros: [...],
-  valuations: { pbMedian: 24026, peMedian: 26869, ... },
-  recommendation: "ACCUMULATE",
-  targetRange: "26,000 - 29,000"
-};
+```bash
+# In danh sách tokens chính xác từ template:
+grep -oE '\{\{[A-Z_0-9]+\}\}' assets/dashboard_template.html | sort -u
 ```
+
+**Token categories:**
+
+| Token type | Tokens | Cách fill |
+|---|---|---|
+| Meta/identity | `{{TICKER}}`, `{{COMPANY_NAME}}`, `{{EXCHANGE}}`, `{{PRICE_DATE}}`, `{{CAPITAL_LENS_AMOUNT}}` | String replace |
+| Section HTML body (22) | `{{SEC_HERO_HTML}}`, `{{SEC_EXEC_HTML}}`, `{{SEC_BIZ_HTML}}`, ... `{{SEC_SOURCE_HTML}}` | HTML block cho mỗi section (bao gồm tables, text, **canvas elements**) |
+| Insight labels | `{{INSIGHT_1_SUBTITLE}}`, `{{INSIGHT_1_SHORT_LABEL}}`, ... (3 insights × 2) | String ngắn |
+| Chart data | `{{CHART_DATA_JS}}` (JS object), `{{THESIS_CAPEX_LABELS}}`, `{{THESIS_CAPEX_DATA}}` | JS array/object |
+| Source/citation | `{{SOURCES_SUMMARY}}`, `{{CITATION_COUNT}}` | String/number |
+
+⚠️ **CANVAS IDS BẮT BUỘC** — JS template có 13 `new Chart()` definitions tham chiếu 13 canvas ids. Agent PHẢI include các canvas elements này trong `{{SEC_XXX_HTML}}` tương ứng:
+```
+chartHistRev, chartBSDt, chartHistCash, chartPeerScatter, chartProfileDD,
+chartProfileDist, chartReturns, chartSegMix, chartTechPrice, chartTechRSI,
+chartThesisCapex, chartThesisRPO, chartValPE
+```
+Nếu thiếu canvas → JS error `Cannot read properties of null` → charts không render.
 
 ### Bước 3: Kiểm tra syntax JavaScript (BẮT BUỘC)
 

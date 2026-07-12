@@ -2,1366 +2,1101 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{TICKER}} · {{COMPANY_NAME}} | Equity Research Dashboard</title>
+    <title>{{TICKER}} · {{COMPANY_NAME}} | Investment Evidence Pack (1–3 năm)</title>
+    <meta name="description" content="Báo cáo nghiên cứu cổ phiếu {{COMPANY_NAME}} ({{TICKER}}) — investment evidence pack cho nhà đầu tư 1–3 năm, không khuyến nghị mua/bán.">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- ===== VIZ DESIGN TOKENS + COMPONENTS (inlined từ _viz-shared/ by inject.py) ===== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* =========================================================================
-   VIZ DESIGN TOKENS — single source of truth
-   Trước đây: :root block này bị copy-paste 4 lần (dashboard, technical,
-   profile, news templates) → mỗi lần sửa palette phải sửa 4 nơi.
-   Giờ: sửa 1 lần tại đây, chạy `inject.py` để inline vào mọi template.
+:root{
+  /* Hybrid dark clean — Bloomberg-ish, accent kìm */
+  --bg-0:#0f1419; --bg-1:#13181f; --bg-2:#1a2029;
+  --card:#161b22; --card-2:#1c232d;
+  --border:rgba(255,255,255,0.08); --border-hot:rgba(245,166,35,0.45);
+  --text:#e6edf3; --text-dim:#8b949e; --text-faint:#565f6b;
+  --amber:#f5a623; --amber-soft:rgba(245,166,35,0.14);
+  --blue:#4a9eff; --blue-soft:rgba(74,158,255,0.14);
+  --green:#3fb950; --green-soft:rgba(63,185,80,0.14);
+  --red:#f85149; --red-soft:rgba(248,81,73,0.14);
+  --purple:#a78bfa; --purple-soft:rgba(167,139,250,0.14);
+  --grad-amber:linear-gradient(135deg,#f5a623 0%,#d48806 100%);
+  --grad-blue:linear-gradient(135deg,#4a9eff 0%,#2670c8 100%);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --radius:12px; --radius-sm:8px;
+  --chart-grid:rgba(255,255,255,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
 
-   THEME SWITCHING: thêm `data-theme="bloomberg"` hoặc `data-theme="corporate"`
-   lên thẻ <html>. Mặc định (không có data-theme) = Fintech.
-   ========================================================================= */
+/* ---------- chrome ---------- */
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad-amber);z-index:1000;transition:width .1s ease-out}
+.topnav{position:sticky;top:0;z-index:900;background:rgba(15,20,25,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.topnav-inner{max-width:1480px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:thin;height:52px}
+.topnav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:16px;border-right:1px solid var(--border);margin-right:8px}
+.topnav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.topnav-link{font-size:12px;color:var(--text-dim);padding:6px 10px;border-radius:6px;white-space:nowrap;transition:all .15s;font-weight:500}
+.topnav-link:hover{color:var(--text);background:var(--card)}
+.topnav-link.active{color:var(--amber);background:var(--amber-soft)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;z-index:800}
+.back-top.visible{opacity:1;pointer-events:auto}
+.back-top:hover{border-color:var(--border-hot);color:var(--amber)}
 
+/* ---------- layout ---------- */
+.container{max-width:1480px;margin:0 auto;padding:24px 24px 80px}
+
+/* ---------- layout 2 cột: content + TOC sidebar phải (sticky) ---------- */
+.layout-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:start}
+.layout-content{min-width:0}
+.toc-sidebar{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding:14px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.toc-sidebar::-webkit-scrollbar{width:6px}
+.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border-hot);border-radius:3px}
+.toc-sidebar-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--amber);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.toc-sidebar-hint{font-size:10.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4}
+.toc-sidebar-list{list-style:none;padding:0;margin:0}
+.toc-sidebar-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text-dim);font-size:11.5px;line-height:1.35;transition:all .12s;border-left:2px solid transparent}
+.toc-sidebar-item:hover{background:rgba(245,166,35,0.06);color:var(--text);text-decoration:none;border-left-color:var(--amber)}
+.toc-sidebar-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:var(--card-2);color:var(--text-faint);font-size:10px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;margin-top:1px}
+.toc-sidebar-item:hover .toc-sidebar-num{background:var(--amber);color:#1a1206}
+.toc-sidebar-item .toc-sidebar-label{flex:1}
+@media(max-width:1100px){.layout-main{grid-template-columns:1fr;gap:0}.toc-sidebar{display:none}}
+
+/* ---------- disclaimer block (cuối báo cáo, trước source) ---------- */
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.section{margin-top:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}
+.section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.section-title .tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#1a1206}
+.tag.amber{background:var(--amber)} .tag.blue{background:var(--blue)} .tag.green{background:var(--green)} .tag.red{background:var(--red)} .tag.purple{background:var(--purple)}
+.divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.section-sub{color:var(--text-dim);font-size:13px;margin:4px 0 20px;padding-left:40px}
+
+/* ---------- hero ---------- */
+.hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(74,158,255,0.04));border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-amber);color:#1a1206;padding:5px 14px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:0.5px}
+.disclaimer-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(248,81,73,0.3);margin-left:8px}
+.company-name{font-size:38px;font-weight:800;margin-top:14px;letter-spacing:-0.8px}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:14px}
+.price-block{text-align:right}
+.price-now{font-size:46px;font-weight:800;letter-spacing:-1px;font-family:var(--font-mono)}
+.price-now .ccy{font-size:20px;color:var(--text-dim);font-weight:500;margin-right:4px}
+.price-meta{margin-top:6px;color:var(--text-dim);font-size:12px}
+.price-meta .delta{font-weight:600;margin-left:6px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
+.kpi:hover{border-color:var(--border-hot)}
+.kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}
+.kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
+
+/* ---------- card ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:11px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:300px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:360px} .chart-wrap.xs{height:180px}
+
+/* ---------- table ---------- */
+.fin-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.fin-table th,.fin-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.fin-table th:first-child,.fin-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim)}
+.fin-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;border-bottom:1px solid var(--border)}
+.fin-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+.fin-table .col-latest{background:var(--amber-soft);color:var(--amber);font-weight:700}
+.fin-table .row-strong td{font-weight:700;background:rgba(255,255,255,0.02)}
+.fin-table .row-total td{border-top:2px solid var(--border);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+
+/* ---------- callout / highlight ---------- */
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card)}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)} .callout.neu{border-left-color:var(--amber)}
+.callout-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.callout-body{font-size:13px;color:var(--text-dim);line-height:1.6}
+.callout-body strong{color:var(--text)}
+
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+
+/* ---------- metric stat ---------- */
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.stat-value{font-size:26px;font-weight:700;margin-top:4px;font-family:var(--font-mono)}
+.stat-meta{font-size:11px;color:var(--text-dim);margin-top:4px}
+.stat-verdict{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:6px}
+.verdict-good{background:var(--green-soft);color:var(--green)} .verdict-warn{background:var(--amber-soft);color:var(--amber)} .verdict-danger{background:var(--red-soft);color:var(--red)}
+
+/* ---------- gauge ---------- */
+.gauge{position:relative;height:8px;background:var(--bg-2);border-radius:4px;margin-top:8px;overflow:hidden}
+.gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px}
+.gauge-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px}
+
+/* ---------- ref / citation ---------- */
+.ref{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 5px;border-radius:4px;margin-left:2px;vertical-align:super;font-family:var(--font-mono);text-decoration:none;border:1px solid rgba(74,158,255,0.25)}
+.ref:hover{background:var(--blue);color:#0f1419;text-decoration:none}
+.refs{list-style:none;counter-reset:ref;padding-left:0}
+.refs li{counter-increment:ref;font-size:11.5px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;line-height:1.5}
+.refs li::before{content:counter(ref);font-family:var(--font-mono);font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 6px;border-radius:4px;font-size:10px;height:fit-content;flex-shrink:0;border:1px solid rgba(74,158,255,0.2)}
+.refs li a{color:var(--text-dim);word-break:break-all}
+.refs li a:hover{color:var(--blue)}
+.refs .src-meta{color:var(--text-faint);font-size:10.5px;display:block;margin-top:2px}
+
+/* ---------- checklist ---------- */
+.check-list{list-style:none;padding:0}
+.check-list li{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.check-list li:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.check-box.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.check-box.off{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.check-list .q{flex:1}
+.check-list .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+
+/* ---------- risk matrix ---------- */
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}
+.risk-table th,.risk-table td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.risk-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600}
+.risk-table td:first-child{font-weight:600;color:var(--text)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px}
+.pill-l{background:var(--green-soft);color:var(--green)} .pill-m{background:var(--amber-soft);color:var(--amber)} .pill-h{background:var(--red-soft);color:var(--red)}
+
+/* ---------- scenario ---------- */
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.scenario-card{border-radius:var(--radius);padding:18px;border:1px solid var(--border)}
+.scenario-card.bull{border-top:3px solid var(--green)} .scenario-card.base{border-top:3px solid var(--amber)} .scenario-card.bear{border-top:3px solid var(--red)}
+.scenario-card h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.scenario-card ul{list-style:none;padding:0;font-size:12px;color:var(--text-dim)}
+.scenario-card li{padding:4px 0;line-height:1.5}
+.scenario-card li::before{content:'›';color:var(--amber);margin-right:6px;font-weight:700}
+
+/* ---------- drawdown ---------- */
+.drawdown-table{width:100%;border-collapse:collapse;font-size:13px}
+.drawdown-table th,.drawdown-table td{padding:10px;border-bottom:1px solid var(--border);text-align:center}
+.drawdown-table th{font-size:10px;text-transform:uppercase;color:var(--text-faint);font-weight:600}
+.drawdown-table td:first-child{text-align:left;font-family:var(--font-mono);color:var(--red);font-weight:600}
+.drawdown-table td:last-child{text-align:left;font-family:var(--font-sans);color:var(--text-dim);font-size:12px}
+
+/* ---------- segment bar ---------- */
+.seg-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.seg-row:last-child{border-bottom:none}
+.seg-name{width:200px;font-size:12.5px;font-weight:500;flex-shrink:0}
+.seg-bar{flex:1;height:24px;background:var(--bg-2);border-radius:5px;overflow:hidden;position:relative}
+.seg-bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono)}
+.seg-meta{width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0}
+
+/* ---------- quality badge ---------- */
+.qbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;font-family:var(--font-mono)}
+.qbadge-HIGHQ{background:var(--green-soft);color:var(--green)} .qbadge-MEDQ{background:var(--amber-soft);color:var(--amber)} .qbadge-LOWQ{background:var(--red-soft);color:var(--red)}
+
+/* ---------- disclaimer block (cuối báo cáo, trước source) ---------- */
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+
+/* ---------- footer ---------- */
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}
+footer p{margin-bottom:6px}
+.disclaimer{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--radius);padding:14px 18px;margin:16px 0;font-size:11.5px;color:var(--text-dim)}
+
+/* ---------- value chain stack ---------- */
+.vc-stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.vc-layer{display:grid;grid-template-columns:130px 1fr 90px 90px;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;background:var(--card-2);border:1px solid var(--border);font-size:12px;position:relative;transition:border-color .2s}
+.vc-layer.upstream-most{border-left:3px solid var(--red)}
+.vc-layer.upstream{border-left:3px solid var(--amber)}
+.vc-layer.oracle{border-left:3px solid var(--blue);background:rgba(74,158,255,0.06)}
+.vc-layer.downstream{border-left:3px solid var(--text-faint)}
+.vc-name{font-weight:600;color:var(--text)}
+.vc-name .sub{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px}
+.vc-players{color:var(--text-dim);font-size:11.5px}
+.vc-rent{font-family:var(--font-mono);font-weight:700;font-size:11px;text-align:center}
+.vc-pillar{font-family:var(--font-mono);font-size:10.5px;text-align:center;font-weight:600}
+.vc-legend{display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-top:10px;flex-wrap:wrap}
+.vc-legend span{display:inline-flex;align-items:center;gap:6px}
+.vc-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* ---------- rent location gauge ---------- */
+.rent-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0;border:1px solid var(--border)}
+.rent-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono);padding:0 4px;text-align:center;line-height:1.1}
+.rent-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-faint);margin-bottom:4px;font-family:var(--font-mono)}
+
+/* ---------- barrier table ---------- */
+.barrier-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.barrier-table th,.barrier-table td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.barrier-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.barrier-table td.barrier-name{font-weight:600;color:var(--text);width:23%}
+.barrier-height{display:inline-flex;align-items:center;gap:2px}
+.barrier-bar{display:inline-block;width:8px;height:14px;background:var(--bg-2);border-radius:2px;margin-right:1px}
+.barrier-bar.on-red{background:var(--red)} .barrier-bar.on-amber{background:var(--amber)} .barrier-bar.on-green{background:var(--green)}
+.trend-up{color:var(--green)} .trend-down{color:var(--red)} .trend-flat{color:var(--text-dim)}
+
+/* ---------- dependency matrix ---------- */
+.dep-matrix{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:14px 0;font-size:11.5px}
+.dep-matrix>div{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.dep-matrix>div:nth-child(3n){border-right:none}
+.dep-matrix>div:nth-last-child(-n+3){border-bottom:none}
+.dep-matrix .head{background:var(--card-2);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint)}
+.dep-layer{font-weight:600;color:var(--text)}
+.dep-verdict{font-weight:600}
+.lock-high{color:var(--green)} .lock-med{color:var(--amber)} .lock-low{color:var(--red)}
+
+/* ---------- technical score ---------- */
+.tech-score-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,var(--card),var(--card-2));border:1px solid var(--border);margin-bottom:16px}
+.tech-score-num{font-size:48px;font-weight:800;font-family:var(--font-mono);line-height:1;min-width:80px;text-align:center}
+.tech-verdict-pill{display:inline-block;font-size:11px;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.verdict-strong-sell{background:var(--red-soft);color:var(--red);border:1px solid rgba(248,81,73,0.4)}
+.verdict-sell{background:rgba(248,81,73,0.2);color:var(--red)}
+.verdict-hold{background:var(--amber-soft);color:var(--amber)}
+.verdict-buy{background:rgba(63,185,80,0.2);color:var(--green)}
+.verdict-strong-buy{background:var(--green-soft);color:var(--green);border:1px solid rgba(63,185,80,0.4)}
+.tech-score-bar{flex:1;height:14px;background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);border-radius:7px;position:relative;min-width:200px}
+.tech-score-marker{position:absolute;top:-4px;width:4px;height:22px;background:var(--text);border-radius:2px;transform:translateX(-50%)}
+.tech-score-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:4px}
+
+.signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.signal-cell{background:var(--bg-2);border-radius:7px;padding:10px;font-size:11.5px;border-left:3px solid var(--border)}
+.signal-cell.bull{border-left-color:var(--green)} .signal-cell.bear{border-left-color:var(--red)} .signal-cell.neut{border-left-color:var(--amber)}
+.signal-cell .sig-name{font-weight:600;color:var(--text);font-size:11px}
+.signal-cell .sig-val{font-family:var(--font-mono);color:var(--text-dim);margin-top:2px;font-size:10.5px}
+
+/* ---------- candlestick mini ---------- */
+.candle-mini-wrap{position:relative;height:280px;margin:12px 0}
+
+/* ---------- non-advice footer (PROFILE mode) ---------- */
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+.non-advice-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:8px;font-weight:700}
+.non-advice-panel ul{list-style:none;padding:0;font-size:11.5px;color:var(--text-dim);line-height:1.65}
+.non-advice-panel li{padding:3px 0;padding-left:16px;position:relative}
+.non-advice-panel li::before{content:'›';position:absolute;left:0;color:var(--amber)}
+
+/* ---------- analyst table ---------- */
+.analyst-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.analyst-table th,.analyst-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.analyst-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.analyst-table td.firm{font-weight:600;color:var(--text)}
+.analyst-table td.target{font-family:var(--font-mono);font-weight:600}
+.analyst-table td.thesis{font-size:11px;color:var(--text-dim);line-height:1.5}
+.rating-buy{color:var(--green);font-weight:600} .rating-hold{color:var(--amber);font-weight:600} .rating-sell{color:var(--red);font-weight:600}
+
+/* ---------- glossary ---------- */
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.gloss-item{background:var(--card-2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:12px}
+.gloss-term{font-weight:700;color:var(--blue);font-family:var(--font-mono);font-size:11.5px}
+.gloss-def{color:var(--text-dim);margin-top:3px;line-height:1.5}
+
+/* ---------- plain-language callout (💡 Nói cách khác) ---------- */
+.callout.plain{border-left-color:var(--amber);background:rgba(245,166,35,0.05)}
+.callout.plain .callout-title{color:var(--amber)}
+.callout.plain .callout-body{color:var(--text);font-size:13px}
+.callout.plain .callout-body strong{color:var(--amber)}
+
+
+/* ---------- xref link (cross-reference inline) ---------- */
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}
+a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+
+/* ---------- responsive ---------- */
+@media(max-width:1100px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .exec-grid{grid-template-columns:1fr 1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .scenario-grid{grid-template-columns:1fr}
+  .grid-2-1,.grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .container{padding:16px 14px 60px}
+  .hero{padding:20px}
+  .company-name{font-size:28px}
+  .price-now{font-size:34px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .exec-grid{grid-template-columns:1fr}
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .topnav-brand{display:none}
+  .section-title h2{font-size:18px}
+  .price-block{text-align:left}
+}
+
+/* ===== KDH EXTRA CSS — comprehensive coverage for generated classes (lesson 16) ===== */
+/* Data table (alternative to fin-table, used in some sections) */
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.data-table th,.data-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);border-left:1px solid var(--border)}
+.data-table th:first-child,.data-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim);border-left:none}
+.data-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;background:var(--card-2)}
+
+/* Insight frame container */
+.insight-frame{background:linear-gradient(135deg,rgba(245,166,35,0.04),rgba(74,158,255,0.03));border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-top:14px}
+
+/* Honest correction callout (stronger red border) */
+.honest-correction{border-left:4px solid var(--red)!important;background:rgba(248,81,73,0.06)!important}
+.callout.honest-correction .callout-title{color:var(--red)}
+
+/* Footnote */
+.footnote{font-size:11px;color:var(--text-faint);margin-top:8px;font-style:italic;line-height:1.5}
+
+/* Analyst card variants */
+.analyst-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.analyst-card.bull{border-top:3px solid var(--green)} .analyst-card.bear{border-top:3px solid var(--red)}
+
+/* Checklist grid (no nesting — lesson 17: place directly in section, not inside grid-2) */
+.checklist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:900px){.checklist-grid{grid-template-columns:1fr}}
+
+/* Cap card (capital lens) */
+.cap-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.cap-card h4{font-size:13px;margin-bottom:10px}
+
+/* Val card (valuation) */
+.val-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;border-left:3px solid var(--blue)}
+
+/* Stat (re-declared to ensure present; skeleton has it but reinforce) */
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-mini{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.stat-mini .stat-label{font-size:9.5px}
+.stat-mini .stat-value{font-size:18px;margin-top:2px}
+
+/* Verdict card */
+.verdict-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;border-left:3px solid var(--green)}
+
+/* Sources block */
+.sources{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px}
+.sources h4{font-size:13px;margin-bottom:10px}
+
+/* Consensus grid (analyst) */
+.consensus-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:900px){.consensus-grid{grid-template-columns:1fr 1fr}}
+
+/* Stale warning */
+.stale-warning{border-left:4px solid var(--amber);background:rgba(245,166,35,0.08);padding:12px 16px;border-radius:8px;margin:10px 0}
+.stale-warning h4{color:var(--amber);font-size:12px;text-transform:uppercase;margin-bottom:6px}
+
+/* Exec grid reinforce */
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1100px){.exec-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.exec-grid{grid-template-columns:1fr}}
+
+/* Scenario grid reinforce */
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.scenario-grid{grid-template-columns:1fr}}
+
+/* Non-advice panel reinforce */
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+
+/* Language policy banner */
+.lang-policy{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11.5px;color:var(--text-dim);margin:10px 0}
+
+/* Archetype card */
+.archetype-card{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(167,139,250,0.04));border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:var(--radius);padding:16px}
+
+/* Grid-3 reinforce */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:900px){.grid-3{grid-template-columns:1fr}}
+
+/* Table wrap borders reinforcement */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);margin:10px 0}
+.fin-table th,.fin-table td{border-bottom:1px solid var(--border)}
+.fin-table th{border-bottom:2px solid var(--border)}
+
+/* Callout variants reinforcement */
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card);margin:10px 0}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)}
+
+
+/* ===== frontend-polish: beautiful-shadows (MengTo) + animation-on-scroll ===== */
 :root {
-  /* --- Background layers --- */
-  --bg-0: #0a0a14;
-  --bg-1: #10101f;
-  --bg-2: #16162a;
-  --card: rgba(28,28,48,0.55);
-  --card-solid: #1a1a2e;
-
-  /* --- Borders --- */
-  --border: rgba(139,92,246,0.18);
-  --border-hot: rgba(236,72,153,0.35);
-
-  /* --- Text --- */
-  --text: #f0f0ff;
-  --text-dim: #8b8ba7;
-  --text-faint: #5a5a72;
-
-  /* --- Accents (neon) --- */
-  --purple: #a855f7;
-  --purple-2: #8b5cf6;
-  --pink: #ec4899;
-  --cyan: #06b6d4;
-  --green: #10d98a;
-  --green-soft: rgba(16,217,138,0.15);
-  --red: #ff4d6d;
-  --red-soft: rgba(255,77,109,0.15);
-  --amber: #fbbf24;
-
-  /* --- Gradients --- */
-  --grad-main: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-  --grad-cool: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
-  --grad-bg: radial-gradient(ellipse at 20% 0%, rgba(139,92,246,0.15) 0%, transparent 50%),
-             radial-gradient(ellipse at 80% 100%, rgba(236,72,153,0.12) 0%, transparent 50%);
-
-  /* --- Typography --- */
-  --font-sans: 'Inter', -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  /* --- Radius --- */
-  --radius-card: 24px;
-  --radius-pill: 999px;
-
-  /* --- Chart palette (for Chart.js — map token colors) --- */
-  --chart-primary: #a855f7;
-  --chart-secondary: #ec4899;
-  --chart-tertiary: #06b6d4;
-  --chart-pos: #10d98a;
-  --chart-neg: #ff4d6d;
-  --chart-neutral: #fbbf24;
-  --chart-grid: rgba(139,92,246,0.06);
-  --chart-text: #8b8ba7;
+  --sh-sm: 0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08);
+  --sh-md: 0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 1px -0.5px rgba(0,0,0,0.06), 0px 3px 3px -1.5px rgba(0,0,0,0.06), 0px 6px 6px -3px rgba(0,0,0,0.06), 0px 12px 12px -6px rgba(0,0,0,0.06), 0px 24px 24px -12px rgba(0,0,0,0.06);
+  --sh-lg: 0 2.8px 2.2px rgba(0,0,0,0.034), 0 6.7px 5.3px rgba(0,0,0,0.048), 0 12.5px 10px rgba(0,0,0,0.06), 0 22.3px 17.9px rgba(0,0,0,0.072), 0 41.8px 33.4px rgba(0,0,0,0.086), 0 100px 80px rgba(0,0,0,0.12);
 }
+@keyframes aosIn { 0% { opacity: 0; transform: translateY(28px); filter: blur(6px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
+.aos { opacity: 0; animation: aosIn 0.7s ease-out 0.05s both; animation-play-state: paused; }
+.aos.animate { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .aos { opacity: 1 !important; animation: none !important; filter: none !important; } }
 
-/* =========================================================================
-   VARIANT 2: Bloomberg Terminal — analyst chuyên nghiệp
-   Active: <html data-theme="bloomberg">
-   ========================================================================= */
-[data-theme="bloomberg"] {
-  --bg-0: #000000;
-  --bg-1: #0a0a0a;
-  --bg-2: #141414;
-  --card: rgba(20,20,20,0.85);
-  --card-solid: #141414;
-
-  --border: #333333;
-  --border-hot: #ffaa00;
-
-  --text: #ffaa00;            /* Bloomberg amber */
-  --text-dim: #888888;
-  --text-faint: #555555;
-
-  --purple: #ffaa00;
-  --pink: #ff6600;
-  --cyan: #00ccff;
-  --green: #00ff66;           /* terminal green */
-  --red: #ff3333;
-  --amber: #ffcc00;
-
-  --grad-main: linear-gradient(135deg, #ffaa00 0%, #ff6600 100%);
-  --grad-cool: linear-gradient(135deg, #00ccff 0%, #ffaa00 100%);
-  --grad-bg: none;            /* flat, no fancy gradients */
-
-  --font-sans: 'Courier New', monospace;
-  --font-mono: 'Courier New', monospace;
-
-  --radius-card: 4px;         /* sharper corners */
-
-  --chart-primary: #ffaa00;
-  --chart-secondary: #00ff66;
-  --chart-tertiary: #00ccff;
-  --chart-pos: #00ff66;
-  --chart-neg: #ff3333;
-  --chart-neutral: #ffcc00;
-  --chart-grid: rgba(255,170,0,0.08);
-  --chart-text: #888888;
-}
-
-/* =========================================================================
-   VARIANT 3: Corporate Sáng — quỹ đầu tư / PDF export
-   Active: <html data-theme="corporate">
-   ========================================================================= */
-[data-theme="corporate"] {
-  --bg-0: #f8f9fc;
-  --bg-1: #ffffff;
-  --bg-2: #edf2f7;
-  --card: #ffffff;
-  --card-solid: #ffffff;
-
-  --border: #e2e8f0;
-  --border-hot: #2c5282;
-
-  --text: #1a202c;
-  --text-dim: #4a5568;
-  --text-faint: #a0aec0;
-
-  --purple: #1a365d;          /* navy */
-  --purple-2: #2c5282;
-  --pink: #c53030;
-  --cyan: #2c7a7b;
-  --green: #2f855a;
-  --red: #c53030;
-  --amber: #c05621;
-
-  --grad-main: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-  --grad-cool: linear-gradient(135deg, #2c7a7b 0%, #2c5282 100%);
-  --grad-bg: none;
-
-  --radius-card: 12px;
-
-  --chart-primary: #1a365d;
-  --chart-secondary: #2c5282;
-  --chart-tertiary: #2c7a7b;
-  --chart-pos: #2f855a;
-  --chart-neg: #c53030;
-  --chart-neutral: #c05621;
-  --chart-grid: rgba(26,54,93,0.06);
-  --chart-text: #4a5568;
-}
-
-/* =========================================================================
-   VIZ COMPONENTS — shared UI classes
-   Trích xuất từ dashboard/technical/profile/news templates (đã trùng lặp 4 lần).
-
-   Components reference tokens từ tokens.css (never hardcode colors).
-   Mỗi component = self-contained block, có thể chọn lọc include.
-   ========================================================================= */
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-html, body {
-  background: var(--bg-0);
-  color: var(--text);
-  font-family: var(--font-sans);
-  line-height: 1.5;
-  overflow-x: hidden;
-}
-
-body {
-  background-image: var(--grad-bg);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-
-.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-
-.container { max-width: 1480px; margin: 0 auto; padding: 24px 32px 80px; }
-
-/* ===== v2.2.0 — Layout 2 cột: content + TOC sidebar sticky (học từ us-equity-research) ===== */
-.layout-main { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 32px; align-items: start; }
-.layout-content { min-width: 0; }
-.toc-sidebar {
-  position: sticky; top: 64px;
-  max-height: calc(100vh - 80px); overflow-y: auto;
-  padding: 14px 14px;
-  background: var(--bg-card, #161b22);
-  border: 1px solid var(--border, rgba(255,255,255,0.08));
-  border-radius: 12px;
-}
-.toc-sidebar::-webkit-scrollbar { width: 6px; }
-.toc-sidebar::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 3px; }
-.toc-sidebar-head {
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
-  color: var(--accent, #a78bfa); margin-bottom: 10px; padding-bottom: 8px;
-  border-bottom: 1px solid var(--border, rgba(255,255,255,0.08));
-}
-.toc-sidebar-hint { font-size: 10.5px; color: var(--text-dim, #8b949e); margin-bottom: 10px; line-height: 1.4; }
-.toc-sidebar-list { list-style: none; padding: 0; margin: 0; }
-.toc-sidebar-item {
-  display: flex; align-items: flex-start; gap: 8px;
-  padding: 6px 8px; border-radius: 6px;
-  text-decoration: none; color: var(--text-dim, #8b949e);
-  font-size: 11.5px; line-height: 1.35;
-  transition: all .12s; border-left: 2px solid transparent;
-}
-.toc-sidebar-item:hover {
-  background: rgba(139,92,246,0.08); color: var(--text, #e6edf3);
-  text-decoration: none; border-left-color: var(--accent, #a78bfa);
-}
-.toc-sidebar-num {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 18px; height: 18px; border-radius: 4px;
-  background: var(--bg-2, #1c232d); color: var(--text-dim, #8b949e);
-  font-size: 10px; font-weight: 700; font-family: var(--font-mono, monospace);
-  flex-shrink: 0; margin-top: 1px;
-}
-.toc-sidebar-item:hover .toc-sidebar-num { background: var(--accent, #a78bfa); color: #1a1206; }
-.toc-sidebar-item .toc-sidebar-label { flex: 1; }
-@media (max-width: 1100px) {
-  .layout-main { grid-template-columns: 1fr; gap: 0; }
-  .toc-sidebar { display: none; }
-}
-
-/* --- Semantic color classes --- */
-.pos { color: var(--green); }
-.neg { color: var(--red); }
-.neu { color: var(--amber); }
-
-/* =========================================================================
-   HERO
-   ========================================================================= */
-.hero {
-  background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(236,72,153,0.08));
-  border: 1px solid var(--border);
-  border-radius: 32px;
-  padding: 40px 44px;
-  margin-bottom: 28px;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(20px);
-}
-.hero::before {
-  content: '';
-  position: absolute;
-  top: -100px; right: -50px;
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(236,72,153,0.25), transparent 70%);
-  filter: blur(40px);
-  pointer-events: none;
-}
-.hero-top {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 24px; flex-wrap: wrap;
-  position: relative; z-index: 2;
-}
-.ticker-badge {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: var(--grad-main); color: #fff;
-  padding: 6px 16px; border-radius: var(--radius-pill);
-  font-weight: 700; font-size: 13px; letter-spacing: 0.5px;
-  box-shadow: 0 8px 24px rgba(168,85,247,0.4);
-}
-.update-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(16,217,138,0.15); color: var(--green);
-  padding: 4px 12px; border-radius: var(--radius-pill);
-  font-weight: 600; font-size: 11px;
-  border: 1px solid rgba(16,217,138,0.3);
-  margin-left: 8px; vertical-align: middle;
-}
-.company-name {
-  font-size: 42px; font-weight: 800; margin-top: 14px;
-  letter-spacing: -1px;
-  background: linear-gradient(90deg, #fff, #c4b5fd);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.company-sub { color: var(--text-dim); margin-top: 6px; font-size: 15px; }
-.price-block { text-align: right; }
-.price-now { font-size: 52px; font-weight: 800; letter-spacing: -1.5px; }
-.price-now .ccy { font-size: 22px; color: var(--text-dim); font-weight: 500; margin-right: 6px; }
-.price-unit { font-size: 14px; color: var(--text-faint); font-weight: 400; }
-.price-meta { margin-top: 8px; color: var(--text-dim); font-size: 13px; }
-
-/* --- KPI strip (6 cards under hero) --- */
-.kpi-strip {
-  display: grid; grid-template-columns: repeat(6, 1fr);
-  gap: 14px; margin-top: 32px;
-  position: relative; z-index: 2;
-}
-.kpi {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 18px; padding: 18px;
-  backdrop-filter: blur(12px);
-  transition: transform .25s, border-color .25s;
-}
-.kpi:hover { transform: translateY(-3px); border-color: var(--border-hot); }
-.kpi-label {
-  font-size: 11px; color: var(--text-faint);
-  text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
-}
-.kpi-value { font-size: 24px; font-weight: 700; margin-top: 6px; }
-.kpi-delta { font-size: 12px; margin-top: 4px; font-weight: 600; }
-
-/* =========================================================================
-   SECTION TITLES
-   ========================================================================= */
-.section-title {
-  display: flex; align-items: center; gap: 12px;
-  margin: 44px 0 20px;
-}
-.section-title h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
-.section-title .tag {
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; padding: 4px 10px;
-  border-radius: 6px; color: #fff;
-}
-.tag.purple { background: var(--purple); }
-.tag.pink   { background: var(--pink); }
-.tag.cyan   { background: var(--cyan); color: #000; }
-.tag.amber  { background: var(--amber); color: #000; }
-.tag.green  { background: var(--green); color: #000; }
-.divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
-
-/* =========================================================================
-   GRID LAYOUTS
-   ========================================================================= */
-.grid-2   { display: grid; grid-template-columns: 1fr 1fr;          gap: 20px; }
-.grid-3   { display: grid; grid-template-columns: repeat(3, 1fr);   gap: 20px; }
-.grid-2-1 { display: grid; grid-template-columns: 2fr 1fr;          gap: 20px; }
-.grid-1-2 { display: grid; grid-template-columns: 1fr 2fr;          gap: 20px; }
-
-/* =========================================================================
-   CARD
-   ========================================================================= */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  padding: 24px;
-  backdrop-filter: blur(14px);
-  position: relative; overflow: hidden;
-}
-.card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.card-title { font-size: 15px; font-weight: 600; color: var(--text); }
-.card-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
-.chart-wrap { position: relative; height: 280px; }
-.chart-wrap.sm { height: 220px; }
-.chart-wrap.lg { height: 340px; }
-
-/* =========================================================================
-   FINANCIAL TABLE
-   ========================================================================= */
-.fin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.fin-table th {
-  text-align: right; padding: 12px 10px;
-  color: var(--text-faint); font-weight: 600; font-size: 11px;
-  text-transform: uppercase; letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-}
-.fin-table th:first-child { text-align: left; }
-.fin-table td {
-  padding: 12px 10px; text-align: right;
-  border-bottom: 1px solid rgba(139,92,246,0.08);
-}
-.fin-table td:first-child { text-align: left; color: var(--text-dim); font-weight: 500; }
-.fin-table tbody tr:hover { background: rgba(168,85,247,0.05); }
-.fin-table .row-strong td { font-weight: 700; color: var(--text); background: rgba(168,85,247,0.06); }
-.fin-table .row-strong td:first-child { color: var(--purple); }
-.fin-table .col-latest { background: rgba(16,217,138,0.06); font-weight: 700; }
-
-/* =========================================================================
-   VALUATION CARDS (5-scenario grid)
-   ========================================================================= */
-.val-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-.val-card {
-  border-radius: 18px; padding: 18px; text-align: center;
-  position: relative; overflow: hidden;
-  border: 1px solid var(--border);
-  background: rgba(20,20,40,0.4);
-}
-.val-card .name { font-size: 11px; color: var(--text-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
-.val-card .price { font-size: 26px; font-weight: 800; margin-top: 8px; }
-.val-card .price small { font-size: 13px; color: var(--text-dim); font-weight: 500; }
-.val-card .upside { font-size: 12px; margin-top: 6px; font-weight: 700; }
-.val-card.base { background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(236,72,153,0.15)); border-color: var(--border-hot); }
-.val-card.base::after {
-  content: 'KHUYẾN NGHỊ'; position: absolute; top: 8px; right: 8px;
-  font-size: 8px; font-weight: 800; background: var(--grad-main);
-  padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;
-}
-.bar-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-top: 10px; overflow: hidden; }
-.bar-fill  { height: 100%; border-radius: 3px; background: var(--grad-main); }
-
-/* =========================================================================
-   GAUGE (fair value verdict)
-   ========================================================================= */
-.gauge-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-.gauge-num {
-  font-size: 64px; font-weight: 900; letter-spacing: -2px;
-  background: var(--grad-main);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.gauge-label { color: var(--text-dim); font-size: 13px; margin-top: 4px; }
-.gauge-verdict { margin-top: 18px; padding: 8px 20px; border-radius: var(--radius-pill); font-weight: 700; font-size: 14px; background: var(--green); color: #000; }
-
-/* =========================================================================
-   INSIGHT CARDS (special insights section)
-   ========================================================================= */
-.insight-card {
-  background: linear-gradient(135deg, rgba(6,182,212,0.08), rgba(139,92,246,0.06));
-  border: 1px solid rgba(6,182,212,0.2);
-  border-radius: 20px; padding: 22px;
-  position: relative; overflow: hidden;
-}
-.insight-card .ico {
-  width: 42px; height: 42px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; margin-bottom: 12px;
-  background: var(--grad-cool);
-}
-.insight-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
-.insight-card p  { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-.insight-card .metric { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
-.insight-card .metric div { flex: 1; min-width: 80px; }
-.insight-card .metric .v { font-size: 18px; font-weight: 700; }
-.insight-card .metric .l { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; }
-
-/* --- Rating dots --- */
-.rating-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid rgba(139,92,246,0.08); }
-.rating-row:last-child { border-bottom: none; }
-.rating-row .cat { flex: 1; font-size: 13px; color: var(--text-dim); }
-.dots { display: flex; gap: 4px; }
-.dot  { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.1); }
-.dot.on { background: var(--grad-main); }
-
-/* =========================================================================
-   EXECUTIVE SUMMARY
-   ========================================================================= */
-.exec-summary {
-  background: linear-gradient(135deg, rgba(168,85,247,0.15), rgba(236,72,153,0.1));
-  border: 1px solid var(--border-hot);
-  border-radius: var(--radius-card); padding: 28px 32px;
-  margin-bottom: 24px;
-  backdrop-filter: blur(14px);
-  position: relative; overflow: hidden;
-}
-.exec-summary::before {
-  content: ''; position: absolute; top: -80px; right: -30px;
-  width: 300px; height: 300px;
-  background: radial-gradient(circle, rgba(168,85,247,0.18), transparent 70%);
-  filter: blur(30px);
-}
-.exec-label {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-  text-transform: uppercase; color: var(--purple);
-  background: rgba(168,85,247,0.15); padding: 5px 12px;
-  border-radius: 6px; margin-bottom: 14px;
-  position: relative; z-index: 2;
-}
-.exec-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; line-height: 1.3; position: relative; z-index: 2; }
-.exec-body { font-size: 14px; color: var(--text-dim); line-height: 1.7; margin-bottom: 18px; position: relative; z-index: 2; }
-.exec-body strong { color: var(--text); font-weight: 600; }
-.exec-body .up   { color: var(--green); font-weight: 700; }
-.exec-body .down { color: var(--red);   font-weight: 700; }
-.exec-highlights { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; position: relative; z-index: 2; }
-.exec-hl { background: rgba(20,20,40,0.6); border: 1px solid var(--border); border-radius: 14px; padding: 14px; text-align: center; }
-.exec-hl.pos { border-color: rgba(16,217,138,0.3); }
-.exec-hl.neg { border-color: rgba(255,77,109,0.3); }
-.exec-hl.neu { border-color: rgba(251,191,36,0.3); }
-.exec-hl-lbl { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-.exec-hl-val { font-size: 20px; font-weight: 800; margin-top: 4px; font-family: var(--font-mono); }
-.exec-hl-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-
-/* =========================================================================
-   NEWS CARDS
-   ========================================================================= */
-.news-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px; padding: 22px;
-  backdrop-filter: blur(14px);
-  position: relative;
-  transition: transform .25s, border-color .25s;
-  overflow: hidden;
-  display: flex; flex-direction: column; gap: 12px;
-}
-.news-card:hover { transform: translateY(-3px); }
-.news-card.positive { border-left: 4px solid var(--green); }
-.news-card.positive:hover { border-color: var(--green); }
-.news-card.negative { border-left: 4px solid var(--red); }
-.news-card.negative:hover { border-color: var(--red); }
-.news-card.neutral { border-left: 4px solid var(--amber); }
-.news-card.neutral:hover { border-color: var(--amber); }
-.news-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.news-cat { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 8px; border-radius: 5px; }
-.news-cat.biz        { background: rgba(16,217,138,0.2); color: var(--green); }
-.news-cat.sector     { background: rgba(168,85,247,0.2); color: var(--purple); }
-.news-cat.macro      { background: rgba(251,191,36,0.2); color: var(--amber); }
-.news-cat.disclosure { background: rgba(6,182,212,0.2); color: var(--cyan); }
-.news-cat.analyst    { background: rgba(236,72,153,0.2); color: var(--pink); }
-.news-date { font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); }
-.news-title { font-size: 15px; font-weight: 700; line-height: 1.4; }
-.news-summary { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-.news-metrics { display: flex; gap: 10px; flex-wrap: wrap; margin: 2px 0; }
-.news-metric { flex: 1; min-width: 90px; background: rgba(255,255,255,0.04); border: 1px solid rgba(139,92,246,0.1); border-radius: 10px; padding: 8px 10px; }
-.news-metric .ml { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-.news-metric .mv { font-size: 15px; font-weight: 700; margin-top: 2px; font-family: var(--font-mono); }
-.news-metric .mv.pos { color: var(--green); }
-.news-metric .mv.neg { color: var(--red); }
-.news-metric .mv.neu { color: var(--amber); }
-.news-why { background: rgba(168,85,247,0.06); border-left: 3px solid var(--purple); border-radius: 0 10px 10px 0; padding: 10px 14px; font-size: 12px; color: var(--text-dim); line-height: 1.55; }
-.news-why strong { color: var(--purple); font-weight: 600; }
-.news-impact { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(139,92,246,0.1); margin-top: auto; }
-.sentiment-pill { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: 0.5px; }
-.sentiment-pill.bullish { background: rgba(16,217,138,0.15); color: var(--green); border: 1px solid rgba(16,217,138,0.3); }
-.sentiment-pill.bearish { background: rgba(255,77,109,0.15); color: var(--red); border: 1px solid rgba(255,77,109,0.3); }
-.sentiment-pill.neutral { background: rgba(251,191,36,0.15); color: var(--amber); border: 1px solid rgba(251,191,36,0.3); }
-.impact-score { font-size: 11px; color: var(--text-faint); }
-.impact-score .v { font-weight: 700; color: var(--text); }
-.news-link { font-size: 11px; color: var(--purple); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
-.news-link:hover { text-decoration: underline; }
-
-/* =========================================================================
-   SENTIMENT METER
-   ========================================================================= */
-.meter-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px; backdrop-filter: blur(14px); margin-bottom: 24px; }
-.meter-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
-.meter-gauge { flex: 0 0 200px; text-align: center; }
-.meter-score { font-size: 64px; font-weight: 900; line-height: 1; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.meter-label { color: var(--text-dim); font-size: 12px; margin-top: 6px; }
-.meter-verdict { margin-top: 10px; padding: 6px 16px; border-radius: var(--radius-pill); font-weight: 700; font-size: 13px; background: var(--green); color: #000; display: inline-block; }
-.meter-breakdown { flex: 1; min-width: 280px; }
-.meter-bar { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
-.meter-bar .lbl { font-size: 12px; width: 60px; color: var(--text-dim); }
-.meter-bar .track { flex: 1; height: 18px; background: rgba(255,255,255,0.06); border-radius: 9px; overflow: hidden; }
-.meter-bar .fill { height: 100%; border-radius: 9px; transition: width .8s ease; }
-.meter-bar .pct { font-size: 12px; font-weight: 700; width: 36px; text-align: right; }
-.news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-
-/* =========================================================================
-   TIMELINE
-   ========================================================================= */
-.timeline-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); padding: 24px; backdrop-filter: blur(14px); }
-.timeline { position: relative; padding-left: 24px; }
-.timeline::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(180deg, var(--purple), var(--pink), var(--cyan)); }
-.tl-item { position: relative; margin-bottom: 18px; padding-left: 24px; }
-.tl-item::before { content: ''; position: absolute; left: -20px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--card); border: 2px solid var(--purple); box-shadow: 0 0 0 3px rgba(168,85,247,0.2); }
-.tl-item.pos::before { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,217,138,0.2); }
-.tl-item.neg::before { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,77,109,0.2); }
-.tl-date { font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); font-weight: 600; }
-.tl-text { font-size: 13px; color: var(--text); margin-top: 2px; }
-.tl-source { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-
-/* =========================================================================
-   KEY TAKEAWAYS
-   ========================================================================= */
-.takeaways { background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(6,182,212,0.06)); border: 1px solid var(--border-hot); border-radius: var(--radius-card); padding: 28px; margin-top: 24px; }
-.takeaway-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid rgba(139,92,246,0.1); }
-.takeaway-item:last-child { border-bottom: none; }
-.takeaway-num { flex: 0 0 32px; height: 32px; border-radius: 10px; background: var(--grad-main); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; }
-.takeaway-content h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-.takeaway-content p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-
-/* =========================================================================
-   TECHNICAL ANALYSIS COMPONENTS
-   ========================================================================= */
-.tech-verdict-card { background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(255,77,109,0.08)); border: 1px solid rgba(251,191,36,0.3); border-radius: var(--radius-card); padding: 28px; margin-bottom: 24px; backdrop-filter: blur(14px); }
-.tech-verdict-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: center; }
-.tech-score-big { font-size: 72px; font-weight: 900; line-height: 1; text-align: center; background: linear-gradient(135deg, #fbbf24, #ff4d6d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.tech-score-lbl { font-size: 11px; color: var(--text-faint); text-align: center; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-.tech-verdict-pill { margin-top: 10px; padding: 6px 16px; border-radius: var(--radius-pill); font-weight: 700; font-size: 13px; background: rgba(251,191,36,0.2); color: var(--amber); border: 1px solid rgba(251,191,36,0.4); display: inline-block; text-align: center; }
-.tech-indicators { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.tech-ind { background: rgba(20,20,40,0.6); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
-.tech-ind-lbl { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-.tech-ind-val { font-size: 20px; font-weight: 800; margin-top: 4px; font-family: var(--font-mono); }
-.tech-ind-val.pos { color: var(--green); }
-.tech-ind-val.neg { color: var(--red); }
-.tech-ind-val.neu { color: var(--amber); }
-.tech-ind-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-.signal-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 16px; }
-.signal-cell { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
-.signal-cell.sell     { border-color: rgba(255,77,109,0.4); }
-.signal-cell.buy      { border-color: rgba(16,217,138,0.4); }
-.signal-cell.neutral  { border-color: rgba(251,191,36,0.4); }
-.signal-name { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-.signal-val { font-size: 14px; font-weight: 800; margin-top: 4px; }
-.signal-val.sell    { color: var(--red); }
-.signal-val.buy     { color: var(--green); }
-.signal-val.neutral { color: var(--amber); }
-.tech-chart-wrap { position: relative; height: 320px; margin-top: 16px; }
-
-/* =========================================================================
-   PROFILE MODE (non-advice)
-   ========================================================================= */
-.profile-read-card { background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(6,182,212,0.08)); border: 1px solid var(--border-hot); border-radius: var(--radius-card); padding: 28px 32px; margin-bottom: 24px; backdrop-filter: blur(14px); position: relative; overflow: hidden; }
-.profile-read-card::before { content: ''; position: absolute; top: -80px; right: -30px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(168,85,247,0.18), transparent 70%); filter: blur(30px); }
-.read-label { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--purple); background: rgba(168,85,247,0.15); padding: 5px 12px; border-radius: 6px; margin-bottom: 14px; position: relative; z-index: 2; }
-.read-archetype { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 12px; line-height: 1.3; position: relative; z-index: 2; }
-.read-archetype .pill { font-size: 13px; font-weight: 700; padding: 4px 14px; border-radius: var(--radius-pill); margin-left: 10px; vertical-align: middle; }
-.read-archetype .pill.trend_following { background: rgba(6,182,212,0.2); color: var(--cyan); border: 1px solid rgba(6,182,212,0.4); }
-.read-archetype .pill.accumulation_breakout { background: rgba(139,92,246,0.2); color: var(--purple-2); border: 1px solid rgba(139,92,246,0.4); }
-.read-archetype .pill.trap_prone { background: rgba(255,77,109,0.2); color: var(--red); border: 1px solid rgba(255,77,109,0.4); }
-.read-archetype .pill.mixed, .read-archetype .pill.no_current_setup { background: rgba(251,191,36,0.2); color: var(--amber); border: 1px solid rgba(251,191,36,0.4); }
-.read-body { font-size: 14px; color: var(--text-dim); line-height: 1.7; margin-bottom: 18px; position: relative; z-index: 2; }
-.read-body strong { color: var(--text); font-weight: 600; }
-.archetype-icon { flex: 0 0 80px; height: 80px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; background: var(--grad-cool); box-shadow: 0 8px 24px rgba(6,182,212,0.3); }
-.profile-read-grid { display: grid; grid-template-columns: 80px 1fr; gap: 20px; align-items: center; position: relative; z-index: 2; }
-
-/* --- Callout (guardrail / non-conclusion) --- */
-.callout { border-radius: 14px; padding: 14px 18px; margin: 14px 0; font-size: 13px; line-height: 1.6; border-left: 4px solid var(--purple); background: rgba(168,85,247,0.06); }
-.callout h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
-.callout.warn { border-color: var(--red); background: rgba(255,77,109,0.06); }
-.callout.warn h4 { color: var(--red); }
-.callout.good { border-color: var(--green); background: rgba(16,217,138,0.06); }
-.callout.good h4 { color: var(--green); }
-.callout.info { border-color: var(--cyan); background: rgba(6,182,212,0.06); }
-.callout.info h4 { color: var(--cyan); }
-.callout ul { margin: 6px 0 0 18px; padding: 0; }
-
-/* =========================================================================
-   NAVIGATION BAR + SCROLL PROGRESS + BACK-TO-TOP
-   ========================================================================= */
-.topnav {
-  position: sticky; top: 0; z-index: 1000;
-  background: rgba(10,10,20,0.85);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(139,92,246,0.2);
-  padding: 0 16px;
-}
-.topnav-inner {
-  max-width: 1480px; margin: 0 auto;
-  display: flex; align-items: center; gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(139,92,246,0.3) transparent;
-}
-.topnav-inner::-webkit-scrollbar { height: 4px; }
-.topnav-inner::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
-.topnav-brand {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px 10px 0;
-  font-weight: 800; font-size: 13px; color: var(--purple);
-  white-space: nowrap;
-  border-right: 1px solid rgba(139,92,246,0.15);
-  margin-right: 6px;
-}
-.topnav-brand .dot-color { width: 8px; height: 8px; border-radius: 50%; background: var(--grad-main); }
-.topnav-link {
-  padding: 10px 12px; font-size: 12px; font-weight: 600;
-  color: var(--text-dim); text-decoration: none;
-  white-space: nowrap; border-radius: 8px;
-  transition: all .2s;
-  border-bottom: 2px solid transparent;
-}
-.topnav-link:hover { color: var(--text); background: rgba(139,92,246,0.08); }
-.topnav-link.active { color: var(--purple); border-bottom-color: var(--purple); background: rgba(168,85,247,0.1); }
-
-.progress-bar {
-  position: fixed; top: 0; left: 0; height: 3px;
-  background: var(--grad-main); width: 0; z-index: 1001;
-  transition: width .1s ease;
-  box-shadow: 0 0 12px rgba(168,85,247,0.6);
-}
-.back-top {
-  position: fixed; bottom: 24px; right: 24px;
-  width: 44px; height: 44px; border-radius: 50%;
-  background: var(--grad-main); color: #fff; border: none;
-  cursor: pointer; font-size: 18px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(168,85,247,0.4);
-  opacity: 0; transform: translateY(20px);
-  transition: all .3s; z-index: 999;
-}
-.back-top.visible { opacity: 1; transform: translateY(0); }
-.back-top:hover { transform: translateY(-3px) scale(1.05); }
-
-/* =========================================================================
-   FOOTER + DISCLAIMER
-   ========================================================================= */
-footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--text-faint); font-size: 12px; text-align: center; line-height: 1.8; }
-footer a { color: var(--purple); text-decoration: none; }
-.disclaimer {
-  background: rgba(251,191,36,0.06);
-  border: 1px solid rgba(251,191,36,0.2);
-  border-radius: 14px; padding: 14px 18px;
-  margin-top: 24px; font-size: 12px; color: var(--text-dim);
-}
-
-/* =========================================================================
-   ANIMATIONS
-   ========================================================================= */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.fade { animation: fadeUp .6s ease both; }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-.live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: pulse 1.5s infinite; }
-
-/* =========================================================================
-   RESPONSIVE
-   ========================================================================= */
-@media (max-width: 1100px) {
-  .kpi-strip { grid-template-columns: repeat(3, 1fr); }
-  .grid-2, .grid-3, .grid-2-1, .grid-1-2 { grid-template-columns: 1fr; }
-  .val-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 600px) {
-  .container { padding: 16px; }
-  .hero { padding: 24px; border-radius: 20px; }
-  .company-name { font-size: 30px; }
-  .price-now { font-size: 38px; }
-  .kpi-strip { grid-template-columns: repeat(2, 1fr); }
-  .val-grid { grid-template-columns: 1fr 1fr; }
-  .topnav-brand { display: none; }
-  .topnav-link { padding: 8px 10px; font-size: 11px; }
-  .profile-read-grid { grid-template-columns: 1fr; }
-  .archetype-icon { margin: 0 auto; }
-}
+/* Apply shadows to all card types */
+.card { box-shadow: var(--sh-md) !important; }
+.kpi { box-shadow: var(--sh-sm) !important; }
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--sh-md) !important; }
+.callout { box-shadow: var(--sh-sm) !important; }
+.data-table { box-shadow: var(--sh-sm) !important; }
+.stat, .stat-mini { box-shadow: var(--sh-sm) !important; }
+.val-card, .vc-card { box-shadow: var(--sh-sm) !important; }
+.scenario-card { box-shadow: var(--sh-md) !important; }
+.cl-card { box-shadow: var(--sh-sm) !important; }
+.cap-card { box-shadow: var(--sh-sm) !important; }
+.consensus-item { box-shadow: var(--sh-sm) !important; }
+.analyst-card { box-shadow: var(--sh-sm) !important; }
+.insight-frame { box-shadow: var(--sh-md) !important; }
+.honest-correction { box-shadow: var(--sh-sm) !important; }
+.verdict-card { box-shadow: var(--sh-sm) !important; }
+.stale-warning { box-shadow: var(--sh-sm) !important; }
+.toc-sidebar { box-shadow: var(--sh-md) !important; }
 
 </style>
 </head>
 <body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand"><span class="dot"></span>{{TICKER}} · Evidence Pack</div>
+    <a class="topnav-link" href="#sec-hero" data-target="sec-hero">Tổng quan</a>
+    <a class="topnav-link" href="#sec-exec" data-target="sec-exec">TL;DR</a>
+    <a class="topnav-link" href="#sec-biz" data-target="sec-biz">Business</a>
+    <a class="topnav-link" href="#sec-industry" data-target="sec-industry">Ngành</a>
+    <a class="topnav-link" href="#sec-history" data-target="sec-history">10 năm</a>
+    <a class="topnav-link" href="#sec-segment" data-target="sec-segment">Segment</a>
+    <a class="topnav-link" href="#sec-thesis" data-target="sec-thesis">Thesis</a>
+    <a class="topnav-link" href="#sec-valuation" data-target="sec-valuation">Định giá</a>
+    <a class="topnav-link" href="#sec-peer" data-target="sec-peer">Peer</a>
+    <a class="topnav-link" href="#sec-bs" data-target="sec-bs">BS & FCF</a>
+    <a class="topnav-link" href="#sec-risk" data-target="sec-risk">Rủi ro</a>
+    <a class="topnav-link" href="#sec-33k" data-target="sec-33k">Vốn</a>
+    <a class="topnav-link" href="#sec-scenario" data-target="sec-scenario">Kịch bản</a>
+    <a class="topnav-link" href="#sec-checklist" data-target="sec-checklist">Checklist</a>
+    <a class="topnav-link" href="#sec-insight-1" data-target="sec-insight-1">★ Insight 1</a>
+    <!-- ADD nav links for insight-2/3/4 if more frames generated -->
+    <a class="topnav-link" href="#sec-tech" data-target="sec-tech">Technical</a>
+    <a class="topnav-link" href="#sec-analyst" data-target="sec-analyst">Analyst</a>
+    <a class="topnav-link" href="#sec-glossary" data-target="sec-glossary">📖 Thuật ngữ</a>
+    <a class="topnav-link" href="#sec-source" data-target="sec-source">Nguồn</a>
+  </div>
+</nav>
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+
 <div class="container">
 
-  <div class="hero fade">
-    <div class="hero-top">
-      <div>
-        <div class="ticker-badge">{{TICKER_BADGE}}</div><span class="update-badge">{{UPDATE_BADGE}}</span>
-        <div class="company-name">{{COMPANY_NAME}}</div>
-        <div class="company-sub">{{COMPANY_SUB}}</div>
-      </div>
-      <div class="price-block">
-        <div class="price-now mono"><span class="ccy">₫</span>{{PRICE_DISPLAY}}<span class="price-unit"> /cp</span></div>
-        <div class="price-meta"><span class="live-dot"></span>{{PRICE_META}}</div>
-      </div>
-    </div>
-    {{KPI_STRIP}}
-  </div>
+<!-- ============ SECTION 1: HERO + KPI ============ -->
+<section id="sec-hero" class="section" style="margin-top:8px;scroll-margin-top:60px">
+  {{SEC_HERO_HTML}}
+</section>
 
-  <div class="section-title">
-    <span class="tag purple">01</span>
-    <h2>Kết quả kinh doanh 5 năm ({{YEAR_RANGE}})</h2>
-    <div class="divider-line"></div>
-    <span style="font-size:12px;color:var(--text-faint)">{{SECTION01_NOTE}}</span>
-  </div>
+<!-- ============ LAYOUT 2 CỘT: content (trái) + TOC sidebar (phải, sticky) ============ -->
+<div class="layout-main">
+<div class="layout-content">
 
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-head"><div><div class="card-title">Doanh thu & Lợi nhuận sau thuế</div><div class="card-sub">{{CHART_REVNP_SUB}}</div></div></div>
-      <div class="chart-wrap"><canvas id="chartRevNP"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div><div class="card-title">Biên lợi nhuận & ROE (%)</div><div class="card-sub">{{CHART_MARGIN_SUB}}</div></div></div>
-      <div class="chart-wrap"><canvas id="chartMargin"></canvas></div>
-    </div>
-  </div>
+<!-- ============ SECTION 2: EXECUTIVE SUMMARY ============ -->
+<section id="sec-exec" class="section">
+  <div class="section-title aos"><span class="num">2</span><h2>Executive Summary — TL;DR</h2><div class="divider"></div></div>
+  {{SEC_EXEC_HTML}}
+</section>
 
-  <div class="card" style="margin-top:20px">
-    <div class="card-head"><div><div class="card-title">Bảng tổng hợp tài chính 5 năm</div><div class="card-sub">{{TABLE5Y_SUB}}</div></div></div>
-    <div style="overflow-x:auto">
-    {{FIN_TABLE_HTML}}
-    </div>
-    {{FIN_TABLE_FOOTNOTE}}
-  </div>
+<!-- ============ SECTION 3: BUSINESS 101 ============ -->
+<section id="sec-biz" class="section">
+  <div class="section-title aos"><span class="num">3</span><h2>Business 101 — {{COMPANY_NAME}} kiếm tiền như thế nào?</h2><div class="divider"></div></div>
+  {{SEC_BIZ_HTML}}
+</section>
 
-  <div class="section-title">
-    <span class="tag pink">02</span>
-    <h2>Định giá dựa trên PE · PB · BV trung bình 5 năm</h2>
-    <div class="divider-line"></div>
-    <span style="font-size:12px;color:var(--text-faint)">Áp hệ số tham chiếu lên số liệu {{LATEST_YEAR}}</span>
-  </div>
+<!-- ============ SECTION 4: INDUSTRY POSITION ============ -->
+<section id="sec-industry" class="section">
+  <div class="section-title aos"><span class="num">4</span><h2>Industry Position — {{COMPANY_NAME}} đứng ở đâu trong ngành?</h2><div class="divider"></div></div>
+  {{SEC_INDUSTRY_HTML}}
+</section>
 
-  <div class="grid-1-2">
-    <div class="card" style="display:flex;flex-direction:column;justify-content:center">
-      <div class="card-title" style="text-align:center">Giá trị hợp lý ước tính</div>
-      <div class="card-sub" style="text-align:center;margin-bottom:8px">Trung bình trọng số các kịch bản</div>
-      <div class="gauge-wrap">
-        <div class="gauge-num mono">₫{{FAIR_VALUE}}K</div>
-        <div class="gauge-label">nghìn đồng / cổ phiếu</div>
-        <div class="gauge-verdict" style="background:var(--amber)">{{GAUGE_VERDICT}}</div>
-        <div style="margin-top:12px;color:var(--text-dim);font-size:13px">{{GAUGE_DIFF_NOTE}}</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div><div class="card-title">5 kịch bản định giá</div><div class="card-sub">Hệ số PE/PB tham chiếu × EPS & BVPS {{LATEST_YEAR}}</div></div></div>
-      <div class="val-grid">
-        {{VAL_CARDS_HTML}}
-      </div>
-    </div>
-  </div>
+<!-- ============ SECTION 5: FINANCIAL HISTORY 10Y ============ -->
+<section id="sec-history" class="section">
+  <div class="section-title aos"><span class="num">5</span><h2>Lịch sử tài chính 5 năm (FY2021–FY2025)</h2><div class="divider"></div></div>
+  {{SEC_HISTORY_HTML}}
+</section>
 
-  <div class="grid-2" style="margin-top:20px">
-    <div class="card">
-      <div class="card-head"><div><div class="card-title">Lịch sử P/E & P/B 5 năm</div><div class="card-sub">{{CHART_PEPB_SUB}}</div></div></div>
-      <div class="chart-wrap"><canvas id="chartPEPB"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div><div class="card-title">Giá vs Giá trị sổ sách (BVPS)</div><div class="card-sub">{{CHART_PRICEBV_SUB}}</div></div></div>
-      <div class="chart-wrap"><canvas id="chartPriceBV"></canvas></div>
-    </div>
-  </div>
+<!-- ============ SECTION 6: SEGMENT ANALYSIS ============ -->
+<section id="sec-segment" class="section">
+  <div class="section-title aos"><span class="num">6</span><h2>Segment Analysis</h2><div class="divider"></div></div>
+  {{SEC_SEGMENT_HTML}}
+</section>
 
-  <div class="section-title">
-    <span class="tag purple">03</span>
-    <h2>Multiples mở rộng · EV/EBITDA · P/CF · P/S</h2>
-    <div class="divider-line"></div>
-  </div>
+<!-- ============ SECTION 7: INVESTMENT THESIS ============ -->
+<section id="sec-thesis" class="section">
+  <div class="section-title aos"><span class="num">7</span><h2>Investment Thesis — 1-3 năm</h2><div class="divider"></div></div>
+  {{SEC_THESIS_HTML}}
+</section>
 
-  {{MULTIPLES_GRID_HTML}}
+<!-- ============ SECTION 8: VALUATION ============ -->
+<section id="sec-valuation" class="section">
+  <div class="section-title aos"><span class="num">8</span><h2>Valuation — P/E & P/B vs lịch sử</h2><div class="divider"></div></div>
+  {{SEC_VALUATION_HTML}}
+</section>
 
-  <div class="section-title">
-    <span class="tag pink">04</span>
-    <h2>Định giá nội tại · DCF (FCFF) & Graham</h2>
-    <div class="divider-line"></div>
-  </div>
+<!-- ============ SECTION 9: PEER COMPARISON ============ -->
+<section id="sec-peer" class="section">
+  <div class="section-title aos"><span class="num">9</span><h2>Peer Comparison</h2><div class="divider"></div></div>
+  {{SEC_PEER_HTML}}
+</section>
 
-  {{DCF_GRAHAM_HTML}}
+<!-- ============ SECTION 10: BALANCE SHEET & FCF ============ -->
+<section id="sec-bs" class="section">
+  <div class="section-title aos"><span class="num">10</span><h2>Balance Sheet, Capex & Free Cash Flow</h2><div class="divider"></div></div>
+  {{SEC_BS_HTML}}
+</section>
 
-  <div class="section-title">
-    <span class="tag cyan">05</span>
-    <h2>DuPont · Chất lượng ROE</h2>
-    <div class="divider-line"></div>
-  </div>
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-head"><div><div class="card-title">DuPont: ROE = Biên × Vòng quay × Đòn bẩy</div><div class="card-sub">Phân tách nguồn gốc ROE</div></div></div>
-      <div class="chart-wrap sm"><canvas id="chartDuPont"></canvas></div>
-    </div>
-    {{DUPONT_INTERPRETATION_HTML}}
-  </div>
+<!-- ============ SECTION 11: RISK MATRIX ============ -->
+<section id="sec-risk" class="section">
+  <div class="section-title aos"><span class="num">11</span><h2>Risk Matrix</h2><div class="divider"></div></div>
+  {{SEC_RISK_HTML}}
+</section>
 
-  <div class="section-title">
-    <span class="tag purple">06</span>
-    <h2>Tổng hợp định giá · 9 phương pháp</h2>
-    <div class="divider-line"></div>
-  </div>
-  <div class="card" style="background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(236,72,153,0.04))">
-    <div class="card-head"><div><div class="card-title">Biểu đồ cầu định giá đa phương pháp</div><div class="card-sub">{{SUMMARY_CHART_SUB}}</div></div></div>
-    <div class="chart-wrap lg" style="height:380px"><canvas id="chartSummary"></canvas></div>
-    {{SUMMARY_STATS_HTML}}
-  </div>
+<!-- ============ SECTION 12: CAPITAL USD LENS ============ -->
+<section id="sec-33k" class="section">
+  <div class="section-title aos"><span class="num">12</span><h2>Góc nhìn khoản đầu tư {{CAPITAL_LENS_AMOUNT}}</h2><div class="divider"></div></div>
+  {{SEC_CAPITAL_LENS_HTML}}
+</section>
 
-  <div class="section-title">
-    <span class="tag cyan">07</span>
-    <h2>Special Insights · {{INSIGHTS_TITLE}}</h2>
-    <div class="divider-line"></div>
-  </div>
-  {{INSIGHTS_GRID_HTML}}
+<!-- ============ SECTION 13: SCENARIO ANALYSIS ============ -->
+<section id="sec-scenario" class="section">
+  <div class="section-title aos"><span class="num">13</span><h2>Scenario Analysis — 1–3 năm</h2><div class="divider"></div></div>
+  {{SEC_SCENARIO_HTML}}
+</section>
 
-  <div class="grid-2-1" style="margin-top:20px">
-    <div class="card">
-      <div class="card-head"><div><div class="card-title">Dự phóng {{FORECAST_YEARS}}</div><div class="card-sub">{{FORECAST_SUB}}</div></div></div>
-      <div class="chart-wrap sm"><canvas id="chartForecast"></canvas></div>
-    </div>
-    {{RATING_HTML}}
-  </div>
+<!-- ============ SECTION 14: FINAL CHECKLIST ============ -->
+<section id="sec-checklist" class="section">
+  <div class="section-title aos"><span class="num">14</span><h2>Final Investment Checklist</h2><div class="divider"></div></div>
+  {{SEC_CHECKLIST_HTML}}
+</section>
 
-  <div class="disclaimer">
-    {{DISCLAIMER_HTML}}
-  </div>
+<!-- ============ SECTIONS 15-17: DYNAMIC INSIGHTS (1-3) ============ -->
+<!-- SECTION 15: SPECIAL INSIGHT 1 -->
+<section id="sec-insight-1" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 1 — {{INSIGHT_1_SUBTITLE}}</h2><div class="divider"></div></div>
+  {{SEC_INSIGHT_1_HTML}}
+</section>
+<!-- SECTION 16: SPECIAL INSIGHT 2 -->
+<section id="sec-insight-2" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 2 — {{INSIGHT_2_SUBTITLE}}</h2><div class="divider"></div></div>
+  {{SEC_INSIGHT_2_HTML}}
+</section>
+<!-- SECTION 17: SPECIAL INSIGHT 3 -->
+<section id="sec-insight-3" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 3 — {{INSIGHT_3_SUBTITLE}}</h2><div class="divider"></div></div>
+  {{SEC_INSIGHT_3_HTML}}
+</section>
 
-  <footer>
-    {{FOOTER_HTML}}
-  </footer>
+<!-- Each insight section follows the same pattern (id="sec-insight-N"); repeat the sec-insight-1/2/3 block for additional frames, using SEC_INSIGHT_4_HTML, etc. See token list at file end. -->
 
+
+<!-- ============ SECTION 18: TECHNICAL — ACTIVE ============ -->
+<section id="sec-tech" class="section">
+  <div class="section-title aos"><span class="num">18</span><h2>Phân tích kỹ thuật — Mode ACTIVE</h2><span class="tag red">TIMING/VERDICT</span><div class="divider"></div></div>
+  {{SEC_TECH_HTML}}
+</section>
+
+<!-- ============ SECTION 19: TECHNICAL — PROFILE (NON-ADVICE) ============ -->
+<section id="sec-tech-profile" class="section">
+  <div class="section-title aos"><span class="num">19</span><h2>Phân tích kỹ thuật — Mode PROFILE</h2><span class="tag amber">NON-ADVICE</span><div class="divider"></div></div>
+  {{SEC_TECH_PROFILE_HTML}}
+</section>
+
+<!-- ============ SECTION 20: ANALYST SYNTHESIS ============ -->
+<section id="sec-analyst" class="section">
+  <div class="section-title aos"><span class="num">20</span><h2>Analyst Synthesis</h2><span class="tag blue">BULL/BEAR</span><div class="divider"></div></div>
+  {{SEC_ANALYST_HTML}}
+</section>
+
+<!-- ============ SECTION 21: GLOSSARY ============ -->
+<section id="sec-glossary" class="section">
+  <div class="section-title aos"><span class="num">21</span><h2>📖 Hướng dẫn đọc — Giải thích thuật ngữ</h2><div class="divider"></div></div>
+  {{SEC_GLOSSARY_HTML}}
+</section>
+
+</div><!-- /layout-content -->
+
+<!-- ============ TOC SIDEBAR (sticky, phải) ============ -->
+<aside class="toc-sidebar" id="tocSidebar">
+  <div class="toc-sidebar-head">📑 Mục lục</div>
+  <div class="toc-sidebar-hint">22 phần · click để nhảy đến</div>
+  <ul class="toc-sidebar-list">
+    <li><a class="toc-sidebar-item" href="#sec-hero"><span class="toc-sidebar-num">1</span><span class="toc-sidebar-label">Hero & KPI</span></a></li><li><a class="toc-sidebar-item" href="#sec-exec"><span class="toc-sidebar-num">2</span><span class="toc-sidebar-label">TL;DR</span></a></li><li><a class="toc-sidebar-item" href="#sec-biz"><span class="toc-sidebar-num">3</span><span class="toc-sidebar-label">Business 101</span></a></li><li><a class="toc-sidebar-item" href="#sec-industry"><span class="toc-sidebar-num">4</span><span class="toc-sidebar-label">Ngành</span></a></li><li><a class="toc-sidebar-item" href="#sec-history"><span class="toc-sidebar-num">5</span><span class="toc-sidebar-label">5 năm</span></a></li><li><a class="toc-sidebar-item" href="#sec-segment"><span class="toc-sidebar-num">6</span><span class="toc-sidebar-label">Segment</span></a></li><li><a class="toc-sidebar-item" href="#sec-thesis"><span class="toc-sidebar-num">7</span><span class="toc-sidebar-label">Thesis</span></a></li><li><a class="toc-sidebar-item" href="#sec-valuation"><span class="toc-sidebar-num">8</span><span class="toc-sidebar-label">Định giá</span></a></li><li><a class="toc-sidebar-item" href="#sec-peer"><span class="toc-sidebar-num">9</span><span class="toc-sidebar-label">Peer</span></a></li><li><a class="toc-sidebar-item" href="#sec-bs"><span class="toc-sidebar-num">10</span><span class="toc-sidebar-label">BS & FCF</span></a></li><li><a class="toc-sidebar-item" href="#sec-risk"><span class="toc-sidebar-num">11</span><span class="toc-sidebar-label">Rủi ro</span></a></li><li><a class="toc-sidebar-item" href="#sec-33k"><span class="toc-sidebar-num">12</span><span class="toc-sidebar-label">800tr VND</span></a></li><li><a class="toc-sidebar-item" href="#sec-scenario"><span class="toc-sidebar-num">13</span><span class="toc-sidebar-label">Kịch bản</span></a></li><li><a class="toc-sidebar-item" href="#sec-checklist"><span class="toc-sidebar-num">14</span><span class="toc-sidebar-label">Checklist</span></a></li><li><a class="toc-sidebar-item" href="#sec-insight-1"><span class="toc-sidebar-num">★1</span><span class="toc-sidebar-label">{{INSIGHT_1_SHORT_LABEL}}</span></a></li><li><a class="toc-sidebar-item" href="#sec-insight-2"><span class="toc-sidebar-num">★2</span><span class="toc-sidebar-label">{{INSIGHT_2_SHORT_LABEL}}</span></a></li><li><a class="toc-sidebar-item" href="#sec-insight-3"><span class="toc-sidebar-num">★3</span><span class="toc-sidebar-label">{{INSIGHT_3_SHORT_LABEL}}</span></a></li><li><a class="toc-sidebar-item" href="#sec-tech"><span class="toc-sidebar-num">18</span><span class="toc-sidebar-label">Technical</span></a></li><li><a class="toc-sidebar-item" href="#sec-tech-profile"><span class="toc-sidebar-num">19</span><span class="toc-sidebar-label">Profile</span></a></li><li><a class="toc-sidebar-item" href="#sec-analyst"><span class="toc-sidebar-num">20</span><span class="toc-sidebar-label">Analyst</span></a></li><li><a class="toc-sidebar-item" href="#sec-glossary"><span class="toc-sidebar-num">21</span><span class="toc-sidebar-label">Thuật ngữ</span></a></li><li><a class="toc-sidebar-item" href="#sec-source"><span class="toc-sidebar-num">22</span><span class="toc-sidebar-label">Nguồn</span></a></li>
+  </ul>
+</aside>
+
+</div><!-- /layout-main -->
+
+<!-- ============ DISCLAIMER (cho nhà đầu tư đọc trước khi ra quyết định) ============ -->
+<div class="disclaimer">
+  <div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+  <p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai. Mặc dù mỗi con số quan trọng đều có trích nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai.</p>
+  <div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+  <ol>
+    <li><strong>Đếm nguồn.</strong> Mỗi số quan trọng (doanh thu, EPS, P/E, FCF) nên có ít nhất 2 nguồn độc lập khớp nhau. Chỉ 1 nguồn = chưa chắc.</li>
+    <li><strong>Số bất thường = dừng.</strong> Con số khiến bạn thấy "ồ hay" hoặc "ồ tệ" → Google 30 giây để đối chiếu. Đó là lúc dễ tin nhất và AI dễ sai nhất.</li>
+    <li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt $800 triệu dựa trên con số này không?" Nếu chưa dám → verify thêm.</li>
+  </ol>
+  <div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+  <p>Mỗi số có nhãn ở bảng Data Quality bên dưới:</p>
+  <ul class="qlist">
+    <li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn chính thống khớp nhau</li>
+    <li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần đối chiếu thêm</li>
+    <li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán, không nên đặt quyết định lớn dựa trên số này</li>
+  </ul>
+  <p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình.</p>
 </div>
 
-<!-- ===== VIZ.JS (inlined từ _viz-shared/ by inject.py) ===== -->
+<!-- ============ SECTION 22: SOURCE APPENDIX ============ -->
+<section id="sec-source" class="section">
+  <div class="section-title aos"><span class="num">22</span><h2>Source Appendix & Data Quality</h2><div class="divider"></div></div>
+  {{SEC_SOURCE_HTML}}
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <div class="container" style="padding-top:0">
+    <div class="disclaimer">
+      <strong style="color:var(--red)">⚠️ Miễn trừ trách nhiệm.</strong>
+      Báo cáo này là <strong>investment evidence pack</strong> phục vụ nghiên cứu cá nhân, <strong>không phải khuyến nghị mua/bán</strong>,
+      không phải lệnh giao dịch, không phải tư vấn tài chính cá nhân.
+      Quyết định đầu tư là của bạn. Cổ phiếu có thể giảm 30–50%.
+    </div>
+    <p><strong>{{COMPANY_NAME}} ({{EXCHANGE}}: {{TICKER}})</strong> · Investment Evidence Pack · dữ liệu tính đến {{PRICE_DATE}} · không khuyến nghị mua/bán</p>
+    <p>Built với equity-research-vn skill · skeleton template + {{TICKER}} JSON data · Chart.js 4.4.1</p>
+    <p class="faint">Nguồn: {{SOURCES_SUMMARY}} · {{CITATION_COUNT}} citations</p>
+  </div>
+</footer>
+
 <script>
-/* =========================================================================
-   VIZ.JS — Chart component registry + Candlestick renderer + Navigation
-   Pattern cốt lõi (học từ Metabase): "chart as plugin".
-   Trước đây: mỗi template có 7+ lệnh `new Chart(...)` riêng, lặp đi lặp lại
-   các config legend/grid/dualAxis. Giờ: registry với base config merge.
 
-   API:
-     viz.chart(canvasId, { type, datasets, scales?, plugins? })
-     viz.renderCandlestick(canvasEl, { candles, volumes, ma20, ma50, high52w, low52w, months })
-     viz.setupNav({ linksSelector, sections?, progressId?, backTopId? })
-     viz.gradient(ctx, c1, c2)              // helper tiện ích
-     viz.neon(c1, c2)                        // helper gradient cho bar fill
-   ========================================================================= */
-(function (global) {
-  'use strict';
+/* ============ DATA (KDH — VND, tỷ VND unless noted) ============ */
+/* ============ DATA (per-ticker chart/financial data — replace whole block) ============ */
+{{CHART_DATA_JS}}
 
-  const viz = {};
 
-  /* ---------------------------------------------------------------------
-     Chart.defaults — setup một lần (trước đây lặp 5 lần trong 5 templates)
-     Lấy màu từ CSS custom properties → tự đổi theo data-theme.
-     --------------------------------------------------------------------- */
-  function cssVar(name) {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  }
-  function readChartColors() {
-    const styles = getComputedStyle(document.documentElement);
-    return {
-      primary:   cssVar('--chart-primary')   || '#a855f7',
-      secondary: cssVar('--chart-secondary') || '#ec4899',
-      tertiary:  cssVar('--chart-tertiary')  || '#06b6d4',
-      pos:       cssVar('--chart-pos')       || '#10d98a',
-      neg:       cssVar('--chart-neg')       || '#ff4d6d',
-      neutral:   cssVar('--chart-neutral')   || '#fbbf24',
-      grid:      cssVar('--chart-grid')      || 'rgba(139,92,246,0.06)',
-      text:      cssVar('--chart-text')      || '#8b8ba7',
-      fontFamily: cssVar('--font-sans')      || 'Inter, sans-serif',
-    };
-  }
-  let CHART_COLORS = readChartColors();
-  function applyChartDefaults() {
-    if (!global.Chart) return;
-    CHART_COLORS = readChartColors();
-    Chart.defaults.color = CHART_COLORS.text;
-    Chart.defaults.font.family = CHART_COLORS.fontFamily;
-    Chart.defaults.borderColor = CHART_COLORS.grid;
-  }
-  applyChartDefaults();
-  // Re-apply khi theme đổi (nếu user swap data-theme sau render)
-  viz.refreshTheme = applyChartDefaults;
+/* ============ Chart defaults ============ */
+Chart.defaults.color = '#8b949e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.size = 11;
 
-  /* ---------------------------------------------------------------------
-     Gradient helper (trước đây lặp ở mỗi template)
-     --------------------------------------------------------------------- */
-  viz.gradient = function (ctx, c1, c2) {
-    const chartArea = ctx.chart.chartArea;
-    const top = chartArea ? chartArea.top : 0;
-    const bottom = chartArea ? chartArea.bottom : 280;
-    const g = ctx.chart.ctx.createLinearGradient(0, top, 0, bottom);
-    g.addColorStop(0, c1);
-    g.addColorStop(1, c2);
-    return g;
-  };
+function grad(ctx, c1, c2){
+  const chart = ctx.chart;
+  const {ctx: cc, chartArea} = chart;
+  if (!chartArea) return c1;
+  const g = cc.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
 
-  /* ---------------------------------------------------------------------
-     CHART REGISTRY — "chart as plugin" pattern
-     Base options hợp nhất tự động → không còn lặp legend/grid/dualAxis.
-     --------------------------------------------------------------------- */
-  const SCALE_BASE = { grid: { color: CHART_COLORS.grid } };
-  const LEGEND_BASE = {
-    position: 'top', align: 'end',
-    labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } },
-  };
+const AMBER='#f5a623', BLUE='#4a9eff', GREEN='#3fb950', RED='#f85149', PURPLE='#a78bfa', GRID='rgba(255,255,255,0.05)';
+const baseScales = {
+  x: { grid:{display:false}, ticks:{font:{size:10}} },
+  y: { grid:{color:GRID}, ticks:{font:{size:10}} }
+};
+const baseOpts = (extra) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8, font:{size:11}}} },
+  ...extra
+});
 
-  function deepMerge(base, override) {
-    // Shallow-ish merge đủ cho config Chart.js (2 cấp).
-    const out = Array.isArray(base) ? base.slice() : Object.assign({}, base);
-    if (!override) return out;
-    for (const k of Object.keys(override)) {
-      const bv = base[k], ov = override[k];
-      if (bv && typeof bv === 'object' && !Array.isArray(bv) && ov && typeof ov === 'object') {
-        out[k] = Object.assign({}, bv, ov);
-      } else {
-        out[k] = ov;
+/* ============ CHARTS ============ */
+
+/* ===== frontend-polish: animation-on-scroll IntersectionObserver (MengTo) ===== */
+(function(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('animate');
+        io.unobserve(entry.target);
       }
-    }
-    return out;
-  }
-
-  /**
-   * Vẽ một chart từ registry. Base options (responsive, legend, grid) tự thêm.
-   * @param {string} canvasId - id thẻ <canvas>
-   * @param {object} spec - { type, data, options?, plugins? }
-   */
-  viz.chart = function (canvasId, spec) {
-    if (!global.Chart) { console.warn('Chart.js chưa load'); return null; }
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) { console.warn('canvas không tìm thấy:', canvasId); return null; }
-
-    const baseOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: LEGEND_BASE },
-    };
-
-    const opts = deepMerge(baseOptions, spec.options || {});
-    // Đảm bảo scales có grid color mặc định nếu user không override
-    if (opts.scales) {
-      for (const k of Object.keys(opts.scales)) {
-        opts.scales[k] = deepMerge({ grid: { color: CHART_COLORS.grid } }, opts.scales[k]);
-      }
-    }
-
-    return new Chart(canvas, {
-      type: spec.type,
-      data: spec.data,
-      options: opts,
-      plugins: spec.plugins || [],
     });
-  };
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.aos').forEach(function(el){ io.observe(el); });
+})();
 
-  /* ---------------------------------------------------------------------
-     CANDLESTICK RENDERER — custom Canvas 2D
-     Trước đây: ~100 dòng này lặp 2 lần (technical + profile templates).
-     Giờ: 1 hàm tái dùng. DPR-aware, resize-aware.
-     @param {HTMLCanvasElement} canvas
-     @param {object} data:
-       candles: [{o,h,l,c}]      (giá nghìn đồng)
-       volumes: number[]          (triệu CP)  — optional
-       ma20: number[]             (null cho warmup)
-       ma50: number[]
-       high52w: number
-       low52w: number
-       months: string[]           (nhãn trục X, vd ['7/25','8/25',...])
-       priceUnit?: 'K' | ''       (mặc định 'K' → chia 1000 khi hiển thị)
-     --------------------------------------------------------------------- */
-  viz.renderCandlestick = function (canvas, data) {
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const candles = data.candles || [];
-    if (!candles.length) return;
-    const volumes = data.volumes || [];
-    const ma20 = data.ma20 || [];
-    const ma50 = data.ma50 || [];
-    const high52w = data.high52w;
-    const low52w = data.low52w;
-    const months = data.months || [];
-    const unit = data.priceUnit || 'K'; // 'K' → giá nghìn đồng hiển thị /1000
-    const div = unit === 'K' ? 1000 : 1;
+document.addEventListener('DOMContentLoaded', function(){
+  const $ = (id) => document.getElementById(id);
 
-    function draw() {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      const W = Math.max(100, rect.width);
-      const H = Math.max(100, rect.height);
-      canvas.width = W * dpr; canvas.height = H * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, W, H);
+  // --- Chart 1: Revenue + Net Income (10Y) ---
+  new Chart($('chartHistRev'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Doanh thu (tỷ VND)', data: DATA.revenue,
+        backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.9)','rgba(74,158,255,0.3)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Lợi nhuận (tỷ VND)', data: DATA.netIncome, type:'line',
+        borderColor: AMBER, backgroundColor: AMBER, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y1', order:1 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, position:'left', title:{display:true, text:'Doanh thu (tỷ VND)', font:{size:10}, color:'#565f6b'} },
+        y1:{ position:'right', grid:{display:false}, ticks:{font:{size:10}, color:AMBER} }
+      },
+      plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8}} }
+    })
+  });
 
-      const priceH = H * 0.65, volH = volumes.length ? H * 0.25 : 0, gap = H * 0.05;
-      const volY = priceH + gap;
-      const padLeft = 50, padRight = 20, padTop = 10, padBot = 20;
-      const chartW = W - padLeft - padRight;
-      const priceTop = padTop, priceBot = priceH - padBot;
-      const volTop = volY + 10, volBot = volY + volH;
-
-      let pMin = Infinity, pMax = -Infinity;
-      candles.forEach(c => { pMin = Math.min(pMin, c.l); pMax = Math.max(pMax, c.h); });
-      const pPad = (pMax - pMin) * 0.05;
-      pMin -= pPad; pMax += pPad;
-      const priceToY = p => priceTop + (priceBot - priceTop) * (pMax - p) / (pMax - pMin);
-
-      const n = candles.length;
-      const candleW = Math.max(3, chartW / n * 0.7);
-      const xStep = chartW / n;
-      const idxToX = i => padLeft + xStep * (i + 0.5);
-
-      // Grid + Y labels
-      ctx.strokeStyle = 'rgba(139,92,246,0.08)'; ctx.lineWidth = 1;
-      ctx.fillStyle = '#5a5a72'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
-      for (let g = 0; g <= 5; g++) {
-        const p = pMin + (pMax - pMin) * g / 5;
-        const y = priceToY(p);
-        ctx.beginPath(); ctx.moveTo(padLeft, y); ctx.lineTo(W - padRight, y); ctx.stroke();
-        ctx.fillText(unit === 'K' ? (p / 1000).toFixed(1) + 'K' : p.toFixed(1), padLeft - 5, y + 3);
+  // --- Chart 2: Capex vs FCF (10Y) ---
+  new Chart($('chartHistCash'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Tăng tồn kho (tỷ VND)', data: DATA.invGrowth,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'CFO (tỷ VND, âm)', data: DATA.cfo, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:(ctx)=> ctx.parsed.y < 0 ? RED : '#0f1419',
+        pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'} }
       }
+    })
+  });
 
-      // MA20 (vàng)
-      if (ma20.length) {
-        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.beginPath();
-        let started = false;
-        ma20.forEach((v, i) => {
-          if (v === null || v === undefined) return;
-          const x = idxToX(i), y = priceToY(v);
-          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      }
-      // MA50 (cyan)
-      if (ma50.length) {
-        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); started = false;
-        ma50.forEach((v, i) => {
-          if (v === null || v === undefined) return;
-          const x = idxToX(i), y = priceToY(v);
-          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-      }
-
-      // Resistance = đỉnh 52 tuần
-      if (high52w != null) {
-        ctx.strokeStyle = 'rgba(255,77,109,0.5)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
-        const resY = priceToY(high52w);
-        ctx.beginPath(); ctx.moveTo(padLeft, resY); ctx.lineTo(W - padRight, resY); ctx.stroke();
-        ctx.fillStyle = 'rgba(255,77,109,0.8)'; ctx.textAlign = 'left'; ctx.font = '9px Inter';
-        ctx.fillText('R ' + (high52w / div).toFixed(unit === 'K' ? 1 : 0) + (unit === 'K' ? 'K' : '') + ' (đỉnh 52W)', padLeft + 4, resY - 5);
-      }
-      // Support = đáy 52 tuần
-      if (low52w != null) {
-        ctx.strokeStyle = 'rgba(16,217,138,0.5)';
-        const supY = priceToY(low52w);
-        ctx.beginPath(); ctx.moveTo(padLeft, supY); ctx.lineTo(W - padRight, supY); ctx.stroke();
-        ctx.fillStyle = 'rgba(16,217,138,0.8)';
-        ctx.fillText('S ' + (low52w / div).toFixed(unit === 'K' ? 1 : 0) + (unit === 'K' ? 'K' : '') + ' (đáy 52W)', padLeft + 4, supY + 12);
-        ctx.setLineDash([]);
-      }
-
-      // Candles
-      candles.forEach((c, i) => {
-        const x = idxToX(i);
-        const isUp = c.c >= c.o;
-        const color = isUp ? '#10d98a' : '#ff4d6d';
-        const yHigh = priceToY(c.h), yLow = priceToY(c.l);
-        const yOpen = priceToY(c.o), yClose = priceToY(c.c);
-        const bodyTop = Math.min(yOpen, yClose);
-        const bodyH = Math.max(1, Math.abs(yClose - yOpen));
-        ctx.strokeStyle = color; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x, yHigh); ctx.lineTo(x, yLow); ctx.stroke();
-        ctx.fillStyle = color; ctx.fillRect(x - candleW / 2, bodyTop, candleW, bodyH);
-      });
-
-      // Volume sub-panel
-      if (volumes.length) {
-        const maxVol = Math.max(...volumes.filter(v => v > 0));
-        const volToY = v => volBot - (volBot - volTop) * v / maxVol;
-        ctx.fillStyle = '#5a5a72'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
-        ctx.fillText(maxVol.toFixed(1) + 'M', padLeft - 5, volTop + 3);
-        ctx.fillText('0', padLeft - 5, volBot);
-        ctx.strokeStyle = 'rgba(139,92,246,0.08)';
-        ctx.beginPath(); ctx.moveTo(padLeft, volBot); ctx.lineTo(W - padRight, volBot); ctx.stroke();
-        candles.forEach((c, i) => {
-          const x = idxToX(i);
-          const isUp = c.c >= c.o;
-          const v = volumes[i];
-          if (v <= 0) return;
-          const y = volToY(v);
-          ctx.fillStyle = isUp ? 'rgba(16,217,138,0.5)' : 'rgba(255,77,109,0.5)';
-          ctx.fillRect(x - candleW / 2, y, candleW, volBot - y);
-        });
-      }
-
-      // X labels (tháng)
-      if (months.length) {
-        ctx.fillStyle = '#5a5a72'; ctx.font = '9px Inter'; ctx.textAlign = 'center';
-        const monthStep = Math.ceil(n / months.length);
-        months.forEach((m, i) => {
-          const idx = i * monthStep + 2;
-          if (idx < n) ctx.fillText(m, idxToX(idx), H - 5);
-        });
+  // --- Chart 3: Segment mix (doughnut) ---
+  new Chart($('chartSegMix'), {
+    type:'doughnut',
+    data:{ labels: DATA.segMix.labels, datasets:[{
+      data: DATA.segMix.values,
+      backgroundColor:[BLUE, PURPLE, AMBER, '#565f6b'],
+      borderColor:'#161b22', borderWidth:2
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{
+        legend:{position:'right', labels:{usePointStyle:true, boxWidth:8, font:{size:11}, padding:10}},
+        tooltip:{callbacks:{label:(c)=>` ${c.label}: ${c.parsed}%`}}
       }
     }
+  });
 
-    draw();
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(draw, 100);
-    });
-  };
+  // --- Chart 4: Land bank / inventory accumulation (tỷ VND) ---
+  if ($('chartThesisRPO')) new Chart($('chartThesisRPO'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[{
+      label:'Tồn kho (tỷ VND)', data: DATA.inventory,
+      backgroundColor:(c)=>grad(c,'rgba(245,166,35,0.85)','rgba(245,166,35,0.25)'),
+      borderRadius:6
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, ticks:{callback:(v)=>v+' tỷ'}} },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>` Tồn kho: ${c.parsed} tỷ VND`}} }
+    })
+  });
 
-  /* ---------------------------------------------------------------------
-     NAVIGATION — scrollspy + progress bar + back-to-top
-     Trước đây: lặp 2 lần (technical + profile). Giờ: 1 hàm.
-     Tự phát hiện links vs fallback. Tương thích cả `data-target` (dashboard)
-     và `href="#id"` (profile).
-     --------------------------------------------------------------------- */
-  viz.setupNav = function (opts) {
-    opts = opts || {};
-    const links = Array.from(document.querySelectorAll(opts.linksSelector || '.topnav-link, nav a[href^="#"]'));
-    if (!links.length) return;
+  // --- Chart 5: Forward project pipeline value (tỷ VND, MEDQ estimate) ---
+  if ($('chartThesisCapex')) new Chart($('chartThesisCapex'), {
+    type:'bar',
+    data:{ labels:{{THESIS_CAPEX_LABELS}}, datasets:[{
+      label:'Giá trị dự án (tỷ VND)', data:{{THESIS_CAPEX_DATA}},
+      backgroundColor:(c)=>{
+        const i = c.dataIndex;
+        const cols=['rgba(74,158,255,0.7)','rgba(245,166,35,0.8)', 'rgba(167,139,250,0.7)', 'rgba(248,81,73,0.8)', 'rgba(63,185,80,0.7)'];
+        return cols[i % cols.length];
+      }, borderRadius:6
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, ticks:{callback:(v)=>v+' tỷ'}} },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>` Giá trị: ${c.parsed} tỷ VND`}} }
+    })
+  });
 
-    const progress = opts.progressId ? document.getElementById(opts.progressId) : document.getElementById('progressBar');
-    const backTop = opts.backTopId ? document.getElementById(opts.backTopId) : document.getElementById('backTop');
-    // Giải section target cho mỗi link (data-target hoặc href)
-    const sections = links.map(link => {
-      const sel = link.dataset.target ? '#' + link.dataset.target : link.getAttribute('href');
-      return { link: link, el: sel ? document.querySelector(sel) : null };
-    }).filter(s => s.el);
-
-    function onScroll() {
-      const sc = window.scrollY + 120;
-      const docH = document.documentElement.scrollHeight - window.innerHeight;
-      if (progress) progress.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
-      if (backTop) backTop.classList.toggle('visible', window.scrollY > 600);
-
-      let current = sections[0];
-      for (let i = sections.length - 1; i >= 0; i--) {
-        if (sections[i].el.getBoundingClientRect().top + window.scrollY - 120 <= sc) {
-          current = sections[i]; break;
-        }
-      }
-      links.forEach(l => l.classList.remove('active'));
-      if (current) {
-        current.link.classList.add('active');
-        // Scroll nav để link active vào view
-        const navInner = current.link.closest('.topnav-inner');
-        if (navInner) {
-          const linkRect = current.link.getBoundingClientRect();
-          const navRect = navInner.getBoundingClientRect();
-          if (linkRect.left < navRect.left + 50 || linkRect.right > navRect.right - 50) {
-            navInner.scrollTo({
-              left: current.link.offsetLeft - navInner.offsetWidth / 2 + current.link.offsetWidth / 2,
-              behavior: 'smooth',
-            });
+  // --- Chart 6: P/E history with avg bands (annotation) ---
+  new Chart($('chartValPE'), {
+    type:'line',
+    data:{ labels: DATA.years, datasets:[{
+      label:'P/E (ước tính)',
+      data: DATA.peHist,
+      borderColor: BLUE, backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.25)','rgba(74,158,255,0)'),
+      fill:true, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, borderWidth:2.5
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'P/E (x)', font:{size:10}, color:'#565f6b'}} },
+      plugins:{
+        legend:{labels:{usePointStyle:true, boxWidth:8}},
+        annotation:{
+          annotations:{
+            avg5: { type:'line', yMin:DATA.pe5med, yMax:DATA.pe5med, borderColor:AMBER, borderDash:[6,4], borderWidth:1.5,
+                    label:{content:('5Y median ~'+DATA.pe5med+'×'),display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
+            avg10:{ type:'line', yMin:DATA.pe5avg, yMax:DATA.pe5avg, borderColor:'#a78bfa', borderDash:[6,4], borderWidth:1.5,
+                    label:{content:('5Y avg ~'+DATA.pe5avg+'×'),display:(Math.abs(DATA.pe5avg-DATA.pe5med)>0.5),position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
+            current:{ type:'point', xValue:(DATA.years[DATA.years.length-1]), yValue:DATA.pe, backgroundColor:RED, radius:6,
+                      label:{content:('Now ~'+DATA.pe+'×'),display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
           }
         }
       }
-    }
+    })
+  });
 
-    links.forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        const sel = link.dataset.target ? '#' + link.dataset.target : link.getAttribute('href');
-        const target = sel ? document.querySelector(sel) : null;
-        if (target) {
-          const navH = (document.querySelector('.topnav') || {}).offsetHeight || 0;
-          const top = target.getBoundingClientRect().top + window.scrollY - navH - 8;
-          window.scrollTo({ top: top, behavior: 'smooth' });
-        }
-      });
-    });
+  // --- Chart 7: Debt vs Cash (10Y) ---
+  new Chart($('chartBSDt'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Tồn kho (tỷ VND)', data: DATA.inventory,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.3)'), borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Vốn chủ sở hữu (tỷ VND)', data: DATA.equity, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
+    })
+  });
 
-    if (backTop) {
-      backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
+  // --- Chart 8: Dividend + Buyback ---
+  new Chart($('chartBSDt2') || $('chartReturns'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'EPS (VND)', data: DATA.eps, backgroundColor:'rgba(63,185,80,0.7)', borderRadius:4, yAxisID:'y' },
+      { label:'ROE (%)', data: DATA.roe, type:'line', borderColor: BLUE, backgroundColor: BLUE, tension:0.3, pointRadius:4, yAxisID:'y1', borderWidth:2 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, stacked:true, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
+    })
+  });
+
+  // --- Chart 9: Peer scatter ---
+  const peers = {
+    datasets:[{
+      label:(DATA.peerLabel || 'Peer VN (P/B vs tăng trưởng, bubble=vốn hóa)'),
+      data: DATA.peers.data || DATA.peers,
+      backgroundColor:(ctx)=>{ const d=ctx.raw; return d.own ? AMBER : BLUE; },
+      borderColor:'#0f1419', borderWidth:1.5
+    }]
   };
+  new Chart($('chartPeerScatter'), {
+    type:'bubble',
+    data: peers,
+    options: baseOpts({
+      scales:{
+        x:{ ...baseScales.x, title:{display:true, text:'P/B (×)', font:{size:10}, color:'#565f6b'}, min:(DATA.peerPBMin||1), max:(DATA.peerPBMax||5) },
+        y:{ ...baseScales.y, title:{display:true, text:(DATA.peerYLabel||'CAGR NPAT 3Y (%)'), font:{size:10}, color:'#565f6b'}, min:0, max:(DATA.peerYMax||20) }
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:(c)=>{
+          const d=c.raw; return ` ${d.label}: P/B ${d.x}×, tăng trưởng ${d.y}%`;
+        }}},
+        datalabels:false
+      }
+    }),
+    plugins:[{
+      id:'peerLabels',
+      afterDatasetsDraw(chart){
+        const {ctx} = chart;
+        const ds = chart.data.datasets[0].data;
+        const meta = chart.getDatasetMeta(0);
+        ctx.save();
+        ctx.font = 'bold 11px Inter';
+        ctx.fillStyle = '#e6edf3';
+        ctx.textAlign='center';
+        ds.forEach((d,i)=>{
+          const pt = meta.data[i];
+          if(!pt) return;
+          ctx.fillText(d.label, pt.x, pt.y - d.r - 4);
+        });
+        ctx.restore();
+      }
+    }]
+  });
 
-  global.viz = viz;
-})(typeof window !== 'undefined' ? window : this);
+  // --- Chart 10: Technical — Price + MA (weekly) ---
+  const techWeeks = DATA.techWeeks;
+  const techPrice = DATA.techPrice;
+  const techMA10  = DATA.techMA10;
+  const techMA20  = DATA.techMA20;
+  const techMA50  = DATA.techMA50;
+  new Chart($('chartTechPrice'), {
+    type:'line',
+    data:{ labels: techWeeks, datasets:[
+      { label:'Close', data: techPrice, borderColor: AMBER, backgroundColor:'transparent', tension:0.3, pointRadius:3, borderWidth:2.5 },
+      { label:'MA10', data: techMA10, borderColor: BLUE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA20', data: techMA20, borderColor: PURPLE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA50', data: techMA50, borderColor: '#8b949e', borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND / cổ phiếu', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{labels:{usePointStyle:true, boxWidth:8}}, annotation:{ annotations:{ support:{type:'line', yMin:DATA.tech52wLow, yMax:DATA.tech52wLow, borderColor:GREEN, borderDash:[6,4], borderWidth:1, label:{content:('Hỗ trợ ~'+DATA.tech52wLow.toLocaleString()+' VND (52W low)'), display:true, position:'start', backgroundColor:'rgba(63,185,80,0.85)', font:{size:9,weight:'bold'}, color:'#0f1419'}}, resist:{type:'line', yMin:DATA.techMA50val, yMax:DATA.techMA50val, borderColor:RED, borderDash:[6,4], borderWidth:1, label:{content:('Kháng cự ~'+DATA.techMA50val.toLocaleString()+' VND (MA50)'), display:true, position:'end', backgroundColor:'rgba(248,81,73,0.85)', font:{size:9,weight:'bold'}, color:'#fff'}} } } }
+    })
+  });
 
-</script>
-<script>
-/* ===== DATA (fill từ report pipeline — ví dụ HPG bên dưới, thay khi chạy skill) =====
-   Tất cả array 5 phần tử = 5 năm. Đơn vị xem data_binding.md. */
-const years = {{YEARS}};
-const data = {{CHART_DATA}};
+  // --- Chart 11: RSI(14) ---
+  new Chart($('chartTechRSI'), {
+    type:'line',
+    data:{ labels: techWeeks, datasets:[{
+      label:'RSI(14)', data: DATA.techRSI,
+      borderColor:(c)=>grad(c,'rgba(245,166,35,0.9)','rgba(245,166,35,0.2)'), fill:true, tension:0.3, pointRadius:3, borderWidth:2
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, min:0, max:100,
+        title:{display:true, text:'RSI', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false}, annotation:{ annotations:{
+        ob:{type:'line', yMin:70, yMax:70, borderColor:RED, borderDash:[4,4], borderWidth:1, label:{content:'Overbought 70', display:true, position:'end', backgroundColor:'rgba(248,81,73,0.7)', font:{size:9}, color:'#fff'}},
+        os:{type:'line', yMin:30, yMax:30, borderColor:GREEN, borderDash:[4,4], borderWidth:1, label:{content:'Oversold 30', display:true, position:'end', backgroundColor:'rgba(63,185,80,0.7)', font:{size:9}, color:'#fff'}}
+      } } }
+    })
+  });
 
-/* ===== CHARTS — dùng viz.chart() registry (pattern "chart as plugin").
-   Base options (responsive, legend, grid color) tự merge → chỉ ghi đè cái cụ thể. ===== */
-viz.chart('chartRevNP', {
-  type: 'bar',
-  data: { labels: years, datasets: [
-    { label: 'Doanh thu (tỷ)', data: data.revenue,
-      backgroundColor: (c) => viz.gradient(c, 'rgba(168,85,247,0.9)', 'rgba(168,85,247,0.25)'),
-      borderRadius: 8, yAxisID: 'y', order: 2 },
-    { label: 'LNST (tỷ)', data: data.netProfit, type: 'line',
-      borderColor: '#ec4899', backgroundColor: '#ec4899',
-      borderWidth: 3, tension: 0.4, pointRadius: 5,
-      pointBackgroundColor: '#ec4899', pointBorderColor: '#fff', pointBorderWidth: 2,
-      yAxisID: 'y1', order: 1 }
-  ]},
-  options: { scales: {
-    y:  { position: 'left',  ticks: { callback: v => (v/1000)+'K' } },
-    y1: { position: 'right', grid: { display: false }, ticks: { callback: v => (v/1000).toFixed(0)+'K' } }
-  }}
+  // --- Chart 12: Drawdown profile (2Y daily underwater curve, monthly resample) ---
+  const ddMonths = DATA.ddMonths;
+  const ddValues = DATA.ddValues;
+  new Chart($('chartProfileDD'), {
+    type:'line',
+    data:{ labels: ddMonths, datasets:[{
+      label:'Drawdown %', data: ddValues,
+      borderColor:(c)=>grad(c,'rgba(248,81,73,0.9)','rgba(248,81,73,0.2)'), fill:true, tension:0.3, pointRadius:2, borderWidth:2
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'%', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false} }
+    })
+  });
+
+  // --- Chart 13: Return distribution histogram ---
+  const distBins = DATA.distBins;
+  const distCounts = DATA.distCounts;
+  new Chart($('chartProfileDist'), {
+    type:'bar',
+    data:{ labels: distBins, datasets:[{
+      label:'Số ngày (2 năm)', data: distCounts,
+      backgroundColor: (c)=>{
+        const i=c.dataIndex;
+        return i<2 ? 'rgba(248,81,73,0.7)' : (i===2 ? '#565f6b' : 'rgba(63,185,80,0.7)');
+      }, borderRadius:4
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'số ngày', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false} }
+    })
+  });
 });
 
-viz.chart('chartMargin', {
-  type: 'line',
-  data: { labels: years, datasets: [
-    { label: 'ROS (Biên LNST)', data: data.ros,
-      borderColor: '#ec4899',
-      backgroundColor: (c) => viz.gradient(c, 'rgba(236,72,153,0.35)', 'transparent'),
-      borderWidth: 3, tension: 0.4, pointRadius: 5,
-      pointBackgroundColor: '#ec4899', pointBorderColor: '#fff', pointBorderWidth: 2, fill: true },
-    { label: 'ROE', data: data.roe,
-      borderColor: '#06b6d4', backgroundColor: 'transparent',
-      borderWidth: 3, tension: 0.4, pointRadius: 5,
-      pointBackgroundColor: '#06b6d4', pointBorderColor: '#fff', pointBorderWidth: 2, borderDash: [6,4] }
-  ]},
-  options: { scales: { y: { ticks: { callback: v => v + '%' } } } }
-});
+/* ============ NAV / scroll-spy / progress / back-top ============ */
+(function(){
+  const nav = document.getElementById('topnav');
+  const links = Array.from(document.querySelectorAll('.topnav-link'));
+  const progressBar = document.getElementById('progressBar');
+  const backTop = document.getElementById('backTop');
+  const sections = links.map(l => document.getElementById(l.dataset.target)).filter(Boolean);
 
-viz.chart('chartPEPB', {
-  type: 'line',
-  data: { labels: years, datasets: [
-    { label: 'P/E', data: data.pe,
-      borderColor: '#a855f7', backgroundColor: '#a855f7',
-      borderWidth: 3, tension: 0.4, pointRadius: 5,
-      pointBackgroundColor: '#a855f7', pointBorderColor: '#fff', pointBorderWidth: 2, yAxisID: 'y' },
-    { label: 'P/B', data: data.pb,
-      borderColor: '#10d98a', backgroundColor: '#10d98a',
-      borderWidth: 3, tension: 0.4, pointRadius: 5,
-      pointBackgroundColor: '#10d98a', pointBorderColor: '#fff', pointBorderWidth: 2, yAxisID: 'y1' }
-  ]},
-  options: { scales: {
-    y:  { position: 'left',  title: { display: true, text: 'P/E (x)', color: '#a855f7' }, ticks: { color: '#a855f7' } },
-    y1: { position: 'right', title: { display: true, text: 'P/B (x)', color: '#10d98a' }, ticks: { color: '#10d98a' }, grid: { display: false } }
-  }}
-});
-
-viz.chart('chartPriceBV', {
-  type: 'bar',
-  data: { labels: years, datasets: [
-    { label: 'Giá (K đ)', data: data.price, type: 'line',
-      borderColor: '#ec4899', backgroundColor: '#ec4899',
-      borderWidth: 3, tension: 0.4, pointRadius: 6,
-      pointBackgroundColor: '#ec4899', pointBorderColor: '#fff', pointBorderWidth: 2, order: 1, yAxisID: 'y' },
-    { label: 'BVPS (K đ)', data: data.bvps.map(v => v/1000),
-      backgroundColor: (c) => viz.gradient(c, 'rgba(6,182,212,0.7)', 'rgba(6,182,212,0.2)'),
-      borderRadius: 8, order: 2, yAxisID: 'y' }
-  ]},
-  options: { scales: { y: { ticks: { callback: v => v + 'K' } } } }
-});
-
-viz.chart('chartDuPont', {
-  type: 'bar',
-  data: { labels: years, datasets: [
-    { label: 'Biên LN (%)',          data: data.dupMargin, backgroundColor: 'rgba(168,85,247,0.8)', borderRadius: 6, stack: 'a' },
-    { label: 'Vòng quay TS (÷100)',  data: data.dupTurn,   backgroundColor: 'rgba(236,72,153,0.8)', borderRadius: 6, stack: 'a' },
-    { label: 'Đòn bẩy (÷100)',       data: data.dupLev,    backgroundColor: 'rgba(6,182,212,0.8)',  borderRadius: 6, stack: 'a' }
-  ]},
-  options: {
-    plugins: {
-      legend: { labels: { font: { size: 10 } } },
-      tooltip: { callbacks: { label: (c) => {
-        const lbl = c.dataset.label, v = c.parsed.y;
-        if (lbl.includes('Biên'))  return `Biên LN: ${v}%`;
-        if (lbl.includes('Vòng'))  return `Vòng quay: ${(v/100).toFixed(2)}x`;
-        return `Đòn bẩy: ${(v/100).toFixed(2)}x`;
-      }}}
-    },
-    scales: {
-      x: { stacked: true, grid: { display: false } },
-      y: { stacked: true, ticks: { display: false } }
+  function onScroll(){
+    const y = window.scrollY;
+    // progress
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (h>0 ? (y/h*100) : 0) + '%';
+    // back-top
+    if (y > 600) backTop.classList.add('visible'); else backTop.classList.remove('visible');
+    // scroll-spy
+    const navH = nav.offsetHeight + 10;
+    let active = sections[0];
+    for (const s of sections){
+      if (s && (s.getBoundingClientRect().top - navH) <= 0) active = s;
+    }
+    links.forEach(l => {
+      l.classList.toggle('active', active && l.dataset.target === active.id);
+    });
+    // auto-scroll active link into view in nav
+    const activeLink = links.find(l => l.classList.contains('active'));
+    if (activeLink){
+      const navInner = nav.querySelector('.topnav-inner');
+      const linkRect = activeLink.getBoundingClientRect();
+      const innerRect = navInner.getBoundingClientRect();
+      if (linkRect.right > innerRect.right - 20 || linkRect.left < innerRect.left + 20){
+        navInner.scrollTo({ left: navInner.scrollLeft + (linkRect.left - innerRect.left - 40), behavior:'smooth' });
+      }
     }
   }
-});
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  // smooth-scroll on click
+  links.forEach(l => {
+    l.addEventListener('click', (e)=>{
+      const t = document.getElementById(l.dataset.target);
+      if (!t) return;
+      e.preventDefault();
+      const top = t.getBoundingClientRect().top + window.scrollY - nav.offsetHeight - 8;
+      window.scrollTo({ top, behavior:'smooth' });
+    });
+  });
+  backTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+  onScroll();
+})();
 
-viz.chart('chartSummary', {
-  type: 'bar',
-  data: {{SUMMARY_CHART_DATA}},
-  options: {
-    plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: c => c.parsed.y.toFixed(1) + 'K đ/cp' } },
-      annotation: { annotations: {{SUMMARY_ANNOTATION}} }
-    },
-    scales: {
-      y: { ticks: { callback: v => v + 'K' } },
-      x: { ticks: { font: { size: 10 }, maxRotation: 0, minRotation: 0 } }
-    }
-  }
-});
-
-viz.chart('chartForecast', {
-  type: 'bar',
-  data: { labels: data.forecastYears, datasets: [
-    { label: 'Sản lượng thép (tr.tấn)', data: data.forecastVol,
-      backgroundColor: (c) => viz.gradient(c, 'rgba(168,85,247,0.9)', 'rgba(168,85,247,0.3)'),
-      borderRadius: 8, yAxisID: 'y' },
-    { label: 'LNST dự báo (tỷ)', data: data.forecastNP, type: 'line',
-      borderColor: '#10d98a', backgroundColor: '#10d98a',
-      borderWidth: 3, tension: 0.4, pointRadius: 5,
-      pointBackgroundColor: '#10d98a', pointBorderColor: '#fff', pointBorderWidth: 2, yAxisID: 'y1' }
-  ]},
-  options: { scales: {
-    y:  { position: 'left',  title: { display: true, text: 'Triệu tấn' } },
-    y1: { position: 'right', title: { display: true, text: 'Tỷ VNĐ' }, ticks: { callback: v => (v/1000)+'K' }, grid: { display: false } }
-  }}
-});
 </script>
 </body>
+
+<!-- 
+=== TOKENS TO FILL (complete list) ===
+Template: dashboard_template.html — 22 sections, Chart.js 4.4.1 framework sẵn sàng.
+Agent chỉ cần fill các token dưới đây. GIỮ NGUYÊN: CSS, <section> ids, canvas ids, nav links, Chart.js setup.
+
+--- Identity / meta ---
+{{TICKER}} — mã cổ phiếu (vd KDH, HPG, FPT)
+{{COMPANY_NAME}} — tên công ty tiếng Việt (vd Nhà Khang Điền)
+{{EXCHANGE}} — sàn giao dịch (vd HOSE, HNX, UPCOM)
+{{PRICE_DATE}} — ngày giá đóng cửa gần nhất (vd 08/07/2026)
+{{CAPITAL_LENS_AMOUNT}} — số vốn cho góc nhìn khoản đầu tư (vd 800 triệu VND)
+{{SOURCES_SUMMARY}} — tóm tắt nguồn dữ liệu (vd vnstock (VCI), BCTC kiểm toán, báo chí...)
+{{CITATION_COUNT}} — số citation trong báo cáo (vd 16)
+
+--- Section body HTML (mỗi token = toàn bộ nội dung HTML bên trong section, giữa section-title và </section>) ---
+{{SEC_HERO_HTML}} — HTML body cho section hero + KPI strip
+{{SEC_EXEC_HTML}} — HTML body cho section executive summary (4 callout + plain)
+{{SEC_BIZ_HTML}} — HTML body cho section business 101
+{{SEC_INDUSTRY_HTML}} — HTML body cho section industry position / value chain
+{{SEC_HISTORY_HTML}} — HTML body cho section financial history table + analysis
+{{SEC_SEGMENT_HTML}} — HTML body cho section segment analysis
+{{SEC_THESIS_HTML}} — HTML body cho section investment thesis + đúng/sai + KPI watchlist
+{{SEC_VALUATION_HTML}} — HTML body cho section valuation P/E P/B + NAV
+{{SEC_PEER_HTML}} — HTML body cho section peer comparison
+{{SEC_BS_HTML}} — HTML body cho section balance sheet & FCF
+{{SEC_RISK_HTML}} — HTML body cho section risk matrix table
+{{SEC_CAPITAL_LENS_HTML}} — HTML body cho section capital lens (800tr) lump sum/DCA/drawdown/checklist
+{{SEC_SCENARIO_HTML}} — HTML body cho section scenario bull/base/bear
+{{SEC_CHECKLIST_HTML}} — HTML body cho section final investment checklist 5 nhóm
+{{SEC_INSIGHT_1_HTML}} — HTML body cho section special insight 1 full body
+{{SEC_INSIGHT_2_HTML}} — HTML body cho section special insight 2 full body
+{{SEC_INSIGHT_3_HTML}} — HTML body cho section special insight 3 full body
+{{SEC_TECH_HTML}} — HTML body cho section technical ACTIVE (score/MA/RSI/MACD/pattern)
+{{SEC_TECH_PROFILE_HTML}} — HTML body cho section technical PROFILE (return/drawdown/tail/non-advice)
+{{SEC_ANALYST_HTML}} — HTML body cho section analyst synthesis (consensus/target/bull-bear)
+{{SEC_GLOSSARY_HTML}} — HTML body cho section glossary
+{{SEC_SOURCE_HTML}} — HTML body cho section source appendix + data quality matrix + refs
+
+--- Insights (subtitle + TOC label) ---
+{{INSIGHT_1_SUBTITLE}} — tiêu đề h2 insight 1 (đặc thù ticker)
+{{INSIGHT_2_SUBTITLE}} — tiêu đề h2 insight 2 (đặc thù ticker)
+{{INSIGHT_3_SUBTITLE}} — tiêu đề h2 insight 3 (đặc thù ticker)
+{{INSIGHT_1_SHORT_LABEL}} — nhãn TOC ngắn cho insight 1 (vd "Tồn kho")
+{{INSIGHT_2_SHORT_LABEL}} — nhãn TOC ngắn cho insight 2 (vd "CFO âm")
+{{INSIGHT_3_SHORT_LABEL}} — nhãn TOC ngắn cho insight 3 (vd "Mả Lặng")
+
+--- Chart data (JS) ---
+{{CHART_DATA_JS}} — block JS "const DATA = {...}" chứa mọi mảng cho Chart.js (years, revenue, netIncome, grossProfit, inventory, cfo, equity, totalAssets, eps, roe, peHist, pbHist, bvps, peers, techWeeks/Price/MA10/MA20/MA50/RSI, ddMonths/Values, distBins/Counts, segMix, invGrowth) — đơn vị tỷ VND / VND / %
+{{THESIS_CAPEX_LABELS}} — JS array nhãn cho chart Thesis Capex (vd ["FY25 thực tế","FY26 dự phóng","FY27 dự phóng","Dự án lớn (toàn dự án)"])
+{{THESIS_CAPEX_DATA}} — JS array số liệu cho chart Thesis Capex (vd [4651, 7000, 9000, 16369])
+
+Lưu ý: {{CHART_DATA_JS}} là biến của const DATA object — tất cả canvas đều đọc từ DATA.years/revenue/... .
+Đừng hardcode số liệu trong Chart setup; tham chiếu DATA.xxx thay thế.
+-->
 </html>
