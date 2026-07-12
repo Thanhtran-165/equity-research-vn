@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-run_phase.py — Phase runner cho equity-research-vn-v2
+run_phase.py — Phase runner cho equity-research-vn
 
 Thin orchestrator: chạy từng phase tuần tự, verify sau mỗi phase.
 
@@ -23,7 +23,7 @@ TICKER = sys.argv[1] if len(sys.argv) > 1 else "UNKNOWN"
 WORK_DIR = sys.argv[2] if len(sys.argv) > 2 else "."
 PHASE_ARG = sys.argv[3] if len(sys.argv) > 3 else "--all"
 
-SKILL_DIR = os.path.expanduser("~/.zcode/skills/equity-research-vn-v2")
+SKILL_DIR = os.path.expanduser("~/.zcode/skills/equity-research-vn")
 STATE_DIR = os.path.join(WORK_DIR, ".task-state")
 STATE_FILE = os.path.join(STATE_DIR, "task-state.json")
 PHASE_MAP_FILE = os.path.join(SKILL_DIR, "requirements-phase-map.yaml")

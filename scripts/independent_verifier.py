@@ -21,7 +21,7 @@ import json, sys, os, re, subprocess, yaml, datetime, hashlib
 
 TICKER = sys.argv[1] if len(sys.argv) > 1 else "UNKNOWN"
 REPORT = sys.argv[2] if len(sys.argv) > 2 else None
-SKILL_DIR = os.path.expanduser("~/.zcode/skills/equity-research-vn-v2")
+SKILL_DIR = os.path.expanduser("~/.zcode/skills/equity-research-vn")
 REQ_FILE = os.path.join(SKILL_DIR, "requirements.yaml")
 
 # Colors

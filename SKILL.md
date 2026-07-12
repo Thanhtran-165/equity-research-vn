@@ -1,9 +1,9 @@
 ---
-name: equity-research-vn-v2
-description: "Phân tích equity research đầy đủ cho cổ phiếu Việt Nam — kiến trúc subagent per phase. Mỗi phase chạy trong context tách biệt, giao tiếp qua task-state.json, verify per-phase. TRIGGER khi user gõ /equity-research-vn-v2 [TICKER]. Thay thế v1 monolith."
+name: equity-research-vn
+description: "Phân tích equity research đầy đủ cho cổ phiếu Việt Nam — kiến trúc subagent per phase (v3.0). Mỗi phase chạy trong context tách biệt, giao tiếp qua task-state.json, verify per-phase. TRIGGER khi user gõ /equity-research-vn [TICKER]."
 ---
 
-# equity-research-vn-v2 [TICKER]
+# equity-research-vn [TICKER]
 
 ## Pipeline (8 phases, chạy tuần tự)
 
