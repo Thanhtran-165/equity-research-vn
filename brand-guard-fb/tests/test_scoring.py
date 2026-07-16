@@ -100,24 +100,33 @@ def test_total_clamped_at_zero():
 
 # === AVATAR / COVER (pHash) ===
 
+def _make_real_image(path, size=(32, 32)):
+    """Tạo ảnh có entropy (không phải placeholder) cho test."""
+    from PIL import Image, ImageDraw
+    img = Image.new("RGB", size, color=(50, 50, 50))
+    draw = ImageDraw.Draw(img)
+    for x in range(0, size[0], 4):
+        for y in range(0, size[1], 4):
+            draw.rectangle([x, y, x + 2, y + 2], fill=(x * 8 % 256, y * 8 % 256, 100))
+    img.save(path)
+    return str(path)
+
+
 def test_avatar_perfect_match(monkeypatch, tmp_path):
     from PIL import Image
-    img = Image.new("RGB", (8, 8), color=(123, 45, 67))
-    avatar = tmp_path / "avatar.png"
-    img.save(avatar)
-    page_avatar_url = tmp_path / "page.png"
-    img.save(page_avatar_url)
+    avatar = _make_real_image(tmp_path / "avatar.png")
+    page_avatar_url = _make_real_image(tmp_path / "page.png")
 
     brand = Brand(
         id="x", display_name="X", aliases=["X"],
         official_username="x",
         official_page_url="https://www.facebook.com/x",
-        avatar_path=str(avatar), cover_path=str(avatar),
+        avatar_path=avatar, cover_path=avatar,
     )
     page = PageMeta(
         url="https://www.facebook.com/y", title="X",
-        avatar_url=str(page_avatar_url),
-        cover_url=str(page_avatar_url),
+        avatar_url=page_avatar_url,
+        cover_url=page_avatar_url,
     )
 
     import src.scoring as sc
@@ -142,12 +151,15 @@ def test_avatar_phash_miss_sets_semantic_flag(monkeypatch, tmp_path):
     import src.scoring as sc
     from src.models import Brand
 
-    # Brand avatar: đen đặc
-    img_brand = Image.new("RGB", (64, 64), color=(0, 0, 0))
+    # Brand avatar: pattern có entropy (alternating colors)
+    img_brand = Image.new("RGB", (64, 64), color=(10, 20, 30))
+    draw_brand = ImageDraw.Draw(img_brand)
+    for x in range(0, 64, 8):
+        draw_brand.rectangle([x, 0, x + 4, 64], fill=(200, 100, 50))
     avatar = tmp_path / "brand.png"
     img_brand.save(avatar)
 
-    # Page avatar: pattern noise (structure khác hẳn → Hamming lớn)
+    # Page avatar: pattern khác hẳn → Hamming lớn
     img_page = Image.new("RGB", (64, 64), color=(255, 0, 0))
     draw = ImageDraw.Draw(img_page)
     for x in range(0, 64, 4):
@@ -166,8 +178,6 @@ def test_avatar_phash_miss_sets_semantic_flag(monkeypatch, tmp_path):
         url="https://www.facebook.com/y", title="X",
         avatar_url=str(page_avatar),
     )
-    # Mock: page_avatar_url là local path → _download_to_temp không gọi
-    # nhưng _phash_distance xử lý local path OK
     s = score_page(page, brand, _scoring_cfg())
     assert s.avatar == 0  # pHash miss (Hamming > 12)
     # name match + avatar miss → flag semantic check
@@ -176,27 +186,23 @@ def test_avatar_phash_miss_sets_semantic_flag(monkeypatch, tmp_path):
 
 def test_avatar_match_does_not_set_flag(monkeypatch, tmp_path):
     """Khi pHash match (Hamming ≤ 4) → không flag semantic."""
-    from PIL import Image
     import src.scoring as sc
     from src.models import Brand
 
-    img = Image.new("RGB", (8, 8), color=(123, 45, 67))
-    avatar = tmp_path / "avatar.png"
-    img.save(avatar)
-    page_avatar = tmp_path / "page.png"
-    img.save(page_avatar)
+    avatar = _make_real_image(tmp_path / "avatar.png")
+    page_avatar = _make_real_image(tmp_path / "page.png")
 
     brand = Brand(
         id="x", display_name="X", aliases=["X"],
         official_username="x",
         official_page_url="https://www.facebook.com/x",
-        avatar_path=str(avatar), cover_path=str(avatar),
+        avatar_path=avatar, cover_path=avatar,
     )
     page = PageMeta(
         url="https://www.facebook.com/y", title="X",
-        avatar_url=str(page_avatar),
+        avatar_url=page_avatar,
     )
-    monkeypatch.setattr(sc, "_download_to_temp", lambda url: str(page_avatar))
+    monkeypatch.setattr(sc, "_download_to_temp", lambda url: page_avatar)
 
     s = score_page(page, brand, _scoring_cfg())
     assert s.avatar == 50
@@ -208,7 +214,11 @@ def test_semantic_flag_off_when_name_doesnt_match(tmp_path):
     from PIL import Image, ImageDraw
     from src.models import Brand
 
-    img_brand = Image.new("RGB", (64, 64), color=(0, 0, 0))
+    # Brand avatar: pattern có entropy (alternating colors)
+    img_brand = Image.new("RGB", (64, 64), color=(10, 20, 30))
+    draw_brand = ImageDraw.Draw(img_brand)
+    for x in range(0, 64, 8):
+        draw_brand.rectangle([x, 0, x + 4, 64], fill=(200, 100, 50))
     avatar = tmp_path / "brand.png"
     img_brand.save(avatar)
 

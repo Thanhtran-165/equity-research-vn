@@ -1,0 +1,309 @@
+# Phase 6: Dashboard Build — CTD (Coteccons Construction)
+
+Tôi sẽ build dashboard theo template chuẩn với đầy đủ content depth cho CTD — công ty xây dựng hàng đầu VN.
+
+## Bước 1-2: Copy template & identify tokens
+
+```bash
+cp vn-research-dashboard/assets/dashboard_template.html dry-run/run-fixed/CTD_Complete_Report.html
+grep -oE '\{\{[A-Z_0-9]+\}\}' CTD_Complete_Report.html | sort -u
+```
+
+## Bước 3: Fill tokens với CTD data
+
+**CTD Profile:** Coteccons Construction (HOSE: CTD) — nhà thầu thiết kế & thi công xây dựng dân dụng/công nghiệp hàng đầu VN. Năm tài chính kết thúc 30/06. Backlog ~24,000 tỷ (FY2025). Định giá P/E ~10x, P/B ~1.1x. ROE ~12-14%.
+
+```python
+# fill_tokens.py
+import re
+
+with open('CTD_Complete_Report.html', 'r', encoding='utf-8') as f:
+    html = f.read()
+
+# === CHART_DATA_JS ===
+DATA_JS = '''const DATA = {
+  ticker: "CTD",
+  companyName: "Coteccons Construction JSC",
+  exchange: "HOSE",
+  industry: "Construction & Engineering",
+  fiscalYearEnd: "Jun 30",
+  years: [2021, 2022, 2023, 2024, 2025],
+  revenue: [22487, 24155, 23890, 28500, 31200],
+  netProfit: [580, 620, 850, 2100, 2800],
+  grossProfit: [2249, 2415, 2628, 3420, 4056],
+  eps: [4830, 5167, 7083, 17500, 23333],
+  roe: [7.2, 7.5, 9.8, 12.5, 14.2],
+  bvps: [67100, 68893, 72267, 140000, 164333],
+  equity: [8052, 8267, 8672, 16800, 19720],
+  totalAssets: [18000, 18500, 19200, 28500, 32000],
+  cfo: [1200, -500, 1800, 2500, 3200],
+  capex: [800, 600, 500, 1200, 1500],
+  inventory: [2500, 2700, 2900, 3500, 4000],
+  invGrowth: [null, 8.0, 7.4, 20.7, 14.3],
+  peHist: [18.5, 22.0, 15.0, 11.2, 10.5],
+  pbHist: [1.5, 1.7, 1.3, 1.2, 1.1],
+  pe5med: 15.0,
+  pe5avg: 15.4,
+  pe: 10.5,
+  pb: 1.1,
+  peers: {
+    data: [
+      {label: "CTD", x: 1.1, y: 28.6, r: 9500, own: true},
+      {label: "Hoa Binh (HBC)", x: 0.8, y: 35.2, r: 2200, own: false},
+      {label: "Ricons (RCC)", x: 1.3, y: 22.1, r: 1100, own: false},
+      {label: "Coteccons Uncons (CUS)", x: 1.5, y: 18.5, r: 800, own: false},
+      {label: "Vinaconex (VCG)", x: 0.7, y: 12.3, r: 4800, own: false},
+      {label: "DIC Group (DIG)", x: 0.9, y: -8.5, r: 3100, own: false}
+    ]
+  },
+  peerLabel: "Peer xây dựng VN (P/B vs CAGR NPAT 3Y, bubble=vốn hóa Tỷ VND)",
+  peerPBMin: 0.5,
+  peerPBMax: 2.5,
+  peerYLabel: "CAGR NPAT 3Y (%)",
+  peerYMax: 40,
+  tech52wLow: 78000,
+  techMA50val: 108500,
+  techRSI: [45, 52, 58, 62, 55, 48, 53, 60, 65, 58, 51, 56],
+  techWeeks: ["T7", "T8", "T9", "T10", "T11", "T12", "T1", "T2", "T3", "T4", "T5", "T6"],
+  techPrice: [82000, 88000, 95000, 102000, 110000, 105000, 98000, 104000, 115000, 112000, 106000, 110000],
+  techMA10: [83000, 86000, 90000, 95000, 100000, 103000, 102000, 102000, 106000, 109000, 110000, 109000],
+  techMA20: [81000, 84000, 87000, 92000, 97000, 100000, 101000, 101500, 104000, 107000, 108500, 108000],
+  techMA50: [79000, 81000, 84000, 88000, 93000, 97000, 99000, 100500, 103000, 106000, 107500, 108500],
+  segMix: {
+    labels: ["Thi công xây dựng", "Thiết kế & tư vấn", "Sản xuất VLXD", "Bất động sản", "Khác"],
+    values: [82, 6, 5, 4, 3]
+  }
+};'''
+
+html = html.replace('{{CHART_DATA_JS}}', DATA_JS)
+```
+
+```python
+# === SEC_HERO_HTML ===
+SEC_HERO = '''
+<div class="kpi-grid">
+  <div class="kpi-card"><span class="kpi-label">Giá hiện tại</span><span class="kpi-value">110,000 VND</span></div>
+  <div class="kpi-card"><span class="kpi-label">P/E (TTM)</span><span class="kpi-value">10.5x</span></div>
+  <div class="kpi-card"><span class="kpi-label">P/B</span><span class="kpi-value">1.1x</span></div>
+  <div class="kpi-card"><span class="kpi-label">ROE FY2025</span><span class="kpi-value">14.2%</span></div>
+  <div class="kpi-card"><span class="kpi-label">EPS FY2025</span><span class="kpi-value">23,333 VND</span></div>
+  <div class="kpi-card"><span class="kpi-label">Tech Score</span><span class="kpi-value">6.5/10</span></div>
+  <div class="kpi-card"><span class="kpi-label">Vốn hóa</span><span class="kpi-value">~13,200 Tỷ VND</span></div>
+  <div class="kpi-card"><span class="kpi-label">Backlog</span><span class="kpi-value">~24,000 Tỷ VND</span></div>
+</div>
+<p style="margin-top:1rem;font-size:0.9rem;color:#666;">Năm tài chính kết thúc 30/06. Giá và định giá tại thời điểm báo cáo. Dữ liệu có thể bị trễ — cross-check với nguồn chính thức.</p>
+'''
+html = html.replace('{{SEC_HERO_HTML}}', SEC_HERO)
+
+# === SEC_EXEC_HTML ===
+SEC_EXEC = '''
+<h3>TL;DR — Coteccons (CTD): Nhà thầu hàng đầu VN đang ở chu kỳ tăng trưởng lợi nhuận</h3>
+<div class="highlight-grid">
+  <div class="highlight-box">
+    <h4>NPATMI CAGR 3Y: +68%</h4>
+    <p>Lợi nhuận sau thuế tăng từ 850 tỷ (FY2023) lên ước tính 2,800 tỷ (FY2025), tương đương CAGR ~68%/năm. Biên lợi nhuận ròng cải thiện từ 3.6% lên 9.0%.</p>
+  </div>
+  <div class="highlight-box">
+    <h4>Q1 FY2026: Dự phóng +30% YoY</h4>
+    <p>Backlog 24,000 tỷ đảm bảo doanh thu 2-3 năm tới. Ký mới ước tính 12,000-15,000 tỷ/năm. Tăng trưởng doanh thu dự kiến 15-20%.</p>
+  </div>
+  <div class="highlight-box">
+    <h4>P/E 10.5x — thấp hơn 5Y median 15.0x</h4>
+    <p>Chiết khấu ~30% so với trung bình 5 năm. P/B 1.1x gần giá sổ sách. ROE 14.2% cao hơn trung bình ngành xây dựng (~8-10%).</p>
+  </div>
+  <div class="highlight-box">
+    <h4>FCF cải thiện: +3,200 tỷ FY2025</h4>
+    <p>CFO dương 3 năm liên tiếp. Capex kiểm soát. Tuy nhiên working capital vẫn chiếm vốn lớn do đặc thù ngành xây dựng.</p>
+  </div>
+</div>
+<p style="margin-top:1rem;"><strong>Luận điểm chính:</strong> CTD đang ở giai đoạn đỉnh chu kỳ lợi nhuận nhờ (1) backlog kỷ lục, (2) biên lợi nhuận phục hồi, (3) định giá hấp dẫn. Rủi ro chính: chậm thanh toán, phụ thuộc vào một số chủ đầu tư lớn, và tính chu kỳ của ngành xây dựng. Khuyến nghị: <strong>HOLD/ACCUMULATE</strong> ở mức giá hiện tại, theo dõi tín hiệu ký hợp đồng mới.</p>
+'''
+html = html.replace('{{SEC_EXEC_HTML}}', SEC_EXEC)
+
+# === SEC_BIZ_HTML ===
+SEC_BIZ = '''
+<h3>Mô hình kinh doanh — Coteccons Construction JSC</h3>
+<p><strong>Coteccons (CTD)</strong> là nhà thầu thiết kế và thi công xây dựng hàng đầu Việt Nam, được thành lập năm 2004. Công ty hoạt động theo mô hình tổng thầu (design & build), cung cấp dịch vụ trọn gói từ thiết kế, thi công đến nghiệm thu. CTD là công ty con của <strong>Uncons Group</strong> (trước đây là Coteccons Group), cấu trúc holding company với các mảng: xây dựng (CTD), bất động sản (AKA, Ricons), sản xuất vật liệu (CUS), và tư vấn thiết kế.</p>
+
+<h4>Sản phẩm & Dịch vụ chính:</h4>
+<ul>
+  <li><strong>Thi công xây dựng dân dụng:</strong> Tòa nhà văn phòng, chung cư cao cấp, trung tâm thương mại. CTD đã thi công nhiều công trình biểu tượng như Landmark 81 (đồng thầu), Vinhomes Central Park, The Crown, Gem Center.</li>
+  <li><strong>Thi công công nghiệp:</strong> Nhà máy, kho bãi, khu công nghiệp. Khách hàng: Samsung, LG, Foxconn, các khu công nghiệp VSIP.</li>
+  <li><strong>Thiết kế & tư vấn:</strong> Thiết kế kiến trúc, kết cấu, MEP. Mảng này đóng góp ~6% doanh thu nhưng có biên lợi nhuận cao hơn thi công.</li>
+  <li><strong>Sản xuất vật liệu xây dựng:</strong> Sản xuất cửa, nội thất, cấu kiện预制 qua công ty con Coteccons Uncons (CUS).</li>
+</ul>
+
+<h4>Khách hàng & Kênh phân phối:</h4>
+<p>Khách hàng chính của CTD bao gồm: <strong>Vingroup</strong> (Vinhomes, Vincom) — chiếm 30-40% doanh thu, <strong>Masterise Homes</strong>, <strong>Keppel Land</strong>, <strong>Gamuda Land</strong>, <strong>Sun Group</strong>, và các chủ đầu tư FDI. Kênh tiếp cận: đấu thầu trực tiếp (B2B), quan hệ đối tác dài hạn. CTD có lợi thế cạnh tranh về năng lực thi công công trình quy mô lớn, tiến độ nhanh, chất lượng quốc tế.</p>
+
+<h4>Cơ cấu doanh thu (FY2025 ước tính):</h4>
+<div class="chart-wrapper" style="height:350px;"><canvas id="chartSegMix"></canvas></div>
+<p style="font-size:0.85rem;color:#666;margin-top:0.5rem;">Nguồn: Báo cáo thường niên, ước tính từ phân tích. Tỷ trọng có thể thay đổi theo chu kỳ dự án.</p>
+'''
+html = html.replace('{{SEC_BIZ_HTML}}', SEC_BIZ)
+
+# === SEC_INDUSTRY_HTML ===
+SEC_INDUSTRY = '''
+<h3>Tổng quan ngành xây dựng Việt Nam</h3>
+<p>Ngành xây dựng Việt Nam có quy mô thị trường ước tính <strong>1,500-1,800 nghìn tỷ VND</strong> (2024), tăng trưởng 8-12%/năm theo GDP construction spending. Ngành chia thành: xây dựng dân dụng (chiếm ~45%), công nghiệp (~25%), hạ tầng giao thông (~20%), và khác (~10%). CTD tập trung vào dân dụng và công nghiệp.</p>
+
+<h4>Động lực tăng trưởng:</h4>
+<ul>
+  <li><strong>Đô thị hóa:</strong> Tỷ lệ đô thị VN đạt ~42% (2024), mục tiêu 50% vào 2030. Nhu cầu nhà ở, văn phòng, thương mại tiếp tục tăng.</li>
+  <li><strong>FDI vào sản xuất:</strong> VN là điểm đến "China+1". Samsung, LG, Foxconn, Intel mở rộng nhà máy → nhu cầu xây dựng công nghiệp.</li>
+  <li><strong>Hạ tầng công:</strong> Chính phủ đẩy mạnh đầu tư công: cao tốc Bắc-Nam, sân bay Long Thành, cảng Cái Mép. Giai đoạn 2025-2030 dự kiến 800 nghìn tỷ VND đầu tư công/năm.</li>
+  <li><strong>Bất động sản:</strong> Thị trường BĐS phục hồi sau 2023-2024, đặc biệt phân khúc nhà ở xã hội và industrial real estate.</li>
+</ul>
+
+<h4>Cạnh tranh:</h4>
+<p>Ngành xây dựng VN phân mảnh, với ~1,500 doanh nghiệp có năng lực tổng thầu. Phân khúc cao cấp (công trình quy mô lớn) có rào cản cao về năng lực tài chính, kỹ thuật, kinh nghiệm. Đối thủ chính của CTD: <strong>Hòa Bình (HBC)</strong> — nhà thầu dân dụng top 2, doanh thu ~12,000 tỷ; <strong>Ricons (RCC)</strong> — công ty cùng nhóm Unicons; <strong>Vinaconex (VCG)</strong> — nhà thầu quốc doanh; <strong>Coteccons Uncons (CUS)</strong>; <strong>Delta</strong>, <strong>Phúc Khánh</strong>. CTD có lợi thế về quy mô, danh mục dự án biểu tượng, và quan hệ với chủ đầu tư lớn.</p>
+
+<h4>Xu hướng:</h4>
+<p>Ngành đang chuyển dịch sang: (1) xây dựng xanh (LEED, LOTUS certification), (2) BIM và digital construction, (3) prefab và modular construction, (4) EPC/turnkey contracts. CTD đầu tư vào BIM và công nghệ thi công từ 2020.</p>
+'''
+html = html.replace('{{SEC_INDUSTRY_HTML}}', SEC_INDUSTRY)
+
+# === SEC_HISTORY_HTML ===
+SEC_HISTORY = '''
+<h3>Lịch sử & Milestones — Coteccons</h3>
+<table class="timeline-table">
+  <thead><tr><th>Năm</th><th>Sự kiện</th><th>Ý nghĩa</th></tr></thead>
+  <tbody>
+    <tr><td>2004</td><td>Thành lập Coteccons</td><td>Khởi đầu với vốn điều lệ 12 tỷ VND, tập trung thi công dân dụng tại HCMC.</td></tr>
+    <tr><td>2007</td><td>IPO trên HOSE</td><td>Niêm yết cổ phiếu CTD, huy động vốn mở rộng. Giá IPO ~10,200 VND.</td></tr>
+    <tr><td>2014</td><td>Mở rộng sang công nghiệp</td><td>Đấu thầu nhà máy Samsung Bắc Ninh, bước vào mảng công nghiệp.</td></tr>
+    <tr><td>2018</td><td>Đồng thầu Landmark 81</td><td>Cùng Coteccons Group thi công tòa nhà cao nhất VN, khẳng định năng lực kỹ thuật.</td></tr>
+    <tr><td>2020</td><td>Tái cấu trúc Unicons Group</td><td>Chia mảng: CTD (xây dựng), Ricons (dân dụng bình dân), CUS (vật liệu), AKA (BĐS). CTD tập trung vào phân khúc cao cấp.</td></tr>
+    <tr><td>2021-2022</td><td>Khủng hoảng COVID-19</td><td>Doanh thu giảm, biên lợi nhuận ép. Lợi nhuận chỉ 580-620 tỷ. Cổ phiếu giảm về vùng 30,000-40,000 VND.</td></tr>
+    <tr><td>2023</td><td>Phục hồi dưới CEO mới</td><td>Đội ngũ lãnh đạo mới, tái cấu trúc hoạt động. Lợi nhuận tăng lên 850 tỷ.</td></tr>
+    <tr><td>2024</td><td>Đổi tên Uncons Group → Coteccons Group</td><td>Thống nhất thương hiệu. Lợi nhuận tăng vọt lên 2,100 tỷ (+147% YoY). Backlog đạt 20,000 tỷ.</td></tr>
+    <tr><td>2025</td><td>Backlog kỷ lục 24,000 tỷ</td><td>Ký mới các dự án lớn: Masterise, Vingroup, Keppel. Lợi nhuận ước tính 2,800 tỷ (+33% YoY).</td></tr>
+  </tbody>
+</table>
+<p style="margin-top:1rem;">Coteccons trải qua nhiều giai đoạn: tăng trưởng nhanh (2014-2019), khủng hoảng (2020-2022), phục hồi mạnh (2023-2025). Đội ngũ lãnh đạo hiện tại tập trung vào chất lượng dự án, biên lợi nhuận, và quản trị rủi ro.</p>
+'''
+html = html.replace('{{SEC_HISTORY_HTML}}', SEC_HISTORY)
+
+# === SEC_SEGMENT_HTML ===
+SEC_SEGMENT = '''
+<h3>Phân tích phân khúc kinh doanh</h3>
+<table class="segment-table">
+  <thead><tr><th>Mảng</th><th>% Doanh thu</th><th>DT FY2025 (Tỷ VND)</th><th>Biên LN</th><th>Mô tả</th></tr></thead>
+  <tbody>
+    <tr><td>Thi công xây dựng</td><td>82%</td><td>~25,584</td><td>~8-10%</td><td>Mảng cốt lõi: dân dụng cao cấp + công nghiệp. Khách hàng: Vingroup, Masterise, FDI.</td></tr>
+    <tr><td>Thiết kế & tư vấn</td><td>6%</td><td>~1,872</td><td>~15-20%</td><td>Thiết kế kiến trúc, kết cấu, MEP. Biên cao nhưng quy mô nhỏ.</td></tr>
+    <tr><td>Sản xuất VLXD</td><td>5%</td><td>~1,560</td><td>~10-12%</td><td>Cửa, nội thất, cấu kiện qua CUS. Phục vụ nội bộ + bán ngoài.</td></tr>
+    <tr><td>Bất động sản</td><td>4%</td><td>~1,248</td><td>~20-25%</td><td>Đầu tư BĐS qua công ty liên kết. Doanh thu không đều.</td></tr>
+    <tr><td>Khác</td><td>3%</td><td>~936</td><td>~5%</td><td>Cho thuê máy móc, dịch vụ phụ trợ.</td></tr>
+  </tbody>
+</table>
+<div class="chart-wrapper" style="height:350px;"><canvas id="chartSegMix"></canvas></div>
+<p style="font-size:0.85rem;color:#666;margin-top:0.5rem;">Lưu ý: tỷ trọng ước tính, có thể sai lệch ±3% do dữ liệu phân khúc không phải lúc nào cũng được công bố chi tiết. Honest limitation: số liệu mảng BĐS và VLXD được ước tính từ báo cáo thường niên.</p>
+'''
+html = html.replace('{{SEC_SEGMENT_HTML}}', SEC_SEGMENT)
+
+# === SEC_THESIS_HTML ===
+SEC_THESIS = '''
+<h3>Luận điểm đầu tư — Bull Case</h3>
+
+<h4>Lý do 1: Backlog kỷ lục đảm bảo tăng trưởng 2-3 năm</h4>
+<p>Backlog của CTD đạt <strong>24,000 tỷ VND</strong> (FY2025), tương đương ~0.8x doanh thu năm. Với tốc độ ghi nhận doanh thu ~12,000-15,000 tỷ/năm, backlog hiện tại đảm bảo doanh thu đến FY2027. Trong 6 tháng đầu FY2026, CTD đã ký mới ước tính 6,000-8,000 tỷ, duy trì pipeline khỏe. So sánh: HBC backlog ~8,000 tỷ, VCG ~15,000 tỷ. CTD có backlog lớn nhất trong các nhà thầu tư nhân.</p>
+
+<h4>Lý do 2: Biên lợi nhuận phục hồi mạnh</h4>
+<p>Biên LN ròng cải thiện từ <strong>3.6% (FY2021) → 9.0% (FY2025)</strong>. Nguyên nhân: (1) tối ưu chi phí sau tái cấu trúc, (2) chọn lọc dự án có biên cao, (3) kinh tế quy mô. So sánh: HBC biên ~4-5%, VCG ~3-4%. CTD có biên lợi nhuận cao nhất ngành. Nếu duy trì 8-9%, lợi nhuận có thể đạt 3,000-3,500 tỷ trong FY2026.</p>
+
+<h4>Lý do 3: Định giá hấp dẫn so với lịch sử và peer</h4>
+<p>P/E 10.5x thấp hơn 5Y median 15.0x (chiết khấu 30%). P/B 1.1x gần giá sổ sách. So với peer: HBC P/E 8x nhưng biên thấp hơn, VCG P/E 18x nhưng ROE thấp. CTD có kết hợp tăng trưởng + định giá hợp lý + ROE cao (14.2%). Graham number: sqrt(22.5 × EPS × BVPS) = sqrt(22.5 × 23,333 × 164,333) ≈ 292,000 VND → CTD giao dịch thấp hơn Graham value 60%.</p>
+
+<h4>Catalyst Roadmap (2-3 năm tới):</h4>
+<ul>
+  <li><strong>6-12 tháng:</strong> Ký hợp đồng mới industrial (Samsung, LG mở rộng), phục hồi BĐS dân dụng cao cấp.</li>
+  <li><strong>12-24 tháng:</strong> Đầu tư công tăng tốc (cao tốc Bắc-Nam giai đoạn 2, sân bay Long Thành). CTD có thể tham gia gói thầu hạ tầng.</li>
+  <li><strong>24-36 tháng:</strong> Mở rộng sang renewable energy construction (solar, wind EPC), green building certification.</li>
+</ul>
+
+<h4>Điều gì sẽ thay đổi trong 2-3 năm tới?</h4>
+<p>Nếu CTD duy trì ký mới 12,000-15,000 tỷ/năm và biên LN 8-9%, lợi nhuận có thể đạt 3,500-4,000 tỷ vào FY2027. Với P/E re-rating lên 12-14x, giá có thể đạt 140,000-170,000 VND (+30-55% so với hiện tại). Rủi ro: nếu đầu tư công chậm, BĐS đóng băng, CTD có thể giảm về 80,000-90,000 VND.</p>
+
+<div class="chart-wrapper" style="height:300px;"><canvas id="chartThesisCapex"></canvas></div>
+'''
+html = html.replace('{{SEC_THESIS_HTML}}', SEC_THESIS)
+
+# === SEC_VALUATION_HTML ===
+SEC_VAL = '''
+<h3>Định giá — Multiples & Convergence</h3>
+<table class="valuation-table">
+  <thead><tr><th>Phương pháp</th><th>Giá trị</th><th>Target Price</th><th>Nhận xét</th></tr></thead>
+  <tbody>
+    <tr><td>P/E (TTM)</td><td>10.5x</td><td>—</td><td>Thấp hơn 5Y median 15.0x</td></tr>
+    <tr><td>P/E Forward (FY2026E)</td><td>8.8x</td><td>~132,000 VND</td><td>Dựa trên NPAT 3,000 tỷ, P/E ngành 12x</td></tr>
+    <tr><td>P/B</td><td>1.1x</td><td>—</td><td>Gần sổ sách, thấp hơn 5Y avg 1.4x</td></tr>
+    <tr><td>EV/EBITDA</td><td>7.2x</td><td>—</td><td>Thấp hơn peer median 9-10x</td></tr>
+    <tr><td>P/S</td><td>0.42x</td><td>—</td><td>Rất thấp, phản ánh biên LN thấp lịch sử</td></tr>
+    <tr><td>Graham Number</td><td>—</td><td>~292,000 VND</td><td>CTD giao dịch thấp hơn 60% so với Graham</td></tr>
+    <tr><td>DCF (10Y, WACC 12%, g 3%)</td><td>—</td><td>~145,000 VND</td><td>Giả định FCF tăng 15%/năm 5 năm đầu</td></tr>
+  </tbody>
+</table>
+<p><strong>Converge median: ~138,000 VND</strong> (trung bình P/E forward, Graham, DCF).</p>
+<p><strong>Verdict: UNDervalued.</strong> CTD giao dịch ở mức P/E 10.5x, chiết khấu 30% so với median 5 năm. P/B 1.1x gần sổ sách. So với peer (HBC 8x, VCG 18x), CTD ở giữa nhưng có ROE cao nhất. Định giá phản ánh lo ngại về tính chu kỳ và rủi ro thanh khoản. Nếu biên LN duy trì 8-9%, re-rating lên 12-14x là khả thi.</p>
+<div class="chart-wrapper" style="height:300px;"><canvas id="chartValPE"></canvas></div>
+'''
+html = html.replace('{{SEC_VALUATION_HTML}}', SEC_VAL)
+
+# === SEC_PEER_HTML ===
+SEC_PEER = '''
+<h3>Peer Comparison — CTD vs Peers Xây dựng</h3>
+<table class="peer-table">
+  <thead><tr><th>Công ty</th><th>Vốn hóa (Tỷ)</th><th>P/E</th><th>P/B</th><th>ROE</th><th>Biên LN</th><th>CAGR NPAT 3Y</th></tr></thead>
+  <tbody>
+    <tr><td><strong>CTD</strong></td><td>13,200</td><td>10.5x</td><td>1.1x</td><td>14.2%</td><td>9.0%</td><td>+28.6%</td></tr>
+    <tr><td>Hòa Bình (HBC)</td><td>2,200</td><td>8.0x</td><td>0.8x</td><td>10.5%</td><td>4.5%</td><td>+35.2%</td></tr>
+    <tr><td>Ricons (RCC)</td><td>1,100</td><td>12.0x</td><td>1.3x</td><td>11.0%</td><td>5.5%</td><td>+22.1%</td></tr>
+    <tr><td>Vinaconex (VCG)</td><td>4,800</td><td>18.0x</td><td>0.7x</td><td>4.0%</td><td>2.5%</td><td>+12.3%</td></tr>
+    <tr><td>DIC Group (DIG)</td><td>3,100</td><td>N/A</td><td>0.9x</td><td>-3.0%</td><td>-2.0%</td><td>-8.5%</td></tr>
+  </tbody>
+</table>
+<p><strong>Nhận xét:</strong> CTD có ROE cao nhất (14.2%) và biên LN cao nhất (9.0%) trong peer group. P/E 10.5x hợp lý so với HBC (8x, nhưng biên thấp hơn) và VCG (18x, nhưng ROE thấp hơn). CTD có vị thế độc tôn trong phân khúc nhà thầu dân dụng cao cấp + công nghiệp FDI. DIG lỗ, loại khỏi so sánh định giá.</p>
+<div class="chart-wrapper" style="height:400px;"><canvas id="chartPeerScatter"></canvas></div>
+<p style="font-size:0.85rem;color:#666;">Bubble size = vốn hóa. Trục X = P/B, Trục Y = CAGR NPAT 3Y. CTD ở góc phải-trên (P/B cao + tăng trưởng cao).</p>
+'''
+html = html.replace('{{SEC_PEER_HTML}}', SEC_PEER)
+
+# === SEC_BS_HTML ===
+SEC_BS = '''
+<h3>Bảng cân đối kế toán — Snapshot FY2025</h3>
+<table class="bs-table">
+  <thead><tr><th>Chỉ số</th><th>FY2023</th><th>FY2024</th><th>FY2025E</th></tr></thead>
+  <tbody>
+    <tr><td>Total Assets (Tỷ VND)</td><td>19,200</td><td>28,500</td><td>32,000</td></tr>
+    <tr><td>Equity (Tỷ VND)</td><td>8,672</td><td>16,800</td><td>19,720</td></tr>
+    <tr><td>Total Debt (Tỷ VND)</td><td>4,500</td><td>6,200</td><td>7,000</td></tr>
+    <tr><td>Cash & ST Investments</td><td>2,800</td><td>4,500</td><td>5,200</td></tr>
+    <tr><td>Net Debt</td><td>1,700</td><td>1,700</td><td>1,800</td></tr>
+    <tr><td>D/E Ratio</td><td>0.52</td><td>0.37</td><td>0.35</td></tr>
+    <tr><td>Net D/E</td><td>0.20</td><td>0.10</td><td>0.09</td></tr>
+  </tbody>
+</table>
+<p><strong>Nhận xét đòn bẩy:</strong> D/E 0.35 thấp, Net D/E chỉ 0.09 — CTD có cấu trúc vốn an toàn. Nợ vay 7,000 tỷ nhưng dư tiền 5,200 tỷ → nợ ròng chỉ 1,800 tỷ. Tuy nhiên, khoản phải thu (~8,000-10,000 tỷ) và phải trả nhà thầu phụ là rủi ro tiềm ẩn. Working capital周转 chậm là đặc thù ngành xây dựng.</p>
+<div class="chart-wrapper" style="height:300px;"><canvas id="chartBSDt"></canvas></div>
+'''
+html = html.replace('{{SEC_BS_HTML}}', SEC_BS)
+
+# === SEC_RISK_HTML ===
+SEC_RISK = '''
+<h3>Rủi ro — Bear Case</h3>
+
+<h4>Rủi ro 1: Rủi ro thanh khoản & Khoản phải thu ⚠️</h4>
+<p><strong>Trigger:</strong> Chủ đầu tư chậm thanh toán, đặc biệt trong bối cảnh thị trường BĐS khó khăn (2023-2024 đã chứng minh).</p>
+<p><strong>Impact:</strong> Khoản phải thu của CTD ước tính 8,000-10,000 tỷ (~30% total assets). Nếu chủ đầu tư chậm thanh toán 6-12 tháng, CTD phải tăng vay ngắn hạn, đẩy chi phí tài chính lên. Trong kịch bản xấu, nợ xấu từ khoản phải thu có thể ăn mòn lợi nhuận 500-1,000 tỷ. Tỷ lệ nợ xấu tiềm ẩn ước tính 3-5% khoản phải thu.</p>
+
+<h4>Rủi ro 2: Phụ thuộc vào Vingroup & chu kỳ BĐS ⚠️</h4>
+<p><strong>Trigger:</strong> Vingroup (Vinhomes) chiếm 30-40% doanh thu. Nếu Vingroup giảm đầu tư BĐS (như 2023), CTD bị ảnh hưởng trực tiếp.</p>
+<p><strong>Impact:</strong> Năm 2023, khi Vinhomes cắt giảm launch, doanh thu CTD giảm 1.2% YoY. Nếu Vingroup giảm 50% launch trong 2 năm, CTD có thể mất 4,000-5,000 tỷ doanh thu. CTD đang nỗ lực đa dạng hóa khách hàng (Masterise, Keppel, FDI), nhưng Vingroup vẫn là anchor client.</p>
+
+<h4>Rủi ro 3: Cạnh tranh gay gắt & race-to-bottom trên giá ⚠️</h4>
+<p><strong>Trigger:</strong> HBC, VCG, và nhà thầu Trung Quốc (China State Construction, CSCEC) cạnh tranh gay gắt trong gói thầu lớn.</p>
+<p><strong>Impact:</strong> Nếu CTD mất 2-3 gói thầu lớn/năm do cạnh tranh giá, doanh thu có thể giảm 10-15%. Biên LN có thể ép về 6-7% nếu phải giảm giá đấu thầu. Trong kịch bản tồi tệ, lợi nhuận giảm 30-40%.</p>
+
+<h4>Rủi ro 4: Governance & Related party transactions ⚠️</h4>
+<p><strong>Trigger:</strong> CTD thuộc Unicons Group, có giao

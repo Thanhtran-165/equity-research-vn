@@ -1,0 +1,60 @@
+protocol_version: 0.12.0
+relation_to_previous: POST_SECTION_DEPTH_AND_VALUATION_RENDER_ENFORCEMENT
+frozen_before_execution: true
+frozen_at: '2026-07-16T10:00:00'
+verification_layer_version: 0.1.6 (UNCHANGED)
+changes_from_v0_11_1:
+  branch_A_content_depth: |
+    Content-depth gate retry rewritten: instead of asking model to "return COMPLETE
+    HTML dashboard" (which caused artifact stripping), now asks model to return ONLY
+    the failing <section> blocks. Runner extracts returned sections and splices them
+    back into the existing HTML. Prevents full-regeneration destruction.
+  branch_B_valuation: |
+    NEW module valuation_render_gate.py: deterministically validates and enforces
+    PE/PB values from verified contract. Catches agent rendering PE×100 (7.35→735)
+    or omitting PB. Pure deterministic injection — no model retry.
+    Wired into runner alongside DATA contract enforcer.
+unchanged:
+- skill prompts
+- verifier 0.1.6
+- builder
+- content_depth_gate (check logic unchanged, retry logic upgraded in runner)
+- environment_preflight
+- source_pack_readiness
+- no_source_claim_gate
+- data_contract_enforcer
+- artifact_integrity_gate
+- phase4a_gate
+- phase6_preflight
+- model_backends
+- requirements.yaml
+frozen_component_hashes:
+  verifier: 95a0edc940d42a4e
+  runner: 19777bb3224f10e7
+  builder: 10dd8620f7dc19e8
+  valuation_render_gate: acc60c460074c35f
+  data_contract_enforcer: 0c26393f36153828
+  artifact_integrity_gate: 0ad646036fe2b920
+  content_depth_gate: 6e4f2ec1b9b818b4
+  environment_preflight: 06abeb0cc4170c23
+targeted_validation_v5:
+  ACB: 2 (was 1/2 — REQ-013 + REQ-025)
+  GEX: 2 (was 1/2 — REQ-013)
+  GAS: 1 (had REQ-025 in v4b)
+  CTD: 1 (regression)
+  SAB: 1 (clean control)
+  SSI: 1 (clean control)
+  total: 8
+  gate:
+    REQ_013: 8/8 PASS
+    REQ_025: 8/8 PASS
+    ACB: 2/2 final PASS
+    GEX: 2/2 final PASS
+    clean_controls: 2/2 PASS
+    artifact_stripping: 0
+model_config:
+  backend: zai
+  model_id: GLM-5.2
+  python: /opt/homebrew/bin/python3
+patches_during_validation: prohibited
+protocol_sha256: 94a64b3a57c1f95a7e388a35780532e5ba19e1abd555a061ab4a845227a624eb

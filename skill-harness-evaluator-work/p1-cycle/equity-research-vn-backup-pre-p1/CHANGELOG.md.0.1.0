@@ -1,0 +1,35 @@
+# CHANGELOG — equity-research-vn (verification/enforcement layer)
+
+This file tracks the **verification/enforcement layer** (`scripts/independent_verifier.py` + `requirements.yaml`), separate from the SKILL.md architecture version (v3.0).
+
+## verification-layer 0.1.0 — 2026-07-12 (controlled merge of P0 audit fixes)
+
+### fixed (verification/enforcement only)
+- **REQ-028 false-positive** on valid deployed artifacts: `verify_chart_runtime_check` now distinguishes unconditional canvas refs from conditional (`if ($(id))`) and fallback (`$(primary) || $(fallback)`) refs. A few optional/single required canvases absent → advisory WARN, not deploy-blocking FAIL. Critical FAIL reserved for: duplicate IDs, no DATA, no Chart.js, canvas-after-body, or >30% required canvases missing.
+- **REQ-009 canonical signal coverage**: `min_canonical_match` tightened 15→20, plus `required_signal_sections: [sec-hero, sec-exec, sec-valuation]` each individually mandatory (not just counted). Count-based proxy alone was gameable.
+- **REQ-025 valuation multiples**: `verify_valuation_recompute` now checks every P/E occurrence in a primary valuation context (val-card / current-price), not first-match regex. Peer/historical/projected multiples remain advisory.
+- **REQ-021 evidence provenance binding**: writes `evidence/REQ-021.json` with `{source_run_id, source_artifact, source_artifact_sha256, evidence_generated_after_validation, unresolved_required_failures, all_requirements_pass, requirement_state_at_eval}`. Deploy evidence is now bound to the current run + current artifact + post-validation timestamp — closes the stale/cross-run-evidence provenance gap.
+
+### validation (post-merge re-run, fresh audit — NOT inherited from candidate)
+```yaml
+clean_controls: 1/1 PASS
+mutations_correctly_detected: 5/5 (all valid oracles)
+wrong_reason_failures: 0
+specificity_rate: 1.0
+false_positive_count: 0
+correct_detection_rate: 1.0
+missed_critical_mutations: 0
+note: "Results apply ONLY to the current 5-mutation suite. Broader P1 coverage pending."
+```
+
+### not labeled
+- **NOT STABLE** — verification layer reaches FUNCTIONAL_OR_ROBUST on the current suite, but the skill as a whole is not STABLE.
+- `agent_execution: NOT_ASSESSED` — no genuine agent runs; agent stability testing blocked until P1 mutation expansion completes.
+
+### pending
+- P1 mutation expansion: capex, evidence-provenance, runtime-chart, source-claim, partial-abstention, stale-state, cross-run-contamination families. At least one mutation per important validator.
+- After P1: genuine agent stability tests (only on a verifier deemed reliable).
+
+### audit trail
+- Audit baseline preserved: `skill-harness-evaluator-work/equity-research-vn-backup-pre-p0-merge/` (pre-merge verifier + requirements, version tag `equity-research-vn-pre-p0-audit-baseline`).
+- Audit performed by `skill-harness-evaluator` v0.1.0.

@@ -41,6 +41,33 @@ def is_chrome_running() -> bool:
         return False
 
 
+def _check_chromium_apps_running() -> list[str]:
+    """Check các Chromium-based app đang chạy (Atlas, Edge, Brave...).
+
+    Launching Chrome via Playwright while these are running can cause
+    inter-process lock conflicts → force-restart → lost sessions.
+    Returns list of running app names.
+    """
+    import subprocess
+    apps = []
+    patterns = [
+        ("ChatGPT Atlas", "ChatGPT Atlas"),
+        ("Microsoft Edge", "Microsoft Edge"),
+        ("Brave", "Brave Browser"),
+        ("Arc", "Arc"),
+    ]
+    try:
+        result = subprocess.run(
+            ["ps", "aux"], capture_output=True, text=True, timeout=3,
+        )
+        for name, pattern in patterns:
+            if pattern in result.stdout:
+                apps.append(name)
+    except Exception:
+        pass
+    return apps
+
+
 def launch_logged_in_context(
     playwright,
     headless: bool = False,
@@ -71,6 +98,23 @@ def launch_logged_in_context(
             "(Cmd+Q) trước khi chạy skill với --use-chrome-profile. "
             "Playwright cần copy profile (cookies, login data) sang location khác."
         )
+
+    # WARN: Chromium-based apps (Atlas, Edge, Brave, Arc) có thể bị restart
+    # khi Playwright launch Chrome binary — gây mất sessions.
+    running_apps = _check_chromium_apps_running()
+    if running_apps:
+        import sys
+        print(
+            f"[!] CẢNH BÁO: Đang chạy các Chromium app: {', '.join(running_apps)}\n"
+            f"    Playwright sẽ launch Chrome binary → có thể gây restart các app trên "
+            f"    và MẤT SESSIONS/tabs đang mở.\n"
+            f"    Khuyến nghị: đóng các app trên trước khi tiếp tục.\n"
+            f"    Nhấn Ctrl+C trong 5 giây để hủy...\n",
+            file=sys.stderr,
+        )
+        import time
+        time.sleep(5)
+        print("[*] Tiếp tục scan...", file=sys.stderr)
 
     src_udd = user_data_dir or get_chrome_user_data_dir()
     if src_udd is None or not src_udd.exists():

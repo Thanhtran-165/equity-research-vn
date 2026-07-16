@@ -1,0 +1,125 @@
+{
+  "skill_version": "0.1.0",
+  "run": 1,
+  "evaluated_at": "2026-07-06T11:08:00Z",
+  "eval_method": "self_critique_with_kpi_checklist (no ground truth available; rule-based on output structure + content checks per TRAIN SKILL PROMPT section 6)",
+  "metrics": {
+    "answer_correctness": {
+      "value": 0.85,
+      "threshold": null,
+      "status": "pass_advisory",
+      "note": "5 key findings extracted match report content; no fabricated claims; numbers verified against extracted page text. No formal ground-truth, so advisory only."
+    },
+    "citation_accuracy": {
+      "value": 0.80,
+      "threshold": 0.90,
+      "status": "FAIL",
+      "note": "5/5 citations have file+page+quote, but only 4/5 have a meaningful section_heading (p.28 'Executive Summaries' is a generic divider, not the actual chart title). Effective: 0.80 < 0.90 threshold."
+    },
+    "page_accuracy": {
+      "value": 1.00,
+      "threshold": 0.90,
+      "status": "PASS",
+      "note": "All 5 cited pages verified in evidence set; quotes found verbatim in extracted page text."
+    },
+    "evidence_sufficiency": {
+      "value": 0.90,
+      "threshold": 0.90,
+      "status": "PASS",
+      "note": "5 findings all have at least one supporting quote. Page 64 abstention correctly handled."
+    },
+    "material_claim_evidence_coverage": {
+      "value": 0.90,
+      "threshold": 0.90,
+      "status": "PASS",
+      "note": "9/10 material claims have direct quote support. One borderline: 'largest absolute monthly decline ever' is supported but the '27% correction' figure is in a separate sentence."
+    },
+    "hallucination_risk": {
+      "value": 0.05,
+      "threshold": 0.05,
+      "status": "PASS_marginal",
+      "note": "No fabricated numbers/clauses. Marginal risk only on forecast-period labeling (see F-FORECAST-001)."
+    },
+    "critical_hallucination_count": {
+      "value": 0,
+      "threshold": 0,
+      "status": "PASS",
+      "note": "Zero critical hallucinations: no fabricated clauses, dates, or numbers; no outside-knowledge contamination; no invented tables/appendices."
+    },
+    "abstention_accuracy": {
+      "value": 1.00,
+      "threshold": 0.90,
+      "status": "PASS",
+      "note": "Page 64 (scanned) correctly abstained with warning. No question-level abstention needed since findings were answerable."
+    },
+    "abstention_quality": {
+      "value": 0.50,
+      "threshold": null,
+      "status": "FAIL_quality",
+      "note": "Abstention only surfaced as a warning string, NOT as a first-class JSON field per output schema. Reader must hunt in warnings[]. This is an output-schema gap, not a refusal failure."
+    },
+    "numeric_accuracy": {
+      "value": 0.95,
+      "threshold": 0.95,
+      "status": "PASS_marginal",
+      "note": "All quoted numbers verified verbatim. Marginal because raw extraction shows spacing inconsistency ('USD6,900' vs 'USD 6,900' on p.28,47) — skill picked the canonical form but does not enforce a normalization rule."
+    },
+    "unit_preservation_rate": {
+      "value": 1.00,
+      "threshold": 0.95,
+      "status": "PASS",
+      "note": "USD/oz, tonnes, bn, %, t all preserved."
+    },
+    "table_handling": {
+      "value": 0.40,
+      "threshold": 0.90,
+      "status": "FAIL",
+      "note": "42 tables in PDF; 39 had missing-header warnings. Skill extracted no structured table data into the answer — treated all table-page citations as text citations. table_id never emitted despite policy format [file, page, table_id, row/col]."
+    },
+    "table_cell_accuracy": {
+      "value": "N/A",
+      "threshold": 0.90,
+      "status": "N/A",
+      "note": "No table cells extracted into the answer; nothing to grade."
+    },
+    "legal_structure_preservation": {
+      "value": "N/A",
+      "threshold": null,
+      "status": "N/A",
+      "note": "Not a legal document."
+    },
+    "vietnamese_output_quality": {
+      "value": "N/A",
+      "threshold": null,
+      "status": "N/A",
+      "note": "Output is English (matches PDF language)."
+    },
+    "terminology_consistency": {
+      "value": 4.5,
+      "threshold": 4.0,
+      "status": "PASS",
+      "note": "Consistent use of 'gold price', 'central-bank demand', 'correction', 'forecast range'. 'Aurum' used only as the report's section title."
+    },
+    "regression_pass_rate": {
+      "value": 1.00,
+      "threshold": 1.00,
+      "status": "PASS",
+      "note": "scaffolding/tests/ 7/7 still pass after run_01 (no skill files changed yet)."
+    },
+    "forecast_period_disclosure": {
+      "value": 0.40,
+      "threshold": null,
+      "status": "FAIL_custom",
+      "note": "Custom metric (F13 family). 3 different forecast horizons in the answer (2030 decade target, 2045 model, 12-month outlook) but only some bullets make the horizon explicit. Risk of reader conflating them."
+    }
+  },
+  "kpi_summary": {
+    "pass_count": 9,
+    "fail_count": 3,
+    "marginal_count": 2,
+    "na_count": 2,
+    "primary_failures": ["citation_accuracy (section heading quality)", "table_handling (no table_id emitted)", "forecast_period_disclosure (F13 family)"],
+    "critical_hallucination_count": 0,
+    "session_completeness_so_far": "input_manifest.json + run_01_output.md + run_01_eval.json present"
+  }
+}

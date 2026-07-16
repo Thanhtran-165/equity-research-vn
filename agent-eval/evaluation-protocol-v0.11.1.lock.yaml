@@ -1,0 +1,64 @@
+protocol_version: 0.11.1
+relation_to_previous: SHADOW_REQUALIFICATION_POST_ARTIFACT_INTEGRITY_FIXES
+baseline_protocol_sha256: 9dcf3938f8173c5611c1933ae11d929482b0a074f1ea3a0205c0bb0bfd39d330
+frozen_before_execution: true
+frozen_at: '2026-07-15T17:35:00'
+verification_layer_version: 0.1.6 (UNCHANGED)
+unchanged:
+- skill prompts
+- verifier 0.1.6
+- runner (DATA enforcer + integrity gate wired)
+- builder (company_profile injected)
+- content_depth_gate
+- environment_preflight
+- source_pack_readiness
+- no_source_claim_gate
+- phase4a_gate
+- phase6_preflight
+- model_backends
+- requirements.yaml
+frozen_component_hashes:
+  verifier: 95a0edc940d42a4e
+  runner: d3e5b09af4c0f343
+  builder: 10dd8620f7dc19e8
+  data_contract_enforcer: 0c26393f36153828
+  artifact_integrity_gate: 0ad646036fe2b920
+fresh_source_pack_hashes:
+  ACB: 932aceb91b2a6d5e
+  SAB: 355f91644b6c8741
+  GEX: ab5798d6c3f942fa
+  SSI: b1187846b3d5f7cc
+  PLX: 9af51b75432b8511
+shadow_batch_1_double_prime:
+  tickers: [ACB, SAB, GEX, SSI, PLX]
+  sectors: [Banking, Consumer/Beverage, Industrial, Financial Services, Energy/Logistics]
+  runs_per_ticker: 2
+  total: 10
+  fresh_tickers: 5
+  previously_used_for_patch_building: 0
+  release_gate:
+    final_PASS: '>=9/10'
+    no_ticker_0_of_2: true
+    critical_failures: 0
+    fabricated_data: 0
+    verifier_false_positives: 0
+    data_accuracy: 100%
+  req_monitoring:
+    REQ_025: {0: stable, 1: residual_variance_pass_if_9_of_10, 2_plus: block_and_add_PE_PB_gate}
+    REQ_019: {2_plus: integrity_gate_investigation}
+    REQ_020: {2_plus: DOM_gate_investigation}
+    REQ_027: {any: provenance_review_before_soak}
+model_config:
+  backend: zai
+  model_id: GLM-5.2
+  python: /opt/homebrew/bin/python3
+  path_prefix: /opt/homebrew/bin
+  max_tokens: 32768
+patches_during_batch: prohibited
+stop_conditions:
+  fabricated_data: true
+  critical_failure: true
+  secret_leak: true
+  protocol_drift: true
+  unsafe_false_pass: true
+protocol_sha256: e4a8c3f95cda231ec7494627ecdbdac5472a03b05b5a8671486eaafe099a52b5

@@ -1,0 +1,60 @@
+protocol_version: 0.1.0
+target_skill_version: v3.0 (SKILL.md architecture)
+verification_layer_version: 0.1.1
+evaluator_version: 0.1.0
+frozen_before_execution: true
+frozen_at: '2026-07-12T15:58:40.453652'
+target_snapshot:
+  directory_sha256: 33118b2f4a634416
+  verifier_sha256: 985eb1a9fa0ce09f
+  requirements_sha256: 284ca2e521acea19
+model:
+  provider: (filled at run-time, from runner env)
+  model_id: (per-run)
+  temperature: (skill default)
+  reasoning_mode: (skill default)
+  other_parameters: {}
+cohorts:
+  exact_repeat:
+    scored_runs: 5
+  controlled_robustness:
+    scored_runs: 5
+    perturbations:
+    - source_order_shuffled
+    - one_noncritical_source_unavailable
+    - tool_returns_empty_once_then_recovers
+    - ambiguous_same_window_numeric_context
+    - external_claim_requires_explicit_flagging
+human_intervention_policy:
+  during_run: prohibited
+  post_run_classification: allowed
+hrs_publishable_coverage_pct: 70
+scoring_weights:
+  spec_adherence: 0.3
+  workflow_adherence: 0.2
+  validation_discipline: 0.2
+  output_conformity: 0.1
+  recovery_robustness: 0.1
+  run_consistency: 0.1
+stop_conditions:
+- model_version_change
+- protocol_drift
+- verifier_or_skill_modified
+- source_pack_change
+- cross_run_contamination
+- scoring_bug_affecting_prior_run
+- two_critical_failures_same_type
+unlock_maturity:
+  ROBUST_requires:
+    exact_repeat_final_pass_rate: 1.0
+    exact_repeat_minimum_HRS: 80
+    exact_repeat_mean_HRS: 90
+    exact_repeat_std_max: 5
+    controlled_robustness_final_pass_rate_min: 0.8
+    major_intervention_rate: 0
+    critical_intervention_rate: 0
+    critical_failures: 0
+never_label:
+- STABLE
+- PRODUCTION_READY
+protocol_sha256: bfb058d53bbd0a5da45b1c8139ea019b840812fdd969d39aece0fcab6ada1df1

@@ -1,0 +1,79 @@
+
+######################################################################
+#  TARGETED REVALIDATION — Protocol v0.9.1
+######################################################################
+
+✓ Environment preflight PASS
+
+Preparing VNM zero-news control pack...
+  VNM zero-news pack prepared (financials complete, events/news empty)
+
+Source-pack semantic readiness:
+  VNM: READY
+  VNM-zero-news: EXPECTED-NOT-READY (control)
+  GAS: READY
+  BID: READY
+  MWG: READY
+
+Starting 7 targeted runs...
+
+
+======================================================================
+  TARGETED run 1/7 — TV-VNM-01 (VNM, complete-pack)
+======================================================================
+  gates: content_depth={'passed': True, 'sections_checked': 17, 'sections_failed': 0} no_source={'passed': True, 'unprovenanced_count': 0, 'recovery_attempts': 1}
+  verdict=FAIL pass=12 fail=16 artifact=HTML dt=959s
+
+======================================================================
+  TARGETED run 2/7 — TV-VNM-02 (VNM, complete-pack)
+======================================================================
+  gates: content_depth={'passed': False, 'sections_checked': 17, 'sections_failed': 1, 'recovery_structural_fail': ['does not start with <!DOCTYPE html> or <html> (likely narration)', 'no canonical <section id="sec-..."> elements'], 'final_status': 'depth_gate_not_satisfied_after_retries'} no_source={'passed': True, 'unprovenanced_count': 0, 'recovery_attempts': 2}
+  verdict=FAIL pass=12 fail=16 artifact=NARRATION dt=1270s
+
+======================================================================
+  TARGETED run 3/7 — TV-VNM-ZN (VNM, zero-news-control)
+======================================================================
+  gates: content_depth={'passed': True, 'sections_checked': 17, 'sections_failed': 0} no_source={'passed': True, 'unprovenanced_count': 0, 'recovery_attempts': 1}
+  verdict=FAIL pass=12 fail=16 artifact=HTML dt=994s
+
+======================================================================
+  TARGETED run 4/7 — TV-GAS-01 (GAS, chart-consistency)
+======================================================================
+  gates: content_depth={'passed': True, 'sections_checked': 17, 'sections_failed': 0} no_source={'passed': True, 'unprovenanced_count': 0}
+  verdict=PASS pass=28 fail=0 artifact=HTML dt=1508s
+
+======================================================================
+  TARGETED run 5/7 — TV-GAS-02 (GAS, chart-consistency)
+======================================================================
+  gates: content_depth={'passed': True, 'sections_checked': 17, 'sections_failed': 0} no_source={'passed': True, 'unprovenanced_count': 0}
+  verdict=FAIL pass=26 fail=2 artifact=HTML dt=1214s
+
+======================================================================
+  TARGETED run 6/7 — TV-BID-01 (BID, clean-control)
+======================================================================
+  gates: content_depth={'passed': True, 'sections_checked': 17, 'sections_failed': 0} no_source={'passed': True, 'unprovenanced_count': 0}
+  verdict=PASS pass=28 fail=0 artifact=HTML dt=660s
+
+======================================================================
+  TARGETED run 7/7 — TV-MWG-01 (MWG, clean-control)
+======================================================================
+  gates: content_depth={'passed': True, 'sections_checked': 17, 'sections_failed': 0} no_source={'passed': True, 'unprovenanced_count': 0, 'recovery_attempts': 1}
+  verdict=FAIL pass=12 fail=16 artifact=HTML dt=1135s
+
+======================================================================
+  TARGETED REVALIDATION SUMMARY — 7 runs
+======================================================================
+  PASS: 2/7
+  TV-VNM-01 VNM (complete-pack): FAIL pass=12 fail=16 | ['REQ-014', 'REQ-018', 'REQ-022', 'REQ-023', 'REQ-015', 'REQ-003', 'REQ-024', 'REQ-012', 'REQ-028', 'REQ-005', 'REQ-025', 'REQ-009', 'REQ-026', 'REQ-006', 'REQ-021', 'REQ-017']
+  TV-VNM-02 VNM (complete-pack): FAIL pass=12 fail=16 | ['REQ-014', 'REQ-018', 'REQ-022', 'REQ-023', 'REQ-015', 'REQ-003', 'REQ-024', 'REQ-012', 'REQ-028', 'REQ-005', 'REQ-025', 'REQ-009', 'REQ-026', 'REQ-006', 'REQ-011', 'REQ-021']
+  TV-VNM-ZN VNM (zero-news-control): FAIL pass=12 fail=16 | ['REQ-014', 'REQ-018', 'REQ-022', 'REQ-023', 'REQ-015', 'REQ-003', 'REQ-024', 'REQ-012', 'REQ-028', 'REQ-005', 'REQ-025', 'REQ-009', 'REQ-026', 'REQ-006', 'REQ-011', 'REQ-021']
+  TV-GAS-01 GAS (chart-consistency): PASS pass=28 fail=0 | []
+  TV-GAS-02 GAS (chart-consistency): FAIL pass=26 fail=2 | ['REQ-003', 'REQ-021']
+  TV-BID-01 BID (clean-control): PASS pass=28 fail=0 | []
+  TV-MWG-01 MWG (clean-control): FAIL pass=12 fail=16 | ['REQ-014', 'REQ-018', 'REQ-022', 'REQ-023', 'REQ-015', 'REQ-003', 'REQ-024', 'REQ-012', 'REQ-028', 'REQ-005', 'REQ-025', 'REQ-009', 'REQ-026', 'REQ-006', 'REQ-011', 'REQ-021']
+
+  CRITERIA:
+    VNM complete 2/2 PASS: 0/2
+    VNM zero-news: FAIL (fabricated=0 required)
+    GAS 2/2 PASS: 1/2
+    Clean controls (BID+MWG) 2/2: 1/2

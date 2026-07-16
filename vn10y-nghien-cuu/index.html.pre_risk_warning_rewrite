@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VN10Y — Lãi suất và Cổ phiếu Việt Nam</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--txt:#e2e8f0;--muted:#94a3b8;--line:#334155;--amber:#f59e0b;--red:#ef4444;--green:#22c55e;--blue:#3b82f6;--violet:#8b5cf6;--cyan:#06b6d4}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.8;font-size:17px}
+.hero{background:linear-gradient(135deg,#1e3a5f 0%,#1e293b 50%,#0f172a 100%);padding:50px 24px 40px;text-align:center}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.08);padding:5px 14px;border-radius:999px;font-size:.8rem;letter-spacing:.05em;color:#fde68a;margin-bottom:16px;border:1px solid rgba(255,255,255,.15)}
+.hero h1{font-size:clamp(1.5rem,3.5vw,2.4rem);font-weight:800;line-height:1.25;max-width:760px;margin:0 auto 12px}
+.hero .sub{color:#cbd5e1;font-size:1.05rem;max-width:680px;margin:0 auto}
+.hero .meta{margin-top:16px;color:#64748b;font-size:.82rem}
+.wrap{max-width:780px;margin:0 auto;padding:0 24px}
+main{padding:40px 0 60px}
+section{margin-bottom:48px;scroll-margin-top:20px}
+h2{font-size:1.35rem;font-weight:700;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:10px}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.85rem;font-weight:800;flex-shrink:0}
+h3{font-size:1.1rem;margin:20px 0 8px;color:var(--amber)}
+p{margin-bottom:14px;color:#cbd5e1}
+strong{color:#fff}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card .icon{font-size:1.6rem;margin-bottom:8px}
+.card h4{font-size:1rem;margin-bottom:6px;color:#fff}
+.card p{font-size:.9rem;color:var(--muted);margin:0}
+.card.badge-label{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-bottom:8px;font-weight:600}
+.label-confirmed{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.label-v1{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.label-explore{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+.label-insufficient{background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.3)}
+.callout{border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid}
+.callout-result{background:rgba(34,197,94,.08);border-color:var(--green)}
+.callout-limit{background:rgba(239,68,68,.08);border-color:var(--red)}
+.callout-explore{background:rgba(59,130,246,.08);border-color:var(--blue)}
+.callout-info{background:rgba(245,158,11,.06);border-color:var(--amber)}
+.callout h4{font-size:.95rem;margin-bottom:6px}
+.callout p{font-size:.92rem;margin-bottom:4px}
+.callout p:last-child{margin-bottom:0}
+table.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:.88rem}
+table.tbl th{background:var(--card);color:var(--amber);padding:8px 10px;text-align:left;border-bottom:2px solid var(--line);font-size:.82rem}
+table.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);color:#cbd5e1}
+table.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.chart-box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
+.chart-box h4{font-size:.92rem;margin-bottom:4px;color:#fff}
+.chart-box .desc{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.chart-wrap{height:300px;position:relative}
+.chart-wrap.tall{height:380px}
+.kpi-row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;min-width:130px}
+.kpi .val{font-size:1.3rem;font-weight:800;color:var(--amber)}
+.kpi .lab{font-size:.78rem;color:var(--muted);margin-top:2px}
+ul.bul{margin:10px 0 14px;padding-left:20px}
+ul.bul li{margin-bottom:6px;color:#cbd5e1}
+ul.bul li::marker{color:var(--amber)}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0;margin:12px 0}
+details summary{cursor:pointer;padding:12px 16px;font-size:.9rem;color:var(--muted);font-weight:600;list-style:none}
+details summary::after{content:" ▸";color:var(--amber)}
+details[open] summary::after{content:" ▾"}
+details .body{padding:0 16px 14px}
+footer{text-align:center;padding:30px 24px;color:#475569;font-size:.8rem;border-top:1px solid var(--line);margin-top:40px}
+@media(max-width:600px){.hero{padding:36px 16px 28px}.hero h1{font-size:1.4rem}.wrap{padding:0 16px}body{font-size:15px}.chart-wrap{height:220px}.cards3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <span class="badge">Tự nghiên cứu · 2014–2026</span>
+  <h1>VN10Y và cổ phiếu Việt Nam: có liên hệ theo tháng, nhưng không dự báo được tương lai.</h1>
+  <p class="sub">Lợi suất trái phiếu Chính phủ 10 năm và VN-Index di chuyển ngược chiều khi đo theo tháng. Nhưng không thể dùng lãi suất để dự đoán cổ phiếu tháng sau.</p>
+  <div class="meta">Dữ liệu TPCP HNX chính thức · 3.113 ngày · 451 mã HOSE · Cập nhật 26/06/2026</div>
+</header>
+
+<main class="wrap">
+
+<!-- ===== TẦNG 1: 90 GIÂY ===== -->
+
+<div class="cards3">
+  <div class="card">
+    <div class="icon">📉</div>
+    <span class="badge-label label-confirmed">Đã xác nhận</span>
+    <h4>Có liên hệ theo tháng</h4>
+    <p>Trong cùng một tháng, lãi suất cao hơn thường đi cùng VN-Index yếu hơn. Mối liên hệ này rõ ràng và khó do ngẫu nhiên.</p>
+  </div>
+  <div class="card">
+    <div class="icon">🚫</div>
+    <span class="badge-label label-confirmed">Đã xác nhận</span>
+    <h4>Không dự báo được</h4>
+    <p>Không tìm thấy khả năng dự báo cho 1, 3 hay 6 tháng tới. Mô hình dự báo kém hơn cả baseline đơn giản.</p>
+  </div>
+  <div class="card">
+    <div class="icon">📊</div>
+    <span class="badge-label label-v1">Mô tả V1</span>
+    <h4>Dùng làm bối cảnh</h4>
+    <p>Khi lãi suất tăng, thị trường khó chọn mã hơn nhưng không hết cơ hội. Nên dùng để đánh giá rủi ro, không mua/bán.</p>
+  </div>
+</div>
+
+<!-- ===== TẦNG 2: 6 CÂU HỎI ===== -->
+
+<section id="ch1">
+  <h2><span class="n">1</span>Có quan hệ giữa lãi suất và cổ phiếu không?</h2>
+  <p><strong>Có — nhưng chỉ khi đo theo tháng.</strong> Trong cùng một tháng, khi lợi suất trái phiếu 10 năm tăng 1 điểm phần trăm, VN-Index trung bình giảm khoảng 7%. Khi đo theo ngày, gần như không có mối liên hệ nào.</p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="val">~7%</div><div class="lab">VN-Index giảm khi yield +1pp/tháng</div></div>
+    <div class="kpi"><div class="val">~1/10</div><div class="lab">Phần biến động cổ phiếu liên quan đến yield</div></div>
+    <div class="kpi"><div class="val">≈0</div><div class="lab">Liên hệ theo ngày (không đáng kể)</div></div>
+  </div>
+
+  <div class="chart-box">
+    <h4>📊 Độ lớn liên hệ đồng thời theo cửa sổ quan sát</h4>
+    <div class="desc">Liên hệ gần 0 ở daily, mạnh nhất ở 3-6 tháng, rồi giảm dần. Đây là liên hệ <strong>đồng thời</strong>, không phải dự báo trước.</div>
+    <div class="chart-wrap"><canvas id="chartCurve"></canvas></div>
+  </div>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Điều KHÔNG được suy ra</h4>
+    <p>Liên hệ theo tháng <strong>không có nghĩa</strong> lãi suất tăng hôm nay sẽ kéo cổ phiếu giảm tháng sau. Đây chỉ là quan sát đồng thời — hai thứ di chuyển ngược chiều khi đo trong cùng tháng.</p>
+  </div>
+
+  <details><summary>Chi tiết thống kê</summary>
+  <div class="body">
+    <table class="tbl">
+      <thead><tr><th>Cửa sổ</th><th>Pearson r</th><th>p-value</th><th>Đánh giá</th></tr></thead>
+      <tbody>
+        <tr><td>Daily (HNX)</td><td>−0,001</td><td>0,97</td><td>Không đáng kể</td></tr>
+        <tr><td>Monthly</td><td>−0,327</td><td>6,2×10⁻⁵</td><td>Rõ ràng, rất khó do ngẫu nhiên</td></tr>
+        <tr><td>3-6 tháng</td><td>−0,29 đến −0,32</td><td>—</td><td>Liên hệ đồng thời mạnh nhất</td></tr>
+      </tbody>
+    </table>
+    <p>Nguồn: TPCP HNX chính thức, 149 tháng (2014-2026). β monthly = −6,92%/pp, R² = 10,7%.</p>
+  </div>
+  </details>
+</section>
+
+<section id="ch2">
+  <h2><span class="n">2</span>Nhưng có thể dùng để dự báo không?</h2>
+  <p><strong>Không.</strong> Nghiên cứu kiểm tra trực tiếp: biết lãi suất thay đổi tháng này có giúp dự đoán cổ phiếu tháng sau không? Câu trả lời là <strong>không</strong> — ở cả 1 tháng, 3 tháng và 6 tháng tới.</p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="val">0/3</div><div class="lab">Mốc dự báo tìm thấy liên hệ đáng tin</div></div>
+    <div class="kpi"><div class="val">0/6</div><div class="lab">Test quanh đấu thầu tìm thấy liên hệ</div></div>
+    <div class="kpi"><div class="val">âm</div><div class="lab">Hiệu suất dự báo ngoài mẫu</div></div>
+  </div>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Điều KHÔNG được suy ra</h4>
+    <p>Không dùng lãi suất trái phiếu làm tín hiệu mua bán (timing). Không dùng để chọn mã. Không kết luận "lãi suất tăng = sắp giảm."</p>
+  </div>
+
+  <details><summary>Chi tiết thống kê</summary>
+  <div class="body">
+    <p><strong>Local projections (V2):</strong> Forward return log(VNI[t+h]/VNI[t])×100 vs yield change +10bp, HAC + centered bootstrap, BH-FDR.</p>
+    <table class="tbl">
+      <thead><tr><th>Horizon</th><th>β/10bp</th><th>q-value</th><th>Kết luận</th></tr></thead>
+      <tbody>
+        <tr><td>1 tháng</td><td>−0,154</td><td>0,828</td><td>Không đủ tin cậy</td></tr>
+        <tr><td>3 tháng</td><td>−0,103</td><td>0,828</td><td>Không đủ tin cậy</td></tr>
+        <tr><td>6 tháng</td><td>−0,204</td><td>0,828</td><td>Không đủ tin cậy</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Auction event study (V2):</strong> 3 proxy × 2 cửa sổ = 6 tests. Tất cả q=0,952, placebo p=0,56-0,96.</p>
+    <p><strong>OOS test (V1):</strong> R² = −0,02; market-timing Sharpe 0,65 &lt; buy-hold 0,83.</p>
+  </div>
+  </details>
+</section>
+
+<section id="ch3">
+  <h2><span class="n">3</span>Khi lãi suất tăng, cơ hội đầu tư thay đổi không?</h2>
+  <p><strong>Khó chọn mã hơn, nhưng không hết cơ hội.</strong> Tỷ lệ cổ phiếu tăng không đổi (khoảng 38%) dù lãi suất tăng hay giảm. Nhưng một số chỉ báo xu hướng xấu đi: ít mã trong xu hướng tăng hơn, nhiều mã sụt giảm hơn.</p>
+
+  <div class="chart-box">
+    <h4>📊 Tỷ lệ mã trên đường trung bình khi yield tăng vs giảm</h4>
+    <div class="desc">Khi yield tăng: ít mã nằm trên MA (xu hướng tăng yếu hơn). Mặc dù tỷ lệ mã tăng không đổi.</div>
+    <div class="chart-wrap"><canvas id="chartBreadth"></canvas></div>
+  </div>
+
+  <div class="callout callout-info">
+    <h4>💡 Nên làm gì khi yield tăng?</h4>
+    <ul class="bul">
+      <li>Đừng hoảng — tỷ lệ mã tăng vẫn 38%</li>
+      <li>Nhưng thận trọng hơn — ít mã trong xu hướng tăng</li>
+      <li>Ưu tiên né tránh — nhiều mã sụt (breakdown) hơn</li>
+      <li>Theo dõi breadth — nếu &lt;20% mã trên MA20, thị trường suy yếu bền vững</li>
+    </ul>
+  </div>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Điều KHÔNG được suy ra</h4>
+    <p>Kết quả này mô tả <strong>bối cảnh thị trường</strong>, không chỉ ra mã nào sẽ tăng hay giảm. Không dùng để chọn cổ phiếu.</p>
+  </div>
+
+  <details><summary>Chi tiết thống kê (kết quả V1, chưa tái kiểm định V2)</summary>
+  <div class="body">
+    <p>Sau điều chỉnh rủi ro sai (BH-FDR), 5/23 chỉ báo monthly còn ý nghĩa: % trên MA10 (−6,5pp), % oversold (+4,4pp), % positive 5d (−5,3pp), % gap down (+3,1pp), golden cross (−6,4pp).</p>
+    <p>67% mã có xu hướng volume thấp hơn khi yield tăng (per-stock, dấu tương quan âm). Win rate 38,6% không đổi (p=0,99).</p>
+  </div>
+  </details>
+</section>
+
+<section id="ch4">
+  <h2><span class="n">4</span>Ngành nào nhạy cảm nhất?</h2>
+  <p><strong>Ngân hàng, dầu khí, bất động sản.</strong> Phân tích từng cổ phiếu riêng (418 mã) cho thấy ngành tài chính có mức phản ứng lớn hơn phi tài chính.</p>
+
+  <div class="chart-box">
+    <h4>📊 Mức nhạy cảm trung bình theo ngành (per-stock)</h4>
+    <div class="desc">Càng âm = nhạy cảm càng cao. Ngân hàng và dầu khí nhạy nhất; ô tô ít nhạy nhất.</div>
+    <div class="chart-wrap"><canvas id="chartSector"></canvas></div>
+  </div>
+
+  <div class="callout callout-explore">
+    <h4>🔍 Phù hợp giả thuyết tín dụng — nhưng chưa xác nhận</h4>
+    <p>Ngành tài chính nhạy hơn có thể vì lãi suất ảnh hưởng trực tiếp đến biên lợi nhuận ngân hàng. Tuy nhiên, đây chỉ là quan sát phù hợp, chưa phải bằng chứng xác nhận cơ chế.</p>
+  </div>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Điều KHÔNG được suy ra</h4>
+    <p>Không kết luận "kênh tín dụng là cơ chế chính". Chưa có test nhân quả xác nhận. Kết quả này mô tả lịch sử.</p>
+  </div>
+
+  <details><summary>Chi tiết thống kê (kết quả V1)</summary>
+  <div class="body">
+    <table class="tbl">
+      <thead><tr><th>Ngành</th><th>n mã</th><th>β trung bình</th><th>% đáng tin</th></tr></thead>
+      <tbody>
+        <tr><td>Dầu khí</td><td>3</td><td>−13,1</td><td>100%</td></tr>
+        <tr><td>Dịch vụ tài chính</td><td>19</td><td>−11,1</td><td>68%</td></tr>
+        <tr><td>Ngân hàng</td><td>19</td><td>−9,5</td><td>68%</td></tr>
+        <tr><td>Bất động sản</td><td>56</td><td>−7,7</td><td>52%</td></tr>
+        <tr><td>Ô tô</td><td>10</td><td>−1,4</td><td>30%</td></tr>
+      </tbody>
+    </table>
+    <p>Large cap (VN30) β=−9,8 vs small/mid β=−5,7 (p=0,002). 35% mã có β âm đáng tin.</p>
+  </div>
+  </details>
+</section>
+
+<section id="ch5">
+  <h2><span class="n">5</span>Việt Nam khác gì nước khác?</h2>
+  <p><strong>Trong 4 nước châu Á đã so sánh, Việt Nam có liên hệ âm rõ nhất.</strong> Indonesia gần 0, Thái Lan dương, Philippines không đáng kể. Việt Nam là nước duy nhất có liên hệ bond-stock nghịch biến mạnh.</p>
+
+  <div class="chart-box">
+    <h4>📊 Liên hệ bond-stock theo tháng — 4 nước EM châu Á</h4>
+    <div class="desc">Việt Nam là nước duy nhất có liên hệ âm đáng kể. Khác biệt rõ so với Thái Lan (dương).</div>
+    <div class="chart-wrap"><canvas id="chartCountry"></canvas></div>
+  </div>
+
+  <div class="callout callout-explore">
+    <h4>🔍 Kết quả thăm dò</h4>
+    <p>Chỉ so sánh 4 nước — chưa đủ để khái quát toàn châu Á. Kết quả phù hợp với đặc thù VN (NHNN điều hành lãi suất theo kiểu hành chính) nhưng chưa xác nhận nguyên nhân.</p>
+  </div>
+
+  <details><summary>Chi tiết thống kê (kết quả V1, chưa tái kiểm định V2)</summary>
+  <div class="body">
+    <table class="tbl">
+      <thead><tr><th>Quốc gia</th><th>r monthly</th><th>p</th></tr></thead>
+      <tbody>
+        <tr><td>Việt Nam</td><td>−0,301</td><td>&lt;0,001</td></tr>
+        <tr><td>Indonesia</td><td>−0,015</td><td>0,84</td></tr>
+        <tr><td>Thái Lan</td><td>+0,148</td><td>0,037</td></tr>
+        <tr><td>Philippines</td><td>+0,055</td><td>0,44</td></tr>
+      </tbody>
+    </table>
+    <p>Global factor chỉ giải thích 7,1% biến động VN10Y — phần lớn chưa được giải thích, không phải "93% nội địa".</p>
+  </div>
+  </details>
+</section>
+
+<section id="ch6">
+  <h2><span class="n">6</span>Nên dùng kết quả này thế nào?</h2>
+  <p><strong>Dùng làm bối cảnh, không làm tín hiệu.</strong> Lãi suất trái phiếu là một trong nhiều yếu tố ảnh hưởng đến thị trường. Nó cho biết "độ khó" của môi trường, không cho biết "mua gì, bán gì".</p>
+
+  <div class="callout callout-info">
+    <h4>💡 3 điều nên nhớ</h4>
+    <ol style="margin:8px 0 0 20px;color:#cbd5e1">
+      <li><strong>Theo dõi theo tháng</strong> — biến động daily gần như vô nghĩa</li>
+      <li><strong>Không mua/bán theo bond</strong> — không dự báo được</li>
+      <li><strong>Dùng để đánh giá rủi ro</strong> — khi yield↑, tăng thận trọng, kiểm tra breadth</li>
+    </ol>
+  </div>
+
+  <div class="callout callout-result">
+    <h4>✅ Nghiên cứu này chứng minh gì</h4>
+    <ul class="bul">
+      <li>Có liên hệ đồng thời theo tháng giữa lãi suất và cổ phiếu (r=−0,33)</li>
+      <li>Liên hệ này <strong>không</strong> chuyển thành khả năng dự báo</li>
+      <li>Thị trường khó hơn khi yield↑ (breadth xấu, volume thấp) nhưng không hết cơ hội</li>
+    </ul>
+  </div>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Nghiên cứu này KHÔNG chứng minh</h4>
+    <ul class="bul">
+      <li>Không chứng minh nhân quả — chỉ quan hệ đồng thời</li>
+      <li>Không chứng minh cơ chế — kênh tín dụng chỉ là giả thuyết</li>
+      <li>Không chứng minh VN cô lập hoàn toàn — chỉ so sánh 4 nước</li>
+      <li>Không cung cấp tín hiệu giao dịch — OOS R² âm</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== TẦNG 3: PHỤ LỤC ===== -->
+
+<section id="appendix">
+  <h2>Phụ lục: Dữ liệu và Phương pháp</h2>
+
+  <details><summary>A. Nguồn dữ liệu</summary>
+  <div class="body">
+    <table class="tbl">
+      <thead><tr><th>Nguồn</th><th>Nội dung</th><th>Kỳ hạn</th><th>Chất lượng</th></tr></thead>
+      <tbody>
+        <tr><td>TPCP HNX chính thức</td><td>VN10Y yield curve</td><td>2014–2026 · 3.113 ngày</td><td>16,5% ngày đứng yên</td></tr>
+        <tr><td>Vietnam Stocks DB</td><td>Giá OHLCV 451 mã HOSE</td><td>2013–2026 · 3.353 ngày</td><td>Point-in-time</td></tr>
+        <tr><td>vnstock API (VCI)</td><td>VN-Index, volume</td><td>2009–2026 · 4.303 ngày</td><td>Continuous</td></tr>
+        <tr><td>Investing.com</td><td>US10Y, 16 trái phiếu peer</td><td>2010–2026</td><td>Dừng 23/6 (HTTP 403)</td></tr>
+      </tbody>
+    </table>
+    <p>Sample flow: 451 mã (HSX + DELISTED) → 418 có β (sau filter outlier) → 394 có volume correlation → 393 trong ma trận giá×volume.</p>
+  </div>
+  </details>
+
+  <details><summary>B. Phương pháp thống kê (14 chính)</summary>
+  <div class="body">
+    <ul class="bul">
+      <li>Pearson correlation (multi-horizon, overlapping + non-overlapping)</li>
+      <li>Granger causality (VAR(4), HAC SE) — predictability, không nhân quả</li>
+      <li>Johansen cointegration + VECM</li>
+      <li>Multivariate OLS (DXY, US10Y controls, Newey-West HAC)</li>
+      <li>Breadth analysis (22 metrics: A/D, TRIN, McClellan, %above MA, drawdown...)</li>
+      <li>Cross-sectional per-stock β (418 mã, grouped by ICB)</li>
+      <li>Volume per-stock analysis</li>
+      <li>Cross-country comparison (VN vs ID/TH/PH)</li>
+      <li>PCA / global factor</li>
+      <li>Local projections (forward predictability test, V2)</li>
+      <li>Auction event study (3 proxy × 2 windows, V2)</li>
+      <li>Out-of-sample test (rolling, OOS R²)</li>
+      <li>Benjamini-Hochberg FDR correction</li>
+      <li>TOST equivalence test</li>
+    </ul>
+    <p>4 phương pháp phụ (GFEVD, Copula, Markov, Quantilogram) có kết quả nhưng không đáng tin hoàn toàn — chi tiết trong research_v2/outputs/.</p>
+  </div>
+  </details>
+
+  <details><summary>C. V2: Forward predictability + Auction</summary>
+  <div class="body">
+    <h3>Local Projections (V2 Phase 1)</h3>
+    <p>Forward-only estimand: log(VNI[t+h]/VNI[t])×100. HAC + centered moving-block bootstrap (2000 reps). BH-FDR trên 3 primary horizons.</p>
+    <table class="tbl">
+      <thead><tr><th>Horizon</th><th>β/10bp</th><th>p</th><th>q_BH</th><th>Simultaneous band</th></tr></thead>
+      <tbody>
+        <tr><td>h=1</td><td>−0,154</td><td>0,444</td><td>0,828</td><td>[−0,787, +0,479]</td></tr>
+        <tr><td>h=3</td><td>−0,103</td><td>0,828</td><td>0,828</td><td>[−1,600, +1,394]</td></tr>
+        <tr><td>h=6</td><td>−0,204</td><td>0,746</td><td>0,828</td><td>[−2,182, +1,774]</td></tr>
+      </tbody>
+    </table>
+    <p>d_level simultaneous critical value: 3,142. Pipeline hash: 6b2416ba...</p>
+
+    <h3>Auction Event Study (V2 Phase 1)</h3>
+    <p>3 proxy (allocation ratio, demand intensity, yield surprise) × 2 windows ([0,+1], [−1,+1]). Trading-day offsets. Quarter block bootstrap (2000 reps). Matched placebo (1000 reps, weekday+month). BH-FDR.</p>
+    <table class="tbl">
+      <thead><tr><th>Variable</th><th>Window</th><th>q_BH</th><th>Placebo p</th></tr></thead>
+      <tbody>
+        <tr><td>Allocation ratio</td><td>[0,+1]</td><td>0,952</td><td>0,563</td></tr>
+        <tr><td>Allocation ratio</td><td>[−1,+1]</td><td>0,952</td><td>0,752</td></tr>
+        <tr><td>Demand intensity</td><td>[0,+1]</td><td>0,952</td><td>0,901</td></tr>
+        <tr><td>Demand intensity</td><td>[−1,+1]</td><td>0,952</td><td>0,868</td></tr>
+        <tr><td>Yield surprise</td><td>[0,+1]</td><td>0,952</td><td>0,832</td></tr>
+        <tr><td>Yield surprise</td><td>[−1,+1]</td><td>0,952</td><td>0,961</td></tr>
+      </tbody>
+    </table>
+    <p>Tất cả 6 tests: inconclusive. GFEVD total spillover: 3,48%.</p>
+  </div>
+  </details>
+
+  <details><summary>D. Robustness</summary>
+  <div class="body">
+    <ul class="bul">
+      <li>BH-FDR: core 7/10 pass, sector 13/18, profitability 5/23 monthly</li>
+      <li>Non-stale subset: kết luận không đổi (HNX đã sạch)</li>
+      <li>Granger trên non-stale: F=6,88 (vẫn đáng tin)</li>
+      <li>SCM divergence hậu COVID: gap −0,54 (mô tả, không phải nhân quả)</li>
+      <li>TOST: 74% mã thực sự không có quan hệ (|r|&lt;0,05)</li>
+      <li>Johansen det_order sensitivity: 0 và 1 đều cho cointegration</li>
+    </ul>
+    <p>Phase 1 V2 closeout: PHASE1_FINAL_CLOSEOUT_PASS (28/28 tests, 18/18 gates, 2-run hash match).</p>
+  </div>
+  </details>
+</section>
+
+</main>
+
+<footer>
+  <p>Dữ liệu TPCP HNX chính thức · Vietnam Stocks DB · vnstock API · Investing.com</p>
+  <p>Code: verify_all_v2.py + research_v2/ (14 phương pháp chính + V2 local projections + auction event study)</p>
+  <p>Tái lập: 28/28 tests pass · 18/18 gates pass · Pipeline 2-run hash match</p>
+</footer>
+
+<script>
+Chart.defaults.color='#94a3b8';
+Chart.defaults.font.family='-apple-system,Segoe UI,Roboto,sans-serif';
+Chart.defaults.borderColor='#334155';
+
+// Chart 1: Influence curve (contemporaneous)
+new Chart(document.getElementById('chartCurve'), {
+  type:'line',
+  data:{ labels:['1 ngày','3 ngày','5 ngày','2 tuần','1 tháng','2 tháng','3 tháng','4 tháng','6 tháng','8 tháng','10 tháng','1 năm','1,5 năm','2 năm'],
+    datasets:[{ label:'|r| liên hệ đồng thời', data:[0.003,0.080,0.108,0.162,0.213,0.266,0.291,0.306,0.293,0.272,0.256,0.223,0.234,0.207],
+      borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.15)', tension:.4, fill:true, borderWidth:2.5, pointRadius:3,
+      pointBackgroundColor:['#64748b','#64748b','#64748b','#64748b','#64748b','#64748b','#fbbf24','#ef4444','#fbbf24','#64748b','#64748b','#64748b','#64748b','#64748b'],
+      pointRadius:[3,3,3,3,3,3,5,7,5,3,3,3,3,3] }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ y:{ beginAtZero:true, max:0.35, title:{display:true,text:'Độ lớn liên hệ',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:45} } }
+  }
+});
+
+// Chart 2: Breadth (MA multi-period)
+new Chart(document.getElementById('chartBreadth'), {
+  type:'bar',
+  data:{ labels:['MA5','MA10','MA20','MA50','% RSI>50','% oversold'],
+    datasets:[
+      { label:'Tháng yield↑', data:[45.7,46.4,47.1,47.8,45.8,13.6], backgroundColor:'rgba(239,68,68,.7)', borderRadius:4 },
+      { label:'Tháng yield↓', data:[50.2,52.9,54.5,56.1,52.0,9.2], backgroundColor:'rgba(34,197,94,.7)', borderRadius:4 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:true, position:'top', labels:{color:'#e2e8f0', font:{size:11}}} },
+    scales:{ y:{ beginAtZero:false, title:{display:true,text:'% (monthly)',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+
+// Chart 3: Sector beta
+new Chart(document.getElementById('chartSector'), {
+  type:'bar',
+  data:{ labels:['Dầu khí','Dịch vụ TC','Ngân hàng','BĐS','Bảo hiểm','F&B','Hàng cá nhân','Hóa chất','CNTT','Điện nước','Tài nguyên','Ô tô'],
+    datasets:[{ label:'β trung bình (per-stock monthly)', data:[-13.1,-11.1,-9.5,-7.7,-6.9,-6.4,-5.7,-5.9,-5.5,-4.7,-4.6,-1.4],
+      backgroundColor:'rgba(239,68,68,.6)', borderRadius:4 }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+    plugins:{ legend:{display:false} },
+    scales:{ x:{ beginAtZero:false, title:{display:true,text:'β trung bình',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      y:{ grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+
+// Chart 4: Cross-country
+new Chart(document.getElementById('chartCountry'), {
+  type:'bar',
+  data:{ labels:['Việt Nam','Indonesia','Thái Lan','Philippines'],
+    datasets:[{ label:'r monthly bond-stock', data:[-0.301,-0.015,0.148,0.055],
+      backgroundColor:['rgba(239,68,68,.8)','rgba(156,163,175,.5)','rgba(34,197,94,.7)','rgba(156,163,175,.5)'], borderRadius:6 }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ y:{ beginAtZero:false, title:{display:true,text:'Pearson r monthly',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false} } }
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+protocol_version: 0.7.0
+relation_to_previous: CROSS_TICKER_GENERALIZATION_POST_COHORT_B
+baseline_protocol_sha256: f9f69743cceeca68687faded8b9abbe16e2cabc560ec7010dc73f4a58f465f18
+frozen_before_execution: true
+frozen_at: '2026-07-13T20:45:58.179012'
+verification_layer_version: 0.1.4 (UNCHANGED)
+runner_version: 0.3.2 (UNCHANGED)
+purpose: cross_ticker_generalization — does the skill generalize beyond CTD?
+tickers:
+- CTD
+- KDH
+- PNJ
+- VCB
+- FPT
+runs_per_ticker: 2
+total_planned_runs: 10
+run_naming: C-{TICKER}-{01|02}
+patches_during_cohort: prohibited
+unchanged:
+- skill prompts
+- verifier 0.1.4
+- requirements.yaml
+- runner 0.3.2
+- build_data_contract
+- phase4a_gate
+- phase6_preflight
+- model_backends
+- scoring thresholds
+classification_thresholds:
+  10_or_9_of_10: STABLE_CANDIDATE
+  8_of_10: FUNCTIONAL_CROSS_TICKER_WITH_VARIANCE
+  6_to_7_of_10: needs_sector_hardening
+  5_or_below: overfit_CTD_suspected
+  any_ticker_0_of_2: sector_gap_confirmed
+REQ_020_threshold:
+  0_or_1_of_10: residual
+  2_plus: deterministic_DOM_gate
+REQ_025_threshold:
+  any: review
+  2_plus: phase6_contract_match_gate
+protocol_sha256: cf953a51382d8be2fa61ac0c18dd6d536651745315d51fd45e0db44165fd5b9c

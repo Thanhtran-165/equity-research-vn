@@ -1,0 +1,112 @@
+protocol_version: 0.8.0
+relation_to_previous: POST_BANKING_SCHEMA_AND_CONTENT_DEPTH_HARDENING
+baseline_protocol_sha256: e6240e725eb233f4978c5b4564903f9556ab5be5d6bd494a496ab89c76fd2df4
+frozen_before_execution: true
+frozen_at: '2026-07-14T07:45:00'
+verification_layer_version: 0.1.4 (UNCHANGED)
+runner_version: 0.3.2→0.4.0 (content-depth gate wired in)
+changes_from_v0_7_1:
+  builder_sector_hardening: |
+    build_data_contract.py: added canonical field resolver (_normalize_field_name,
+    _build_column_index, resolve_field) with alias map for total_assets, equity,
+    revenue, net_income, eps, capex, total_loans, deposits. Case-insensitive +
+    Unicode-normalized + format-insensitive. Fixes VCB banking CSV (ALL CAPS
+    "TOTAL ASSETS" was unreadable → equity=0 → REQ-023/025 FAIL).
+    Builder hash: 8c5eb381 → 7bfbab14.
+  content_depth_gate: |
+    NEW module content_depth_gate.py: semantic content-depth check (not just char
+    count). Checks effective_chars ≥200, analytical sentence presence for
+    borderline sections (<250 chars), boilerplate ratio <60%, data-label ratio.
+    Wired into agent_runner phase6 retry loop: if gate fails, retries with
+    section-specific feedback. 5 unit tests + 7/7 known-artifact validation.
+  environment_preflight: |
+    NEW module environment_preflight.py: checks vnstock_data importability +
+    sponsor period count + GLM backend BEFORE cohort start. Fails closed (exit 3)
+    if unavailable. Also discovered Cohort C REQ-001/002 failures were a PATH
+    misconfiguration (verifier subprocess used system python3 without
+    vnstock_data; homebrew python3.14 has it). Cohort C′ runs with corrected
+    PATH so REQ-001/002 should PASS.
+  path_fix: |
+    Cohort C′ orchestrator prepends /opt/homebrew/bin to PATH so verifier's
+    `python3` subprocess resolves to python3.14 (has vnstock_data). This is an
+    environment configuration, NOT a skill change.
+purpose: cross_ticker_generalization with banking schema fix + content-depth enforcement
+tickers:
+- CTD
+- KDH
+- PNJ
+- VCB
+- FPT
+runs_per_ticker: 2
+total_planned_runs: 10
+run_naming: Cp-{TICKER}-{01|02}
+patches_during_cohort: prohibited
+unchanged:
+- skill prompts
+- verifier 0.1.4
+- requirements.yaml
+- phase4a_gate
+- phase6_preflight (structural)
+- model_backends
+- scoring thresholds
+frozen_component_hashes:
+  verifier: cf870dee9c2b8df5
+  runner: 046303a346c20253
+  builder: 7bfbab1436c7e8c8
+  content_depth_gate: 6e4f2ec1b9b818b4
+  environment_preflight: 06abeb0cc4170c23
+  phase4a_gate: b3c6edb912eaf053
+  phase6_preflight: 7f29f328c9b202c4
+  model_backends: fcfcf01b6df07e75
+  requirements: ffeb27c68a019882
+tier_1_targeted_validation:
+  description: 6 runs to validate the 3 fixes before full cohort
+  runs:
+  - {id: T-VCB-01, ticker: VCB, purpose: validate banking builder fix (REQ-023/025)}
+  - {id: T-VCB-02, ticker: VCB, purpose: validate banking builder fix (2nd run)}
+  - {id: T-KDH-01, ticker: KDH, purpose: validate content-depth gate (had REQ-013)}
+  - {id: T-FPT-01, ticker: FPT, purpose: validate content-depth gate (had REQ-013)}
+  - {id: T-CTD-01, ticker: CTD, purpose: clean control (no regression)}
+  - {id: T-PNJ-01, ticker: PNJ, purpose: clean control (no regression)}
+  pass_criteria:
+    VCB_REQ_023_025: 2/2 PASS
+    REQ_013_occurrences: 0 or 1/6
+    no_regression_on_CTD_PNJ: true
+    environment_preflight: PASS
+    fabricated_data: 0
+tier_2_full_cohort:
+  description: Full 10-run cohort if Tier 1 passes
+  runs: Cp-{CTD,KDH,PNJ,VCB,FPT}-{01,02}
+  release_gate:
+    environment_preflight: PASS
+    genuine_completed_runs: 10
+    final_PASS: '>=9/10'
+    data_accuracy_pass_rate: 100%
+    fabricated_data_rate: 0
+    critical_failure_rate: 0
+    html_output_rate: 100%
+    no_ticker_with_0_of_2_PASS: true
+    banking_REQ_023_025: 2/2 PASS
+    REQ_013_occurrences: 0 or 1/10
+    verifier_false_positive_affecting_verdict: 0
+    recurring_cross_ticker_defects: 0
+classification_thresholds:
+  10_or_9_of_10: STABLE_CANDIDATE
+  8_of_10: FUNCTIONAL_CROSS_TICKER_WITH_VARIANCE
+  6_to_7_of_10: needs_sector_hardening
+  5_or_below: overfit_CTD_suspected
+  any_ticker_0_of_2: sector_gap_confirmed
+REQ_020_threshold:
+  0_or_1_of_10: residual
+  2_plus: deterministic_DOM_gate
+REQ_025_threshold:
+  any: review
+  2_plus: phase6_contract_match_gate
+model_config:
+  backend: zai
+  model_id: GLM-5.2
+  python: /opt/homebrew/bin/python3
+  path_prefix: /opt/homebrew/bin (critical for vnstock_data resolution)
+  max_tokens: 32768
+  streaming: required
+protocol_sha256: cad6e183d7a52135c872aa0b5f4b01a0f6252b3f05cc39229968a3f9710a3848

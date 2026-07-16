@@ -1,0 +1,45 @@
+protocol_version: 0.2.0
+relation_to_previous: POST_PHASE6_PATCH
+baseline_protocol_sha256: bfb058d53bbd0a5da45b1c8139ea019b840812fdd969d39aece0fcab6ada1df1
+frozen_before_execution: true
+frozen_at: '2026-07-12T17:18:28.178333'
+target_skill_version: v3.0 + phase6-dashboard.md patch
+verification_layer_version: 0.1.1 (UNCHANGED)
+evaluator_version: 0.2.0 (metric-split + HRS-value/coverage)
+phase6_patch:
+  layer1: phase6-dashboard.md output-contract + inline template
+  layer2: phase6_preflight.py deterministic gate + bounded retry (3 max)
+  fix1: HRS value separated from evidence_coverage_pct
+  fix2: preflight whitespace/attribute-order tolerant
+  fix3: OUTPUT_TRUNCATED detection (max_tokens, missing </html>)
+  fix4: 'retry policy: 1 initial + 2 recovery = 3 max; per-attempt artifacts preserved'
+cohorts:
+  exact_repeat:
+    scored_runs: 5
+  controlled_robustness:
+    scored_runs: 5
+    perturbations:
+    - source_order_shuffled
+    - one_noncritical_source_unavailable
+    - tool_returns_empty_once_then_recovers
+    - ambiguous_same_window_numeric_context
+    - external_claim_requires_explicit_flagging
+unchanged_from_baseline:
+- benchmark BENCH-CTD-2026-07-12
+- source-pack 5c5633d9
+- model GLM-5.2
+- temperature/config
+- scoring thresholds
+- 'hrs_publishable_coverage_pct: 70'
+comparison_vs_baseline:
+- PRE_PHASE6_PATCH_COHORT_A preserved; Cohort A′ runs under v0.2.0; before/after by
+  metric
+stop_conditions:
+- model_version_change
+- protocol_drift
+- verifier_or_skill_modified
+- source_pack_change
+- cross_run_contamination
+- scoring_bug
+- two_critical_same_type
+protocol_sha256: d10ea91537b6df3a77e5f57397e50189b74c427fbd5df696fafa60dc28e3e859

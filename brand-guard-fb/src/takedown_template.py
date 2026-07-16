@@ -73,23 +73,44 @@ def render_alert_post(
     include_medium: bool = True,
 ) -> str:
     """Render bài post cảnh báo giả mạo bằng tiếng Việt.
-    Mặc định include cả trang MID (tên giống + avatar khác) — set False để chỉ
-    liệt kê trang HIGH (avatar trùng)."""
+
+    HIGH (avatar match mạnh): ghi "XÁC NHẬN" — đã khớp avatar.
+    MID (tên giống nhưng avatar khác): ghi "NGHI VẤN" — cần kiểm tra thêm.
+    Không gọi MID là "đã xác nhận".
+    """
+    from src.models import RiskBand
     template = (_TEMPLATE_DIR / "alert_post_vi.md").read_text(encoding="utf-8")
     lines: list[str] = []
     for i, sp in enumerate(pages, 1):
-        score_pct = int(sp.score.total / 110 * 100)  # normalize theo max có thể
         signals = []
-        if sp.score.name >= 35:
+        if sp.score.name >= 8:
             signals.append("tên trùng")
-        if sp.score.avatar >= 25:
-            signals.append(f"avatar giống {sp.score.avatar}/35")
-        if sp.score.cover >= 12:
-            signals.append("ảnh bìa giống")
+        if sp.score.avatar >= 35:
+            signals.append(f"avatar khớp {sp.score.avatar}/50")
+        if sp.score.cover >= 20:
+            signals.append("ảnh bìa khớp")
         reason = ", ".join(signals) if signals else "nghi vấn"
-        lines.append(f"{i}. {sp.page.url} — {sp.page.title} ({reason})")
+
+        # P8: HIGH vs MID wording
+        if sp.score.band == RiskBand.HIGH:
+            status_tag = "🔴 XÁC NHẬN"
+        elif sp.score.band == RiskBand.MID:
+            status_tag = "🟡 NGHI VẤN"
+        else:
+            status_tag = "🟢 Thấp"
+
+        lines.append(
+            f"{i}. {status_tag} {sp.page.title or '—'} ({reason})\n"
+            f"   🔗 {sp.page.url}"
+        )
     fake_list = "\n".join(lines) if lines else "(chưa có)"
+
+    # Brand hashtag: derive from display_name
+    import re
+    hashtag = re.sub(r"[^\w]", "", brand.display_name)
     return template.format(
-        brand=brand,
+        brand_display_name=brand.display_name,
         fake_pages_list=fake_list,
+        official_page_url=brand.official_page_url,
+        brand_hashtag=hashtag,
     )

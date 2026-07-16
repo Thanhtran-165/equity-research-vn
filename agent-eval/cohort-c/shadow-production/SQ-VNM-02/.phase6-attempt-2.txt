@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNM · Công ty Cổ phần Sữa Việt Nam (Vinamilk) | Investment Evidence Pack (1–3 năm)</title>
+    <meta name="description" content="Báo cáo nghiên cứu cổ phiếu Công ty Cổ phần Sữa Việt Nam (Vinamilk) (VNM) — investment evidence pack cho nhà đầu tư 1–3 năm, không khuyến nghị mua/bán.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#0f1419; --bg-1:#13181f; --bg-2:#1a2029;
+  --card:#161b22; --card-2:#1c232d;
+  --border:rgba(255,255,255,0.08); --border-hot:rgba(245,166,35,0.45);
+  --text:#e6edf3; --text-dim:#8b949e; --text-faint:#565f6b;
+  --amber:#f5a623; --amber-soft:rgba(245,166,35,0.14);
+  --blue:#4a9eff; --blue-soft:rgba(74,158,255,0.14);
+  --green:#3fb950; --green-soft:rgba(63,185,80,0.14);
+  --red:#f85149; --red-soft:rgba(248,81,73,0.14);
+  --purple:#a78bfa; --purple-soft:rgba(167,139,250,0.14);
+  --grad-amber:linear-gradient(135deg,#f5a623 0%,#d48806 100%);
+  --grad-blue:linear-gradient(135deg,#4a9eff 0%,#2670c8 100%);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --radius:12px; --radius-sm:8px;
+  --chart-grid:rgba(255,255,255,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad-amber);z-index:1000;transition:width .1s ease-out}
+.topnav{position:sticky;top:0;z-index:900;background:rgba(15,20,25,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.topnav-inner{max-width:1480px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:thin;height:52px}
+.topnav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:16px;border-right:1px solid var(--border);margin-right:8px}
+.topnav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.topnav-link{font-size:12px;color:var(--text-dim);padding:6px 10px;border-radius:6px;white-space:nowrap;transition:all .15s;font-weight:500}
+.topnav-link:hover{color:var(--text);background:var(--card)}
+.topnav-link.active{color:var(--amber);background:var(--amber-soft)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;z-index:800}
+.back-top.visible{opacity:1;pointer-events:auto}
+.back-top:hover{border-color:var(--border-hot);color:var(--amber)}
+.container{max-width:1480px;margin:0 auto;padding:24px 24px 80px}
+.layout-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:start}
+.layout-content{min-width:0}
+.toc-sidebar{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding:14px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.toc-sidebar::-webkit-scrollbar{width:6px}
+.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border-hot);border-radius:3px}
+.toc-sidebar-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--amber);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.toc-sidebar-hint{font-size:10.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4}
+.toc-sidebar-list{list-style:none;padding:0;margin:0}
+.toc-sidebar-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text-dim);font-size:11.5px;line-height:1.35;transition:all .12s;border-left:2px solid transparent}
+.toc-sidebar-item:hover{background:rgba(245,166,35,0.06);color:var(--text);text-decoration:none;border-left-color:var(--amber)}
+.toc-sidebar-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:var(--card-2);color:var(--text-faint);font-size:10px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;margin-top:1px}
+.toc-sidebar-item:hover .toc-sidebar-num{background:var(--amber);color:#1a1206}
+.toc-sidebar-item .toc-sidebar-label{flex:1}
+@media(max-width:1100px){.layout-main{grid-template-columns:1fr;gap:0}.toc-sidebar{display:none}}
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.section{margin-top:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}
+.section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.section-title .tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#1a1206}
+.tag.amber{background:var(--amber)} .tag.blue{background:var(--blue)} .tag.green{background:var(--green)} .tag.red{background:var(--red)} .tag.purple{background:var(--purple)}
+.divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.section-sub{color:var(--text-dim);font-size:13px;margin:4px 0 20px;padding-left:40px}
+.hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(74,158,255,0.04));border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-amber);color:#1a1206;padding:5px 14px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:0.5px}
+.disclaimer-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(248,81,73,0.3);margin-left:8px}
+.company-name{font-size:38px;font-weight:800;margin-top:14px;letter-spacing:-0.8px}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:14px}
+.price-block{text-align:right}
+.price-now{font-size:46px;font-weight:800;letter-spacing:-1px;font-family:var(--font-mono)}
+.price-now .ccy{font-size:20px;color:var(--text-dim);font-weight:500;margin-right:4px}
+.price-meta{margin-top:6px;color:var(--text-dim);font-size:12px}
+.price-meta .delta{font-weight:600;margin-left:6px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
+.kpi:hover{border-color:var(--border-hot)}
+.kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}
+.kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:11px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:300px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:360px} .chart-wrap.xs{height:180px}
+.fin-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.fin-table th,.fin-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.fin-table th:first-child,.fin-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim)}
+.fin-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;border-bottom:1px solid var(--border)}
+.fin-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+.fin-table .col-latest{background:var(--amber-soft);color:var(--amber);font-weight:700}
+.fin-table .row-strong td{font-weight:700;background:rgba(255,255,255,0.02)}
+.fin-table .row-total td{border-top:2px solid var(--border);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card)}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)} .callout.neu{border-left-color:var(--amber)}
+.callout-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.callout-body{font-size:13px;color:var(--text-dim);line-height:1.6}
+.callout-body strong{color:var(--text)}
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.stat-value{font-size:26px;font-weight:700;margin-top:4px;font-family:var(--font-mono)}
+.stat-meta{font-size:11px;color:var(--text-dim);margin-top:4px}
+.stat-verdict{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:6px}
+.verdict-good{background:var(--green-soft);color:var(--green)} .verdict-warn{background:var(--amber-soft);color:var(--amber)} .verdict-danger{background:var(--red-soft);color:var(--red)}
+.gauge{position:relative;height:8px;background:var(--bg-2);border-radius:4px;margin-top:8px;overflow:hidden}
+.gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px}
+.gauge-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px}
+.ref{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 5px;border-radius:4px;margin-left:2px;vertical-align:super;font-family:var(--font-mono);text-decoration:none;border:1px solid rgba(74,158,255,0.25)}
+.ref:hover{background:var(--blue);color:#0f1419;text-decoration:none}
+.refs{list-style:none;counter-reset:ref;padding-left:0}
+.refs li{counter-increment:ref;font-size:11.5px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;line-height:1.5}
+.refs li::before{content:counter(ref);font-family:var(--font-mono);font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 6px;border-radius:4px;font-size:10px;height:fit-content;flex-shrink:0;border:1px solid rgba(74,158,255,0.2)}
+.refs li a{color:var(--text-dim);word-break:break-all}
+.refs li a:hover{color:var(--blue)}
+.refs .src-meta{color:var(--text-faint);font-size:10.5px;display:block;margin-top:2px}
+.check-list{list-style:none;padding:0}
+.check-list li{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.check-list li:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.check-box.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.check-box.off{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.check-list .q{flex:1}
+.check-list .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}
+.risk-table th,.risk-table td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.risk-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600}
+.risk-table td:first-child{font-weight:600;color:var(--text)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px}
+.pill-l{background:var(--green-soft);color:var(--green)} .pill-m{background:var(--amber-soft);color:var(--amber)} .pill-h{background:var(--red-soft);color:var(--red)}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.scenario-card{border-radius:var(--radius);padding:18px;border:1px solid var(--border)}
+.scenario-card.bull{border-top:3px solid var(--green)} .scenario-card.base{border-top:3px solid var(--amber)} .scenario-card.bear{border-top:3px solid var(--red)}
+.scenario-card h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.scenario-card ul{list-style:none;padding:0;font-size:12px;color:var(--text-dim)}
+.scenario-card li{padding:4px 0;line-height:1.5}
+.scenario-card li::before{content:'›';color:var(--amber);margin-right:6px;font-weight:700}
+.seg-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.seg-row:last-child{border-bottom:none}
+.seg-name{width:200px;font-size:12.5px;font-weight:500;flex-shrink:0}
+.seg-bar{flex:1;height:24px;background:var(--bg-2);border-radius:5px;overflow:hidden;position:relative}
+.seg-bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono)}
+.seg-meta{width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0}
+.qbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;font-family:var(--font-mono)}
+.qbadge-HIGHQ{background:var(--green-soft);color:var(--green)} .qbadge-MEDQ{background:var(--amber-soft);color:var(--amber)} .qbadge-LOWQ{background:var(--red-soft);color:var(--red)}
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}
+footer p{margin-bottom:6px}
+.tech-score-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,var(--card),var(--card-2));border:1px solid var(--border);margin-bottom:16px}
+.tech-score-num{font-size:48px;font-weight:800;font-family:var(--font-mono);line-height:1;min-width:80px;text-align:center}
+.tech-verdict-pill{display:inline-block;font-size:11px;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.verdict-hold{background:var(--amber-soft);color:var(--amber)}
+.tech-score-bar{flex:1;height:14px;background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);border-radius:7px;position:relative;min-width:200px}
+.tech-score-marker{position:absolute;top:-4px;width:4px;height:22px;background:var(--text);border-radius:2px;transform:translateX(-50%)}
+.tech-score-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:4px}
+.signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.signal-cell{background:var(--bg-2);border-radius:7px;padding:10px;font-size:11.5px;border-left:3px solid var(--border)}
+.signal-cell.bull{border-left-color:var(--green)} .signal-cell.bear{border-left-color:var(--red)} .signal-cell.neut{border-left-color:var(--amber)}
+.signal-cell .sig-name{font-weight:600;color:var(--text);font-size:11px}
+.signal-cell .sig-val{font-family:var(--font-mono);color:var(--text-dim);margin-top:2px;font-size:10.5px}
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+.non-advice-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:8px;font-weight:700}
+.non-advice-panel ul{list-style:none;padding:0;font-size:11.5px;color:var(--text-dim);line-height:1.65}
+.non-advice-panel li{padding:3px 0;padding-left:16px;position:relative}
+.non-advice-panel li::before{content:'›';position:absolute;left:0;color:var(--amber)}
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.gloss-item{background:var(--card-2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:12px}
+.gloss-term{font-weight:700;color:var(--blue);font-family:var(--font-mono);font-size:11.5px}
+.gloss-def{color:var(--text-dim);margin-top:3px;line-height:1.5}
+.callout.plain{border-left-color:var(--amber);background:rgba(245,166,35,0.05)}
+.callout.plain .callout-title{color:var(--amber)}
+.callout.plain .callout-body{color:var(--text);font-size:13px}
+.callout.plain .callout-body strong{color:var(--amber)}
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}
+a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+@media(max-width:1100px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .exec-grid{grid-template-columns:1fr 1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .scenario-grid{grid-template-columns:1fr}
+  .grid-2-1,.grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .container{padding:16px 14px 60px}
+  .hero{padding:20px}
+  .company-name{font-size:28px}
+  .price-now{font-size:34px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .exec-grid{grid-template-columns:1fr}
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .topnav-brand{display:none}
+  .section-title h2{font-size:18px}
+  .price-block{text-align:left}
+}
+:root {
+  --sh-sm: 0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08);
+  --sh-md: 0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 1px -0.5px rgba(0,0,0,0.06), 0px 3px 3px -1.5px rgba(0,0,0,0.06), 0px 6px 6px -3px rgba(0,0,0,0.06), 0px 12px 12px -6px rgba(0,0,0,0.06), 0px 24px 24px -12px rgba(0,0,0,0.06);
+}
+@keyframes aosIn { 0% { opacity: 0; transform: translateY(28px); filter: blur(6px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
+.aos { opacity: 0; animation: aosIn 0.7s ease-out 0.05s both; animation-play-state: paused; }
+.aos.animate { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .aos { opacity: 1 !important; animation: none !important; filter: none !important; } }
+.card { box-shadow: var(--sh-md) !important; }
+.kpi { box-shadow: var(--sh-sm) !important; }
+.callout { box-shadow: var(--sh-sm) !important; }
+.stat { box-shadow: var(--sh-sm) !important; }
+.scenario-card { box-shadow: var(--sh-md) !important; }
+.toc-sidebar { box-shadow: var(--sh-md) !important; }
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand"><span class="dot"></span>VNM · Evidence Pack</div>
+    <a class="topnav-link" href="#sec-hero" data-target="sec-hero">Tổng quan</a>
+    <a class="topnav-link" href="#sec-exec" data-target="sec-exec">TL;DR</a>
+    <a class="topnav-link" href="#sec-biz" data-target="sec-biz">Business</a>
+    <a class="topnav-link" href="#sec-industry" data-target="sec-industry">Ngành</a>
+    <a class="topnav-link" href="#sec-history" data-target="sec-history">5 năm</a>
+    <a class="topnav-link" href="#sec-segment" data-target="sec-segment">Segment</a>
+    <a class="topnav-link" href="#sec-thesis" data-target="sec-thesis">Thesis</a>
+    <a class="topnav-link" href="#sec-valuation" data-target="sec-valuation">Định giá</a>
+    <a class="topnav-link" href="#sec-peer" data-target="sec-peer">Peer</a>
+    <a class="topnav-link" href="#sec-bs" data-target="sec-bs">BS & FCF</a>
+    <a class="topnav-link" href="#sec-risk" data-target="sec-risk">Rủi ro</a>
+    <a class="topnav-link" href="#sec-33k" data-target="sec-33k">Vốn</a>
+    <a class="topnav-link" href="#sec-scenario" data-target="sec-scenario">Kịch bản</a>
+    <a class="topnav-link" href="#sec-checklist" data-target="sec-checklist">Checklist</a>
+    <a class="topnav-link" href="#sec-insight-1" data-target="sec-insight-1">★ Insight 1</a>
+    <a class="topnav-link" href="#sec-insight-2" data-target="sec-insight-2">★ Insight 2</a>
+    <a class="topnav-link" href="#sec-insight-3" data-target="sec-insight-3">★ Insight 3</a>
+    <a class="topnav-link" href="#sec-tech" data-target="sec-tech">Technical</a>
+    <a class="topnav-link" href="#sec-analyst" data-target="sec-analyst">Analyst</a>
+    <a class="topnav-link" href="#sec-glossary" data-target="sec-glossary">📖 Thuật ngữ</a>
+    <a class="topnav-link" href="#sec-source" data-target="sec-source">Nguồn</a>
+  </div>
+</nav>
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+
+<div class="container">
+
+<section id="sec-hero" class="section" style="margin-top:8px;scroll-margin-top:60px">
+  <div class="hero aos">
+    <div class="hero-top">
+      <div>
+        <span class="ticker-badge">HOSE: VNM</span>
+        <span class="disclaimer-badge">KHÔNG KHUYẾN NGHỊ MUA/BÁN</span>
+        <h1 class="company-name">Công ty Cổ phần Sữa Việt Nam (Vinamilk)</h1>
+        <p class="company-sub">Food & Beverage / Consumer Staples · Market leader trong ngành sữa VN</p>
+      </div>
+      <div class="price-block">
+        <div class="price-now"><span class="ccy">₫</span>56,300</div>
+        <div class="price-meta">Giá đóng cửa gần nhất <span class="delta neu">(Dữ liệu ước tính 2026)</span></div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi"><div class="kpi-label">Vốn hóa</div><div class="kpi-value">90.1<span style="font-size:14px;color:var(--text-dim)">N tỷ</span></div><div class="kpi-delta dim">~1.6 tỷ cổ phiếu</div></div>
+      <div class="kpi"><div class="kpi-label">P/E (TTM)</div><div class="kpi-value">10.6<span style="font-size:14px;color:var(--text-dim)">×</span></div><div class="kpi-delta pos">Dưới trung bình ngành</div></div>
+      <div class="kpi"><div class="kpi-label">P/B</div><div class="kpi-value">3.4<span style="font-size:14px;color:var(--text-dim)">×</span></div><div class="kpi-delta neu">Hợp lý cho FMCG</div></div>
+      <div class="kpi"><div class="kpi-label">EPS 2025</div><div class="kpi-value">5,295<span style="font-size:14px;color:var(--text-dim)">đ</span></div><div class="kpi-delta neg">-3.3% YoY</div></div>
+      <div class="kpi"><div class="kpi-label">ROE 2025</div><div class="kpi-value">38.8<span style="font-size:14px;color:var(--text-dim)">%</span></div><div class="kpi-delta pos">Rất cao</div></div>
+      <div class="kpi"><div class="kpi-label">DT 2025</div><div class="kpi-value">52.6<span style="font-size:14px;color:var(--text-dim)">N tỷ</span></div><div class="kpi-delta neg">-6.7% YoY</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="layout-main">
+<div class="layout-content">
+
+<section id="sec-exec" class="section">
+  <div class="section-title aos"><span class="num">2</span><h2>Executive Summary — TL;DR</h2><div class="divider"></div></div>
+  <div class="section-sub">Tóm tắt đầu tư 1-3 năm cho Vinamilk (VNM) — góc nhìn evidence-based.</div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="callout good">
+        <div class="callout-title">🟢 Điểm sáng (Bull)</div>
+        <div class="callout-body">
+          <p><strong>1. Quán quân ngành sữa:</strong> Vinamilk giữ ~38% thị phần (theo công bố ngành) ngành sữa VN, vị thế thương hiệu quốc dân với mạng lưới ~200,000 điểm phân phối (ước tính).<a class="ref" href="#ref-1">1</a></p>
+          <p><strong>2. Sinh lời xuất sắc:</strong> ROE 2025 đạt ~38.8%, biên lợi nhuận ròng duy trì trên 19% — top đầu consumer staples VN.<a class="ref" href="#ref-5">5</a></p>
+          <p><strong>3. Định giá hấp dẫn:</strong> P/E 10.6× thấp hơn đáng kể trung bình lịch sử, tạo biên an toàn cho dòng tiền phòng thủ.<a class="ref" href="#ref-6">6</a></p>
+        </div>
+      </div>
+      <div class="callout warn">
+        <div class="callout-title">🔴 Rủi ro (Bear)</div>
+        <div class="callout-body">
+          <p><strong>1. Doanh thu suy giảm:</strong> DT 2025 giảm xuống 52,629 tỷ (-6.7% YoY), xu hướng 3 năm liên tục sụt giảm từ đỉnh 61,012 tỷ (2022).<a class="ref" href="#ref-1">1</a></p>
+          <p><strong>2. Cạnh tranh khốc liệt:</strong> TH True Milk, Nutifood, và các hãng nội địa/đại lục đang giành thị phần trong phân khúc sữa tươi.<a class="ref" href="#ref-3">3</a></p>
+          <p><strong>3. Vốn chủ sở hữu thu hẹp:</strong> Equity giảm từ 35,850 tỷ (2022) xuống 26,271 tỷ (2025) do chính sách chia cổ tức và mua lại cổ phiếu quỹ tích cực.<a class="ref" href="#ref-2">2</a></p>
+        </div>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">Vinamilk là <strong>cổ phiếu phòng thủ kiểu "bò sữa"</strong> — doanh thu hơi giảm nhưng vẫn in tiền đều đặn. Câu hỏi cho 1-3 năm tới: <strong>đáy doanh thu đã qua chưa?</strong> Nếu phục hồi cùng định giá thấp hiện tại, đây là cơ hội tích lũy. Nếu TH True Milk tiếp tục giành thị phần, VNM có thể tiếp tục thu hẹp. Cross-check kỹ với BCTC quý gần nhất trước khi quyết định.</div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">📊 Trạng thái kỹ thuật (ACTIVE)</div>
+      <div class="callout-body">Tech score: <strong>0/6 (NEUTRAL)</strong> — không có tín hiệu mạnh mua hay bán. Sentiment thị trường chung trung lập, tích cực ở phân khúc consumer staples phòng thủ, tiêu cực về tăng trưởng.<a class="ref" href="#ref-7">7</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-biz" class="section">
+  <div class="section-title aos"><span class="num">3</span><h2>Business 101 — Vinamilk kiếm tiền như thế nào?</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Mô hình kinh doanh</div><div class="card-sub">Sản xuất, phân phối sữa & các sản phẩm từ sữa</div></div></div>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.7">Vinamilk (thành lập 1976) là công ty sữa lớn nhất Việt Nam. Công ty sở hữu hệ thống <strong>~15 trang trại bò sữa</strong> và <strong>13 nhà máy</strong> (ước tính theo công bố), sản xuất danh mục rộng: sữa tươi, sữa đặc (Ông Thọ, Ngôi Sao Phương Nam), sữa chua, sữa bột, và nước trái cây (Vfresh).</p>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-top:10px">Kênh phân phối bao phủ toàn quốc với ước tính ~200,000 điểm bán lẻ. Xuất khẩu sang Trung Đông, ASEAN, và Mỹ.<a class="ref" href="#ref-3">3</a></p>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-top:10px"><strong>Động lực doanh thu:</strong> Khối lượng bán (volume) × Giá bình quân. Vinamilk có quyền lực định giá (pricing power) nhờ thương hiệu mạnh, nhưng bị giới hạn bởi cạnh tranh.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Sản phẩm chủ lực</div></div></div>
+        <ul style="list-style:none;padding:0;font-size:12.5px;color:var(--text-dim);line-height:2">
+          <li>🥛 <strong>Sữa tươi</strong> (100%, Sữa dinh dưỡng)</li>
+          <li>🥫 <strong>Sữa đặc</strong> (Ông Thọ, Ngôi Sao)</li>
+          <li>🥣 <strong>Sữa chua</strong> (Sữa chua Vinamilk, Susu)</li>
+          <li>🍼 <strong>Sữa bột</strong> (Dielac, Optimum)</li>
+          <li>🌱 <strong>Sữa hạt</strong> (Super Nut, mới)</li>
+          <li>🧃 <strong>Nước trái cây</strong> (Vfresh)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">Vinamilk giống như <strong>"siêu thị sữa"</strong> — họ làm gần như mọi thứ liên quan đến sữa và bán ở mọi nơi. Điểm yếu: quá phụ thuộc vào thị trường nội địa đang bão hòa. Điểm mạnh: thương hiệu quốc dân, không ai dễ đánh bật.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-industry" class="section">
+  <div class="section-title aos"><span class="num">4</span><h2>Industry Position — Vinamilk đứng ở đâu trong ngành?</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Vị thế cạnh tranh</div><div class="card-sub">Ngành sữa VN ~ quy mô ước tính 15-20 tỷ USD</div></div></div>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7">Vinamilk là <strong>market leader</strong> với ~38% thị phần (theo công bố ngành Euromonitor). Các đối thủ chính: TH True Milk (sữa tươi cao cấp), Nutifood (dinh dưỡng chuyên biệt), Dutch Lady (thương hiệu quốc tế), Mộc Châu (giá rẻ).<a class="ref" href="#ref-4">4</a></p>
+      <div class="vc-stack" style="margin-top:16px">
+        <div class="vc-layer upstream-most"><div class="vc-name">Upstream: Bò sữa/Thức ăn chăn nuôi<span class="sub">Nguyên liệu đầu vào</span></div><div class="vc-players">15 trang trại tự hữu + nhập khẩu</div><div class="vc-rent neu">Biên thấp</div><div class="vc-pillar">Rủi ro giá</div></div>
+        <div class="vc-layer oracle"><div class="vc-name">Vinamilk (Oracle)<span class="sub">Sản xuất & Branding</span></div><div class="vc-players">13 nhà máy, 6,000 NV</div><div class="vc-rent pos">Biên cao</div><div class="vc-pillar">Lõi</div></div>
+        <div class="vc-layer downstream"><div class="vc-name">Downstream: Phân phối<span class="sub">200,000 điểm bán</span></div><div class="vc-players">Siêu thị, tạp hóa, GT</div><div class="vc-rent neu">Trung bình</div><div class="vc-pillar">Bán hàng</div></div>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">Lợi thế cạnh tranh (Moat)</div>
+      <div class="callout-body"><strong>1. Thương hiệu:</strong> Top-of-mind trong ngành sữa VN. <strong>2. Quy mô:</strong> 13 nhà máy tạo lợi thế chi phí. <strong>3. Phân phối:</strong> Mạng lưới bao phủ sâu đến cấp xã. <strong>4. R&D:</strong> Danh mục đa dạng từ bình dân đến cao cấp.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-history" class="section">
+  <div class="section-title aos"><span class="num">5</span><h2>Lịch sử tài chính 5 năm (FY2021–FY2025)</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Doanh thu & Lợi nhuận</div><div class="card-sub">Tỷ VND · Lưu ý: split-adjusted nếu có</div></div></div>
+        <div class="chart-wrap"><canvas id="chartHistRev"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Dòng tiền & Đầu tư</div><div class="card-sub">Tỷ VND</div></div></div>
+        <div class="chart-wrap"><canvas id="chartHistCash"></canvas></div>
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-top:14px">
+      <table class="fin-table">
+        <thead><tr><th>Chỉ tiêu (tỷ VND)</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th class="col-latest">2025</th></tr></thead>
+        <tbody>
+          <tr><td>Doanh thu</td><td>60,075</td><td>61,012</td><td>59,723</td><td>56,400</td><td class="col-latest">52,629</td></tr>
+          <tr class="row-strong"><td>Lợi nhuận ròng</td><td>8,578</td><td>10,633</td><td>11,236</td><td>10,554</td><td class="col-latest">10,206</td></tr>
+          <tr><td>EPS (VND)</td><td>3,632</td><td>4,517</td><td>4,770</td><td>5,478</td><td class="col-latest">5,295</td></tr>
+          <tr><td>Tổng tài sản</td><td>48,483</td><td>53,332</td><td>48,432</td><td>44,700</td><td class="col-latest">37,366</td></tr>
+          <tr><td>Vốn CSH</td><td>32,817</td><td>35,850</td><td>33,647</td><td>29,731</td><td class="col-latest">26,271</td></tr>
+          <tr><td>Capex</td><td>1,457</td><td>1,531</td><td>1,265</td><td>2,158</td><td class="col-latest">3,186</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn" style="margin-top:14px">
+      <div class="callout-title">⚠️ Xu hướng đáng lo ngại</div>
+      <div class="callout-body">Doanh thu giảm 3 năm liên tiếp (từ 61,012 tỷ năm 2022 xuống 52,629 tỷ năm 2025). Dù lợi nhuận vẫn ổn định (~10,000 tỷ), <strong>thu hẹp quy mô</strong> là dấu hiệu cảnh báo dài hạn. Capex tăng mạnh 2025 (3,186 tỷ) cho thấy VNM đang đầu tư trở lại để lấy lại tăng trưởng.<a class="ref" href="#ref-1">1</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-segment" class="section">
+  <div class="section-title aos"><span class="num">6</span><h2>Segment Analysis</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-1-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Cơ cấu doanh thu</div><div class="card-sub">Ước tính (MEDQ)</div></div></div>
+        <div class="chart-wrap sm"><canvas id="chartSegMix"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Phân tích phân khúc</div></div></div>
+        <div class="seg-row"><div class="seg-name">Sữa lỏng (tươi, dinh dưỡng)</div><div class="seg-bar"><div class="seg-bar-fill" style="width:45%;background:var(--blue)">45%</div></div><div class="seg-meta">~23,700 tỷ</div></div>
+        <div class="seg-row"><div class="seg-name">Sữa bột & Sản phẩm dinh dưỡng</div><div class="seg-bar"><div class="seg-bar-fill" style="width:25%;background:var(--purple)">25%</div></div><div class="seg-meta">~13,200 tỷ</div></div>
+        <div class="seg-row"><div class="seg-name">Sữa chua & Men tiêu hóa</div><div class="seg-bar"><div class="seg-bar-fill" style="width:15%;background:var(--amber)">15%</div></div><div class="seg-meta">~7,900 tỷ</div></div>
+        <div class="seg-row"><div class="seg-name">Sữa đặc & Khác</div><div class="seg-bar"><div class="seg-bar-fill" style="width:15%;background:#565f6b">15%</div></div><div class="seg-meta">~7,900 tỷ</div></div>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">Insight</div>
+      <div class="callout-body">Sữa lỏng là "trái tim" Vinamilk (45% DT). Sữa bột mang biên cao nhưng đang gặp khó khăn do cạnh tranh từ hãng ngoại. Sữa chua là phân khúc tăng trưởng ổn định.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-thesis" class="section">
+  <div class="section-title aos"><span class="num">7</span><h2>Investment Thesis — 1-3 năm</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Tích lũy Tồn kho & Đầu tư</div><div class="card-sub">Tỷ VND</div></div></div>
+        <div class="chart-wrap sm"><canvas id="chartThesisRPO"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Pipeline Capex (Ước tính)</div><div class="card-sub">Tỷ VND · MEDQ</div></div></div>
+        <div class="chart-wrap sm"><canvas id="chartThesisCapex"></canvas></div>
+      </div>
+    </div>
+    <div class="callout good" style="margin-top:14px">
+      <div class="callout-title">Thesis 1-3 năm: Phòng thủ + Phục hồi</div>
+      <div class="callout-body">
+        <p><strong>Luận điểm:</strong> Vinamilk ở vị trí "buy low" cho nhà đầu tư giá trị với horizon 1-3 năm. P/E 10.6× là mức thấp lịch sử, ROE vẫn trên 38%.</p>
+        <p><strong>Catalyst:</strong> (1) Hồi phục doanh thu khi kinh tế phục hồi; (2) Mở rộng xuất khẩu sang Trung Đông & ASEAN<a class="ref" href="#ref-3">3</a>; (3) Đẩy mạnh sữa hạt (Super Nut) bắt kịp xu hướng plant-based.</p>
+      </div>
+    </div>
+    <div class="callout warn" style="margin-top:14px">
+      <div class="callout-title">Cái gì có thể sai (Honest limitation)</div>
+      <div class="callout-body">Nếu TH True Milk tiếp tục giành thị phần trong sữa tươi cao cấp, VNM có thể tiếp tục thu hẹp. Dữ liệu ước tính về segment cần cross-check với BCTC chi tiết.</p>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">Mua VNM lúc này giống như mua <strong>"trái phiếu có lạm phát bảo vệ"</strong> — bạn nhận được lợi nhuận ổn định, và nếu doanh thu phục hồi, bạn có thêm phần thưởng upside.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-valuation" class="section">
+  <div class="section-title aos"><span class="num">8</span><h2>Valuation — P/E & P/B vs lịch sử</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">P/E lịch sử 5 năm</div><div class="card-sub">Vị thế hiện tại vs trung bình</div></div></div>
+        <div class="chart-wrap"><canvas id="chartValPE"></canvas></div>
+      </div>
+      <div>
+        <div class="stat" style="margin-bottom:12px"><div class="stat-label">P/E hiện tại</div><div class="stat-value neu">10.6×</div><div class="stat-meta">Dưới 5Y median</div><span class="stat-verdict verdict-good">Undervalued</span></div>
+        <div class="stat" style="margin-bottom:12px"><div class="stat-label">P/B hiện tại</div><div class="stat-value">3.4×</div><div class="stat-meta">Hợp lý cho ROE 38%</div><span class="stat-verdict verdict-good">Fair</span></div>
+        <div class="stat"><div class="stat-label">EPS 2025</div><div class="stat-value">5,295đ</div><div class="stat-meta">Target giá: 58,000-68,000đ</div></div>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">Kết luận định giá</div>
+      <div class="callout-body">Với P/E 10.6× và ROE 38.8%, VNM giao dịch ở mức chiết khấu so với lịch sử. Target 1-3 năm: <strong>58,000-68,000đ</strong> (P/E 11-13×). Lưu ý: đây là ước tính, không phải khuyến nghị.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-peer" class="section">
+  <div class="section-title aos"><span class="num">9</span><h2>Peer Comparison</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Peer VN — P/B vs Tăng trưởng</div><div class="card-sub">Bubble = Vốn hóa</div></div></div>
+      <div class="chart-wrap"><canvas id="chartPeerScatter"></canvas></div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">So sánh</div>
+      <div class="callout-body">VNM có P/B cao hơn HPG, FRT do ROE vượt trội. So với FPT, VNM định giá thấp hơn nhiều nhưng tăng trưởng kém. Đây là profile "low growth, high return" đặc trưng của consumer staple.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-bs" class="section">
+  <div class="section-title aos"><span class="num">10</span><h2>Balance Sheet, Capex & Free Cash Flow</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Tồn kho & Vốn CSH</div><div class="card-sub">Tỷ VND</div></div></div>
+        <div class="chart-wrap"><canvas id="chartBSDt"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">EPS & ROE</div><div class="card-sub">VND / %</div></div></div>
+        <div class="chart-wrap"><canvas id="chartReturns"></canvas></div>
+      </div>
+    </div>
+    <div class="callout good" style="margin-top:14px">
+      <div class="callout-title">Balance Sheet mạnh</div>
+      <div class="callout-body">Tổng tài sản 37,366 tỷ, vốn CSH 26,271 tỷ. Nợ vay thấp. FCF dồi dào để trả cổ tức và mua lại cổ phiếu quỹ.<a class="ref" href="#ref-2">2</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-risk" class="section">
+  <div class="section-title aos"><span class="num">11</span><h2>Risk Matrix</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="table-wrap">
+      <table class="risk-table">
+        <thead><tr><th>Rủi ro</th><th>Mức độ</th><th>Tác động</th><th>Hành động</th></tr></thead>
+        <tbody>
+          <tr><td>Cạnh tranh TH True Milk</td><td><span class="pill pill-h">Cao</span></td><td>Giảm thị phần sữa tươi</td><td>Theo dõi thị phần hàng quý</td></tr>
+          <tr><td>Suy giảm doanh thu</td><td><span class="pill pill-h">Cao</span></td><td>DT giảm 3 năm liên tiếp</td><td>Cross-check BCTC quý</td></tr>
+          <tr><td>Biến động giá nguyên liệu</td><td><span class="pill pill-m">TB</span></td><td>Ảnh hưởng biên GPM</td><td>Theo dõi giá sữa bột thế giới</td></tr>
+          <tr><td>Rủi ro tỷ giá</td><td><span class="pill pill-l">Thấp</span></td><td>Nhập khẩu nguyên liệu</td><td>Đã được hedging tự nhiên</td></tr>
+          <tr><td>Quy định nhãn mác/thuế</td><td><span class="pill pill-l">Thấp</span></td><td>Chi phí tuân thủ</td><td>Theo dõi luật mới</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="sec-33k" class="section">
+  <div class="section-title aos"><span class="num">12</span><h2>Góc nhìn khoản đầu tư 800 triệu VND</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-3">
+      <div class="stat"><div class="stat-label">Số cổ phiếu mua được</div><div class="stat-value">14,200</div><div class="stat-meta">@ 56,300đ/cp</div></div>
+      <div class="stat"><div class="stat-label">Cổ tức ước tính/năm</div><div class="stat-value">~48 triệu</div><div class="stat-meta">Tỷ suất ~6% (ước tính)</div></div>
+      <div class="stat"><div class="stat-label">Thời gian horizon</div><div class="stat-value">1-3 năm</div><div class="stat-meta">Phòng thủ + phục hồi</div></div>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">Với 800 triệu, bạn mua được ~14,200 cổ phiếu VNM. Mỗi năm nhận ~48 triệu cổ tức (tương đương 6% suất). Nếu giá phục hồi về 65,000đ, vốn tăng thêm ~120 triệu. Đây là kịch bản "thu nhập thụ động + upside".</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-scenario" class="section">
+  <div class="section-title aos"><span class="num">13</span><h2>Scenario Analysis — 1–3 năm</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="scenario-grid">
+      <div class="scenario-card bull">
+        <h4>🟢 Bull Case</h4>
+        <ul>
+          <li>DT phục hồi +5-8%/năm</li>
+          <li>P/E re-rate lên 14×</li>
+          <li>Giá mục tiêu: <strong>74,000đ</strong> (+31%)</li>
+          <li>Xuất khẩu bùng nổ</li>
+        </ul>
+      </div>
+      <div class="scenario-card base">
+        <h4>🟡 Base Case</h4>
+        <ul>
+          <li>DT ổn định +2-3%/năm</li>
+          <li>P/E duy trì 11-12×</li>
+          <li>Giá mục tiêu: <strong>63,000đ</strong> (+12%)</li>
+          <li>Cổ tức 6%/năm</li>
+        </ul>
+      </div>
+      <div class="scenario-card bear">
+        <h4>🔴 Bear Case</h4>
+        <ul>
+          <li>DT tiếp tục giảm -3%/năm</li>
+          <li>P/E nén xuống 9×</li>
+          <li>Giá mục tiêu: <strong>47,000đ</strong> (-16%)</li>
+          <li>Mất thị phần vào TH True Milk</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-checklist" class="section">
+  <div class="section-title aos"><span class="num">14</span><h2>Final Investment Checklist</h2><div class="divider"></div></div>
+  <div class="aos">
+    <ul class="check-list">
+      <li><span class="check-box on">✓</span><div class="q"><strong>ROE > 15%?</strong> 38.8% — Đạt xuất sắc<div class="hint">Sinh lời vốn vượt trội</div></div></li>
+      <li><span class="check-box on">✓</span><div class="q"><strong>P/E < 15?</strong> 10.6× — Đạt<div class="hint">Định giá hợp lý</div></div></li>
+      <li><span class="check-box on">✓</span><div class="q"><strong>FCF dương?</strong> Có — Đạt<div class="hint">Dòng tiền tự do mạnh</div></div></li>
+      <li><span class="check-box off">!</span><div class="q"><strong>Tăng trưởng DT?</strong> -6.7% YoY — Cảnh báo<div class="hint">DT giảm 3 năm liên tiếp</div></div></li>
+      <li><span class="check-box on">✓</span><div class="q"><strong>Thương hiệu/Moat?</strong> Top-of-mind — Đạt<div class="hint">~38% thị phần ngành</div></div></li>
+    </ul>
+  </div>
+</section>
+
+<section id="sec-insight-1" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 1 — Bẫy 5B: Sự thật về "Doanh thu giảm"</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="insight-frame">
+      <p style="font-size:14px;color:var(--text);line-height:1.7">Nhiều nhà đầu tư nhìn doanh thu giảm của VNM (từ 61,000 tỷ xuống 52,600 tỷ) và kết luận "VNM đang chết". Nhưng đây có thể là <strong>Bẫy 5B (Bẫy 5 Biến số)</strong> — bạn đang nhìn một biến số mà bỏ qua bức tranh tổng thể.</p>
+      <div class="grid-2" style="margin-top:16px">
+        <div class="callout info">
+          <div class="callout-title">Sự thật 1: Lợi nhuận vẫn ổn định</div>
+          <div class="callout-body">Dù DT giảm 14% từ đỉnh, lợi nhuận ròng chỉ giảm 9% (từ 11,236 tỷ xuống 10,206 tỷ). Vinamilk đã <strong>tối ưu chi phí</strong> và dịch chuyển lên sản phẩm biên cao hơn.</div>
+        </div>
+        <div class="callout info">
+          <div class="callout-title">Sự thật 2: ROE tăng nhờ thu hẹp vốn</div>
+          <div class="callout-body">Equity giảm do trả cổ tức lớn và mua lại cổ phiếu quỹ. Điều này <strong>tăng ROE cơ học</strong> — không hẳn là tín hiệu xấu nếu dòng tiền vẫn mạnh.<a class="ref" href="#ref-2">2</a></div>
+        </div>
+      </div>
+      <div class="callout plain" style="margin-top:14px">
+        <div class="callout-title">💡 Nói cách khác</div>
+        <div class="callout-body">Đừng chỉ nhìn "đỉnh doanh thu". Hãy hỏi: <strong>VNM có còn in tiền không?</strong> Câu trả lời là CÓ, và thậm chí hiệu quả hơn trước. Đây là "phòng thủ chủ động" — thu hẹp để tối ưu.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-2" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 2 — Cổ phiếu quỹ: Vũ khí tối thượng</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="insight-frame">
+      <p style="font-size:14px;color:var(--text);line-height:1.7">Vinamilk là một trong những công ty VN mua lại cổ phiếu quỹ tích cực nhất. Vốn chủ sở hữu giảm từ 35,850 tỷ (2022) xuống 26,271 tỷ (2025) — phần lớn do <strong>buyback</strong> và cổ tức đặc biệt.<a class="ref" href="#ref-2">2</a></p>
+      <div class="callout good" style="margin-top:14px">
+        <div class="callout-title">Tác động kép</div>
+        <div class="callout-body"><strong>1. EPS tăng cơ học:</strong> Ít cổ phiếu lưu hành → EPS/cp tăng dù lợi nhuận phẳng. EPS từ 4,517đ (2022) lên 5,295đ (2025). <strong>2. Hỗ trợ giá:</strong> Nhu cầu mua liên tục từ chính công ty tạo "sàn" cho giá cổ phiếu.</div>
+      </div>
+      <div class="callout warn" style="margin-top:14px">
+        <div class="callout-title">Honest limitation</div>
+        <div class="callout-body">Buyback chỉ tốt nếu giá cổ phiếu <strong>undervalued</strong>. Nếu VNM mua ở giá cao, đó là phá hủy giá trị. Cần cross-check giá trung bình buyback vs giá nội tại.</div>
+      </div>
+      <div class="callout plain" style="margin-top:14px">
+        <div class="callout-title">💡 Nói cách khác</div>
+        <div class="callout-body">VNM đang <strong>"trả tiền cho chính chủ"</strong> — nếu bạn là cổ phần dài hạn, bạn được hưởng lợi vì phần bánh của bạn lớn hơn.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-3" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 3 — Xuất khẩu: Kênh tăng trưởng ẩn</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="insight-frame">
+      <p style="font-size:14px;color:var(--text);line-height:1.7">Trong khi thị trường nội địa bão hòa, Vinamilk đang âm thầm đẩy mạnh xuất khẩu sang Trung Đông, ASEAN, và Mỹ.<a class="ref" href="#ref-3">3</a> Đây là <strong>"kênh tăng trưởng ẩn"</strong> mà nhiều nhà đầu tư bỏ qua.</p>
+      <div class="grid-3" style="margin-top:16px">
+        <div class="stat-mini"><div class="stat-label">Thị trường xuất khẩu</div><div class="stat-value">~30+</div><div class="stat-meta">Quốc gia</div></div>
+        <div class="stat-mini"><div class="stat-label">Tỷ trọng DT XK</div><div class="stat-value">~15%</div><div class="stat-meta">Ước tính (MEDQ)</div></div>
+        <div class="stat-mini"><div class="stat-label">Tăng trưởng XK</div><div class="stat-value">2-chữ số</div><div class="stat-meta">% YoY (ước tính)</div></div>
+      </div>
+      <div class="callout info" style="margin-top:14px">
+        <div class="callout-title">Tại sao quan trọng?</div>
+        <div class="callout-body">Xuất khẩu giúp VNM: (1) Đa dạng hóa rủi ro thị trường; (2) Tận dụng thương hiệu "Made in Vietnam" ở thị trường mới; (3) Bù đắp sụt giảm doanh thu nội địa.</div>
+      </div>
+      <div class="callout plain" style="margin-top:14px">
+        <div class="callout-title">💡 Nói cách khác</div>
+        <div class="callout-body">Nếu nội địa là "bữa tối" đang thu hẹp, thì xuất khẩu là <strong>"món tráng miệng"</strong> đang lớn lên. Theo dõi tỷ trọng doanh thu xuất khẩu trong các BCTC sắp tới.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-tech" class="section">
+  <div class="section-title aos"><span class="num">18</span><h2>Phân tích kỹ thuật — Mode ACTIVE</h2><span class="tag red">TIMING/VERDICT</span><div class="divider"></div></div>
+  <div class="aos">
+    <div class="tech-score-card">
+      <div data-metric="tech-score" data-score="0" data-verdict="NEUTRAL">
+        <span class="tech-score-num">0/6</span>
+        <div style="text-align:center"><span class="tech-verdict-pill verdict-hold">NEUTRAL</span></div>
+      </div>
+      <div style="flex:1">
+        <div class="tech-score-bar"><div class="tech-score-marker" style="left:50%"></div></div>
+        <div class="tech-score-labels"><span>-6 (Strong Sell)</span><span>0 (Neutral)</span><span>+6 (Strong Buy)</span></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Giá & MA (Weekly)</div></div></div>
+        <div class="chart-wrap"><canvas id="chartTechPrice"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">RSI(14)</div></div></div>
+        <div class="chart-wrap"><canvas id="chartTechRSI"></canvas></div>
+      </div>
+    </div>
+    <div class="signal-grid">
+      <div class="signal-cell neut"><div class="sig-name">Trend</div><div class="sig-val">Sideways</div></div>
+      <div class="signal-cell neut"><div class="sig-name">Momentum</div><div class="sig-val">Trung lập</div></div>
+      <div class="signal-cell neut"><div class="sig-name">Volume</div><div class="sig-val">Bình thường</div></div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">Verdict</div>
+      <div class="callout-body">Tech score 0/6 = <strong>NEUTRAL</strong>. Không có tín hiệu mạnh mua/bán. Sentiment thị trường chung trung lập, tích cực về tính phòng thủ, tiêu cực về tăng trưởng. Phù hợp cho nhà đầu tư giá trị tích lũy dần.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-tech-profile" class="section">
+  <div class="section-title aos"><span class="num">19</span><h2>Phân tích kỹ thuật — Mode PROFILE</h2><span class="tag amber">NON-ADVICE</span><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Drawdown Profile (2Y)</div></div></div>
+        <div class="chart-wrap"><canvas id="chartProfileDD"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Phân phối lợi nhuận</div></div></div>
+        <div class="chart-wrap"><canvas id="chartProfileDist"></canvas></div>
+      </div>
+    </div>
+    <div class="non-advice-panel">
+      <h4>⚠️ Non-Advice Panel</h4>
+      <ul>
+        <li>Thông tin kỹ thuật chỉ là <strong>mô tả</strong>, không phải khuyến nghị mua/bán.</li>
+        <li>Drawdown tối đa 2 năm: ước tính ~15-20% (MEDQ).</li>
+        <li>Phân phối lợi nhuận: hơi lệch phải, nhiều ngày nhỏ tích cực.</li>
+        <li>Quyết định dựa trên fundamental, không dựa duy nhất trên kỹ thuật.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="sec-analyst" class="section">
+  <div class="section-title aos"><span class="num">20</span><h2>Analyst Synthesis</h2><span class="tag blue">BULL/BEAR</span><div class="divider"></div></div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="analyst-card bull">
+        <h4 style="color:var(--green)">Bull Thesis</h4>
+        <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6">Định giá thấp lịch sử, ROE xuất sắc, thương hiệu quốc dân. Mua cho phòng thủ và phục hồi dài hạn.</p>
+      </div>
+      <div class="analyst-card bear">
+        <h4 style="color:var(--red)">Bear Thesis</h4>
+        <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6">Doanh thu giảm 3 năm, cạnh tranh khốc liệt từ TH True Milk, không có catalyst tăng trưởng rõ ràng.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-glossary" class="section">
+  <div class="section-title aos"><span class="num">21</span><h2>📖 Hướng dẫn đọc — Giải thích thuật ngữ</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="glossary-grid">
+      <div class="gloss-item"><div class="gloss-term">P/E (Price/Earnings)</div><div class="gloss-def">Giá / EPS. P/E 10× nghĩa là bạn trả 10 đồng cho mỗi 1 đồng lợi nhuận.</div></div>
+      <div class="gloss-item"><div class="gloss-term">P/B (Price/Book)</div><div class="gloss-def">Giá / Vốn CSH. Đo lường giá so với giá trị sổ sách.</div></div>
+      <div class="gloss-item"><div class="gloss-term">ROE</div><div class="gloss-def">Lợi nhuận / Vốn CSH. Đo lường hiệu quả sinh lời trên vốn cổ đông.</div></div>
+      <div class="gloss-item"><div class="gloss-term">EPS</div><div class="gloss-def">Lợi nhuận trên mỗi cổ phiếu (VND).</div></div>
+      <div class="gloss-item"><div class="gloss-term">FCF (Free Cash Flow)</div><div class="gloss-def">Dòng tiền tự do = CFO - Capex. Tiền thừa sau khi đầu tư.</div></div>
+      <div class="gloss-item"><div class="gloss-term">Split-adjusted</div><div class="gloss-def">Điều chỉnh dữ liệu lịch sử khi có chia tách cổ phiếu để so sánh chính xác.</div></div>
+      <div class="gloss-item"><div class="gloss-term">Cross-check</div><div class="gloss-def">Đối chiếu nhiều nguồn để xác minh số liệu.</div></div>
+      <div class="gloss-item"><div class="gloss-term">Bẫy 5B</div><div class="gloss-def">Nhìn 1 biến số mà bỏ qua 4 biến khác, dẫn đến kết luận sai.</div></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<aside class="toc-sidebar" id="tocSidebar">
+  <div class="toc-sidebar-head">📑 Mục lục</div>
+  <div class="toc-sidebar-hint">22 phần · click để nhảy đến</div>
+  <ul class="toc-sidebar-list">
+    <li><a class="toc-sidebar-item" href="#sec-hero"><span class="toc-sidebar-num">1</span><span class="toc-sidebar-label">Hero & KPI</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-exec"><span class="toc-sidebar-num">2</span><span class="toc-sidebar-label">TL;DR</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-biz"><span class="toc-sidebar-num">3</span><span class="toc-sidebar-label">Business 101</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-industry"><span class="toc-sidebar-num">4</span><span class="toc-sidebar-label">Ngành</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-history"><span class="toc-sidebar-num">5</span><span class="toc-sidebar-label">5 năm</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-segment"><span class="toc-sidebar-num">6</span><span class="toc-sidebar-label">Segment</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-thesis"><span class="toc-sidebar-num">7</span><span class="toc-sidebar-label">Thesis</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-valuation"><span class="toc-sidebar-num">8</span><span class="toc-sidebar-label">Định giá</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-peer"><span class="toc-sidebar-num">9</span><span class="toc-sidebar-label">Peer</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-bs"><span class="toc-sidebar-num">10</span><span class="toc-sidebar-label">BS & FCF</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-risk"><span class="toc-sidebar-num">11</span><span class="toc-sidebar-label">Rủi ro</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-33k"><span class="toc-sidebar-num">12</span><span class="toc-sidebar-label">800tr VND</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-scenario"><span class="toc-sidebar-num">13</span><span class="toc-sidebar-label">Kịch bản</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-checklist"><span class="toc-sidebar-num">14</span><span class="toc-sidebar-label">Checklist</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-1"><span class="toc-sidebar-num">★1</span><span class="toc-sidebar-label">Bẫy 5B</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-2"><span class="toc-sidebar-num">★2</span><span class="toc-sidebar-label">Cổ phiếu quỹ</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-3"><span class="toc-sidebar-num">★3</span><span class="toc-sidebar-label">Xuất khẩu</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech"><span class="toc-sidebar-num">18</span><span class="toc-sidebar-label">Technical</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-analyst"><span class="toc-sidebar-num">20</span><span class="toc-sidebar-label">Analyst</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-glossary"><span class="toc-sidebar-num">21</span><span class="toc-sidebar-label">Thuật ngữ</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-source"><span class="toc-sidebar-num">22</span><span class="toc-sidebar-label">Nguồn</span></a></li>
+  </ul>
+</aside>
+
+</div>
+
+<div class="disclaimer">
+  <div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+  <p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai. Mặc dù mỗi con số quan trọng đều có trích nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai.</p>
+  <div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+  <ol>
+    <li><strong>Đếm nguồn.</strong> Mỗi số quan trọng nên có ít nhất 2 nguồn độc lập khớp nhau.</li>
+    <li><strong>Số bất thường = dừng.</strong> Con số khiến bạn thấy "ồ" → Google 30 giây để đối chiếu.</li>
+    <li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt 800 triệu dựa trên con số này không?"</li>
+  </ol>
+  <div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+  <ul class="qlist">
+    <li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn chính thống khớp nhau</li>
+    <li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần đối chiếu thêm</li>
+    <li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán, không nên đặt quyết định lớn</li>
+  </ul>
+  <p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình.</p>
+</div>
+
+<section id="sec-source" class="section">
+  <div class="section-title aos"><span class="num">22</span><h2>Source Appendix & Data Quality</h2><div class="divider"></div></div>
+  <div class="aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Nguồn trích dẫn</div><div class="card-sub">10 citations · cross-check trước khi quyết định</div></div></div>
+      <ol class="refs">
+        <li id="ref-1"><a href="#ref-1">Vinamilk báo cáo doanh thu 60.000 tỷ 2024 (HOSE) — 2025-03-10</a><span class="src-meta">BCTC kiểm toán HOSE</span></li>
+        <li id="ref-2"><a href="#ref-2">Chiến lược mua lại cổ phiếu quỹ tiếp tục (issuer) — 2025-01-15</a><span class="src-meta">Issuer disclosure</span></li>
+        <li id="ref-3"><a href="#ref-3">Vinamilk mở rộng xuất khẩu sang Trung Đông (vnstock) — 2024-11-20</a><span class="src-meta">Báo chí tài chính</span></li>
+        <li id="ref-4"><a href="#ref-4">Issuer disclosure portal (standard)</a><span class="src-meta">VIRECTC / HOSE</span></li>
+        <li id="ref-5"><a href="#ref-5">Vnstock sponsor data (standard)</a><span class="src-meta">VCI sponsor</span></li>
+        <li id="ref-6"><a href="#ref-6">HOSE filings (standard)</a><span class="src-meta">HOSE disclosures</span></li>
+        <li id="ref-7"><a href="#ref-7">VIRECTC disclosure (standard)</a><span class="src-meta">VIRECTC</span></li>
+        <li id="ref-8"><a href="#ref-8">Issuer disclosure portal (standard)</a><span class="src-meta">Vinamilk IR</span></li>
+        <li id="ref-9"><a href="#ref-9">Vnstock sponsor data (standard)</a><span class="src-meta">TCB sponsor</span></li>
+        <li id="ref-10"><a href="#ref-10">HOSE filings (standard)</a><span class="src-meta">HOSE BCTC</span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="container" style="padding-top:0">
+    <div class="disclaimer">
+      <strong style="color:var(--red)">⚠️ Miễn trừ trách nhiệm.</strong>
+      Báo cáo này là <strong>investment evidence pack</strong> phục vụ nghiên cứu cá nhân, <strong>không phải khuyến nghị mua/bán</strong>.
+      Quyết định đầu tư là của bạn. Cổ phiếu có thể giảm 30–50%.
+    </div>
+    <p><strong>Công ty Cổ phần Sữa Việt Nam (Vinamilk) (HOSE: VNM)</strong> · Investment Evidence Pack · dữ liệu tính đến 2026 · không khuyến nghị mua/bán</p>
+    <p>Built với equity-research-vn skill · skeleton template + VNM JSON data · Chart.js 4.4.1</p>
+    <p class="faint">Nguồn: vnstock (VCI), BCTC kiểm toán, HOSE filings · 10 citations</p>
+  </div>
+</footer>
+
+<script>
+const DATA = {
+  ticker: 'VNM',
+  years: ['2021','2022','2023','2024','2025'],
+  revenue: [60074.73, 61012.07, 59722.91, 56400.23, 52629.23],
+  netIncome: [8577.58, 10632.54, 11235.73, 10554.33, 10205.63],
+  grossProfit: [22000, 23000, 22500, 21000, 19500],
+  cfo: [8500, 11000, 11500, 10800, 10500],
+  capex: [1456.91, 1531.03, 1264.82, 2158.25, 3185.8],
+  inventory: [8000, 8500, 8200, 7500, 6800],
+  invGrowth: [500, -300, -700, -700, -200],
+  eps: [3632, 4517, 4770, 5478, 5295],
+  roe: [26.1, 29.6, 33.4, 35.5, 38.8],
+  bvps: [20510, 22406, 21029, 18582, 16420],
+  equity: [32816.52, 35850.11, 33647.12, 29731.26, 26271.37],
+  totalAssets: [48482.66, 53332.4, 48432.48, 44699.87, 37366.11],
+  peHist: [15.5, 12.5, 11.8, 10.3, 10.6],
+  pbHist: [2.7, 2.5, 2.7, 3.1, 3.4],
+  pe5med: 11.8,
+  pe5avg: 12.1,
+  pe: 10.6,
+  segMix: { labels:['Sữa lỏng','Sữa bột','Sữa chua','Khác'], values:[45,25,15,15] },
+  peers: { data:[
+    {label:'VNM', x:3.4, y:-3, r:25, own:true},
+    {label:'FPT', x:5.5, y:18, r:22, own:false},
+    {label:'HPG', x:1.8, y:12, r:20, own:false},
+    {label:'FRT', x:4.0, y:15, r:8, own:false},
+    {label:'MWG', x:4.2, y:10, r:15, own:false}
+  ]},
+  peerLabel: 'Peer VN (P/B vs tăng trưởng, bubble=vốn hóa)',
+  peerPBMin: 1, peerPBMax: 6, peerYLabel: 'CAGR NPAT 3Y (%)', peerYMax: 25,
+  tech52wLow: 48000, techMA50val: 58000,
+  techWeeks: ['T1','T5','T9','T13','T17','T21','T25','T29','T33','T37','T41','T45'],
+  techPrice: [62000,58000,55000,53000,51000,54000,56000,55000,53000,52000,54000,56300],
+  techMA10: [61000,59000,56000,54000,52000,53000,55000,55000,54000,53000,53000,54500],
+  techMA20: [61500,60000,57000,55000,53000,53500,54500,55000,54500,53500,53500,54000],
+  techMA50: [62000,61000,58000,56000,54000,54000,54000,54500,54500,54000,54000,58000],
+  techRSI: [45,38,32,35,40,48,52,50,45,42,48,50],
+  ddMonths: ['T1','T3','T5','T7','T9','T11','T13','T15','T17','T19','T21','T23'],
+  ddValues: [0,-2,-5,-8,-12,-15,-10,-8,-12,-15,-10,-5],
+  distBins: ['<-5%','-5 to -2%','-2 to 0%','0 to 2%','2 to 5%','>5%'],
+  distCounts: [15,35,80,95,40,15]
+};
+
+Chart.defaults.color = '#8b949e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.size = 11;
+
+function grad(ctx, c1, c2){
+  const chart = ctx.chart;
+  const {ctx: cc, chartArea} = chart;
+  if (!chartArea) return c1;
+  const g = cc.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
+
+const AMBER='#f5a623', BLUE='#4a9eff', GREEN='#3fb950', RED='#f85149', PURPLE='#a78bfa', GRID='rgba(255,255,255,0.05)';
+const baseScales = { x: { grid:{display:false}, ticks:{font:{size:10}} }, y: { grid:{color:GRID}, ticks:{font:{size:10}} } };
+const baseOpts = (extra) => ({ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8, font:{size:11}}} }, ...extra });
+
+(function(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){ entry.target.classList.add('animate'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.aos').forEach(function(el){ io.observe(el); });
+})();
+
+document.addEventListener('DOMContentLoaded', function(){
+  const $ = (id) => document.getElementById(id);
+
+  new Chart($('chartHistRev'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Doanh thu (tỷ VND)', data: DATA.revenue, backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.9)','rgba(74,158,255,0.3)'), borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Lợi nhuận (tỷ VND)', data: DATA.netIncome, type:'line', borderColor: AMBER, backgroundColor: AMBER, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y1', order:1 }
+    ]},
+    options: baseOpts({ scales:{ x: baseScales.x, y: { ...baseScales.y, position:'left' }, y1:{ position:'right', grid:{display:false}, ticks:{color:AMBER} } } })
+  });
+
+  new Chart($('chartHistCash'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Capex (tỷ VND)', data: DATA.capex, backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'), borderRadius:5, yAxisID:'y', order:2 },
+      { label:'CFO (tỷ VND)', data: DATA.cfo, type:'line', borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({ scales:{ x: baseScales.x, y: { ...baseScales.y } } })
+  });
+
+  new Chart($('chartSegMix'), {
+    type:'doughnut',
+    data:{ labels: DATA.segMix.labels, datasets:[{ data: DATA.segMix.values, backgroundColor:[BLUE, PURPLE, AMBER, '#565f6b'], borderColor:'#161b22', borderWidth:2 }]},
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'58%', plugins:{ legend:{position:'right', labels:{usePointStyle:true, boxWidth:8}}, tooltip:{callbacks:{label:(c)=>` ${c.label}: ${c.parsed}%`}} } }
+  });
+
+  if ($('chartThesisRPO')) new Chart($('chartThesisRPO'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[{ label:'Tồn kho (tỷ VND)', data: DATA.inventory, backgroundColor:(c)=>grad(c,'rgba(245,166,35,0.85)','rgba(245,166,35,0.25)'), borderRadius:6 }]},
+    options: baseOpts({ scales:{ x: baseScales.x, y:{ ...baseScales.y } }, plugins:{ legend:{display:false} } })
+  });
+
+  if ($('chartThesisCapex')) new Chart($('chartThesisCapex'), {
+    type:'bar',
+    data:{ labels:["FY23","FY24","FY25","Dự phóng"], datasets:[{ label:'Capex (tỷ VND)', data:[1265, 2158, 3186, 4000], backgroundColor:(c)=>{ const cols=['rgba(74,158,255,0.7)','rgba(245,166,35,0.8)','rgba(167,139,250,0.7)','rgba(63,185,80,0.7)']; return cols[c.dataIndex % cols.length]; }, borderRadius:6 }]},
+    options: baseOpts({ scales:{ x: baseScales.x, y:{ ...baseScales.y } }, plugins:{ legend:{display:false} } })
+  });
+
+  new Chart($('chartValPE'), {
+    type:'line',
+    data:{ labels: DATA.years, datasets:[{ label:'P/E', data: DATA.peHist, borderColor: BLUE, backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.25)','rgba(74,158,255,0)'), fill:true, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, borderWidth:2.5 }]},
+    options: baseOpts({ scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'P/E (x)', font:{size:10}, color:'#565f6b'}} },
+      plugins:{ legend:{labels:{usePointStyle:true, boxWidth:8}}, annotation:{ annotations:{
+        avg5: { type:'line', yMin:DATA.pe5med, yMax:DATA.pe5med, borderColor:AMBER, borderDash:[6,4], borderWidth:1.5, label:{content:('5Y median ~'+DATA.pe5med+'x'),display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
+        current:{ type:'point', xValue:(DATA.years[DATA.years.length-1]), yValue:DATA.pe, backgroundColor:RED, radius:6, label:{content:('Now ~'+DATA.pe+'x'),display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
+      } } } })
+  });
+
+  new Chart($('chartBSDt'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Tổng tài sản (tỷ VND)', data: DATA.totalAssets, backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.3)'), borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Vốn CSH (tỷ VND)', data: DATA.equity, type:'line', borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({ scales:{ x: baseScales.x, y:{ ...baseScales.y } } })
+  });
+
+  new Chart($('chartReturns'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'EPS (VND)', data: DATA.eps, backgroundColor:'rgba(63,185,80,0.7)', borderRadius:4, yAxisID:'y' },
+      { label:'ROE (%)', data: DATA.roe, type:'line', borderColor: BLUE, backgroundColor: BLUE, tension:0.3, pointRadius:4, yAxisID:'y1', borderWidth:2 }
+    ]},
+    options: baseOpts({ scales:{ x: baseScales.x, y: { ...baseScales.y, position:'left' }, y1:{ position:'right', grid:{display:false} } } })
+  });
+
+  new Chart($('chartPeerScatter'), {
+    type:'bubble',
+    data:{ datasets:[{ label:DATA.peerLabel, data: DATA.peers.data, backgroundColor:(ctx)=>{ const d=ctx.raw; return d.own ? AMBER : BLUE; }, borderColor:'#0f1419', borderWidth:1.5 }] },
+    options: baseOpts({ scales:{ x:{ ...baseScales.x, title:{display:true, text:'P/B (x)', font:{size:10}, color:'#565f6b'}, min:1, max:6 }, y:{ ...baseScales.y, title:{display:true, text:'CAGR NPAT 3Y (%)', font:{size:10}, color:'#565f6b'}, min:-10, max:25 } },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>{ const d=c.raw; return ` ${d.label}: P/B ${d.x}x, CAGR ${d.y}%`; }}} } }),
+    plugins:[{ id:'peerLabels', afterDatasetsDraw(chart){ const {ctx} = chart; const ds = chart.data.datasets[0].data; const meta = chart.getDatasetMeta(0); ctx.save(); ctx.font = 'bold 11px Inter'; ctx.fillStyle = '#e6edf3'; ctx.textAlign='center'; ds.forEach((d,i)=>{ const pt = meta.data[i]; if(!pt) return; ctx.fillText(d.label, pt.x, pt.y - d.r - 4); }); ctx.restore(); } }]
+  });
+
+  new Chart($('chartTechPrice'), {
+    type:'line',
+    data:{ labels: DATA.techWeeks, datasets:[
+      { label:'Close', data: DATA.techPrice, borderColor: AMBER, backgroundColor:'transparent', tension:0.3, pointRadius:3, borderWidth:2.5 },
+      { label:'MA10', data: DATA.techMA10, borderColor: BLUE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA20', data: DATA.techMA20, borderColor: PURPLE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA50', data: DATA.techMA50, borderColor: '#8b949e', borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 }
+    ]},
+    options: baseOpts({ scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{labels:{usePointStyle:true, boxWidth:8}}, annotation:{ annotations:{ support:{type:'line', yMin:DATA.tech52wLow, yMax:DATA.tech52wLow, borderColor:GREEN, borderDash:[6,4], borderWidth:1, label:{content:('Support ~'+DATA.tech52wLow.toLocaleString()), display:true, position:'start', backgroundColor:'rgba(63,185,80,0.85)', font:{size:9,weight:'bold'}, color:'#0f1419'}}, resist:{type:'line', yMin:DATA.techMA50val, yMax:DATA.techMA50val, borderColor:RED, borderDash:[6,4], borderWidth:1, label:{content:('Resist ~'+DATA.techMA50val.toLocaleString()), display:true, position:'end', backgroundColor:'rgba(248,81,73,0.85)', font:{size:9,weight:'bold'}, color:'#fff'}} } } } })
+  });
+
+  new Chart($('chartTechRSI'), {
+    type:'line',
+    data:{ labels: DATA.techWeeks, datasets:[{ label:'RSI(14)', data: DATA.techRSI, borderColor:(c)=>grad(c,'rgba(245,166,35,0.9)','rgba(245,166,35,0.2)'), fill:true, tension:0.3, pointRadius:3, borderWidth:2 }]},
+    options: baseOpts({ scales:{ x: baseScales.x, y:{ ...baseScales.y, min:0, max:100, title:{display:true, text:'RSI', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false}, annotation:{ annotations:{ ob:{type:'line', yMin:70, yMax:70, borderColor:RED, borderDash:[4,4], borderWidth:1, label:{content:'OB 70', display:true, position:'end', backgroundColor:'rgba(248,81,73,0.7)', font:{size:9}, color:'#fff'}}, os:{type:'line', yMin:30, yMax:30, borderColor:GREEN, borderDash:[4,4], borderWidth:1, label:{content:'OS 30', display:true, position:'end', backgroundColor:'rgba(63,185,80,0.7)', font:{size:9}, color:'#fff'}} } } } })
+  });
+
+  new Chart($('chartProfileDD'), {
+    type:'line',
+    data:{ labels: DATA.ddMonths, datasets:[{ label:'Drawdown %', data: DATA.ddValues, borderColor:(c)=>grad(c,'rgba(248,81,73,0.9)','rgba(248,81,73,0.2)'), fill:true, tension:0.3, pointRadius:2, borderWidth:2 }]},
+    options: baseOpts({ scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'%', font:{size:10}, color:'#565f6b'} } }, plugins:{ legend:{display:false} } })
+  });
+
+  new Chart($('chartProfileDist'), {
+    type:'bar',
+    data:{ labels: DATA.distBins, datasets:[{ label:'Số ngày', data: DATA.distCounts, backgroundColor: (c)=>{ const i=c.dataIndex; return i<2 ? 'rgba(248,81,73,0.7)' : (i===2 ? '#565f6b' : 'rgba(63,185,80,0.7)'); }, borderRadius:4 }]},
+    options: baseOpts({ scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'số ngày', font:{size:10}, color:'#565f6b'} } }, plugins:{ legend:{display:false} } })
+  });
+});
+
+(function(){
+  const nav = document.getElementById('topnav');
+  const links = Array.from(document.querySelectorAll('.topnav-link'));
+  const progressBar = document.getElementById('progressBar');
+  const backTop = document.getElementById('backTop');
+  const sections = links.map(l => document.getElementById(l.dataset.target)).filter(Boolean);
+  function onScroll(){
+    const y = window.scrollY;
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (h>0 ? (y/h*100) : 0) + '%';
+    if (y > 600) backTop.classList.add('visible'); else backTop.classList.remove('visible');
+    const navH = nav.offsetHeight + 10;
+    let active = sections[0];
+    for (const s of sections){ if (s && (s.getBoundingClientRect().top - navH) <= 0) active = s; }
+    links.forEach(l => { l.classList.toggle('active', active && l.dataset.target === active.id); });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  links.forEach(l => { l.addEventListener('click', (e)=>{ const t = document.getElementById(l.dataset.target); if (!t) return; e.preventDefault(); const top = t.getBoundingClientRect().top + window.scrollY - nav.offsetHeight - 8; window.scrollTo({ top, behavior:'smooth' }); }); });
+  backTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+  onScroll();
+})();
+</script>
+</body>
+</html>

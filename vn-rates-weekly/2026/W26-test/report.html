@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VN Rates Weekly · Tháng 6/2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-0:#0a0a14;--card:rgba(28,28,48,0.55);--border:rgba(139,92,246,0.18);--text:#f0f0ff;--text-dim:#8b8ba7;--text-faint:#5a5a72;--purple:#a855f7;--pink:#ec4899;--cyan:#06b6d4;--green:#10d98a;--red:#ff4d6d;--amber:#fbbf24;--grad-main:linear-gradient(135deg,#a855f7,#ec4899)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;line-height:1.7;min-height:100vh}
+.container{max-width:1100px;margin:0 auto;padding:32px 24px 80px}
+.hero{background:var(--grad-main);border-radius:18px;overflow:hidden;margin-bottom:24px}
+.hero-inner{background:rgba(10,10,20,0.82);padding:36px 40px;backdrop-filter:blur(10px)}
+.hero h1{font-size:30px;font-weight:800;background:var(--grad-main);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.hero .sub{color:var(--text-dim);font-size:14px}
+.hero .meta{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+.hero .badge{background:rgba(168,85,247,0.2);color:var(--purple);border:1px solid rgba(168,85,247,0.3);padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600}
+.intro{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px;font-size:15px;line-height:1.85;color:var(--text);text-align:justify}
+.nav-tabs{position:sticky;top:0;z-index:50;display:flex;gap:6px;background:rgba(10,10,20,0.92);backdrop-filter:blur(12px);padding:12px 0;border-radius:12px;margin-bottom:24px;border:1px solid var(--border);flex-wrap:wrap}
+.nav-tab{background:transparent;border:1px solid transparent;color:var(--text-dim);padding:9px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.nav-tab:hover{color:var(--text);border-color:var(--border)}
+.nav-tab.active{background:var(--grad-main);color:#fff}
+.group-section{display:none;animation:fadeIn 0.3s}
+.group-section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.group-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.tag{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px}
+.g1{background:var(--purple)}.g2{background:var(--pink)}.g3{background:var(--cyan)}.g4{background:var(--amber)}.g5{background:var(--grad-main)}
+.group-header h2{font-size:20px;font-weight:700}
+.group-header .src{font-size:11px;color:var(--text-faint);margin-left:auto}
+.prose-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:18px;border-left:3px solid var(--purple)}
+.prose-card p{font-size:14.5px;line-height:1.85;color:var(--text);margin-bottom:14px;text-align:justify}
+.prose-card p strong{color:var(--pink)}
+.prose-card h4.subsection{font-size:15px;font-weight:700;margin:20px 0 8px;color:var(--cyan)}
+.prose-card ul{margin:0 0 14px 20px}
+.prose-card li{font-size:14px;margin-bottom:6px;line-height:1.7}
+.prose-card blockquote{background:rgba(168,85,247,0.06);border-left:3px solid var(--purple);padding:12px 16px;margin:14px 0;font-size:13.5px;color:var(--text-dim);border-radius:0 8px 8px 0;font-style:italic}
+.chart-card,.table-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:18px}
+.chart-card h3,.table-card h3{font-size:15px;font-weight:700;margin-bottom:4px}
+.chart-sub{font-size:12px;color:var(--text-faint);margin-bottom:14px}
+.chart-canvas-wrap{position:relative;height:240px}
+.data-table,.md-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th,.data-table td,.md-table th,.md-table td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--border)}
+.data-table th,.md-table th{color:var(--text-faint);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.04em}
+.data-table td:first-child,.data-table th:first-child,.md-table td:first-child,.md-table th:first-child{text-align:left;color:var(--text-dim)}
+.num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.data-table tr:hover td,.md-table tr:hover td{background:rgba(168,85,247,0.04)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.disclaimer{margin-top:32px;padding:16px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:12px;font-size:11px;color:var(--text-faint);line-height:1.7}
+@media(max-width:768px){.grid-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero"><div class="hero-inner">
+<h1>Thị trường Lãi suất & Tiền tệ Việt Nam</h1>
+<div class="sub">Tháng 6/2026 · Kỳ báo cáo: 4 tuần (1-26/6/2026)</div>
+<div class="meta">
+<span class="badge">📊 3 nguồn: SBV · VBMA · VNBA</span>
+<span class="badge">📅 Cutoff: 26/06/2026</span>
+<span class="badge">🔍 45/45 số liệu verified</span>
+</div>
+</div></div>
+
+<div class="intro"><p>Thị trường Lãi suất & Tiền tệ Việt Nam — Tháng 6/2026</p></div>
+
+<nav class="nav-tabs">
+  <button class="nav-tab active" data-target="lnh">💰 Liên ngân hàng</button>
+  <button class="nav-tab" data-target="tpcp">📜 Trái phiếu CP</button>
+  <button class="nav-tab" data-target="tpdn">🏢 Trái phiếu DN</button>
+  <button class="nav-tab" data-target="fx">💱 Ngoại hối</button>
+  <button class="nav-tab" data-target="global">🌍 Toàn cầu</button>
+  <button class="nav-tab" data-target="vn">🇻🇳 VN</button>
+</nav>
+
+<section class="group-section active" id="lnh">
+  <div class="group-header"><span class="tag g1">01</span><h2>Liên ngân hàng & OMO</h2><span class="src">SBV · VBMA · VNBA</span></div>
+  <div class="prose-card"><p>#### Xu hướng lãi suất liên ngân hàng bốn tuần</p>
+<p>Lãi suất liên ngân hàng (LNH) VND kỳ hạn qua đêm (ON) biến động theo pha giảm rồi phục hồi nhẹ trong tháng 6. Cụ thể, mức bình quân tuần giảm từ <strong>6,81%</strong> (đầu tháng) xuống <strong>5,58%</strong> (giữa tháng) và chạm đáy <strong>3,90%</strong> (tuần thứ ba), trước khi nhích lên <strong>4,26%</strong> (cuối tháng). Biến động toàn kỳ ghi nhận mức <strong>-255 đcb</strong>, phản ánh dư địa thanh khoản hệ thống tương đối dồi dào.</p>
+<p>Sự phân kỳ giữa các kỳ hạn là đặc điểm nổi bật. Trong khi ON và kỳ hạn 1 tháng (1M) có xu hướng giảm hoặc đi ngang, kỳ hạn 1 tuần (1W) dao động mạnh: từ <strong>6,59%</strong> đầu tháng giảm xuống <strong>5,14%</strong> giữa tháng, rồi tăng vọt lên <strong>7,34%</strong> cuối tháng — mức cao nhất trong bốn tuần. Tương tự, kỳ hạn 2 tuần và 1 tháng trồi sụt quanh dải <strong>7,0%–7,9%</strong>. Cấu trúc này cho thấy nhu cầu vốn kỳ hạn ngắn (qua đêm) được đáp ứng đầy đủ, nhưng áp lực tại đầu kỳ hạn 1 tuần đôi lúc căng thẳng, đặc biệt vào những thời điểm thanh khoản cục bộ về cuối ngày giao dịch.</p>
+<p><table></p>
+<p><tr><th>Kỳ hạn</th><th>Đầu tháng (%)</th><th>Giữa tháng (%)</th><th>Tuần 3 (%)</th><th>Cuối tháng (%)</th><th>Biến động kỳ (đcb)</th></tr></p>
+<p><tr><td>Qua đêm (ON)</td><td><b>6,81</b></td><td><b>5,58</b></td><td><b>3,90</b></td><td><b>4,26</b></td><td>-255</td></tr></p>
+<p><tr><td>1 tuần (1W)</td><td>6,59</td><td>5,68</td><td>5,14</td><td><b>7,34</b></td><td>+75</td></tr></p>
+<p><tr><td>1 tháng (1M)</td><td>7,01</td><td>7,37</td><td>7,93</td><td>7,32</td><td>+31</td></tr></p>
+<p></table></p>
+<p>Theo dữ liệu chi tiết của Hiệp hội Thị trường Trái phiếu Việt Nam (VBMA), mức đóng cửa ngày 26/6 của LNH ON ở mức <strong>2,91%</strong>, thấp hơn đáng kể so với bình quân năm ngày <strong>4,25%</strong>. Biến động tuần (WoW) ghi nhận mức <strong>-150 đcb</strong>, và so với tháng trước giảm tới <strong>-477 đcb</strong>. Trong khi đó, lãi suất kỳ hạn 1 tuần đóng ở <strong>7,35%</strong> (+205 đcb WoW), kỳ hạn 6 tháng tăng <strong>103 đcb</strong> lên <strong>8,60%</strong> và kỳ hạn 9 tháng giảm <strong>17 đcb</strong> xuống <strong>8,06%</strong>.</p>
+<p>Lãi suất liên ngân hàng USD duy trì ổn định: kỳ hạn qua đêm giữ nguyên ở <strong>3,63%</strong> suốt tháng, kỳ hạn 1 tuần dao động hẹp quanh <strong>3,65%–3,70%</strong>. Chênh lệch lãi suất USD–VND ở các kỳ hạn ON và 1W bình quân nới rộng khoảng <strong>264 đcb</strong> trong tuần cuối tháng, sau khi thu hẹp <strong>61–94 đcb</strong> ở các tuần đầu.</p>
+<p>#### Nghiệp vụ thị trường mở (OMO)</p>
+<p>Hoạt động OMO của NHNN cho thấy sự dịch chuyển rõ rệt giữa hút ròng và bơm ròng trong tháng 6. Tuần đầu tháng, NHNN bơm <strong>62.658 tỷ đồng</strong> qua các kỳ hạn 7/35/56 ngày với lãi suất <strong>4,5%/năm</strong>, nhưng với hơn 89 nghìn tỷ đồng đáo hạn được rút khỏi hệ thống, NHNN thực hiện hút ròng khoảng <strong>26 nghìn tỷ đồng</strong>, đưa lượng OMO lưu hành xuống mức <strong>306 nghìn tỷ đồng</strong>.</p>
+<p>Tuần giữa tháng và tuần thứ ba, NHNN tiếp tục hút ròng lần lượt khoảng <strong>26 nghìn tỷ</strong> và <strong>55 nghìn tỷ đồng</strong> (đáo hạn 69 và 82 nghìn tỷ), lượng OMO lưu hành giảm dần về mức <strong>280 nghìn tỷ</strong> rồi <strong>226 nghìn tỷ đồng</strong>.</p>
+<p>Đến tuần cuối tháng, NHNN bơm <strong>30.961 tỷ đồng</strong> qua OMO kỳ hạn 35 và 56 ngày với lãi suất <strong>4,5%/năm</strong>, trong khi <strong>27 nghìn tỷ đồng</strong> đáo hạn được rút đi. Kết quả, NHNN bơm ròng khoảng <strong>3,9 nghìn tỷ đồng</strong> — lần đầu tiên trong tháng chuyển sang bơm ròng — đưa lượng OMO lưu hành đạt gần <strong>230 nghìn tỷ đồng</strong>.</p>
+<blockquote>Insight: Việc NHNN chuyển sang bơm ròng ở tuần cuối tháng, kết hợp với mức lãi suất OMO ổn định ở 4,5%, cho thấy trần chi phí vốn ngắn hạn của hệ thống được neo vững chắc, hỗ trợ mặt bằng lãi suất thị trường.</blockquote>
+<p>#### Khối lượng giao dịch và cấu trúc kỳ hạn</p>
+<p>Tổng giá trị giao dịch liên ngân hàng VND dao động quanh <strong>3,45–4,4 triệu tỷ đồng/tuần</strong>. Cụ thể, khối lượng giảm <strong>27,1%</strong> ở tuần đầu (xuống <strong>3,45 triệu tỷ</strong>), phục hồi tăng <strong>19,6%</strong> ở tuần giữa (lên <strong>4,12 triệu tỷ</strong>), nhích <strong>0,5%</strong> ở tuần thứ ba (<strong>4,15 triệu tỷ</strong>) và tăng <strong>6,2%</strong> ở tuần cuối (lên <strong>4,4 triệu tỷ</strong>). Tuần cuối, giao dịch ON đạt khoảng <strong>3,97 triệu tỷ đồng</strong> và 1 tuần đạt <strong>212 nghìn tỷ</strong>, hai kỳ hạn này chiếm <strong>95%</strong> tổng giao dịch.</p>
+<p>Doanh số giao dịch USD quy đổi VND biến động: tăng đầu tháng (đạt <strong>834.913 tỷ</strong>, bình quân <strong>166.983 tỷ/ngày</strong>), giảm giữa tháng (<strong>806.640 tỷ</strong>) và chạm đáy <strong>606.269 tỷ</strong> ở tuần thứ ba (bình quân <strong>121.254 tỷ/ngày</strong>, giảm <strong>40.074 tỷ/ngày</strong>), trước khi phục hồi lên <strong>808.814 tỷ</strong> ở tuần cuối. Giao dịch USD tập trung mạnh vào kỳ hạn qua đêm (tỷ trọng <strong>72%–93%</strong> tùy tuần).</p>
+<p><table></p>
+<p><tr><th>Chỉ tiêu</th><th>Đầu tháng</th><th>Giữa tháng</th><th>Tuần 3</th><th>Cuối tháng</th></tr></p>
+<p><tr><td>OMO (bơm/hút ròng)</td><td>Hút ròng ~26 nghìn tỷ</td><td>Hút ròng ~26 nghìn tỷ</td><td>Hút ròng ~55 nghìn tỷ</td><td><b>Bơm ròng ~3,9 nghìn tỷ</b></td></tr></p>
+<p><tr><td>OMO lưu hành</td><td>~306 nghìn tỷ</td><td>~280 nghìn tỷ</td><td>~226 nghìn tỷ</td><td>~230 nghìn tỷ</td></tr></p>
+<p><tr><td>GT giao dịch VND</td><td>3,45 triệu tỷ</td><td>4,12 triệu tỷ</td><td>4,15 triệu tỷ</td><td><b>4,4 triệu tỷ</b></td></tr></p>
+<p><tr><td>ON+1W chiếm</td><td>98,2%</td><td>97,4%</td><td>97,5%</td><td>95%</td></tr></p>
+<p></table></p>
+<p>#### Yếu tố tác động</p>
+<p>Biến động LNH trong tháng chịu ảnh hưởng của các yếu tố:</p>
+<p><ul></p>
+<p><li><b>T thanh khoản hệ thống</b>: NHNN chuyển từ hút ròng sang bơm ròng ở tuần cuối, giảm áp lực vốn ngắn hạn;</li></p>
+<p><li><b>Nhu cầu vốn kỳ hạn</b>: Tỷ trọng giao dịch 1 tuần tăng từ 1% lên 5% ở tuần cuối, phản ánh nhu cầu vốn kỳ hạn dài hơn khi các ngân hàng chuẩn bị nguồn lực cho cuối quý;</li></p>
+<p><li><b>Chính sách tỷ giá</b>: Sự ổn định của USD/VND quanh 26.300 giúp giảm áp lực can thiệp, NHNN có dư địa duy trì thanh khoản VND;</li></p>
+<p><li><b>Kỳ hạn lãi suất OMO</b>: Việc kéo dài kỳ hạn OMO lên 35 và 56 ngày cung cấp vốn ổn định hơn cho hệ thống so với kỳ hạn 7 ngày ngắn hạn.</li></p>
+<p></ul></p></div>
+  
+      <div class="chart-card">
+        <h3>📉 LNH VND — Bật/tắt kỳ hạn</h3>
+        <div class="chart-sub">ON · 1W · 2W · 1M · 3M · 6M · 9M</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px" id="lnhToggles"><button class="tg active" data-t="ON" style="background:#a855f7">ON</button><button class="tg active" data-t="1W" style="background:#ec4899">1W</button><button class="tg active" data-t="2W" style="background:#fbbf24">2W</button><button class="tg active" data-t="1M" style="background:#06b6d4">1M</button><button class="tg active" data-t="3M" style="background:#10d98a">3M</button><button class="tg active" data-t="6M" style="background:#ff4d6d">6M</button><button class="tg active" data-t="9M" style="background:#8b8ba7">9M</button></div>
+        <div class="chart-canvas-wrap" style="height:320px"><canvas id="chartLNH"></canvas></div>
+      </div>
+      <script class="chart-data" id="chartLNH_data" type="application/json">{"labels": ["05/06", "12/06", "19/06", "26/06"], "datasets": [{"label": "VND ON", "data": [6.81, 5.58, 3.9, 4.26], "color": "#a855f7", "fill": true}, {"label": "VND 1W", "data": [6.59, 5.68, 5.14, 7.34], "color": "#ec4899", "fill": false}, {"label": "VND 2W", "data": [6.73, 6.2, 7.03, 7.76], "color": "#fbbf24", "fill": false}, {"label": "VND 1M", "data": [7.01, 7.37, 7.93, 7.32], "color": "#06b6d4", "fill": false}, {"label": "VND 3M", "data": [7.61, 7.62, 7.89, 7.94], "color": "#10d98a", "fill": false}, {"label": "VND 6M", "data": [8.13, 8.39, 7.7, 8.12], "color": "#ff4d6d", "fill": false}, {"label": "VND 9M", "data": [6.65, 8.23, null, 8.06], "color": "#8b8ba7", "fill": false}]}</script>
+      <style>.tg{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;border:none;color:#fff}.tg.off{opacity:.25}</style>
+    
+</section>
+
+<section class="group-section" id="tpcp">
+  <div class="group-header"><span class="tag g2">02</span><h2>Trái phiếu Chính phủ</h2><span class="src">VBMA</span></div>
+  <div class="prose-card"><p>#### Diễn biến đường cong lợi suất bốn tuần</p>
+<p>Đường cong lợi suất TPCP dịch chuyển theo hướng dịch lên (bear steepening nhẹ) trong tháng 6, với biên độ tăng mạnh hơn ở đoạn giữa kỳ hạn (5–10 năm) so với hai đầu. Lợi suất 10 năm tăng đều bốn tuần liên tiếp: từ <strong>4,33%</strong> (đầu tháng) lên <strong>4,34%</strong>, <strong>4,37%</strong> và đóng ở <strong>4,40%</strong> (cuối tháng), biến động kỳ <strong>+7 đcb</strong>.</p>
+<p>Tương tự, lợi suất 5 năm tăng từ <strong>4,13%</strong> lên <strong>4,19%</strong> (+6 đcb), và 2 năm tăng từ <strong>3,42%</strong> lên <strong>3,48%</strong> (+6 đcb). Đường cong cuối tháng có hình thái bình thường (normal curve), không xuất hiện inversion: kỳ hạn 1 năm ở <strong>3,38%</strong>, tăng dần đến 30 năm ở <strong>4,69%</strong>. Độ dốc (slope) 10 năm – 2 năm ở mức <strong>92 đcb</strong>, mở rộng nhẹ từ <strong>91 đcb</strong> đầu kỳ.</p>
+<p><table></p>
+<p><tr><th>Kỳ hạn</th><th>Đầu tháng (%)</th><th>Giữa tháng (%)</th><th>Tuần 3 (%)</th><th>Cuối tháng (%)</th><th>Biến động (đcb)</th></tr></p>
+<p><tr><td>2 năm</td><td>3,42</td><td>3,45</td><td>3,46</td><td>3,48</td><td>+6</td></tr></p>
+<p><tr><td>5 năm</td><td>4,13</td><td>4,14</td><td>4,17</td><td>4,19</td><td>+6</td></tr></p>
+<p><tr><td>10 năm</td><td><b>4,33</b></td><td>4,34</td><td>4,37</td><td><b>4,40</b></td><td><b>+7</b></td></tr></p>
+<p></table></p>
+<p>#### Cấu trúc đường cong cuối tháng và biến động tuần</p>
+<p>Bảng biến động lợi suất theo kỳ hạn tại phòng giao dịch VBMA cho thấy dịch chuyển đồng breadth:</p>
+<p><table></p>
+<p><tr><th>Kỳ hạn</th><th>1N</th><th>2N</th><th>3N</th><th>5N</th><th>7N</th><th>10N</th><th>15N</th><th>20N</th><th>30N</th></tr></p>
+<p><tr><td>Cuối tháng (%)</td><td>3,38</td><td>3,48</td><td>3,56</td><td>4,19</td><td>4,25</td><td><b>4,40</b></td><td>4,57</td><td>4,62</td><td>4,69</td></tr></p>
+<p><tr><td>WoW (đcb)</td><td>+1,14</td><td>+1,36</td><td>+1,06</td><td>+2,00</td><td><b>+3,18</b></td><td><b>+3,06</b></td><td>+1,92</td><td>+1,48</td><td>+1,04</td></tr></p>
+<p><tr><td>YoY (đcb)</td><td>+120,6</td><td>+126,2</td><td>+127,9</td><td>+152,9</td><td>+125,3</td><td>+119,3</td><td>+125,1</td><td>+123,9</td><td>+121,4</td></tr></p>
+<p></table></p>
+<p>Điểm đáng chú ý là biên độ tăng tuần tập trung ở đoạn 7–10 năm (+3,18 và +3,06 đcb), trong khi hai đầu (dưới 3 năm và trên 20 năm) chỉ tăng khoảng 1 đcb. So với cùng kỳ năm trước, toàn bộ đường cong dịch lên trên <strong>119–153 đcb</strong>, phản ánh mặt bằng lợi suất năm 2026 cao hơn đáng kể so với 2025 — khi lợi suất 10 năm cùng kỳ năm trước chỉ ở mức <strong>3,20%</strong>.</p>
+<p>#### Đấu thầu sơ cấp</p>
+<p>Phiên đấu thầu ngày 24/6 (tuần cuối tháng), Kho bạc Nhà nước (KBNN) gọi thầu tổng cộng <strong>17.000 tỷ đồng</strong> ở 5 kỳ hạn. Kết quả cho thấy sức cầu phân hóa mạnh giữa các kỳ hạn:</p>
+<p><ul></p>
+<p><li><b>3 năm</b>: tỷ lệ trúng thầu <strong>25%</strong> (trúng <strong>125/500 tỷ</strong>), lãi suất trúng thầu (LSTT) <strong>3,52%</strong>, không đổi so với phiên trước;</li></p>
+<p><li><b>5 năm</b>: tỷ lệ trúng thầu <strong>26%</strong> (trúng <strong>1.550/6.000 tỷ</strong>), LSTT <strong>4,18%</strong>, tăng <strong>3 đcb</strong>;</li></p>
+<p><li><b>10 năm</b>: tỷ lệ trúng thầu <strong>27%</strong> (trúng <strong>2.470/9.000 tỷ</strong>), LSTT <strong>4,35%</strong>, không đổi;</li></p>
+<p><li><b>15 năm</b>: tỷ lệ trúng thầu <strong>0%</strong> (đặt thầu chỉ 100 tỷ), không có giao dịch;</li></p>
+<p><li><b>30 năm</b>: tỷ lệ trúng thầu <strong>48%</strong> (trúng <strong>240/500 tỷ</strong>), LSTT <strong>4,58%</strong>, tăng <strong>1 đcb</strong>.</li></p>
+<p></ul></p>
+<p>Xu hướng LSTT kỳ hạn 10 năm bốn phiên liên tiếp: <strong>4,27%</strong> (đầu tháng, +2 đcb) → <strong>4,30%</strong> (+3 đcb) → <strong>4,35%</strong> (+5 đcb) → <strong>4,35%</strong> (0 đcb). Tốc độ tăng LSTT chậm lại ở phiên cuối, nhưng mức <strong>4,35%</strong> vẫn là cao nhất trong tháng. Tỷ lệ trúng thầu kỳ hạn 10 năm phục hồi mạnh từ <strong>3%</strong> (đầu tháng) lên <strong>27%</strong> (cuối tháng), cho thấy sức cầu tại kỳ hạn trọng điểm cải thiện khi chênh lệch giữa LSTT và lợi suất thứ cấp thu hẹp.</p>
+<p>Tính từ đầu năm 2026 đến 24/6, KBNN đã huy động gần <strong>182.561 tỷ đồng</strong> TPCP các kỳ hạn từ 5 đến 30 năm, đạt khoảng <strong>36,5%</strong> kế hoạch phát hành <strong>500.000 tỷ đồng</strong> cả năm. Trái phiếu 10 năm được phát hành nhiều nhất với <strong>151.941 tỷ đồng</strong>, tiếp theo là 5 năm <strong>27.255 tỷ</strong> và 15 năm <strong>2.525 tỷ</strong>, ba kỳ hạn này chiếm khoảng <strong>99,5%</strong> tổng giá trị. Tuần tới, KBNN sẽ gọi thầu <strong>16.000 tỷ đồng</strong> ở 5 kỳ hạn (3, 5, 10, 15, 30 năm).</p>
+<blockquote>Insight: Việc tỷ lệ trúng thầu 10 năm phục hồi lên 27% cùng LSTT giữ ở 4,35% cho thấy quan hệ cung–cầu tại kỳ hạn then chốt đang cân bằng trở lại sau giai đoạn cầu yếu đầu tháng.</blockquote>
+<p>#### Thị trường thứ cấp</p>
+<p>Giá trị giao dịch (GTGD) thị trường thứ cấp tăng dần trong tháng: từ <strong>81.564 tỷ</strong> (đầu tháng) lên <strong>81.995 tỷ</strong> (giữa tháng), <strong>89.103 tỷ</strong> (tuần 3) và <strong>99.404 tỷ đồng</strong> (cuối tháng). GTGD outright bình quân ngày đạt <strong>15.288 tỷ</strong> (+13,8% WoW), GTGD repo bình quân ngày <strong>4.593 tỷ</strong> (+4,8% WoW).</p>
+<p>Dòng tiền ngoại duy trì xu hướng bán ròng: tuần cuối bán ròng khoảng <strong>171 tỷ đồng</strong>, đưa lũy kế bán ròng từ đầu năm lên khoảng <strong>6.153 tỷ đồng</strong>. Trước đó, khối ngoại đã đảo sang mua ròng <strong>434 tỷ</strong> (đầu tháng) và <strong>711 tỷ</strong> (giữa tháng), trước khi quay lại bán ròng <strong>606 tỷ</strong> (tuần 3).</p>
+<p>Top mã trái phiếu có GTGD outright lớn nhất tuần cuối: TD1747410 (kỳ hạn 30 năm, <strong>8.994 tỷ</strong>), TD1747409 (30 năm, <strong>5.368 tỷ</strong>), TD2434026 (10 năm, <strong>5.325 tỷ</strong>), TD2636023 (10 năm mới phát hành, <strong>4.723 tỷ</strong>). Nhóm trái phiếu dài hạn (15–30 năm) chiếm tỷ trọng lớn trong giao dịch, cho thấy nhu cầu cấu hình danh mục dài hạn vẫn được duy trì.</p>
+<p>#### Yếu tố tác động lợi suất</p>
+<p><ul></p>
+<p><li><b>Lãi suất liên ngân hàng</b>: ON ở mức thấp 2,91–4,26% tạo nền chi phí vốn thấp cho đầu tư trái phiếu, hỗ trợ sức cầu thứ cấp;</li></p>
+<p><li><b>Cung TPCP</b>: KBNN gọi thầu đều đặn 17.000 tỷ/tuần, nhưng tỷ lệ trúng thầu thấp đầu tháng tạo áp lực lên lợi suất sơ cấp;</li></p>
+<p><li><b>Lợi suất toàn cầu</b>: Lợi suất TPCP Mỹ 10 năm ở mức 4,37%, chênh lệch với VN (~4,52% theo VBMA) khoảng 15 đcb, hẹp hơn so với trung bình lịch sử;</li></p>
+<p><li><b>Dòng tiền ngoại</b>: Bán ròng 171 tỷ ở tuần cuối, nhưng quy mô nhỏ so với tổng giao dịch 99.404 tỷ, ít tác động đến mặt bằng lợi suất.</li></p>
+<p></ul></p></div>
+  
+      <div class="chart-card">
+        <h3>📈 Lợi suất TPCP — 12 tuần (HNX trực tiếp)</h3>
+        <div class="chart-sub">2 năm · 5 năm · 10 năm — 2026-04-03 → 2026-06-26</div>
+        <div class="chart-canvas-wrap" style="height:300px"><canvas id="chartYields"></canvas></div>
+      </div>
+      <script class="chart-data" id="chartYields_data" type="application/json">{"labels": ["04-03", "04-10", "04-17", "04-24", "05-08", "05-15", "05-22", "05-29", "06-05", "06-12", "06-19", "06-26"], "datasets": [{"label": "2 năm (HNX)", "data": [3.6086, 3.6033, 3.659, 3.6568, 3.7157, 3.7149, 3.7558, 3.7676, 3.7967, 3.8222, 3.8305, 3.8608], "color": "#10d98a", "fill": false}, {"label": "5 năm (HNX)", "data": [3.8554, 3.8061, 3.9192, 3.9195, 3.9647, 3.9745, 3.9729, 4.005, 4.0702, 4.1076, 4.1095, 4.1099], "color": "#fbbf24", "fill": false}, {"label": "10 năm (HNX)", "data": [4.1356, 4.0793, 4.218, 4.2058, 4.2422, 4.2484, 4.2303, 4.2888, 4.3367, 4.3722, 4.4011, 4.4065], "color": "#ff4d6d", "fill": false}]}</script>
+    
+        <div class="chart-card"><h3>🏖️ Đường cong LSTP — HNX</h3><div class="chart-sub">8 kỳ hạn · Đầu vs Cuối tháng</div><div class="chart-canvas-wrap" style="height:300px"><canvas id="chartYieldCurve"></canvas></div></div><script class="chart-data" id="chartYieldCurve_data" type="application/json">{"labels": ["1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "15Y", "20Y"], "datasets": [{"label": "Đầu tháng", "data": [3.67693219719401, 3.79674793199405, 3.90086983662849, 4.07017064165936, 4.19862186620034, 4.33666668879762, 4.47554705429614, 4.55196290493205], "color": "#8b8ba7", "fill": false, "dash": true}, {"label": "Cuối tháng", "data": [3.76473259410734, 3.86083835022686, 3.95028711959085, 4.10992763676144, 4.2452355383883, 4.40645758732015, 4.57943693661762, 4.65714679609754], "color": "#a855f7", "fill": true}]}</script>
+      <div class="chart-card"><h3>📊 Biến động theo kỳ hạn</h3><div class="chart-sub">Spread (bp)</div><div class="chart-canvas-wrap"><canvas id="chartSpread"></canvas></div></div><script class="chart-data" id="chartSpread_data" type="application/json">{"labels": ["1Y", "2Y", "3Y", "5Y", "7Y", "10Y", "15Y", "20Y"], "datasets": [{"label": "bp", "data": [8.8, 6.4, 4.9, 4.0, 4.7, 7.0, 10.4, 10.5], "color": "#ec4899", "fill": true, "type": "bar"}]}</script>
+      <div class="chart-card"><h3>📏 Độ dốc (10Y−2Y)</h3><div class="chart-sub">12 tuần</div><div class="chart-canvas-wrap" style="height:240px"><canvas id="chartSlope"></canvas></div></div><script class="chart-data" id="chartSlope_data" type="application/json">{"labels": ["03/04", "10/04", "17/04", "24/04", "08/05", "15/05", "22/05", "29/05", "05/06", "12/06", "19/06", "26/06"], "datasets": [{"label": "Độ dốc 10Y−2Y (bp)", "data": [52.7, 47.6, 55.9, 54.9, 52.7, 53.4, 47.4, 52.1, 54.0, 55.0, 57.1, 54.6], "color": "#a855f7", "fill": false}]}</script>
+      <div class="chart-card"><h3>🌀 Độ lồi (2×5Y−2Y−10Y)</h3><div class="chart-sub">12 tuần</div><div class="chart-canvas-wrap" style="height:240px"><canvas id="chartConvex"></canvas></div></div><script class="chart-data" id="chartConvex_data" type="application/json">{"labels": ["03/04", "10/04", "17/04", "24/04", "08/05", "15/05", "22/05", "29/05", "05/06", "12/06", "19/06", "26/06"], "datasets": [{"label": "Độ lồi (bp)", "data": [-3.3, -7.0, -3.9, -2.4, -2.9, -1.4, -4.0, -4.6, 0.7, 2.1, -1.3, -4.7], "color": "#06b6d4", "fill": true}]}</script>
+
+      
+</section>
+
+<section class="group-section" id="tpdn">
+  <div class="group-header"><span class="tag g3">03</span><h2>Trái phiếu Doanh nghiệp</h2><span class="src">VBMA</span></div>
+  <div class="prose-card"><p>#### Phát hành trong tháng 6</p>
+<p>Hoạt động phát hành trái phiếu doanh nghiệp (TPDN) tăng tốc mạnh trong tháng 6. Số lượng đợt phát hành ghi nhận tăng dần: <strong>2 đợt</strong> (đầu tháng, <strong>5.907 tỷ đồng</strong>) → <strong>11 đợt</strong> (giữa tháng, <strong>18.007 tỷ</strong>) → <strong>22 đợt</strong> (tuần 3, <strong>22.317 tỷ</strong>) → <strong>37 đợt</strong> (cả tháng, <strong>36.486 tỷ đồng</strong>). Lũy kế từ đầu năm 2026, tổng giá trị phát hành TPDN đạt <strong>180.525 tỷ đồng</strong>, bao gồm:</p>
+<p><ul></p>
+<p><li><b>Phát hành riêng lẻ</b>: 118 đợt, trị giá <strong>155.693 tỷ đồng</strong> (chiếm <strong>86,24%</strong>);</li></p>
+<p><li><b>Phát hành công chúng</b>: 22 đợt, trị giá <strong>24.833 tỷ đồng</strong> (chiếm <strong>13,76%</strong>);</li></p>
+<p><li><b>Phát hành quốc tế</b>: 1 đợt.</li></p>
+<p></ul></p>
+<p>Cơ cấu ngành nghề (lũy kế năm 2026) cho thấy sự phân hóa rõ rệt: Ngân hàng chiếm <strong>47,8%</strong>, Bất động sản <strong>38,6%</strong>, Tiêu dùng <strong>7,6%</strong>, các ngành khác (Xây dựng, Nông nghiệp – thủy sản, Tài chính) chiếm phần còn lại. Trong tháng 6, các đợt phát hành nổi bật bao gồm Vinpearl (Tiêu dùng, <strong>4.907 tỷ</strong>, kỳ hạn 5 năm, LS tối thiểu <strong>12,0%/năm</strong>), BIDV (Ngân hàng, <strong>1.000 tỷ</strong>, 8 năm, LSTC+2,15%), Techcombank (3 đợt riêng lẻ tổng <strong>6.000 tỷ</strong>, LS <strong>8,4–8,5%</strong>), Vinhomes (4 đợt BĐS tổng <strong>6.000 tỷ</strong>, LS tối thiểu <strong>12,5%</strong>), và OCB (2 đợt tổng <strong>3.000 tỷ</strong>, LS <strong>8,0–8,7%</strong>).</p>
+<p>#### Mua lại trước hạn và đáo hạn</p>
+<p>Hoạt động mua lại TPDN trước hạn tăng mạnh trong tháng. Doanh nghiệp đã mua lại <strong>47.098 tỷ đồng</strong> trái phiếu trong tháng 6, đưa lũy kế từ đầu năm lên <strong>129.412 tỷ đồng</strong> — tăng <strong>25%</strong> so với cùng kỳ năm 2025. Ngân hàng là nhóm dẫn đầu, chiếm khoảng <strong>86,7%</strong> tổng giá trị mua lại (tương ứng khoảng <strong>112.208 tỷ đồng</strong>), phản ánh nhu cầu quản trị bảng cân đối và tái cấu trúc nợ của nhóm này.</p>
+<p>Phần giá trị trái phiếu còn lại sẽ đáo hạn trong năm 2026 đạt <strong>119.009 tỷ đồng</strong>, trong đó:</p>
+<p><ul></p>
+<p><li><b>Bất động sản</b>: <strong>65.670 tỷ đồng</strong> (chiếm <strong>55,2%</strong>);</li></p>
+<p><li><b>Ngân hàng</b>: <strong>21.755 tỷ đồng</strong> (chiếm <strong>18,3%</strong>);</li></p>
+<p><li><b>Các ngành khác</b>: phần còn lại.</li></p>
+<p></ul></p>
+<p>Cơ cấu đáo hạn tập trung vào nhóm Bất động sản đặt ra yêu cầu quản trị dòng tiền đối với các doanh nghiệp phát hành trong nửa cuối năm.</p>
+<p>#### Giao dịch thứ cấp và kế hoạch phát hành</p>
+<p>GTGD TPDN riêng lẻ bình quân ngày đạt <strong>8.640 tỷ đồng</strong> ở tuần cuối tháng, tăng <strong>67,7%</strong> so với tuần trước — mức tăng mạnh nhất trong tháng. Các tổ chức phát hành có trái phiếu được giao dịch nhiều nhất: CTCP Đầu tư Xây dựng Thái Sơn (<strong>3.248 tỷ</strong>), CTCP Hưng Thịnh Land (<strong>2.980 tỷ</strong>) và CTCP Đầu tư và phát triển NEWCO (<strong>2.590 tỷ</strong>). Tính từ đầu năm, tổng GTGD trái phiếu phát hành riêng lẻ đạt khoảng <strong>711 nghìn tỷ đồng</strong>.</p>
+<p>Về kế hoạch phát hành, HĐQT Vietbank đã thông qua phương án phát hành trái phiếu tăng vốn cấp 2 riêng lẻ, tổng giá trị tối đa <strong>2.000 tỷ đồng</strong>, kỳ hạn 7 năm, lãi suất thả nổi, không chuyển đổi, không kèm chứng quyền, không tài sản đảm bảo, mệnh giá dự kiến 100 triệu đồng/trái phiếu. HĐQT Vinhomes (VHM) thông qua phát hành trái phiếu riêng lẻ tổng giá trị tối đa <strong>3.000 tỷ đồng</strong>, kỳ hạn 36 tháng, lãi suất kết hợp cố định và thả nổi, có tài sản đảm bảo, mệnh giá 100 triệu đồng/trái phiếu.</p>
+<p>#### Đáo hạn và rủi ro tín dụng TPDN</p>
+<p>Trong tuần tiếp theo (29/6–5/7), CTCP Nông nghiệp BAF Việt Nam có trái phiếu đáo hạn <strong>300 tỷ đồng</strong> (mã BAFH2225002, phát hành 04/07/2023). Tổng giá trị trái phiếu đáo hạn phần còn lại của năm 2026 ở mức <strong>119.009 tỷ đồng</strong>, trong đó nhóm Bất động sản chiếm tỷ trọng áp đảo (<strong>55,2%</strong>) — phản ánh cấu trúc nguồn vốn của các doanh nghiệp BĐS phụ thuộc đáng kể vào kênh trái phiếu trung dài hạn.</p>
+<p>Tuần cuối tháng cũng ghi nhận một số công bố thông tin bất thường về TPDN, bao gồm các trường hợp gia hạn trái phiếu thêm 1 năm và chậm thanh toán <strong>3.000 tỷ đồng</strong> gốc. Các sự kiện này cho thấy áp lực tái cơ cấu nợ vẫn hiện hữu ở một bộ phận doanh nghiệp phát hành, đặc biệt trong bối cảnh mặt bằng lãi suất huy động duy trì cao so với cùng kỳ.</p>
+<blockquote>Insight: Sự phân hóa cấu trúc lãi suất giữa nhóm ngân hàng (LSTC+biên độ, dao động 8,0–8,7%) và nhóm bất động sản (LS cố định cao 12,0–12,5%) phản ánh chênh lệch đánh giá rủi ro và chi phí vốn giữa hai nhóm ngành chủ đạo của thị trường TPDN.</blockquote></div>
+</section>
+
+<section class="group-section" id="fx">
+  <div class="group-header"><span class="tag g4">04</span><h2>Tỷ giá & Ngoại hối</h2><span class="src">SBV · VBMA</span></div>
+  <div class="prose-card"><p>#### Diễn biến USD/VND</p>
+<p>Tỷ giá USD/VND duy trì biên độ ổn định trong tháng 6. Tỷ giá giao ngay (spot, mid) dao động quanh dải <strong>26.264–26.284</strong>, biến động cả tháng chỉ <strong>+0,08%</strong>. Mức đóng cửa tuần cuối ở <strong>26.300</strong> (-0,08% WoW), tích lũy từ đầu năm <strong>+8,12%</strong>.</p>
+<p>Tỷ giá trung tâm do NHNN công bố tăng dần trong tháng: từ <strong>25.147</strong> (đầu tháng) lên <strong>25.155</strong> (giữa tháng), <strong>25.181</strong> (tuần 3) và <strong>25.195</strong> (cuối tháng), biến động tuần cuối <strong>+14 VND/USD</strong>. Tỷ giá niêm yết tại Vietcombank cuối tháng ở mức <strong>26.114</strong> (chiều mua, -6 VND) và <strong>26.454</strong> (chiều bán, +14 VND). Biên độ giao dịch mua–bán tại NHTM mở rộng nhẹ, dao động quanh <strong>340 VND/USD</strong>.</p>
+<p><table></p>
+<p><tr><th>Cặp tiền</th><th>Giá cuối tháng</th><th>WoW (%)</th><th>YTD (%)</th></tr></p>
+<p><tr><td><b>USD/VND</b></td><td><b>26.300</b></td><td>-0,08</td><td><b>+8,12</b></td></tr></p>
+<p><tr><td>EUR/USD</td><td>1,138</td><td>-0,74</td><td>+3,99</td></tr></p>
+<p><tr><td>USD/CNY</td><td>6,798</td><td>+0,43</td><td>-4,82</td></tr></p>
+<p><tr><td>USD/JPY</td><td>161,76</td><td>+0,28</td><td>+13,93</td></tr></p>
+<p><tr><td>GBP/USD</td><td>1,320</td><td>-0,23</td><td>+4,67</td></tr></p>
+<p><tr><td>DXY</td><td><b>101,36</b></td><td>+0,51</td><td>-0,82</td></tr></p>
+<p></table></p>
+<p>#### Chỉ số đô la Mỹ và các đồng tiền chính</p>
+<p>Chỉ số sức mạnh đồng đô la Mỹ (DXY) đóng cửa ở <strong>101,36 điểm</strong>, tăng <strong>0,51%</strong> so với tuần trước và <strong>-0,82%</strong> so với đầu năm. DXY dao động trong dải hẹp 99,75–101,36 trong tháng, phản ánh pha điều chỉnh sau giai đoạn tăng mạnh.</p>
+<p>Đồng Euro (EUR) suy yếu trước USD, EUR/USD giảm <strong>0,74%</strong> tuần và đóng dưới ngưỡng <strong>1,14</strong> do chênh lệch lãi suất Mỹ – Âu mở rộng. Bảng Anh (GBP) cũng giảm <strong>0,23%</strong>. Ngược lại, đồng Nhân dân tệ (CNY) yếu hơn USD với USD/CNY tăng <strong>0,43%</strong> lên <strong>6,798</strong>, và đồng Yên Nhật (JPY) tiếp tục suy yếu nghiêm trọng khi USD/JPY đạt <strong>161,76</strong> — mức thấp nhất của JPY kể từ năm 1986.</p>
+<p>#### Bối cảnh ngoại hối quốc tế</p>
+<p>Tuần cuối tháng, BofA điều chỉnh dự báo lên ba lần tăng 25 đcb trong năm 2026 (đưa lãi suất Fed về <strong>4,25–4,50%</strong>), trong khi số liệu core PCE tháng 5 công bố ngày 25/6 tăng <strong>3,4%</strong> so với cùng kỳ — mức cao nhất kể từ tháng 10/2023. CME FedWatch cuối tuần định giá xác suất Fed tăng lãi suất trước cuối năm 2026 lên khoảng <strong>86%</strong>, thị trường bắt đầu định giá khả năng tăng sớm nhất vào cuộc họp tháng 9.</p>
+<p>Về dầu thô, lưu thông qua eo biển Hormuz phục hồi nhanh hơn dự kiến khi Saudi Arabia bắt đầu xuất hàng từ cảng Ras Tanura, xuất khẩu Vùng Vịnh ước đạt khoảng <strong>75%</strong> mức trước chiến tranh. Tuy nhiên, tàu container Ever Lovely trúng đạn ở đông nam Oman ngày 25/6 khiến đà giảm bị đảo một phần. Kết thúc tuần 26/6, giá Brent đóng quanh <strong>72 USD/thùng</strong>, giảm khoảng <strong>10%</strong> so với tuần trước — mức giảm lớn nhất trong một tháng.</p>
+<p>#### Yếu tố tác động tỷ giá</p>
+<p><ul></p>
+<p><li><b>DXY</b>: Tăng 0,51% tuần cuối tạo áp lực nhẹ lên các đồng tiền thị trường mới nổi, nhưng biên độ hẹp;</li></p>
+<p><li><b>Thanh khoản ngoại tệ</b>: Doanh số giao dịch USD liên ngân hàng phục hồi lên 808.814 tỷ (tăng 40.509 tỷ/ngày), cho thấy dòng ngoại tệ luân chuyển ổn định;</li></p>
+<p><li><b>Chính sách NHNN</b>: Tỷ giá trung tâm được điều chỉnh tăng rất chậm (+14 VND/tuần), cho thấy nỗ lực kiểm soát biên độ và ổn định kỳ vọng;</li></p>
+<p><li><b>Cán cân thương mại</b>: Tăng cường xuất khẩu và dòng vốn FDI hỗ trợ cung ngoại tệ, hạn chế áp lực giảm giá VND.</li></p>
+<p></ul></p>
+<blockquote>Insight: Việc USD/VND duy trì ổn định quanh 26.300 trong bối cảnh DXY tăng và Fed giữ lập trường thắt chặt phản ánh năng lực quản lý tỷ giá của NHNN, kết hợp với thanh khoản ngoại tệ dồi dào từ dòng vốn thương mại và đầu tư.</blockquote></div>
+  
+      <div class="chart-card">
+        <h3>💱 Tỷ giá TM USD/VND — 4 tuần (mid)</h3>
+        <div class="chart-sub">Biến động ±0,08% — NHNN kiểm soát</div>
+        <div class="chart-canvas-wrap" style="height:300px"><canvas id="chartFX"></canvas></div>
+      </div>
+      <script class="chart-data" id="chartFX_data" type="application/json">
+      {"labels": ["05/6", "12/6", "19/6", "26/6"], "datasets": [{"label": "USD/VND mid", "data": [26264, 26267, 26280, 26284], "color": "#06b6d4", "fill": true}]}
+      </script>
+    
+</section>
+
+<section class="group-section" id="global">
+  <div class="group-header"><span class="tag g4">05</span><h2>Bối cảnh Toàn cầu</h2><span class="src">VNBA</span></div>
+  <div class="prose-card"><p>#### Lãi suất chính sách các ngân hàng trung ương</p>
+<p>Bức tranh chính sách tiền tệ toàn cầu ghi nhận sự phân kỳ giữa các ngân hàng trung ương (NHTW) lớn. Cục Dự trữ Liên bang Mỹ (Fed) duy trì mức lãi suất <strong>3,50–3,75%</strong> tại cuộc họp 16–17/6 theo bỏ phiếu nhất trí 12–0, lần đầu tiên dưới quyền tân Chủ tịch Kevin Warsh. Tuy nhiên, dot plot nâng lãi suất trung vị cuối năm 2026 lên <strong>3,8%</strong> (từ <strong>3,4%</strong> hồi tháng 3), với <strong>9/18</strong> thành viên kỳ vọng ít nhất một lần tăng trong năm nay.</p>
+<p><table></p>
+<p><tr><th>NHTW</th><th>Lãi suất hiện hành</th><th>Lãi suất trước</th><th>Phiên điều chỉnh gần nhất</th></tr></p>
+<p><tr><td><b>Fed</b></td><td><b>3,50–3,75%</b></td><td>3,75–4,00%</td><td>10/12/2025</td></tr></p>
+<p><tr><td>ECB</td><td>2,25%</td><td>2,00%</td><td>11/06/2026</td></tr></p>
+<p><tr><td>BOJ</td><td>0,75%</td><td>0,50%</td><td>19/12/2025</td></tr></p>
+<p><tr><td>PBoC</td><td>3,00%</td><td>3,10%</td><td>20/05/2025</td></tr></p>
+<p><tr><td>RBA</td><td>4,35%</td><td>4,10%</td><td>07/05/2026</td></tr></p>
+<p><tr><td>BoE</td><td>3,75%</td><td>4,00%</td><td>18/12/2025</td></tr></p>
+<p></table></p>
+<p>Ngân hàng Trung ương Châu Âu (ECB) đã tăng lãi suất lên <strong>2,25%</strong> (từ 2,00%) trong phiên họp 11/6. Ngân hàng Nhật Bản (BOJ) tăng lãi suất ngắn hạn lên mức <strong>1,0%</strong> tại cuộc họp tháng 6, thành viên HĐQT Naoki Tamura đưa ra quan điểm tiếp tục tăng 25 đcb mỗi vài tháng để đưa lãi suất về mức trung tính <strong>2,0%</strong> nhằm đối phó lạm phát nhập khẩu. Ngân hàng Trung ương Trung Quốc (PBoC) giữ nguyên lãi suất cho vay cơ bản (LPR) kỳ hạn 1 năm ở <strong>3,0%</strong> và 5 năm ở <strong>3,5%</strong> tháng thứ 13 liên tiếp, đồng thời triển khai nghiệp vụ repo đảo ngược qua đêm định kỳ nhằm thắt chặt biên độ hành lang lãi suất từ 70 đcb xuống 50 đcb.</p>
+<p>#### Lợi suất trái phiếu chính phủ 10 năm</p>
+<p>Lợi suất TPCP kỳ hạn 10 năm các nước biến động mixed trong tuần cuối tháng. Lợi suất Mỹ giảm nhẹ về <strong>4,371%</strong> (-0,15% WoW), Nhật Bản <strong>2,602%</strong> (-0,04%), Úc <strong>4,727%</strong> (-0,08%), Đức <strong>2,848%</strong> (-0,14%), Singapore <strong>2,013%</strong> (-0,05%). Trong khi đó, Trung Quốc tăng nhẹ lên <strong>1,793%</strong> (+0,06%) và Indonesia tăng lên <strong>7,182%</strong> (+0,11%). Lợi suất Việt Nam (theo VBMA) ở mức <strong>4,521%</strong> (-0,01%).</p>
+<p>Bảng so sánh lợi suất TPCP 5 năm khu vực cho thấy mức tăng mạnh của Việt Nam trong năm 2026: từ <strong>2,58%</strong> (T6/2025) lên <strong>4,13%</strong> (T6/2026), tức tăng khoảng <strong>155 đcb</strong> trong 12 tháng — cao thứ hai khu vực sau Philippines (7,36%). Mỹ tăng từ <strong>3,96%</strong> lên <strong>4,21%</strong> (+25 đcb), Trung Quốc giảm từ <strong>1,52%</strong> xuống <strong>1,43%</strong> (-9 đcb), Nhật Bản tăng từ <strong>1,00%</strong> lên <strong>1,91%</strong> (+91 đcb). Mức tăng lợi suất TPCP Việt Nam cao hơn đáng kể so với các nền kinh tế phát triển, phản ánh quá trình bình thường hóa chính sách tiền tệ và điều chỉnh mặt bằng lãi suất thị trường sau giai đoạn kích thích kéo dài.</p>
+<p>#### Diễn biến thị trường cổ phiếu</p>
+<p>Thị trường chứng khoán toàn cầu phân hóa mạnh trong tuần cuối tháng. Mỹ ghi nhận đợt điều chỉnh sâu ở nhóm cổ phiếu công nghệ: Nasdaq giảm <strong>4,60%</strong> (MoM <strong>-6,21%</strong>), S&P 500 giảm <strong>1,95%</strong>, trong khi Dow Jones tăng nhẹ <strong>0,60%</strong>. Động thái bán ra ở nhóm bán dẫn (Nvidia -1,6%, Broadcom -3,7%) sau chuỗi ngày tăng nóng là nguyên nhân chính.</p>
+<p><table></p>
+<p><tr><th>Chỉ số</th><th>WoW (%)</th><th>MoM (%)</th><th>YTD (%)</th></tr></p>
+<p><tr><td>Dow Jones</td><td>+0,60</td><td>+1,65</td><td>+7,93</td></tr></p>
+<p><tr><td>S&P 500</td><td>-1,95</td><td>-2,98</td><td>+7,43</td></tr></p>
+<p><tr><td><b>Nasdaq</b></td><td><b>-4,60</b></td><td><b>-6,21</b></td><td>+8,84</td></tr></p>
+<p><tr><td>DAX</td><td>-1,26</td><td>-1,73</td><td>+0,74</td></tr></p>
+<p><tr><td>FTSE 100</td><td>+1,40</td><td>+0,95</td><td>+5,81</td></tr></p>
+<p><tr><td>Nikkei 225</td><td>-2,65</td><td>+4,57</td><td><b>+37,79</b></td></tr></p>
+<p><tr><td>Shanghai</td><td>-1,55</td><td>-1,02</td><td>+1,47</td></tr></p>
+<p><tr><td>Hang Seng</td><td><b>-5,24</b></td><td><b>-9,97</b></td><td><b>-11,54</b></td></tr></p>
+<p></table></p>
+<p>Châu Á chịu áp lực lớn: Nikkei 225 giảm <strong>2,65%</strong> tuần (phiên cuối tuần lao dốc <strong>4,15%</strong> xuống 69.361 điểm do cổ phiếu SoftBank Group bốc hơi gần 13% sau tin OpenAI có thể trì hoãn IPO sang năm 2027), Shanghai giảm <strong>1,55%</strong>. Đặc biệt, Hang Seng ghi nhận đợt giảm sâu <strong>5,24%</strong> tuần và <strong>-9,97%</strong> trong tháng, đưa chỉ số này xuống <strong>-11,54%</strong> so với đầu năm — điểm sáng tiêu cực nhất khu vực. Ngược lại, Nikkei vẫn dẫn đầu YTD toàn cầu với <strong>+37,79%</strong>, trong khi Dow Jones tăng <strong>+7,93%</strong> YTD và FTSE 100 tăng <strong>+5,81%</strong>.</p>
+<p>Tại Châu Âu, các chỉ số đồng loạt nhuộm đỏ: Euro STOXX 50 giảm <strong>0,9%</strong> xuống 6.212 điểm do áp lực kép từ việc nhóm cổ phiếu AI North America đảo chiều và thông tin Volkswagen (-3,9%) lên kế hoạch đóng cửa <strong>4 nhà máy</strong> và cắt giảm tới <strong>100.000 nhân sự</strong> trong đợt tái cấu trúc lớn nhất lịch sử tập đoàn. Cổ phiếu bán dẫn Mỹ và chuỗi cung ứng công nghệ chịu áp lực tương tự, làm giảm đáng kể giá trị hóa các quỹ đầu tư mạo hiểm công nghệ.</p>
+<p>#### Kinh tế vĩ mô các nền kinh tế lớn</p>
+<p>Hội nghị Thượng đỉnh thường niên của Ngân hàng Thanh toán Quốc tế (BIS) tại Basel ngày 28/6 khái quát 12 tháng qua bằng hai từ: <strong>"Tiến triển"</strong> (Progress) và <strong>"Hiểm họa"</strong> (Peril). "Tiến triển" thể hiện ở làn sóng đầu tư cơ sở hạ tầng Trí tuệ nhân tạo (AI) tăng mạnh; "Hiểm họa" từ lạm phát, nợ công kỷ lục áp sát mức đỉnh sau Thế chiến II và sự hưng phấn quá đà của thị trường tài chính.</p>
+<p><ul></p>
+<p><li><b>Mỹ</b>: GDP Quý I/2026 điều chỉnh tăng lên <strong>2,1%</strong> (từ 1,6%) nhờ xuất khẩu +10,9% và đầu tư tư nhân +7,9%, nhưng chi tiêu tiêu dùng bị hạ xuống <strong>0,5%</strong>. PCE lõi tháng 5 tăng <strong>3,4%</strong> y/y — cao nhất kể từ 10/2023. Thâm hụt thương mại hàng hóa tháng 5 lập đỉnh 14 tháng ở mức <strong>105,8 tỷ USD</strong> (vượt dự báo 85 tỷ);</li></p>
+<p><li><b>Eurozone</b>: PMI tổng hợp sơ bộ tăng từ 48,5 lên <strong>49,5</strong> điểm — mức cao nhất 3 tháng. Dự báo thâm hụt ngân sách tăng từ 2,9% GDP (2025) lên 3,6% (2026);</li></p>
+<p><li><b>Nhật Bản</b>: PMI sản xuất sơ bộ đạt <strong>54,9</strong> — chuỗi 6 tháng mở rộng liên tiếp, áp sát đỉnh lịch sử. Lạm phát lõi Tokyo tăng tốc lên <strong>1,6%</strong> (từ 1,3%) — lần tăng đầu tiên sau 8 tháng;</li></p>
+<p><li><b>Trung Quốc</b>: Lợi nhuận công nghiệp 5 tháng đầu năm tăng <strong>18,8%</strong> (riêng tháng 5 tăng <strong>21,1%</strong>), thặng dư tài khoản vãng lai Q1 đạt kỷ lục <strong>184,3 tỷ USD</strong>. Ngày 25/6, Trung Quốc phát hành trái phiếu chính phủ bằng đồng Euro lớn nhất lịch sử, quy mô <strong>5 tỷ Euro</strong> (5,7 tỷ USD) tại Luxembourg với 3 kỳ hạn 5/8/12 năm.</li></p>
+<p></ul></p>
+<p>#### Thị trường hàng hóa</p>
+<p>Giá vàng giao ngay tăng <strong>1,2%</strong> lên khoảng <strong>4.087 USD/ounce</strong> trong tuần, nhưng vẫn giảm <strong>1,56%</strong> so với tuần trước và <strong>8,28%</strong> so với tháng trước — đánh dấu tuần giảm thứ tư liên tiếp do lập trường cứng rắn của Fed hỗ trợ đồng USD. Hợp đồng vàng kỳ hạn tháng 8 ở mức <strong>4.096,30 USD/ounce</strong>.</p>
+<p>Thị trường dầu thô ghi nhận đợt giảm mạnh nhất trong một tháng: Brent giảm <strong>4,34%</strong> chốt ở <strong>71,99 USD/thùng</strong>, WTI giảm <strong>3,74%</strong> xuống <strong>69,23 USD/thùng</strong> — lần đầu tiên WTI đóng dưới mốc 70 USD kể từ ngày 27/2/2026 (một ngày trước khi xung đột Mỹ – Iran bùng phát). Khối lượng vận chuyển qua eo biển Hormuz phục hồi khi các tàu công khai di chuyển qua tuyến đường thủy này, đưa xuất khẩu dầu Vùng Vịnh lên khoảng <strong>75%</strong> mức trước chiến tranh. Saudi Arabia bắt đầu bốc dỡ dầu tại cảng Ras Tanura, báo hiệu gia tăng sản lượng. Các nhà sản xuất Trung Đông (UAE, Kuwait, Qatar) tăng nguồn cung bất chấp khó khăn đảm bảo tàu chở dầu, Iraq tìm kiếm hạn ngạch OPEC cao hơn để bù đắp doanh số mất trong chiến tranh. Tổng mức giảm dầu thô trong tuần vượt <strong>10%</strong>. Trong khi đó, Tổng thống Mỹ Donald Trump cáo buộc Iran vi phạm lệnh ngừng bắn bằng cách bắn UAV vào các tàu ở Hormuz, duy trì yếu tố rủi ro địa chính trị.</p>
+<p>Các hàng hóa khác biến động đa chiều: đồng giảm <strong>2,89%</strong> tuần (xuống <strong>6,144 USD/lbs</strong>), nhôm giảm <strong>5,94%</strong> (xuống <strong>3.199 USD/tấn</strong>), thiếc giảm <strong>6,09%</strong> (xuống <strong>50.383 USD/tấn</strong>), bạc giảm mạnh <strong>9,43%</strong> (xuống <strong>58,78 USD/ounce</strong>). Quặng sắt tăng nhẹ <strong>1,15%</strong> lên <strong>748 USD/tấn</strong>. Nhóm nông sản ghi nhận đà tăng của gạo (<strong>+5,01%</strong>, lên <strong>13,10 USD/cwt</strong>), đường (<strong>+2,61%</strong>), chè (<strong>+3,08%</strong>) và cà phê (<strong>+2,78%</strong>), trong khi cao su giảm <strong>7,30%</strong> và bông giảm <strong>4,29%</strong>.</p></div>
+  
+      <div class="chart-card"><h3>📈 US 10Y — FRED</h3><div class="chart-canvas-wrap"><canvas id="chartUS10Y"></canvas></div></div><script class="chart-data" id="chartUS10Y_data" type="application/json">{"labels": ["04-03", "04-06", "04-07", "04-08", "04-09", "04-10", "04-13", "04-14", "04-15", "04-16", "04-17", "04-20", "04-21", "04-22", "04-23", "04-24", "04-27", "04-28", "04-29", "04-30", "05-01", "05-04", "05-05", "05-06", "05-07", "05-08", "05-11", "05-12", "05-13", "05-14", "05-15", "05-18", "05-19", "05-20", "05-21", "05-22", "05-26", "05-27", "05-28", "05-29", "06-01", "06-02", "06-03", "06-04", "06-05", "06-08", "06-09", "06-10", "06-11", "06-12", "06-15", "06-16", "06-17", "06-18", "06-22", "06-23", "06-24", "06-25", "06-26"], "datasets": [{"label": "US 10Y", "data": [4.35, 4.34, 4.33, 4.29, 4.29, 4.31, 4.3, 4.26, 4.29, 4.32, 4.26, 4.26, 4.3, 4.3, 4.34, 4.31, 4.35, 4.36, 4.42, 4.4, 4.39, 4.45, 4.43, 4.36, 4.41, 4.38, 4.42, 4.46, 4.46, 4.47, 4.59, 4.61, 4.67, 4.57, 4.57, 4.56, 4.5, 4.48, 4.45, 4.45, 4.47, 4.46, 4.49, 4.47, 4.55, 4.56, 4.53, 4.55, 4.45, 4.48, 4.47, 4.43, 4.49, 4.46, 4.51, 4.5, 4.41, 4.4, 4.38], "color": "#ff4d6d", "fill": false}]}</script><div class="chart-card"><h3>💵 DXY — FRED</h3><div class="chart-canvas-wrap"><canvas id="chartDXY"></canvas></div></div><script class="chart-data" id="chartDXY_data" type="application/json">{"labels": ["04-03", "04-06", "04-07", "04-08", "04-09", "04-10", "04-13", "04-14", "04-15", "04-16", "04-17", "04-20", "04-21", "04-22", "04-23", "04-24", "04-27", "04-28", "04-29", "04-30", "05-01", "05-04", "05-05", "05-06", "05-07", "05-08", "05-11", "05-12", "05-13", "05-14", "05-15", "05-18", "05-19", "05-20", "05-21", "05-22", "05-26", "05-27", "05-28", "05-29", "06-01", "06-02", "06-03", "06-04", "06-05", "06-08", "06-09", "06-10", "06-11", "06-12", "06-15", "06-16", "06-17", "06-18", "06-22", "06-23", "06-24", "06-25", "06-26"], "datasets": [{"label": "DXY", "data": [120.6565, 120.4302, 120.32, 119.0596, 118.8998, 118.8552, 118.9916, 118.3581, 118.3623, 118.3616, 118.0795, 118.2374, 118.4331, 118.6004, 118.7155, 118.7294, 118.5458, 118.7717, 119.0975, 118.671, 118.3926, 118.8264, 118.6207, 118.0982, 118.0116, 118.0392, 118.0562, 118.5238, 118.4737, 118.6696, 119.2825, 119.0574, 119.451, 119.1624, 119.369, 119.2868, 119.1696, 119.1829, 119.0318, 118.8783, 119.1653, 119.0359, 119.3848, 119.3615, 120.0831, 120.034, 119.9617, 119.9134, 120.1174, 119.5073, 119.3158, 119.256, 119.3871, 120.3958, 120.5463, 121.0552, 121.412, 121.0559, 120.8866], "color": "#06b6d4", "fill": false}]}</script>
+      <div class="grid-2">
+        <div class="table-card">
+          <h3>🏦 Lãi suất CB</h3>
+          <table class="data-table">
+            <thead><tr><th>CB</th><th>Hiện tại</th></tr></thead>
+            <tbody>
+              <tr><td>FED</td><td class="num">3,50-3,75%</td></tr>
+              <tr><td>ECB</td><td class="num">2,25%</td></tr>
+              <tr><td>BOJ</td><td class="num">0,75%</td></tr>
+              <tr><td>PBoC</td><td class="num">3,00%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-card">
+          <h3>📊 Lợi suất 10Y (quốc tế)</h3>
+          <table class="data-table">
+            <thead><tr><th>QT</th><th>10Y</th></tr></thead>
+            <tbody>
+              <tr><td>US</td><td class="num">4,37%</td></tr>
+              <tr><td>VN</td><td class="num">4,52%</td></tr>
+              <tr><td>CN</td><td class="num">1,79%</td></tr>
+              <tr><td>JP</td><td class="num">2,60%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    
+</section>
+
+<section class="group-section" id="vn">
+  <div class="group-header"><span class="tag g5">06</span><h2>Chính sách & Ngân hàng VN</h2><span class="src">VNBA</span></div>
+  <div class="prose-card"><p>#### Nghị quyết 168/NQ-CP và định hướng chính sách tiền tệ</p>
+<p>Ngày 27/6/2026, Chính phủ ban hành Nghị quyết số <strong>168/NQ-CP</strong> nhằm thực hiện mục tiêu tăng trưởng hai con số trong năm 2026. Theo đó, Chính phủ yêu cầu NHNN điều hành chính sách tiền tệ chủ động, linh hoạt, kịp thời, hiệu quả thông qua các giải pháp:</p>
+<p><ul></p>
+<p><li>Triển khai các giải pháp ổn định lãi suất, bảo đảm thanh khoản cho nền kinh tế, ổn định thị trường tiền tệ, ngoại tệ nhằm kiểm soát lạm phát, hỗ trợ mục tiêu tăng trưởng hai con số;</li></p>
+<p><li>Theo dõi sát tình hình xuất nhập khẩu, dòng vốn đầu tư, thị trường tài chính quốc tế và các yếu tố tác động đến tỷ giá;</li></p>
+<p><li>Chỉ đạo các tổ chức tín dụng tiếp tục tiết giảm chi phí, ổn định mặt bằng lãi suất thị trường;</li></p>
+<p><li>Kiểm soát tín dụng đối với lĩnh vực tiềm ẩn rủi ro, đảm bảo nguồn vốn cho các dự án lớn, trọng điểm;</li></p>
+<p><li>Nghiên cứu điều chỉnh hạn mức tín dụng phù hợp và xử lý nghiêm các trường hợp lợi dụng hạn mức tăng trưởng để nâng lãi suất cho vay.</li></p>
+<p></ul></p>
+<p>Đặc biệt, Chính phủ giao NHNN nghiên cứu nâng tỷ lệ tiền gửi có kỳ hạn của KBNN tại các ngân hàng thương mại vào nguồn vốn huy động để bổ sung thanh khoản. Bộ Tài chính và NHNN phối hợp điều hành tiền gửi KBNN tại hệ thống NHTM, cho phép sử dụng ngân quỹ nhà nước tạm thời nhàn rỗi gửi có kỳ hạn (có thể vượt quá 50% khả năng ngân quỹ) nhằm tăng cường phối hợp giữa chính sách tài khóa và tiền tệ.</p>
+<p>#### Thông tư 25/2026/TT-NHNN — điều chỉnh tỷ lệ vốn ngắn hạn cho vay trung dài hạn</p>
+<p>Ngày 22/6/2026, NHNN ban hành Thông tư số <strong>25/2026/TT-NHNN</strong> sửa đổi, bổ sung Thông tư 22/2019/TT-NHNN, chính thức tăng tỷ lệ tối đa nguồn vốn ngắn hạn được sử dụng để cho vay trung và dài hạn (SFL) từ <strong>30% lên 40%</strong>. Đây là sự đảo chiều đáng chú ý, khi trước đó NHNN duy trì đà giảm SFL từ <strong>40%</strong> (năm 2019) xuống <strong>37%</strong>, rồi <strong>34%</strong> và <strong>30%</strong> từ tháng 10/2023 nhằm đảm bảo an toàn thanh khoản và tránh rủi ro kỳ hạn.</p>
+<p>Thông tư mới cũng điều chỉnh cách tính tỷ lệ dư nợ cho vay trên tổng tiền gửi (LDR): tiếp tục loại trừ tiền gửi không kỳ hạn của KBNN khỏi mẫu số, đồng thời cho phép loại trừ <strong>80%</strong> số dư tiền gửi có kỳ hạn của KBNN. Dữ liệu từ MBS cho thấy tỷ trọng cho vay trung và dài hạn trên tổng dư nợ toàn ngành đã tăng từ <strong>43,4%</strong> (Q2/2024) lên <strong>47,4%</strong> (Q1/2026), làm gia tăng áp lực lên tỷ lệ vốn ngắn hạn sử dụng cho vay trung dài hạn — động lực chính thúc đẩy điều chỉnh này.</p>
+<blockquote>Insight: Việc nâng SFL từ 30% lên 40% cung cấp thêm dư địa cho các ngân hàng mở rộng cho vay trung và dài hạn, song song với yêu cầu quản trị rủi ro kỳ hạn nghiêm ngặt theo khung Thông tư mới thay thế hoàn toàn các quy định trước đó về tỷ lệ an toàn kỳ hạn.</blockquote>
+<p>#### Lợi nhuận ngân hàng Q2/2026 — bức tranh phân hóa</p>
+<p>Theo đánh giá sơ bộ của các tổ chức nghiên cứu, lợi nhuận ngân hàng Q2/2026 mang sắc thái tích cực nhưng phân hóa mạnh. Tổng lợi nhuận sau thuế (LNST) nhóm ngân hàng niêm yết được kỳ vọng tăng khoảng <strong>15%</strong> so với cùng kỳ; lũy kế 6 tháng đầu năm tăng khoảng <strong>16%</strong>. Ước tính tăng trưởng tín dụng toàn ngành đạt khoảng <strong>9%</strong> so với đầu năm.</p>
+<p><table></p>
+<p><tr><th>Ngân hàng</th><th>LNST Q2 (tỷ đồng)</th><th>YoY (%)</th></tr></p>
+<p><tr><td><b>VPB</b></td><td><b>7.499</b></td><td><b>+51,9</b></td></tr></p>
+<p><tr><td><b>HDB</b></td><td>5.381</td><td>+46,4</td></tr></p>
+<p><tr><td>VIB</td><td>2.597</td><td>+25,1</td></tr></p>
+<p><tr><td>OCB</td><td>953</td><td>+20,2</td></tr></p>
+<p><tr><td>TCB</td><td>7.468</td><td>+17,7</td></tr></p>
+<p><tr><td>VCB</td><td>10.262</td><td>+16,1</td></tr></p>
+<p><tr><td>BIDV</td><td>7.937</td><td>+15,1</td></tr></p>
+<p><tr><td><b>CTG</b></td><td><b>11.022</b></td><td>+13,0</td></tr></p>
+<p><tr><td>TPB</td><td>1.824</td><td>+11,9</td></tr></p>
+<p><tr><td>ACB</td><td>4.899</td><td>+0,4</td></tr></p>
+<p><tr><td>LPB</td><td>2.244</td><td>-6,3</td></tr></p>
+<p><tr><td>EIB</td><td>309</td><td><b>-39,0</b></td></tr></p>
+<p><tr><td><b>STB</b></td><td>1.666</td><td><b>-42,4</b></td></tr></p>
+<p></table></p>
+<p>Nhóm tăng trưởng mạnh (trên <strong>45%</strong>) có đặc điểm tham gia nhận chuyển giao bắt buộc tổ chức tín dụng yếu kém, nhờ đó có hạn mức tăng trưởng tín dụng (room) cao vượt trội và không bị hạn chế theo từng quý. Nhóm tăng trưởng bền vững (<strong>10–25%</strong>) gồm Big 4 và các NHTM cổ phần có chất lượng tài sản tốt. Nhóm giảm hoặc đi ngang chịu áp lực từ suy giảm NIM (chi phí vốn tăng) và sức ép tăng chi phí trích lập dự phòng rủi ro tín dụng — thu nhập ngoài lãi ước tính tăng <strong>11,3%</strong> nhưng chi phí dự phòng tăng khoảng <strong>19%</strong> so với cùng kỳ.</p>
+<p>Động lực chính bao gồm:</p>
+<p><ul></p>
+<p><li><b>Tín dụng</b>: Khách hàng doanh nghiệp (đặc biệt SME) tiếp tục dẫn dắt tăng trưởng;</li></p>
+<p><li><b>NIM</b>: Một số Big 4 (Vietcombank, VietinBank) cải thiện NIM nhờ lợi thế chi phí vốn (CASA tốt) và nền so sánh thấp;</li></p>
+<p><li><b>Thu nhập ngoài lãi</b>: Tăng chủ yếu từ thu hồi nợ và phí dịch vụ;</li></p>
+<p><li><b>Áp lực dự phòng</b>: Nợ xấu hiện hữu khiến chi phí trích lập tăng mạnh nhằm củng cố bộ đệm rủi ro.</li></p>
+<p></ul></p>
+<p>#### Lãi suất huy động và thị trường vàng trong nước</p>
+<p>Lãi suất huy động tiết kiệm cuối tháng 6/2026 tăng nhẹ ở một số kỳ hạn ngắn (nhỏ hơn hoặc bằng 6 tháng), song mặt bằng chung duy trì ổn định nhằm hỗ trợ thanh khoản hệ thống. Các ngân hàng quốc doanh — nhóm có mặt bằng lãi suất thấp nhất thị trường — duy trì mức <strong>3,2%–4,8%/năm</strong> tùy kỳ hạn. Động thái điều chỉnh lãi suất huy động phản ánh nhu cầu tăng cường vốn ngắn hạn của các ngân hàng khi bước vào giai đoạn cuối quý, chuẩn bị nguồn lực cho cầu tín dụng tăng theo mùa vụ. Mặt bằng lãi suất huy động cao hơn so với cùng kỳ năm trước được ghi nhận ở một số ngân hàng cổ phần, tạo áp lực lên chi phí vốn và biên lãi thuần (NIM) của ngành.</p>
+<p>Thị trường vàng trong nước tuần 22–27/6 biến động "lạc nhịp" so với thế giới. Vàng miếng SJC đầu tuần giảm về mốc <strong>143,2–146,2 triệu đồng/lượng</strong> (mua–bán) vào ngày 25/6, mất khoảng 1–2 triệu đồng/lượng so với cuối tuần trước. Tuy nhiên, cuối tuần kim loại quý bật tăng mạnh: kết phiên 27/6, vàng miếng SJC tại các thương hiệu lớn (SJC, DOJI) niêm yết quanh <strong>145,5–148,5 triệu đồng/lượng</strong>. Vàng nhẫn 9999 dao động sát vàng miếk, cuối tuần giao dịch phổ biến từ <strong>145,4–148,5 triệu đồng/lượng</strong> tại các hệ thống SJC, DOJI, Bảo Tín Minh Châu.</p>
+<p>Động thái đảo chiều của vàng trong nước cuối tuần — khi giá thế giới vẫn trong xu hướng giảm — phản ánh yếu tố cung – cầu nội địa và tâm lý phòng thủ của nhà đầu tư cá nhân trước các biến động tỷ giá và lãi suất quốc tế. Mức chênh lệch giá vàng SJC so với giá thế giới quy đổi duy trì ở biên độ cao, tiếp tục là đặc trưng cấu trúc của thị trường vàng Việt Nam.</p>
+<p>#### Tổng kết</p>
+<p>Tháng 6/2026 đánh giá tổng thể theo khung phân loại là <strong>LƯỢNG (mild dovish)</strong> với điểm số lập trường <strong>1/6</strong>. Lãi suất liên ngân hàng ON giảm <strong>2,55 điểm phần trăm</strong> (dovish), trong khi lợi suất TPCP 10 năm tăng <strong>0,07 điểm phần trăm</strong> (hawkish). Sự kết hợp giữa thanh khoản hệ thống dồi dào, OMO chuyển sang bơm ròng, và các biện pháp chính sách (Nghị quyết 168, Thông tư 25/2026) phản ánh định hướng hỗ trợ tăng trưởng kinh tế trong bối cảnh kiểm soát lạm phát và ổn định tỷ giá. Trên phương diện toàn cầu, áp lực từ Fed giữ lập trường thắt chặt và biến động giá dầu tạo ra môi trường bên ngoài phức tạp, đòi hỏi phối hợp chặt chẽ giữa chính sách tài khóa và tiền tệ.</p></div>
+  
+      <div class="table-card">
+        <h3>🏦 Lợi nhuận ngân hàng Q2/2026 (dự báo)</h3>
+        <table class="data-table">
+          <thead><tr><th>Mã</th><th>LNST (tỷ)</th><th>YoY</th></tr></thead>
+          <tbody>
+            <tr><td>VPB</td><td class="num">7.499</td><td class="num pos">+51,9%</td></tr>
+            <tr><td>HDB</td><td class="num">5.381</td><td class="num pos">+46,4%</td></tr>
+            <tr><td>VIB</td><td class="num">2.597</td><td class="num pos">+25,1%</td></tr>
+            <tr><td>VCB</td><td class="num">10.262</td><td class="num pos">+16,1%</td></tr>
+            <tr><td>CTG</td><td class="num">11.022</td><td class="num pos">+13,0%</td></tr>
+            <tr><td>STB</td><td class="num">1.666</td><td class="num neg">-42,4%</td></tr>
+            <tr><td>EIB</td><td class="num">309</td><td class="num neg">-39,0%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    
+</section>
+
+<div class="disclaimer">
+⚠️ <strong>Miễn trừ trách nhiệm:</strong> Báo cáo lãi suất & tiền tệ tham khảo. Số liệu từ 3 nguồn chính thức (SBV, VBMA, VNBA). Đã verify 45/45 điểm dữ liệu khớp source gốc. <strong>Không phải lời khuyên đầu tư.</strong>
+</div>
+
+</div>
+
+<script>
+const chartsRendered = {};
+let lnhChart = null;
+function renderChart(canvasId) {
+  if (chartsRendered[canvasId]) return;
+  const el = document.getElementById(canvasId);
+  if (!el || el.clientWidth === 0) return;
+  Chart.defaults.color = '#8b8ba7';
+  Chart.defaults.borderColor = 'rgba(139,92,246,0.1)';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  const dataEl = document.getElementById(canvasId + '_data');
+  if (!dataEl) return;
+  const data = JSON.parse(dataEl.textContent);
+  const chart = new Chart(el, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: data.datasets.map(ds => ({
+        label: ds.label, data: ds.data, borderColor: ds.color,
+        backgroundColor: ds.fill ? ds.color + '20' : 'transparent',
+        tension: 0.3, fill: ds.fill || false, borderWidth: 2.5, pointRadius: 5,
+        pointBackgroundColor: ds.color,
+        borderDash: ds.dash ? [6, 4] : [],
+        hidden: false,
+        spanGaps: true
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { usePointStyle: true, boxWidth: 8, padding: 14, font: { size: 11 } } } },
+      scales: { y: { grid: { color: 'rgba(139,92,246,0.06)' } } }
+    }
+  });
+  chartsRendered[canvasId] = true;
+  if (canvasId === 'chartLNH') lnhChart = chart;
+}
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.group-section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    const target = document.getElementById(tab.dataset.target);
+    if (target) {
+      target.classList.add('active');
+      setTimeout(() => target.querySelectorAll('canvas').forEach(c => renderChart(c.id)), 50);
+    }
+  });
+});
+renderChart('chartLNH');
+document.addEventListener('click', function(e) {
+  if (!e.target.classList.contains('tg')) return;
+  e.target.classList.toggle('off');
+  if (!lnhChart) return;
+  const tenors = [...document.querySelectorAll('#lnhToggles .tg:not(.off)')].map(b => b.dataset.t);
+  lnhChart.data.datasets.forEach(ds => {
+    const t = ds.label.split(' ')[1];
+    ds.hidden = !tenors.includes(t);
+  });
+  lnhChart.update();
+});
+</script>
+</body></html>

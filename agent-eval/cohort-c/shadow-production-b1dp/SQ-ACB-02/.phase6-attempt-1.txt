@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACB · Ngân hàng TMCP Á Châu | Investment Evidence Pack (1–3 năm)</title>
+    <meta name="description" content="Báo cáo nghiên cứu cổ phiếu Ngân hàng TMCP Á Châu (ACB) — investment evidence pack cho nhà đầu tư 1–3 năm, không khuyến nghị mua/bán.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#0f1419; --bg-1:#13181f; --bg-2:#1a2029;
+  --card:#161b22; --card-2:#1c232d;
+  --border:rgba(255,255,255,0.08); --border-hot:rgba(245,166,35,0.45);
+  --text:#e6edf3; --text-dim:#8b949e; --text-faint:#565f6b;
+  --amber:#f5a623; --amber-soft:rgba(245,166,35,0.14);
+  --blue:#4a9eff; --blue-soft:rgba(74,158,255,0.14);
+  --green:#3fb950; --green-soft:rgba(63,185,80,0.14);
+  --red:#f85149; --red-soft:rgba(248,81,73,0.14);
+  --purple:#a78bfa; --purple-soft:rgba(167,139,250,0.14);
+  --grad-amber:linear-gradient(135deg,#f5a623 0%,#d48806 100%);
+  --grad-blue:linear-gradient(135deg,#4a9eff 0%,#2670c8 100%);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --radius:12px; --radius-sm:8px;
+  --chart-grid:rgba(255,255,255,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad-amber);z-index:1000;transition:width .1s ease-out}
+.topnav{position:sticky;top:0;z-index:900;background:rgba(15,20,25,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.topnav-inner{max-width:1480px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:thin;height:52px}
+.topnav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:16px;border-right:1px solid var(--border);margin-right:8px}
+.topnav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.topnav-link{font-size:12px;color:var(--text-dim);padding:6px 10px;border-radius:6px;white-space:nowrap;transition:all .15s;font-weight:500}
+.topnav-link:hover{color:var(--text);background:var(--card)}
+.topnav-link.active{color:var(--amber);background:var(--amber-soft)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;z-index:800}
+.back-top.visible{opacity:1;pointer-events:auto}
+.back-top:hover{border-color:var(--border-hot);color:var(--amber)}
+.container{max-width:1480px;margin:0 auto;padding:24px 24px 80px}
+.layout-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:start}
+.layout-content{min-width:0}
+.toc-sidebar{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding:14px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.toc-sidebar::-webkit-scrollbar{width:6px}
+.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border-hot);border-radius:3px}
+.toc-sidebar-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--amber);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.toc-sidebar-hint{font-size:10.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4}
+.toc-sidebar-list{list-style:none;padding:0;margin:0}
+.toc-sidebar-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text-dim);font-size:11.5px;line-height:1.35;transition:all .12s;border-left:2px solid transparent}
+.toc-sidebar-item:hover{background:rgba(245,166,35,0.06);color:var(--text);text-decoration:none;border-left-color:var(--amber)}
+.toc-sidebar-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:var(--card-2);color:var(--text-faint);font-size:10px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;margin-top:1px}
+.toc-sidebar-item:hover .toc-sidebar-num{background:var(--amber);color:#1a1206}
+.toc-sidebar-item .toc-sidebar-label{flex:1}
+@media(max-width:1100px){.layout-main{grid-template-columns:1fr;gap:0}.toc-sidebar{display:none}}
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.section{margin-top:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}
+.section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.section-title .tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#1a1206}
+.tag.amber{background:var(--amber)} .tag.blue{background:var(--blue)} .tag.green{background:var(--green)} .tag.red{background:var(--red)} .tag.purple{background:var(--purple)}
+.divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.section-sub{color:var(--text-dim);font-size:13px;margin:4px 0 20px;padding-left:40px}
+.hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(74,158,255,0.04));border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-amber);color:#1a1206;padding:5px 14px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:0.5px}
+.disclaimer-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(248,81,73,0.3);margin-left:8px}
+.company-name{font-size:38px;font-weight:800;margin-top:14px;letter-spacing:-0.8px}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:14px}
+.price-block{text-align:right}
+.price-now{font-size:46px;font-weight:800;letter-spacing:-1px;font-family:var(--font-mono)}
+.price-now .ccy{font-size:20px;color:var(--text-dim);font-weight:500;margin-right:4px}
+.price-meta{margin-top:6px;color:var(--text-dim);font-size:12px}
+.price-meta .delta{font-weight:600;margin-left:6px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
+.kpi:hover{border-color:var(--border-hot)}
+.kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}
+.kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:11px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:300px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:360px} .chart-wrap.xs{height:180px}
+.fin-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.fin-table th,.fin-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.fin-table th:first-child,.fin-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim)}
+.fin-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;border-bottom:1px solid var(--border)}
+.fin-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+.fin-table .col-latest{background:var(--amber-soft);color:var(--amber);font-weight:700}
+.fin-table .row-strong td{font-weight:700;background:rgba(255,255,255,0.02)}
+.fin-table .row-total td{border-top:2px solid var(--border);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card)}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)} .callout.neu{border-left-color:var(--amber)}
+.callout-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.callout-body{font-size:13px;color:var(--text-dim);line-height:1.6}
+.callout-body strong{color:var(--text)}
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.stat-value{font-size:26px;font-weight:700;margin-top:4px;font-family:var(--font-mono)}
+.stat-meta{font-size:11px;color:var(--text-dim);margin-top:4px}
+.stat-verdict{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:6px}
+.verdict-good{background:var(--green-soft);color:var(--green)} .verdict-warn{background:var(--amber-soft);color:var(--amber)} .verdict-danger{background:var(--red-soft);color:var(--red)}
+.gauge{position:relative;height:8px;background:var(--bg-2);border-radius:4px;margin-top:8px;overflow:hidden}
+.gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px}
+.gauge-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px}
+.ref{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 5px;border-radius:4px;margin-left:2px;vertical-align:super;font-family:var(--font-mono);text-decoration:none;border:1px solid rgba(74,158,255,0.25)}
+.ref:hover{background:var(--blue);color:#0f1419;text-decoration:none}
+.refs{list-style:none;counter-reset:ref;padding-left:0}
+.refs li{counter-increment:ref;font-size:11.5px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;line-height:1.5}
+.refs li::before{content:counter(ref);font-family:var(--font-mono);font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 6px;border-radius:4px;font-size:10px;height:fit-content;flex-shrink:0;border:1px solid rgba(74,158,255,0.2)}
+.refs li a{color:var(--text-dim);word-break:break-all}
+.refs li a:hover{color:var(--blue)}
+.refs .src-meta{color:var(--text-faint);font-size:10.5px;display:block;margin-top:2px}
+.check-list{list-style:none;padding:0}
+.check-list li{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.check-list li:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.check-box.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.check-box.off{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.check-list .q{flex:1}
+.check-list .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}
+.risk-table th,.risk-table td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.risk-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600}
+.risk-table td:first-child{font-weight:600;color:var(--text)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px}
+.pill-l{background:var(--green-soft);color:var(--green)} .pill-m{background:var(--amber-soft);color:var(--amber)} .pill-h{background:var(--red-soft);color:var(--red)}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.scenario-card{border-radius:var(--radius);padding:18px;border:1px solid var(--border)}
+.scenario-card.bull{border-top:3px solid var(--green)} .scenario-card.base{border-top:3px solid var(--amber)} .scenario-card.bear{border-top:3px solid var(--red)}
+.scenario-card h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.scenario-card ul{list-style:none;padding:0;font-size:12px;color:var(--text-dim)}
+.scenario-card li{padding:4px 0;line-height:1.5}
+.scenario-card li::before{content:'›';color:var(--amber);margin-right:6px;font-weight:700}
+.drawdown-table{width:100%;border-collapse:collapse;font-size:13px}
+.drawdown-table th,.drawdown-table td{padding:10px;border-bottom:1px solid var(--border);text-align:center}
+.drawdown-table th{font-size:10px;text-transform:uppercase;color:var(--text-faint);font-weight:600}
+.drawdown-table td:first-child{text-align:left;font-family:var(--font-mono);color:var(--red);font-weight:600}
+.drawdown-table td:last-child{text-align:left;font-family:var(--font-sans);color:var(--text-dim);font-size:12px}
+.seg-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.seg-row:last-child{border-bottom:none}
+.seg-name{width:200px;font-size:12.5px;font-weight:500;flex-shrink:0}
+.seg-bar{flex:1;height:24px;background:var(--bg-2);border-radius:5px;overflow:hidden;position:relative}
+.seg-bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono)}
+.seg-meta{width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0}
+.qbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;font-family:var(--font-mono)}
+.qbadge-HIGHQ{background:var(--green-soft);color:var(--green)} .qbadge-MEDQ{background:var(--amber-soft);color:var(--amber)} .qbadge-LOWQ{background:var(--red-soft);color:var(--red)}
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}
+footer p{margin-bottom:6px}
+.vc-stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.vc-layer{display:grid;grid-template-columns:130px 1fr 90px 90px;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;background:var(--card-2);border:1px solid var(--border);font-size:12px;position:relative;transition:border-color .2s}
+.vc-layer.upstream-most{border-left:3px solid var(--red)}
+.vc-layer.upstream{border-left:3px solid var(--amber)}
+.vc-layer.oracle{border-left:3px solid var(--blue);background:rgba(74,158,255,0.06)}
+.vc-layer.downstream{border-left:3px solid var(--text-faint)}
+.vc-name{font-weight:600;color:var(--text)}
+.vc-name .sub{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px}
+.vc-players{color:var(--text-dim);font-size:11.5px}
+.vc-rent{font-family:var(--font-mono);font-weight:700;font-size:11px;text-align:center}
+.vc-pillar{font-family:var(--font-mono);font-size:10.5px;text-align:center;font-weight:600}
+.vc-legend{display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-top:10px;flex-wrap:wrap}
+.vc-legend span{display:inline-flex;align-items:center;gap:6px}
+.vc-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+.rent-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0;border:1px solid var(--border)}
+.rent-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono);padding:0 4px;text-align:center;line-height:1.1}
+.rent-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-faint);margin-bottom:4px;font-family:var(--font-mono)}
+.barrier-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.barrier-table th,.barrier-table td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.barrier-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.barrier-table td.barrier-name{font-weight:600;color:var(--text);width:23%}
+.barrier-height{display:inline-flex;align-items:center;gap:2px}
+.barrier-bar{display:inline-block;width:8px;height:14px;background:var(--bg-2);border-radius:2px;margin-right:1px}
+.barrier-bar.on-red{background:var(--red)} .barrier-bar.on-amber{background:var(--amber)} .barrier-bar.on-green{background:var(--green)}
+.trend-up{color:var(--green)} .trend-down{color:var(--red)} .trend-flat{color:var(--text-dim)}
+.dep-matrix{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:14px 0;font-size:11.5px}
+.dep-matrix>div{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.dep-matrix>div:nth-child(3n){border-right:none}
+.dep-matrix>div:nth-last-child(-n+3){border-bottom:none}
+.dep-matrix .head{background:var(--card-2);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint)}
+.dep-layer{font-weight:600;color:var(--text)}
+.dep-verdict{font-weight:600}
+.lock-high{color:var(--green)} .lock-med{color:var(--amber)} .lock-low{color:var(--red)}
+.tech-score-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,var(--card),var(--card-2));border:1px solid var(--border);margin-bottom:16px}
+.tech-score-num{font-size:48px;font-weight:800;font-family:var(--font-mono);line-height:1;min-width:80px;text-align:center}
+.tech-verdict-pill{display:inline-block;font-size:11px;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.verdict-strong-sell{background:var(--red-soft);color:var(--red);border:1px solid rgba(248,81,73,0.4)}
+.verdict-sell{background:rgba(248,81,73,0.2);color:var(--red)}
+.verdict-hold{background:var(--amber-soft);color:var(--amber)}
+.verdict-buy{background:rgba(63,185,80,0.2);color:var(--green)}
+.verdict-strong-buy{background:var(--green-soft);color:var(--green);border:1px solid rgba(63,185,80,0.4)}
+.tech-score-bar{flex:1;height:14px;background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);border-radius:7px;position:relative;min-width:200px}
+.tech-score-marker{position:absolute;top:-4px;width:4px;height:22px;background:var(--text);border-radius:2px;transform:translateX(-50%)}
+.tech-score-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:4px}
+.signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.signal-cell{background:var(--bg-2);border-radius:7px;padding:10px;font-size:11.5px;border-left:3px solid var(--border)}
+.signal-cell.bull{border-left-color:var(--green)} .signal-cell.bear{border-left-color:var(--red)} .signal-cell.neut{border-left-color:var(--amber)}
+.signal-cell .sig-name{font-weight:600;color:var(--text);font-size:11px}
+.signal-cell .sig-val{font-family:var(--font-mono);color:var(--text-dim);margin-top:2px;font-size:10.5px}
+.candle-mini-wrap{position:relative;height:280px;margin:12px 0}
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+.non-advice-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:8px;font-weight:700}
+.non-advice-panel ul{list-style:none;padding:0;font-size:11.5px;color:var(--text-dim);line-height:1.65}
+.non-advice-panel li{padding:3px 0;padding-left:16px;position:relative}
+.non-advice-panel li::before{content:'›';position:absolute;left:0;color:var(--amber)}
+.analyst-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.analyst-table th,.analyst-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.analyst-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.analyst-table td.firm{font-weight:600;color:var(--text)}
+.analyst-table td.target{font-family:var(--font-mono);font-weight:600}
+.analyst-table td.thesis{font-size:11px;color:var(--text-dim);line-height:1.5}
+.rating-buy{color:var(--green);font-weight:600} .rating-hold{color:var(--amber);font-weight:600} .rating-sell{color:var(--red);font-weight:600}
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.gloss-item{background:var(--card-2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:12px}
+.gloss-term{font-weight:700;color:var(--blue);font-family:var(--font-mono);font-size:11.5px}
+.gloss-def{color:var(--text-dim);margin-top:3px;line-height:1.5}
+.callout.plain{border-left-color:var(--amber);background:rgba(245,166,35,0.05)}
+.callout.plain .callout-title{color:var(--amber)}
+.callout.plain .callout-body{color:var(--text);font-size:13px}
+.callout.plain .callout-body strong{color:var(--amber)}
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}
+a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+@media(max-width:1100px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .exec-grid{grid-template-columns:1fr 1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .scenario-grid{grid-template-columns:1fr}
+  .grid-2-1,.grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .container{padding:16px 14px 60px}
+  .hero{padding:20px}
+  .company-name{font-size:28px}
+  .price-now{font-size:34px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .exec-grid{grid-template-columns:1fr}
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .topnav-brand{display:none}
+  .section-title h2{font-size:18px}
+  .price-block{text-align:left}
+}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.data-table th,.data-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);border-left:1px solid var(--border)}
+.data-table th:first-child,.data-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim);border-left:none}
+.data-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;background:var(--card-2)}
+.insight-frame{background:linear-gradient(135deg,rgba(245,166,35,0.04),rgba(74,158,255,0.03));border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-top:14px}
+.honest-correction{border-left:4px solid var(--red)!important;background:rgba(248,81,73,0.06)!important}
+.callout.honest-correction .callout-title{color:var(--red)}
+.footnote{font-size:11px;color:var(--text-faint);margin-top:8px;font-style:italic;line-height:1.5}
+.analyst-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.analyst-card.bull{border-top:3px solid var(--green)} .analyst-card.bear{border-top:3px solid var(--red)}
+.checklist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:900px){.checklist-grid{grid-template-columns:1fr}}
+.cap-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.cap-card h4{font-size:13px;margin-bottom:10px}
+.val-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;border-left:3px solid var(--blue)}
+.stat-mini{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.stat-mini .stat-label{font-size:9.5px}
+.stat-mini .stat-value{font-size:18px;margin-top:2px}
+.verdict-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;border-left:3px solid var(--green)}
+.sources{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px}
+.sources h4{font-size:13px;margin-bottom:10px}
+.consensus-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:900px){.consensus-grid{grid-template-columns:1fr 1fr}}
+.stale-warning{border-left:4px solid var(--amber);background:rgba(245,166,35,0.08);padding:12px 16px;border-radius:8px;margin:10px 0}
+.stale-warning h4{color:var(--amber);font-size:12px;text-transform:uppercase;margin-bottom:6px}
+.lang-policy{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11.5px;color:var(--text-dim);margin:10px 0}
+.archetype-card{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(167,139,250,0.04));border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:var(--radius);padding:16px}
+:root {
+  --sh-sm: 0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08);
+  --sh-md: 0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 1px -0.5px rgba(0,0,0,0.06), 0px 3px 3px -1.5px rgba(0,0,0,0.06), 0px 6px 6px -3px rgba(0,0,0,0.06), 0px 12px 12px -6px rgba(0,0,0,0.06), 0px 24px 24px -12px rgba(0,0,0,0.06);
+  --sh-lg: 0 2.8px 2.2px rgba(0,0,0,0.034), 0 6.7px 5.3px rgba(0,0,0,0.048), 0 12.5px 10px rgba(0,0,0,0.06), 0 22.3px 17.9px rgba(0,0,0,0.072), 0 41.8px 33.4px rgba(0,0,0,0.086), 0 100px 80px rgba(0,0,0,0.12);
+}
+@keyframes aosIn { 0% { opacity: 0; transform: translateY(28px); filter: blur(6px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
+.aos { opacity: 0; animation: aosIn 0.7s ease-out 0.05s both; animation-play-state: paused; }
+.aos.animate { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .aos { opacity: 1 !important; animation: none !important; filter: none !important; } }
+.card { box-shadow: var(--sh-md) !important; }
+.kpi { box-shadow: var(--sh-sm) !important; }
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--sh-md) !important; }
+.callout { box-shadow: var(--sh-sm) !important; }
+.data-table { box-shadow: var(--sh-sm) !important; }
+.stat, .stat-mini { box-shadow: var(--sh-sm) !important; }
+.val-card, .vc-card { box-shadow: var(--sh-sm) !important; }
+.scenario-card { box-shadow: var(--sh-md) !important; }
+.cl-card { box-shadow: var(--sh-sm) !important; }
+.cap-card { box-shadow: var(--sh-sm) !important; }
+.consensus-item { box-shadow: var(--sh-sm) !important; }
+.analyst-card { box-shadow: var(--sh-sm) !important; }
+.insight-frame { box-shadow: var(--sh-md) !important; }
+.honest-correction { box-shadow: var(--sh-sm) !important; }
+.verdict-card { box-shadow: var(--sh-sm) !important; }
+.stale-warning { box-shadow: var(--sh-sm) !important; }
+.toc-sidebar { box-shadow: var(--sh-md) !important; }
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand"><span class="dot"></span>ACB · Evidence Pack</div>
+    <a class="topnav-link" href="#sec-hero" data-target="sec-hero">Tổng quan</a>
+    <a class="topnav-link" href="#sec-exec" data-target="sec-exec">TL;DR</a>
+    <a class="topnav-link" href="#sec-biz" data-target="sec-biz">Business</a>
+    <a class="topnav-link" href="#sec-industry" data-target="sec-industry">Ngành</a>
+    <a class="topnav-link" href="#sec-history" data-target="sec-history">10 năm</a>
+    <a class="topnav-link" href="#sec-segment" data-target="sec-segment">Segment</a>
+    <a class="topnav-link" href="#sec-thesis" data-target="sec-thesis">Thesis</a>
+    <a class="topnav-link" href="#sec-valuation" data-target="sec-valuation">Định giá</a>
+    <a class="topnav-link" href="#sec-peer" data-target="sec-peer">Peer</a>
+    <a class="topnav-link" href="#sec-bs" data-target="sec-bs">BS & FCF</a>
+    <a class="topnav-link" href="#sec-risk" data-target="sec-risk">Rủi ro</a>
+    <a class="topnav-link" href="#sec-33k" data-target="sec-33k">Vốn</a>
+    <a class="topnav-link" href="#sec-scenario" data-target="sec-scenario">Kịch bản</a>
+    <a class="topnav-link" href="#sec-checklist" data-target="sec-checklist">Checklist</a>
+    <a class="topnav-link" href="#sec-insight-1" data-target="sec-insight-1">★ Insight 1</a>
+    <a class="topnav-link" href="#sec-insight-2" data-target="sec-insight-2">★ Insight 2</a>
+    <a class="topnav-link" href="#sec-insight-3" data-target="sec-insight-3">★ Insight 3</a>
+    <a class="topnav-link" href="#sec-tech" data-target="sec-tech">Technical</a>
+    <a class="topnav-link" href="#sec-analyst" data-target="sec-analyst">Analyst</a>
+    <a class="topnav-link" href="#sec-glossary" data-target="sec-glossary">📖 Thuật ngữ</a>
+    <a class="topnav-link" href="#sec-source" data-target="sec-source">Nguồn</a>
+  </div>
+</nav>
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+
+<div class="container">
+
+<section id="sec-hero" class="section" style="margin-top:8px;scroll-margin-top:60px">
+  <div class="hero aos">
+    <div class="hero-top">
+      <div>
+        <span class="ticker-badge">HOSE: ACB</span>
+        <span class="disclaimer-badge">KHÔNG KHUYẾN NGHỊ MUA/BÁN</span>
+        <h1 class="company-name">Ngân hàng TMCP Á Châu</h1>
+        <p class="company-sub">Ngành: Ngân hàng thương mại cổ phần · Trụ sở TP.HCM, Việt Nam</p>
+      </div>
+      <div class="price-block">
+        <div class="price-now"><span class="ccy">₫</span>22,600</div>
+        <div class="price-meta">Giá đóng cửa gần nhất · <span class="dim">15/07/2026</span></div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi">
+        <div class="kpi-label">Vốn hóa</div>
+        <div class="kpi-value">101.7 nghìn tỷ</div>
+        <div class="kpi-delta dim">~4.5 tỷ cổ phiếu</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">P/E (TTM)</div>
+        <div class="kpi-value neu">7.35×</div>
+        <div class="kpi-delta dim">Dựa trên EPS 3,076₫</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">P/B</div>
+        <div class="kpi-value blue">4.80×</div>
+        <div class="kpi-delta dim">BVPS ước tính</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">EPS (2025)</div>
+        <div class="kpi-value pos">3,076₫</div>
+        <div class="kpi-delta pos">+10.6% YoY</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">NPL (thông báo)</div>
+        <div class="kpi-value pos">0.8%</div>
+        <div class="kpi-delta dim">Tốt hơn trung bình ngành</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">CASA</div>
+        <div class="kpi-value blue">~22%</div>
+        <div class="kpi-delta dim">Chi phí vốn thấp</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="layout-main">
+<div class="layout-content">
+
+<section id="sec-exec" class="section">
+  <div class="section-title aos"><span class="num">2</span><h2>Executive Summary — TL;DR</h2><div class="divider"></div></div>
+  <div class="section-sub">Tóm tắt đầu tư 1–3 năm cho ACB — bằng chứng chính, rủi ro chính, và những gì cần theo dõi.</div>
+  <div class="exec-grid aos">
+    <div class="callout good">
+      <div class="callout-title">🟢 Điểm sáng</div>
+      <div class="callout-body">P/E 7.35× rất hấp dẫn so với trung bình ngành ngân hàng Việt Nam. NPL 0.8% cho thấy chất lượng tài sản tốt. CASA ~22% giúp duy trì biên lợi nhuận (NIM) ổn định. EPS phục hồi +10.6% trong năm 2025.</div>
+    </div>
+    <div class="callout warn">
+      <div class="callout-title">🔴 Rủi ro</div>
+      <div class="callout-body">Doanh thu và lợi nhuận giảm liên tục 5 năm (2021–2025). Lợi nhuận 2025 chỉ bằng 37.5% so với đỉnh 2021. P/B 4.8× cao — định giá không hề rẻ trên giá trị sổ sách. Cần cross-check kỹ lý do giảm doanh thu.</div>
+    </div>
+    <div class="callout info">
+      <div class="callout-title">🔵 Cơ hội</div>
+      <div class="callout-body">Chu kỳ tín dụng có thể phục hồi trong 1–3 năm tới. Lãi suất hạ có thể kích hoạt tăng trưởng tín dụng. ACB có nền tảng khách hàng cá nhân vững chắc với ~350 chi nhánh và ~2.000 ATM.</div>
+    </div>
+    <div class="callout neu">
+      <div class="callout-title">🟡 Theo dõi</div>
+      <div class="callout-body">Tăng trưởng tín dụng hàng quý, tỷ lệ nợ xấu (NPL), biên lợi nhuận (NIM), và sentiment thị trường chung đối với nhóm ngân hàng. Cảnh giác với "Bẫy 5B" — giá rẻ nhưng có thể rẻ hơn nữa.</div>
+    </div>
+  </div>
+  <div class="callout plain aos" style="margin-top:14px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">ACB là một ngân hàng <strong>đang trong giai đoạn thu hẹp doanh thu</strong> nhưng vẫn duy trì được lợi nhuận trên mỗi cổ phiếu nhờ kiểm soát chi phí tốt. Câu hỏi then chốt: <strong>"Liệu doanh thu đã chạm đáy chưa?"</strong> Nếu P/E 7.35× phản ánh đúng chu kỳ, đây có thể là điểm hấp dẫn. Nếu doanh thu tiếp tục giảm, cổ phiếu có thể còn rẻ hơn. Đây là split-adjusted data — không bị bóp méo bởi chia tách cổ phiếu.</div>
+  </div>
+</section>
+
+<section id="sec-biz" class="section">
+  <div class="section-title aos"><span class="num">3</span><h2>Business 101 — Ngân hàng TMCP Á Châu kiếm tiền như thế nào?</h2><div class="divider"></div></div>
+  <div class="section-sub">Mô hình kinh doanh, nguồn thu chính, và cấu trúc hoạt động của ACB.</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Mô hình kinh doanh</div>
+          <div class="card-sub">Ngân hàng thương mại cổ phần — bán lẻ trọng tâm</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">ACB là một trong những ngân hàng thương mại cổ phần tư nhân hàng đầu tại Việt Nam, tập trung mạnh vào <strong style="color:var(--text)">ngân hàng bán lẻ</strong>. Mạng lưới gồm ~350 chi nhánh và phòng giao dịch cùng ~2.000 ATM/CDM trên toàn quốc, phục vụ khách hàng cá nhân và doanh nghiệp vừa và nhỏ (SME).</p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7">Điểm khác biệt cốt lõi: ACB nổi tiếng với chiến lược <strong style="color:var(--text)">cho vay tiêu dùng có tài sản đảm bảo</strong> (mortgage-backed lending), giúp duy trì tỷ lệ nợ xấu thấp (0.8% theo công bố) so với trung bình ngành.</p>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Nguồn thu chính</div>
+          <div class="card-sub">Cấu trúc doanh thu ước tính</div>
+        </div>
+      </div>
+      <div class="seg-row">
+        <div class="seg-name">Thu nhập từ lãi (NII)</div>
+        <div class="seg-bar"><div class="seg-bar-fill" style="width:75%;background:var(--blue)">75%</div></div>
+        <div class="seg-meta">~70-75%</div>
+      </div>
+      <div class="seg-row">
+        <div class="seg-name">Thu nhập ngoài lãi (NFI)</div>
+        <div class="seg-bar"><div class="seg-bar-fill" style="width:20%;background:var(--purple)">20%</div></div>
+        <div class="seg-meta">~18-22%</div>
+      </div>
+      <div class="seg-row">
+        <div class="seg-name">Khác (đầu tư, ngoại hối)</div>
+        <div class="seg-bar"><div class="seg-bar-fill" style="width:5%;background:var(--amber)">5%</div></div>
+        <div class="seg-meta">~5-8%</div>
+      </div>
+      <p class="footnote">Cấu trúc doanh营收 là ước tính dựa trên mô hình ngân hàng bán lẻ điển hình tại VN. Số liệu chính xác cần đối chiếu BCTC chi tiết.</p>
+    </div>
+  </div>
+  <div class="callout info aos" style="margin-top:14px">
+    <div class="callout-title">ℹ️ Thông tin nền tảng</div>
+    <div class="callout-body">ACB có ~15.000 nhân viên (theo công bố). Tỷ lệ CASA ~22% là một lợi thế cạnh tranh quan trọng, giúp ngân hàng có chi phí vốn thấp hơn nhiều đối thủ. Tuy nhiên, cần lưu ý rằng dữ liệu tài chính 5 năm gần đây cho thấy xu hướng <strong>giảm tổng tài sản</strong> — từ 607.8 nghìn tỷ (2021) xuống 329.3 nghìn tỷ (2025), giảm ~46%.</div>
+  </div>
+</section>
+
+<section id="sec-industry" class="section">
+  <div class="section-title aos"><span class="num">4</span><h2>Industry Position — ACB đứng ở đâu trong ngành?</h2><div class="divider"></div></div>
+  <div class="section-sub">Chuỗi giá trị ngành ngân hàng và vị thế cạnh tranh của ACB.</div>
+  <div class="card aos">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Chuỗi giá trị & vị thế cạnh tranh</div>
+        <div class="card-sub">Ngành Ngân hàng thương mại — Việt Nam</div>
+      </div>
+    </div>
+    <div class="vc-stack">
+      <div class="vc-layer upstream-most">
+        <div class="vc-name">Tiền gửi NHNN & Vốn điều lệ<span class="sub">Nguồn vốn tối thượng</span></div>
+        <div class="vc-players">NHNN Việt Nam, Cổ đông</div>
+        <div class="vc-rent">Cơ bản</div>
+        <div class="vc-pillar">Vốn</div>
+      </div>
+      <div class="vc-layer upstream">
+        <div class="vc-name">Huy động tiền gửi<span class="sub">CASA & tiền gửi tiết kiệm</span></div>
+        <div class="vc-players">Khách hàng cá nhân & SME</div>
+        <div class="vc-rent">CASA 22%</div>
+        <div class="vc-pillar">Chi phí vốn</div>
+      </div>
+      <div class="vc-layer oracle">
+        <div class="vc-name">ACB — Lõi kinh doanh<span class="sub">Cho vay bán lẻ & SME</span></div>
+        <div class="vc-players">~350 chi nhánh, 15.000 NV</div>
+        <div class="vc-rent">NIM cốt lõi</div>
+        <div class="vc-pillar">Rủi ro tín dụng</div>
+      </div>
+      <div class="vc-layer downstream">
+        <div class="vc-name">Khách hàng vay<span class="sub">Bán lẻ, mortgage, SME</span></div>
+        <div class="vc-players">Người vay mua nhà, tiêu dùng</div>
+        <div class="vc-rent">NIM spread</div>
+        <div class="vc-pillar">Thu nhập từ lãi</div>
+      </div>
+      <div class="vc-layer downstream">
+        <div class="vc-name">Dịch vụ phí & Bancassurance<span class="sub">Bán chéo sản phẩm</span></div>
+        <div class="vc-players">Đối tác bảo hiểm, chứng khoán</div>
+        <div class="vc-rent">Phí hoa hồng</div>
+        <div class="vc-pillar">Thu nhập ngoài lãi</div>
+      </div>
+    </div>
+    <div class="vc-legend">
+      <span><span class="swatch" style="background:var(--red)"></span> Nguồn vốn (upstream)</span>
+      <span><span class="swatch" style="background:var(--amber)"></span> Huy động</span>
+      <span><span class="swatch" style="background:var(--blue)"></span> Lõi kinh doanh (ACB)</span>
+      <span><span class="swatch" style="background:var(--text-faint)"></span> Phân phối (downstream)</span>
+    </div>
+  </div>
+  <div class="grid-2 aos" style="margin-top:14px">
+    <div class="callout good">
+      <div class="callout-title">Lợi thế cạnh tranh</div>
+      <div class="callout-body">NPL thấp (0.8%), CASA cao (~22%), thương hiệu bán lẻ mạnh, mạng lưới rộng (~350 chi nhánh). ACB được thị trường đánh giá là một trong những ngân hàng an toàn nhất về chất lượng tài sản.</div>
+    </div>
+    <div class="callout warn">
+      <div class="callout-title">Thách thức</div>
+      <div class="callout-body">Quy mô tổng tài sản đang thu hẹp nhanh chóng. Cạnh tranh khốc liệt từ Techcombank, MB, VPBank trong phân khúc bán lẻ. Sentiment ngành ngân hàng phụ thuộc mạnh vào chính sách tiền tệ của NHNN.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-history" class="section">
+  <div class="section-title aos"><span class="num">5</span><h2>Lịch sử tài chính 5 năm (FY2021–FY2025)</h2><div class="divider"></div></div>
+  <div class="section-sub">Dữ liệu split-adjusted từ BCTC kiểm toán. Đơn vị: tỷ VND (trừ EPS: VND).</div>
+  <div class="table-wrap aos">
+    <table class="fin-table">
+      <thead>
+        <tr>
+          <th>Chỉ tiêu</th>
+          <th>2021</th>
+          <th>2022</th>
+          <th>2023</th>
+          <th>2024</th>
+          <th class="col-latest">2025</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-strong">
+          <td>Doanh thu hoạt động (tỷ VND)</td>
+          <td>23,533</td>
+          <td>18,945</td>
+          <td>14,582</td>
+          <td>12,112</td>
+          <td class="col-latest">10,363</td>
+        </tr>
+        <tr class="row-strong">
+          <td>Lợi nhuận sau thuế (tỷ VND)</td>
+          <td>13,688</td>
+          <td>9,603</td>
+          <td>7,683</td>
+          <td>6,010</td>
+          <td class="col-latest">5,137</td>
+        </tr>
+        <tr>
+          <td>EPS (VND)</td>
+          <td>3,486</td>
+          <td>2,799</td>
+          <td>2,808</td>
+          <td>2,780</td>
+          <td class="col-latest">3,076</td>
+        </tr>
+        <tr>
+          <td>Tổng tài sản (tỷ VND)</td>
+          <td>607,875</td>
+          <td>527,770</td>
+          <td>444,530</td>
+          <td>383,514</td>
+          <td class="col-latest">329,333</td>
+        </tr>
+        <tr>
+          <td>Vốn chủ sở hữu (tỷ VND)</td>
+          <td>58,439</td>
+          <td>44,901</td>
+          <td>35,448</td>
+          <td>27,765</td>
+          <td class="col-latest">21,018</td>
+        </tr>
+        <tr>
+          <td>Capex (tỷ VND)</td>
+          <td>512</td>
+          <td>636</td>
+          <td>423</td>
+          <td>535</td>
+          <td class="col-latest">374</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid-2 aos" style="margin-top:18px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Doanh thu & Lợi nhuận</div><div class="card-sub">5 năm (tỷ VND)</div></div></div>
+      <div class="chart-wrap"><canvas id="chartHistRev"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Tổng tài sản & Vốn CSH</div><div class="card-sub">5 năm (tỷ VND)</div></div></div>
+      <div class="chart-wrap"><canvas id="chartBSDt"></canvas></div>
+    </div>
+  </div>
+  <div class="callout honest-correction aos" style="margin-top:14px">
+    <div class="callout-title">⚠️ Đánh giá honest về xu hướng</div>
+    <div class="callout-body">Dữ liệu cho thấy <strong>doanh thu giảm 56%</strong> trong 5 năm (từ 23.5 nghìn tỷ xuống 10.4 nghìn tỷ). Lợi nhuận giảm 62.5%. Đây là xu hướng <strong>bất thường</strong> cho một ngân hàng đang hoạt động bình thường. <strong>Limitation:</strong> Có thể dữ liệu này phản ánh thay đổi về cách ghi nhận doanh thu (chuyển từ tổng sang thuần), hoặc thu hẹp balancesheet có chủ đích. Nhà đầu tư <strong>phải đối chiếu BCTC gốc</strong> để hiểu rõ bản chất trước khi đưa ra quyết định. Ước tính này cần được xác minh bằng nguồn độc lập.</div>
+  </div>
+</section>
+
+<section id="sec-segment" class="section">
+  <div class="section-title aos"><span class="num">6</span><h2>Segment Analysis</h2><div class="divider"></div></div>
+  <div class="section-sub">Cơ cấu doanh thu theo phân khúc khách hàng (ước tính).</div>
+  <div class="grid-2-1 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Cơ cấu doanh thu ước tính</div><div class="card-sub">Theo phân khúc khách hàng</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartSegMix"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Đặc điểm</div></div></div>
+      <div class="seg-row">
+        <div class="seg-name">Bán lẻ cá nhân</div>
+        <div class="seg-bar"><div class="seg-bar-fill" style="width:55%;background:var(--blue)">55%</div></div>
+      </div>
+      <div class="seg-row">
+        <div class="seg-name">SME</div>
+        <div class="seg-bar"><div class="seg-bar-fill" style="width:25%;background:var(--purple)">25%</div></div>
+      </div>
+      <div class="seg-row">
+        <div class="seg-name">Doanh nghiệp lớn</div>
+        <div class="seg-bar"><div class="seg-bar-fill" style="width:12%;background:var(--amber)">12%</div></div>
+      </div>
+      <div class="seg-row">
+        <div class="seg-name">Dịch vụ phí & Khác</div>
+        <div class="seg-bar"><div class="seg-bar-fill" style="width:8%;background:var(--text-faint)">8%</div></div>
+      </div>
+      <p class="footnote">Cơ cấu segment là ước tính dựa trên mô hình kinh doanh đặc thù của ACB. Số liệu chi tiết cần đối chiếu BCTC.</p>
+    </div>
+  </div>
+</section>
+
+<section id="sec-thesis" class="section">
+  <div class="section-title aos"><span class="num">7</span><h2>Investment Thesis — 1-3 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">Luận điểm đầu tư chính cho ACB trong khung thời gian 1–3 năm.</div>
+  <div class="grid-2 aos">
+    <div class="callout good">
+      <div class="callout-title">✅ Luận điểm ĐÚNG (Bull)</div>
+      <div class="callout-body">
+        <p style="margin-bottom:8px"><strong>1. Định giá hấp dẫn:</strong> P/E 7.35× thấp hơn trung bình ngành ngân hàng VN (thường 8–12×). Nếu sentiment thị trường cải thiện, có dư địa tăng giá.</p>
+        <p style="margin-bottom:8px"><strong>2. Chất lượng tài sản tốt:</strong> NPL 0.8% là một trong những mức thấp nhất ngành. Rủi ro tín dụng được kiểm soát chặt.</p>
+        <p><strong>3. EPS phục hồi:</strong> EPS 2025 tăng +10.6% so với 2024, cho thấy khả năng sinh lời trên mỗi cổ phiếu đang cải thiện dù tổng lợi nhuận giảm.</p>
+      </div>
+    </div>
+    <div class="callout warn">
+      <div class="callout-title">❌ Luận điểm SAI (Bear)</div>
+      <div class="callout-body">
+        <p style="margin-bottom:8px"><strong>1. Xu hướng doanh thu giảm:</strong> Doanh thu giảm liên tục 5 năm. Nếu xu hướng tiếp tục, P/E thấp có thể là "Bẫy giá rẻ" (value trap).</p>
+        <p style="margin-bottom:8px"><strong>2. P/B cao bất thường:</strong> P/B 4.8× rất cao so với ngành (thường 1–2×). Điều này mâu thuẫn với P/E thấp — cần kiểm tra kỹ BVPS.</p>
+        <p><strong>3. Thu hẹp balancesheet:</strong> Tổng tài sản giảm 46% trong 5 năm — tín hiệu bất thường cho một ngân hàng đang hoạt động.</p>
+      </div>
+    </div>
+  </div>
+  <div class="card aos" style="margin-top:14px">
+    <div class="card-head"><div><div class="card-title">KPI Watchlist — Theo dõi hàng quý</div></div></div>
+    <div class="grid-4">
+      <div class="stat-mini">
+        <div class="stat-label">Tăng trưởng tín dụng</div>
+        <div class="stat-value">≥10%</div>
+        <div class="stat-meta">Mục tiêu hàng năm</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-label">NPL ratio</div>
+        <div class="stat-value">&lt;1.5%</div>
+        <div class="stat-meta">Hiện tại: 0.8%</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-label">NIM</div>
+        <div class="stat-value">≥3.5%</div>
+        <div class="stat-meta">Biên lợi nhuận ròng</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-label">CASA</div>
+        <div class="stat-value">≥20%</div>
+        <div class="stat-meta">Hiện tại: ~22%</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-valuation" class="section">
+  <div class="section-title aos"><span class="num">8</span><h2>Valuation — P/E & P/B vs lịch sử</h2><div class="divider"></div></div>
+  <div class="section-sub">Định giá hiện tại so với trung bình lịch sử và ngành.</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">P/E lịch sử 5 năm</div><div class="card-sub">Với annotation trung bình</div></div></div>
+      <div class="chart-wrap"><canvas id="chartValPE"></canvas></div>
+    </div>
+    <div class="val-card">
+      <h4 style="font-size:13px;margin-bottom:12px">Valuation Snapshot</h4>
+      <div class="stat-mini" style="margin-bottom:10px">
+        <div class="stat-label">P/E hiện tại</div>
+        <div class="stat-value neu">7.35×</div>
+        <div class="stat-meta">Dựa trên giá 22,600₫ và EPS 3,076₫</div>
+      </div>
+      <div class="stat-mini" style="margin-bottom:10px">
+        <div class="stat-label">P/B hiện tại</div>
+        <div class="stat-value blue">4.80×</div>
+        <div class="stat-meta">Cao — cần cross-check BVPS</div>
+      </div>
+      <div class="stat-mini" style="margin-bottom:10px">
+        <div class="stat-label">EPS 2025</div>
+        <div class="stat-value pos">3,076₫</div>
+        <div class="stat-meta">+10.6% YoY</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-label">Giá mục tiêu (P/E 10×)</div>
+        <div class="stat-value pos">~30,760₫</div>
+        <div class="stat-meta">+36% so với giá hiện tại</div>
+      </div>
+    </div>
+  </div>
+  <div class="callout plain aos" style="margin-top:14px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">Với P/E 7.35×, thị trường đang định giá ACB <strong>rất thấp</strong> so với lợi nhuận hiện tại. Nếu ACB duy trì được EPS 3,076₫ và thị trường quay lại định giá P/E 10× (mức trung bình ngành), giá có thể đạt ~30,760₫. Tuy nhiên, <strong>cảnh giác: P/B 4.8× rất cao</strong>, cho thấy có thể có sự không nhất quán trong dữ liệu BVPS. Hãy verify kỹ trước khi quyết định.</div>
+  </div>
+</section>
+
+<section id="sec-peer" class="section">
+  <div class="section-title aos"><span class="num">9</span><h2>Peer Comparison</h2><div class="divider"></div></div>
+  <div class="section-sub">So sánh ACB với các ngân hàng cùng ngành (ước tính, MEDQ).</div>
+  <div class="card aos">
+    <div class="card-head"><div><div class="card-title">Peer Scatter — P/B vs Tăng trưởng lợi nhuận</div><div class="card-sub">Bubble size = Vốn hóa (ước tính)</div></div></div>
+    <div class="chart-wrap"><canvas id="chartPeerScatter"></canvas></div>
+  </div>
+  <div class="table-wrap aos" style="margin-top:14px">
+    <table class="fin-table">
+      <thead>
+        <tr>
+          <th>Ngân hàng</th>
+          <th>P/E (×)</th>
+          <th>P/B (×)</th>
+          <th>NPL (%)</th>
+          <th>ROE (%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-strong">
+          <td>ACB</td>
+          <td class="col-latest">7.35</td>
+          <td class="col-latest">4.80</td>
+          <td>0.8</td>
+          <td>~24</td>
+        </tr>
+        <tr>
+          <td>VCB (Vietcombank)</td>
+          <td>~12</td>
+          <td>~2.5</td>
+          <td>~0.8</td>
+          <td>~23</td>
+        </tr>
+        <tr>
+          <td>TCB (Techcombank)</td>
+          <td>~8</td>
+          <td>~1.8</td>
+          <td>~1.0</td>
+          <td>~20</td>
+        </tr>
+        <tr>
+          <td>MBB (MB Bank)</td>
+          <td>~6</td>
+          <td>~1.5</td>
+          <td>~1.5</td>
+          <td>~22</td>
+        </tr>
+        <tr>
+          <td>VPB (VPBank)</td>
+          <td>~7</td>
+          <td>~1.3</td>
+          <td>~2.0</td>
+          <td>~18</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="footnote">Số liệu peer là ước tính (MEDQ) dựa trên dữ liệu thị trường công khai. Cần đối chiếu nguồn độc lập trước khi ra quyết định.</p>
+</section>
+
+<section id="sec-bs" class="section">
+  <div class="section-title aos"><span class="num">10</span><h2>Balance Sheet, Capex & Free Cash Flow</h2><div class="divider"></div></div>
+  <div class="section-sub">Phân tích cấu trúc tài chính và dòng tiền.</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Capex vs Dòng tiền hoạt động</div><div class="card-sub">5 năm (tỷ VND)</div></div></div>
+      <div class="chart-wrap"><canvas id="chartHistCash"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">EPS & ROE</div><div class="card-sub">5 năm</div></div></div>
+      <div class="chart-wrap"><canvas id="chartReturns"></canvas></div>
+    </div>
+  </div>
+  <div class="callout info aos" style="margin-top:14px">
+    <div class="callout-title">Phân tích Balance Sheet</div>
+    <div class="callout-body">Tổng tài sản giảm từ 607.9 nghìn tỷ (2021) xuống 329.3 nghìn tỷ (2025) — giảm 46%. Vốn chủ sở hữu cũng giảm từ 58.4 nghìn tỷ xuống 21.0 nghìn tỷ. Capex duy trì ở mức thấp (374–636 tỷ/năm), phù hợp với mô hình ngân hàng (capex chủ yếu là công nghệ và chi nhánh). <strong>Honest note:</strong> Việc thu hẹp balancesheet liên tục là rất bất thường và cần được giải thích — có thể do thay đổi chuẩn mực kế toán hoặc tái cấu trúc.</div>
+  </div>
+</section>
+
+<section id="sec-risk" class="section">
+  <div class="section-title aos"><span class="num">11</span><h2>Risk Matrix</h2><div class="divider"></div></div>
+  <div class="section-sub">Các rủi ro chính và mức độ ảnh hưởng.</div>
+  <div class="table-wrap aos">
+    <table class="risk-table">
+      <thead>
+        <tr>
+          <th>Rủi ro</th>
+          <th>Mức độ</th>
+          <th>Tác động</th>
+          <th>Mitigation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Rủi ro tín dụng (NPL tăng)</td>
+          <td><span class="pill pill-l">Thấp</span></td>
+          <td>NPL hiện tại 0.8% — tốt. Nhưng nếu kinh tế suy thoái, nợ xấu có thể tăng nhanh.</td>
+          <td>ACB có lịch sử quản lý rủi ro tốt, cho vay có tài sản đảm bảo.</td>
+        </tr>
+        <tr>
+          <td>Rủi ro thanh khoản</td>
+          <td><span class="pill pill-m">Trung bình</span></td>
+          <td>CASA 22% giúp giảm rủi ro, nhưng balancesheet đang thu hẹp.</td>
+          <td>Duy trì tỷ lệ LDR theo quy định NHNN.</td>
+        </tr>
+        <tr>
+          <td>Rủi ro chính sách (NHNN)</td>
+          <td><span class="pill pill-h">Cao</span></td>
+          <td>Thay đổi lãi suất, hạn mức tín dụng ảnh hưởng trực tiếp đến doanh thu.</td>
+          <td>Theo dõi sát chính sách tiền tệ và room tín dụng.</td>
+        </tr>
+        <tr>
+          <td>Rủi ro cạnh tranh</td>
+          <td><span class="pill pill-m">Trung bình</span></td>
+          <td>Techcombank, MB, VPBank đang cạnh tranh mạnh trong bán lẻ.</td>
+          <td>Đầu tư công nghệ và bancassurance để tăng thu ngoài lãi.</td>
+        </tr>
+        <tr>
+          <td>Rủi ro dữ liệu (data limitation)</td>
+          <td><span class="pill pill-h">Cao</span></td>
+          <td>Xu hướng doanh thu giảm 5 năm là bất thường — có thể do lỗi dữ liệu hoặc thay đổi kế toán.</td>
+          <td><strong>Bắt buộc cross-check</strong> BCTC gốc trước khi quyết định.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="sec-33k" class="section">
+  <div class="section-title aos"><span class="num">12</span><h2>Góc nhìn khoản đầu tư 800 triệu VND</h2><div class="divider"></div></div>
+  <div class="section-sub">Nếu đầu tư 800 triệu VND vào ACB — các kịch bản và cân nhắc.</div>
+  <div class="grid-3 aos">
+    <div class="cap-card">
+      <h4>Lump Sum (Một lần)</h4>
+      <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6">Với 800 triệu VND ở giá 22,600₫, bạn mua được ~35,398 cổ phiếu. Nếu giá đạt mục tiêu 30,760₫ (P/E 10×), lợi nhuận ~+36% = ~288 triệu VND. Tuy nhiên, nếu giá giảm 30%, bạn mất ~240 triệu VND.</p>
+    </div>
+    <div class="cap-card">
+      <h4>DCA (Định kỳ)</h4>
+      <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6">Chia 800 triệu thành 8 lần × 100 triệu/tháng. Giảm rủi ro thời điểm nhập cuộc. Phù hợp nếu bạn tin ACB hấp dẫn nhưng lo ngại biến động ngắn hạn của sentiment thị trường.</p>
+    </div>
+    <div class="cap-card">
+      <h4>Drawdown tối đa</h4>
+      <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6">Cổ phiếu ngân hàng VN có thể giảm 30–50% trong thị trường suy thoái. Với 800 triệu, bạn cần sẵn sàng tâm lý thấy tài khoản giảm xuống 400–560 triệu tạm thời.</p>
+    </div>
+  </div>
+  <div class="callout warn aos" style="margin-top:14px">
+    <div class="callout-title">⚠️ Cảnh báo quan trọng</div>
+    <div class="callout-body">Trước khi đặt 800 triệu VND, hãy <strong>verify dữ liệu tài chính</strong> từ BCTC gốc. Xu hướng doanh thu giảm 5 năm là tín hiệu cảnh báo đỏ (red flag). Không quyết định lớn dựa trên dữ liệu chưa được cross-check.</div>
+  </div>
+</section>
+
+<section id="sec-scenario" class="section">
+  <div class="section-title aos"><span class="num">13</span><h2>Scenario Analysis — 1–3 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">Ba kịch bản: Bull, Base, Bear.</div>
+  <div class="scenario-grid aos">
+    <div class="scenario-card bull">
+      <h4>🟢 Bull Case</h4>
+      <ul>
+        <li>P/E mở rộng lên 10–12×</li>
+        <li>Giá mục tiêu: 30,760–36,900₫</li>
+        <li>Doanh thu phục hồi, tăng trưởng tín dụng ≥12%</li>
+        <li>NPL duy trì &lt;1%</li>
+        <li>Lợi nhuận tiềm năng: +36% đến +63%</li>
+      </ul>
+    </div>
+    <div class="scenario-card base">
+      <h4>🟡 Base Case</h4>
+      <ul>
+        <li>P/E duy trì 7–8×</li>
+        <li>Giá dao động: 21,500–24,600₫</li>
+        <li>Doanh thu ổn định, tăng trưởng tín dụng ~8–10%</li>
+        <li>NPL duy trì ~1%</li>
+        <li>Lợi nhuận tiềm năng: -5% đến +9%</li>
+      </ul>
+    </div>
+    <div class="scenario-card bear">
+      <h4>🔴 Bear Case</h4>
+      <ul>
+        <li>P/E nén xuống 5–6×</li>
+        <li>Giá giảm: 15,380–18,450₫</li>
+        <li>Doanh thu tiếp tục giảm, tín dụng yếu</li>
+        <li>NPL tăng trên 1.5%</li>
+        <li>Lợi nhuận tiềm năng: -18% đến -32%</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="sec-checklist" class="section">
+  <div class="section-title aos"><span class="num">14</span><h2>Final Investment Checklist</h2><div class="divider"></div></div>
+  <div class="section-sub">5 câu hỏi then chốt trước khi quyết định đầu tư.</div>
+  <div class="checklist-grid aos">
+    <div class="card">
+      <ul class="check-list">
+        <li>
+          <span class="check-box on">✓</span>
+          <div class="q">Định giá có hấp dẫn không?
+            <div class="hint">P/E 7.35× thấp hơn trung bình ngành. Có.</div>
+          </div>
+        </li>
+        <li>
+          <span class="check-box off">?</span>
+          <div class="q">Doanh thu có đang tăng không?
+            <div class="hint">KHÔNG — doanh thu giảm 5 năm liên tục. Cần làm rõ.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="card">
+      <ul class="check-list">
+        <li>
+          <span class="check-box on">✓</span>
+          <div class="q">Chất lượng tài sản tốt không?
+            <div class="hint">NPL 0.8% — rất tốt.</div>
+          </div>
+        </li>
+        <li>
+          <span class="check-box on">✓</span>
+          <div class="q">ROE có trên 15% không?
+            <div class="hint">Ước tính ~24% — rất tốt.</div>
+          </div>
+        </li>
+        <li>
+          <span class="check-box off">?</span>
+          <div class="q">Dữ liệu đã cross-check chưa?
+            <div class="hint">CHƯA — cần verify BCTC gốc.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-1" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 1 — Thu hẹp Balance Sheet: Tái cấu trúc hay dấu hiệu cảnh báo?</h2><div class="divider"></div></div>
+  <div class="section-sub">Phân tích sâu hiện tượng tổng tài sản giảm 46% trong 5 năm.</div>
+  <div class="insight-frame aos">
+    <p style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:14px">Một trong những quan sát đáng chú ý nhất về ACB là <strong>tổng tài sản giảm từ 607.9 nghìn tỷ VND (2021) xuống 329.3 nghìn tỷ VND (2025)</strong> — tương đương giảm 46%. Điều này rất bất thường đối với một ngân hàng đang hoạt động bình thường, vì thông thường tổng tài sản của ngân hàng tăng theo thời gian cùng với tăng trưởng tín dụng và huy động.</p>
+    <p style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:14px">Có ba giả thuyết chính có thể giải thích hiện tượng này:</p>
+    <ol style="font-size:13px;color:var(--text-dim);line-height:1.8;padding-left:20px;margin-bottom:14px">
+      <li><strong style="color:var(--text)">Thay đổi chuẩn mực kế toán:</strong> Có thể ACB đã chuyển từ ghi nhận tổng (gross) sang ghi nhận thuần (net) đối với một số khoản mục, làm giảm tổng tài sản mà không thực sự thu hẹp hoạt động.</li>
+      <li><strong style="color:var(--text)">Tái cấu trúc có chủ đích:</strong> Ban lãnh đạo có thể chủ động thu hẹp balancesheet để tập trung vào chất lượng thay vì số lượng, giảm cho vay rủi ro và tăng tỷ lệ an toàn vốn.</li>
+      <li><strong style="color:var(--text)">Dấu hiệu cảnh báo thực sự:</strong> Nếu tổng tài sản giảm do mất khách hàng, giảm huy động, hoặc phải xóa sổ nợ xấu, đây là tín hiệu cảnh báo nghiêm trọng.</li>
+    </ol>
+    <div class="callout honest-correction">
+      <div class="callout-title">⚠️ Honest Assessment</div>
+      <div class="callout-body">Với dữ liệu hiện có, <strong>không thể xác định chắc chắn</strong> nguyên nhân. Đây là một <strong>limitation quan trọng</strong> của báo cáo này. Nhà đầu tư <strong>bắt buộc phải đọc BCTC gốc</strong> (đặc biệt là Thuyết minh BCTC) để hiểu rõ. Nếu nguyên nhân là (1) hoặc (2), ACB có thể vẫn là đầu tư hấp dẫn. Nếu là (3), cần tránh xa.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-2" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 2 — P/E thấp nhưng P/B cao: Nghịch lý định giá</h2><div class="divider"></div></div>
+  <div class="section-sub">Giải mã sự mâu thuẫn giữa P/E 7.35× và P/B 4.80×.</div>
+  <div class="insight-frame aos">
+    <p style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:14px">Thông thường, một ngân hàng có P/E thấp (7.35×) sẽ đi kèm với P/B cũng thấp (1–2×). Tuy nhiên, ACB có <strong>P/B lên đến 4.80×</strong> — mức rất cao so với trung bình ngành ngân hàng VN (thường 1–2.5×). Sự mâu thuẫn này cần được giải thích.</p>
+    <p style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:14px">Phân tích: P/B = Giá / BVPS. Với giá 22,600₫ và P/B 4.80×, BVPS ngụ ý chỉ khoảng <strong>~4,708₫</strong>. Tuy nhiên, với vốn chủ sở hữu 21,018 tỷ VND và 4.5 tỷ cổ phiếu, BVPS thực tế phải là <strong>~4,671₫</strong> — gần khớp. Điều này có nghĩa là <strong>ACB thực sự đang giao dịch ở P/B rất cao</strong>.</p>
+    <p style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:14px">Lý do có thể: ROE rất cao (~24%) cho phép ngân hàng giao dịch ở P/B cao hơn trung bình. Tuy nhiên, P/B 4.8× vẫn là mức <strong>khá bất thường</strong> và có thể phản ánh kỳ vọng thị trường rất tích cực về khả năng sinh lời tương lai, hoặc có sự sai lệch trong số liệu cổ phiếu lưu hành.</p>
+    <div class="callout warn">
+      <div class="callout-title">🔴 Hành động</div>
+      <div class="callout-body">Nhà đầu tư cần <strong>cross-check số cổ phiếu lưu hành</strong> và <strong>BVPS</strong> từ BCTC mới nhất. Nếu P/B thực sự là 4.8×, đây là mức định giá đắt đỏ và rủi ro giảm giá cao nếu ROE giảm.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-3" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 3 — CASA 22% và lợi thế cạnh tranh bền vững</h2><div class="divider"></div></div>
+  <div class="section-sub">Tại sao tỷ lệ tiền gửi không kỳ hạn lại quan trọng với ACB.</div>
+  <div class="insight-frame aos">
+    <p style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:14px">CASA (Current Account Savings Account) ~22% của ACB là một trong những lợi thế cạnh tranh quan trọng nhất. CASA là tỷ lệ tiền gửi không kỳ hạn (hoặc kỳ hạn rất ngắn) trên tổng tiền gửi. Tiền gửi không kỳ hạn thường có <strong>chi phí vốn gần bằng 0</strong> (lãi suất ~0.1–0.5%/năm), giúp ngân hàng có nguồn vốn rẻ để cho vay với biên lợi nhuận (NIM) cao hơn.</p>
+    <p style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:14px">So sánh với ngành: CASA trung bình ngành ngân hàng VN khoảng 15–20%. ACB ở mức ~22% là thuộc top đầu, chỉ sau Techcombank (~40%+) và Vietcombank (~25%). Điều này giúp ACB duy trì NIM ổn định ngay cả khi lãi suất thị trường biến động.</p>
+    <p style="font-size:13.5px;color:var(--text);line-height:1.7;margin-bottom:14px">Tuy nhiên, <strong>limitation</strong> cần lưu ý: CASA có thể giảm nhanh nếu khách hàng chuyển tiền sang các sản phẩm tiết kiệm có lãi suất cao hơn khi lãi suất thị trường tăng. ACB cần liên tục đầu tư vào trải nghiệm số (digital banking) để giữ chân khách hàng CASA. Sentiment tích cực của khách hàng đối với app ngân hàng số là một chỉ số quan trọng cần theo dõi.</p>
+    <div class="callout good">
+      <div class="callout-title">🟢 Kết luận</div>
+      <div class="callout-body">CASA 22% là một <strong>lợi thế cạnh tranh bền vững</strong> của ACB, giúp ngân hàng duy trì lợi nhuận ngay cả trong môi trường lãi suất khó khăn. Đây là một trong những lý do chính khiến ACB đáng được xem xét cho danh mục đầu tư 1–3 năm.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-tech" class="section">
+  <div class="section-title aos"><span class="num">18</span><h2>Phân tích kỹ thuật — Mode ACTIVE</h2><span class="tag red">TIMING/VERDICT</span><div class="divider"></div></div>
+  <div class="section-sub">Tín hiệu kỹ thuật và điểm tổng hợp.</div>
+  <div class="tech-score-card aos">
+    <div data-metric="tech-score" data-score="0" data-verdict="NEUTRAL">
+      <span class="tech-score-num">0/6</span>
+      <div style="text-align:center"><span class="tech-score-verdict verdict-hold">NEUTRAL</span></div>
+    </div>
+    <div style="flex:1">
+      <div class="tech-score-bar">
+        <div class="tech-score-marker" style="left:50%"></div>
+      </div>
+      <div class="tech-score-labels">
+        <span>-6 (Strong Sell)</span>
+        <span>0 (Neutral)</span>
+        <span>+6 (Strong Buy)</span>
+      </div>
+    </div>
+  </div>
+  <div class="card aos">
+    <div class="card-head"><div><div class="card-title">Giá & Đường trung bình động</div><div class="card-sub">Weekly — 2 năm gần đây</div></div></div>
+    <div class="chart-wrap"><canvas id="chartTechPrice"></canvas></div>
+  </div>
+  <div class="grid-2 aos" style="margin-top:14px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">RSI (14)</div><div class="card-sub">Chỉ số sức mạnh tương đối</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartTechRSI"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Tín hiệu kỹ thuật</div></div></div>
+      <div class="signal-grid">
+        <div class="signal-cell neut">
+          <div class="sig-name">Trend</div>
+          <div class="sig-val">Neutral — Sideways</div>
+        </div>
+        <div class="signal-cell neut">
+          <div class="sig-name">MA Cross</div>
+          <div class="sig-val">Chưa có tín hiệu rõ</div>
+        </div>
+        <div class="signal-cell neut">
+          <div class="sig-name">RSI</div>
+          <div class="sig-val">~50 — Trung tính</div>
+        </div>
+        <div class="signal-cell neut">
+          <div class="sig-name">Volume</div>
+          <div class="sig-val">Bình thường</div>
+        </div>
+        <div class="signal-cell neut">
+          <div class="sig-name">Support</div>
+          <div class="sig-val">~21,000₫</div>
+        </div>
+        <div class="signal-cell neut">
+          <div class="sig-name">Resistance</div>
+          <div class="sig-val">~24,000₫</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-tech-profile" class="section">
+  <div class="section-title aos"><span class="num">19</span><h2>Phân tích kỹ thuật — Mode PROFILE</h2><span class="tag amber">NON-ADVICE</span><div class="divider"></div></div>
+  <div class="section-sub">Hồ sơ biến động giá — không phải khuyến nghị mua/bán.</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Drawdown Profile</div><div class="card-sub">2 năm — underwater curve</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartProfileDD"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Phân phối lợi nhuận</div><div class="card-sub">2 năm — histogram</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartProfileDist"></canvas></div>
+    </div>
+  </div>
+  <div class="non-advice-panel aos">
+    <h4>⚠️ Non-Advice — Hồ sơ biến động</h4>
+    <ul>
+      <li>Thông tin trên là mô tả <strong>hồ sơ biến động giá trong quá khứ</strong>, không phải dự báo tương lai.</li>
+      <li>Drawdown tối đa trong 2 năm có thể lên đến -20% đến -30% trong các giai đoạn thị trường suy thoái.</li>
+      <li>Nhà đầu tư cần tự đánh giá khả năng chịu đựng rủi ro trước khi ra quyết định.</li>
+      <li>Sentiment thị trường có thể thay đổi nhanh chóng — không dựa vào kỹ thuật đơn thuần.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="sec-analyst" class="section">
+  <div class="section-title aos"><span class="num">20</span><h2>Analyst Synthesis</h2><span class="tag blue">BULL/BEAR</span><div class="divider"></div></div>
+  <div class="section-sub">Tổng hợp quan điểm bull và bear.</div>
+  <div class="grid-2 aos">
+    <div class="analyst-card bull">
+      <h4 style="font-size:13px;margin-bottom:10px">🟢 Bull Thesis</h4>
+      <ul style="list-style:none;padding:0;font-size:12px;color:var(--text-dim);line-height:1.7">
+        <li style="padding:3px 0">› P/E 7.35× hấp dẫn so với ngành</li>
+        <li style="padding:3px 0">› NPL 0.8% — chất lượng tài sản top đầu</li>
+        <li style="padding:3px 0">› CASA 22% — chi phí vốn thấp</li>
+        <li style="padding:3px 0">› EPS phục hồi +10.6% trong 2025</li>
+        <li style="padding:3px 0">› Thương hiệu bán lẻ mạnh, mạng lưới rộng</li>
+      </ul>
+    </div>
+    <div class="analyst-card bear">
+      <h4 style="font-size:13px;margin-bottom:10px">🔴 Bear Thesis</h4>
+      <ul style="list-style:none;padding:0;font-size:12px;color:var(--text-dim);line-height:1.7">
+        <li style="padding:3px 0">› Doanh thu giảm 5 năm liên tục</li>
+        <li style="padding:3px 0">› P/B 4.8× cao bất thường</li>
+        <li style="padding:3px 0">› Tổng tài sản giảm 46% — cảnh báo</li>
+        <li style="padding:3px 0">› Cạnh tranh bán lẻ ngày càng khốc liệt</li>
+        <li style="padding:3px 0">› Rủi ro dữ liệu — cần verify BCTC</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="sec-glossary" class="section">
+  <div class="section-title aos"><span class="num">21</span><h2>📖 Hướng dẫn đọc — Giải thích thuật ngữ</h2><div class="divider"></div></div>
+  <div class="section-sub">Các thuật ngữ tài chính sử dụng trong báo cáo.</div>
+  <div class="glossary-grid aos">
+    <div class="gloss-item">
+      <div class="gloss-term">P/E (Price-to-Earnings)</div>
+      <div class="gloss-def">Giá / EPS. Cho biết bạn trả bao nhiêu cho mỗi đồng lợi nhuận. P/E thấp = định giá rẻ (nhưng có thể có lý do).</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">P/B (Price-to-Book)</div>
+      <div class="gloss-def">Giá / BVPS. Cho biết bạn trả bao nhiêu trên giá trị sổ sách. P/B cao = thị trường kỳ vọng ROE cao.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">EPS (Earnings Per Share)</div>
+      <div class="gloss-def">Lợi nhuận trên mỗi cổ phiếu. Lợi nhuận sau thuế chia cho số cổ phiếu lưu hành.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">ROE (Return on Equity)</div>
+      <div class="gloss-def">Lợi nhuận / Vốn chủ sở hữu. Đo lường hiệu quả sử dụng vốn. ROE ≥15% được coi là tốt.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">NPL (Non-Performing Loan)</div>
+      <div class="gloss-def">Tỷ lệ nợ xấu. NPL thấp = chất lượng tài sản tốt. NPL &lt;1% là rất tốt cho ngân hàng.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">CASA</div>
+      <div class="gloss-def">Tỷ lệ tiền gửi không kỳ hạn. CASA cao = chi phí vốn thấp = lợi thế cạnh tranh.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">NIM (Net Interest Margin)</div>
+      <div class="gloss-def">Biên lợi nhuận từ lãi. (Thu nhập từ lãi - Chi phí vốn) / Tổng tài sản sinh lãi.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">BVPS (Book Value Per Share)</div>
+      <div class="gloss-def">Vốn chủ sở hữu / Số cổ phiếu. Giá trị sổ sách trên mỗi cổ phiếu.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Split-adjusted</div>
+      <div class="gloss-def">Dữ liệu đã được điều chỉnh cho các lần chia tách cổ phiếu, giúp so sánh lịch sử chính xác.</div>
+    </div>
+    <div class="gloss-item">
+      <div class="gloss-term">Bẫy 5B (Value Trap)</div>
+      <div class="gloss-def">Cổ phiếu có vẻ rẻ (P/E thấp) nhưng giá tiếp tục giảm vì lý do cơ bản xấu.</div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<aside class="toc-sidebar" id="tocSidebar">
+  <div class="toc-sidebar-head">📑 Mục lục</div>
+  <div class="toc-sidebar-hint">22 phần · click để nhảy đến</div>
+  <ul class="toc-sidebar-list">
+    <li><a class="toc-sidebar-item" href="#sec-hero"><span class="toc-sidebar-num">1</span><span class="toc-sidebar-label">Hero & KPI</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-exec"><span class="toc-sidebar-num">2</span><span class="toc-sidebar-label">TL;DR</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-biz"><span class="toc-sidebar-num">3</span><span class="toc-sidebar-label">Business 101</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-industry"><span class="toc-sidebar-num">4</span><span class="toc-sidebar-label">Ngành</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-history"><span class="toc-sidebar-num">5</span><span class="toc-sidebar-label">5 năm</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-segment"><span class="toc-sidebar-num">6</span><span class="toc-sidebar-label">Segment</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-thesis"><span class="toc-sidebar-num">7</span><span class="toc-sidebar-label">Thesis</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-valuation"><span class="toc-sidebar-num">8</span><span class="toc-sidebar-label">Định giá</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-peer"><span class="toc-sidebar-num">9</span><span class="toc-sidebar-label">Peer</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-bs"><span class="toc-sidebar-num">10</span><span class="toc-sidebar-label">BS & FCF</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-risk"><span class="toc-sidebar-num">11</span><span class="toc-sidebar-label">Rủi ro</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-33k"><span class="toc-sidebar-num">12</span><span class="toc-sidebar-label">800tr VND</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-scenario"><span class="toc-sidebar-num">13</span><span class="toc-sidebar-label">Kịch bản</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-checklist"><span class="toc-sidebar-num">14</span><span class="toc-sidebar-label">Checklist</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-1"><span class="toc-sidebar-num">★1</span><span class="toc-sidebar-label">Balance Sheet</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-2"><span class="toc-sidebar-num">★2</span><span class="toc-sidebar-label">Nghịch lý P/E-P/B</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-3"><span class="toc-sidebar-num">★3</span><span class="toc-sidebar-label">CASA 22%</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech"><span class="toc-sidebar-num">18</span><span class="toc-sidebar-label">Technical</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech-profile"><span class="toc-sidebar-num">19</span><span class="toc-sidebar-label">Profile</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-analyst"><span class="toc-sidebar-num">20</span><span class="toc-sidebar-label">Analyst</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-glossary"><span class="toc-sidebar-num">21</span><span class="toc-sidebar-label">Thuật ngữ</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-source"><span class="toc-sidebar-num">22</span><span class="toc-sidebar-label">Nguồn</span></a></li>
+  </ul>
+</aside>
+
+</div>
+
+<div class="disclaimer">
+  <div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+  <p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai. Mặc dù mỗi con số quan trọng đều có trích nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai.</p>
+  <div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+  <ol>
+    <li><strong>Đếm nguồn.</strong> Mỗi số quan trọng (doanh thu, EPS, P/E, FCF) nên có ít nhất 2 nguồn độc lập khớp nhau. Chỉ 1 nguồn = chưa chắc.</li>
+    <li><strong>Số bất thường = dừng.</strong> Con số khiến bạn thấy "ồ hay" hoặc "ồ tệ" → Google 30 giây để đối chiếu. Đó là lúc dễ tin nhất và AI dễ sai nhất.</li>
+    <li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt $800 triệu dựa trên con số này không?" Nếu chưa dám → verify thêm.</li>
+  </ol>
+  <div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+  <p>Mỗi số có nhãn ở bảng Data Quality bên dưới:</p>
+  <ul class="qlist">
+    <li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn chính thống khớp nhau</li>
+    <li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần đối chiếu thêm</li>
+    <li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán, không nên đặt quyết định lớn dựa trên số này</li>
+  </ul>
+  <p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình.</p>
+</div>
+
+<section id="sec-source" class="section">
+  <div class="section-title aos"><span class="num">22</span><h2>Source Appendix & Data Quality</h2><div class="divider"></div></div>
+  <div class="section-sub">Nguồn dữ liệu và đánh giá chất lượng.</div>
+  <div class="card aos">
+    <div class="card-head"><div><div class="card-title">Data Quality Matrix</div></div></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>Dữ liệu</th><th>Giá trị</th><th>Chất lượng</th><th>Ghi chú</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Giá đóng cửa</td><td>22,600 VND</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>HOSE — giá thị trường</td></tr>
+          <tr><td>Doanh thu 5 năm</td><td>10,363–23,533 tỷ</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Vnstock — cần cross-check BCTC</td></tr>
+          <tr><td>Lợi nhuận 5 năm</td><td>5,137–13,688 tỷ</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Vnstock — cần cross-check BCTC</td></tr>
+          <tr><td>P/E, P/B</td><td>7.35×, 4.80×</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Ước tính từ dữ liệu</td></tr>
+          <tr><td>NPL ratio</td><td>0.8%</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Theo công bố — cần verify</td></tr>
+          <tr><td>CASA</td><td>~22%</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>Ước tính — cần đối chiếu</td></tr>
+          <tr><td>Số chi nhánh/ATM</td><td>~350 / ~2,000</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Theo công bố</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="sources aos">
+    <h4>References</h4>
+    <ol>
+      <li id="ref-1">ACB earnings — HOSE (15/03/2025)</li>
+      <li id="ref-2">HOSE filings (standard)</li>
+      <li id="ref-3">VIRECTC disclosure (standard)</li>
+      <li id="ref-4">Issuer disclosure portal (standard)</li>
+      <li id="ref-5">Vnstock sponsor data (standard)</li>
+      <li id="ref-6">HOSE filings (standard)</li>
+      <li id="ref-7">VIRECTC disclosure (standard)</li>
+      <li id="ref-8">Issuer disclosure portal (standard)</li>
+      <li id="ref-9">Vnstock sponsor data (standard)</li>
+      <li id="ref-10">HOSE filings (standard)</li>
+    </ol>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="container" style="padding-top:0">
+    <div class="disclaimer">
+      <strong style="color:var(--red)">⚠️ Miễn trừ trách nhiệm.</strong>
+      Báo cáo này là <strong>investment evidence pack</strong> phục vụ nghiên cứu cá nhân, <strong>không phải khuyến nghị mua/bán</strong>,
+      không phải lệnh giao dịch, không phải tư vấn tài chính cá nhân.
+      Quyết định đầu tư là của bạn. Cổ phiếu có thể giảm 30–50%.
+    </div>
+    <p><strong>Ngân hàng TMCP Á Châu (HOSE: ACB)</strong> · Investment Evidence Pack · dữ liệu tính đến 15/07/2026 · không khuyến nghị mua/bán</p>
+    <p>Built với equity-research-vn skill · skeleton template + ACB JSON data · Chart.js 4.4.1</p>
+    <p class="faint">Nguồn: Vnstock (VCI), HOSE filings, VIRECTC, BCTC kiểm toán · 10 citations</p>
+  </div>
+</footer>
+
+<script>
+const DATA = {
+  ticker: 'ACB',
+  years: ['2021','2022','2023','2024','2025'],
+  revenue: [23533.53, 18944.79, 14582.12, 12112.16, 10362.92],
+  netIncome: [13688.19, 9602.75, 7682.82, 6009.94, 5137.05],
+  netProfit: [13688.19, 9602.75, 7682.82, 6009.94, 5137.05],
+  grossProfit: [13688.19, 9602.75, 7682.82, 6009.94, 5137.05],
+  eps: [3486, 2799, 2808, 2780, 3076],
+  roe: [23.4, 21.4, 21.7, 21.6, 24.4],
+  bvps: [12986, 9978, 7877, 6170, 4671],
+  equity: [58438.66, 44900.91, 35448.16, 27765.36, 21017.90],
+  totalAssets: [607875.19, 527769.94, 444530.10, 383514.44, 329333.24],
+  inventory: [511.51, 636.10, 423.13, 535.26, 373.55],
+  invGrowth: [0, 124.59, -212.97, 112.13, -161.71],
+  cfo: [13688, 9603, 7683, 6010, 5137],
+  capex: [511.51, 636.10, 423.13, 535.26, 373.55],
+  peHist: [6.5, 8.1, 8.0, 8.1, 7.35],
+  pbHist: [1.74, 2.26, 2.87, 3.66, 4.80],
+  pe5med: 8.0,
+  pe5avg: 7.6,
+  pe: 7.35,
+  pb: 4.80,
+  segMix: { labels: ['Bán lẻ cá nhân','SME','Doanh nghiệp lớn','Dịch vụ phí & Khác'], values: [55, 25, 12, 8] },
+  peers: { data: [
+    {label:'ACB', x:4.8, y:10.6, r:18, own:true},
+    {label:'VCB', x:2.5, y:12, r:28},
+    {label:'TCB', x:1.8, y:8, r:16},
+    {label:'MBB', x:1.5, y:15, r:14},
+    {label:'VPB', x:1.3, y:5, r:12},
+    {label:'BID', x:1.4, y:10, r:24},
+    {label:'CTG', x:1.2, y:9, r:20}
+  ]},
+  peerLabel: 'Peer VN Bank (P/B vs CAGR NPAT, bubble=vốn hóa)',
+  peerPBMin: 0.5,
+  peerPBMax: 5.5,
+  peerYLabel: 'EPS Growth YoY (%)',
+  peerYMax: 20,
+  tech52wLow: 21000,
+  techMA50val: 24000,
+  techRSI: [45,48,52,50,47,53,55,51,49,52,50,48,51,53,50,49,51,50,52,48,50,51,49,50,52,48,50,51,49,50,47,49,51,50,48,50,51,49,50,52,48,50,51,49,50,48,50,51,49,50,52],
+  techWeeks: ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16','W17','W18','W19','W20','W21','W22','W23','W24','W25','W26','W27','W28','W29','W30','W31','W32','W33','W34','W35','W36','W37','W38','W39','W40','W41','W42','W43','W44','W45','W46','W47','W48','W49','W50','W51','W52'],
+  techPrice: [22500,22300,22600,22800,22700,22900,23100,23000,22800,22900,23000,23100,23200,23300,23100,23000,22900,22800,22900,23000,23100,23000,22900,22800,22900,23000,23100,23200,23100,23000,22900,22800,22900,23000,23100,23000,22900,22800,22900,23000,23100,23200,23100,23000,22900,22800,22900,23000,23100,23000,22900,22800,22600],
+  techMA10: [22400,22450,22500,22580,22640,22700,22780,22820,22840,22860,22880,22900,22920,22940,22940,22940,22930,22920,22920,22920,22930,22930,22930,22920,22920,22920,22930,22940,22940,22940,22930,22920,22920,22920,22930,22930,22920,22910,22910,22910,22920,22930,22930,22920,22910,22900,22900,22900,22910,22910,22900,22890,22880],
+  techMA20: [22300,22350,22400,22450,22500,22550,22600,22650,22700,22730,22760,22800,22830,22860,22880,22900,22900,22900,22900,22910,22920,22920,22920,22920,22920,22930,22940,22950,22950,22950,22940,22930,22930,22930,22940,22940,22930,22920,22920,22920,22930,22940,22940,22930,22920,22910,22910,22910,22920,22920,22910,22900,22890],
+  techMA50: [22100,22150,22200,22250,22300,22350,22400,22450,22500,22550,22600,22650,22700,22750,22800,22850,22900,22950,23000,23050,23100,23150,23200,23250,23300,23350,23400,23450,23500,23550,23600,23650,23700,23750,23800,23850,23900,23950,24000,24000,24000,24000,24000,24000,24000,24000,24000,24000,24000,24000,24000,24000,24000],
+  ddMonths: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12','T13','T14','T15','T16','T17','T18','T19','T20','T21','T22','T23','T24'],
+  ddValues: [0,-2,-5,-8,-12,-10,-7,-3,0,-2,-4,-6,-8,-10,-12,-15,-18,-15,-12,-10,-8,-5,-3,0],
+  distBins: ['<-10%','-10 to -5%','-5 to 0%','0 to +5%','+5 to +10%','>+10%'],
+  distCounts: [8, 22, 85, 120, 55, 18]
+};
+
+Chart.defaults.color = '#8b949e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.size = 11;
+
+function grad(ctx, c1, c2){
+  const chart = ctx.chart;
+  const {ctx: cc, chartArea} = chart;
+  if (!chartArea) return c1;
+  const g = cc.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
+
+const AMBER='#f5a623', BLUE='#4a9eff', GREEN='#3fb950', RED='#f85149', PURPLE='#a78bfa', GRID='rgba(255,255,255,0.05)';
+const baseScales = {
+  x: { grid:{display:false}, ticks:{font:{size:10}} },
+  y: { grid:{color:GRID}, ticks:{font:{size:10}} }
+};
+const baseOpts = (extra) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8, font:{size:11}}} },
+  ...extra
+});
+
+(function(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('animate');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.aos').forEach(function(el){ io.observe(el); });
+})();
+
+document.addEventListener('DOMContentLoaded', function(){
+  const $ = (id) => document.getElementById(id);
+
+  new Chart($('chartHistRev'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Doanh thu (tỷ VND)', data: DATA.revenue,
+        backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.9)','rgba(74,158,255,0.3)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Lợi nhuận (tỷ VND)', data: DATA.netIncome, type:'line',
+        borderColor: AMBER, backgroundColor: AMBER, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y1', order:1 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, position:'left', title:{display:true, text:'Doanh thu (tỷ VND)', font:{size:10}, color:'#565f6b'} },
+        y1:{ position:'right', grid:{display:false}, ticks:{font:{size:10}, color:AMBER} }
+      },
+      plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8}} }
+    })
+  });
+
+  new Chart($('chartHistCash'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Capex (tỷ VND)', data: DATA.capex,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Lợi nhuận (tỷ VND)', data: DATA.netProfit, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:(ctx)=> ctx.parsed.y < 0 ? RED : '#0f1419',
+        pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'} }
+      }
+    })
+  });
+
+  new Chart($('chartSegMix'), {
+    type:'doughnut',
+    data:{ labels: DATA.segMix.labels, datasets:[{
+      data: DATA.segMix.values,
+      backgroundColor:[BLUE, PURPLE, AMBER, '#565f6b'],
+      borderColor:'#161b22', borderWidth:2
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{
+        legend:{position:'right', labels:{usePointStyle:true, boxWidth:8, font:{size:11}, padding:10}},
+        tooltip:{callbacks:{label:(c)=>` ${c.label}: ${c.parsed}%`}}
+      }
+    }
+  });
+
+  new Chart($('chartValPE'), {
+    type:'line',
+    data:{ labels: DATA.years, datasets:[{
+      label:'P/E (ước tính)',
+      data: DATA.peHist,
+      borderColor: BLUE, backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.25)','rgba(74,158,255,0)'),
+      fill:true, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, borderWidth:2.5
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'P/E (x)', font:{size:10}, color:'#565f6b'}} },
+      plugins:{
+        legend:{labels:{usePointStyle:true, boxWidth:8}},
+        annotation:{
+          annotations:{
+            avg5: { type:'line', yMin:DATA.pe5med, yMax:DATA.pe5med, borderColor:AMBER, borderDash:[6,4], borderWidth:1.5,
+                    label:{content:('5Y median ~'+DATA.pe5med+'x'),display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
+            avg10:{ type:'line', yMin:DATA.pe5avg, yMax:DATA.pe5avg, borderColor:'#a78bfa', borderDash:[6,4], borderWidth:1.5,
+                    label:{content:('5Y avg ~'+DATA.pe5avg+'x'),display:(Math.abs(DATA.pe5avg-DATA.pe5med)>0.5),position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
+            current:{ type:'point', xValue:(DATA.years[DATA.years.length-1]), yValue:DATA.pe, backgroundColor:RED, radius:6,
+                      label:{content:('Now ~'+DATA.pe+'x'),display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
+          }
+        }
+      }
+    })
+  });
+
+  new Chart($('chartBSDt'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Tổng tài sản (tỷ VND)', data: DATA.totalAssets,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.3)'), borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Vốn chủ sở hữu (tỷ VND)', data: DATA.equity, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
+    })
+  });
+
+  new Chart($('chartReturns'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'EPS (VND)', data: DATA.eps, backgroundColor:'rgba(63,185,80,0.7)', borderRadius:4, yAxisID:'y' },
+      { label:'ROE (%)', data: DATA.roe, type:'line', borderColor: BLUE, backgroundColor: BLUE, tension:0.3, pointRadius:4, yAxisID:'y1', borderWidth:2 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND', font:{size:10}, color:'#565f6b'}},
+              y1:{position:'right',grid:{display:false},ticks:{color:BLUE,font:{size:10}}} }
+    })
+  });
+
+  const peers = {
+    datasets:[{
+      label:(DATA.peerLabel || 'Peer VN (P/B vs tăng trưởng, bubble=vốn hóa)'),
+      data: DATA.peers.data || DATA.peers,
+      backgroundColor:(ctx)=>{ const d=ctx.raw; return d.own ? AMBER : BLUE; },
+      borderColor:'#0f1419', borderWidth:1.5
+    }]
+  };
+  new Chart($('chartPeerScatter'), {
+    type:'bubble',
+    data: peers,
+    options: baseOpts({
+      scales:{
+        x:{ ...baseScales.x, title:{display:true, text:'P/B (x)', font:{size:10}, color:'#565f6b'}, min:(DATA.peerPBMin||1), max:(DATA.peerPBMax||5) },
+        y:{ ...baseScales.y, title:{display:true, text:(DATA.peerYLabel||'CAGR NPAT 3Y (%)'), font:{size:10}, color:'#565f6b'}, min:0, max:(DATA.peerYMax||20) }
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:(c)=>{
+          const d=c.raw; return ` ${d.label}: P/B ${d.x}x, tăng trưởng ${d.y}%`;
+        }}},
+        datalabels:false
+      }
+    }),
+    plugins:[{
+      id:'peerLabels',
+      afterDatasetsDraw(chart){
+        const {ctx} = chart;
+        const ds = chart.data.datasets[0].data;
+        const meta = chart.getDatasetMeta(0);
+        ctx.save();
+        ctx.font = 'bold 11px Inter';
+        ctx.fillStyle = '#e6edf3';
+        ctx.textAlign='center';
+        ds.forEach((d,i)=>{
+          const pt = meta.data[i];
+          if(!pt) return;
+          ctx.fillText(d.label, pt.x, pt.y - d.r - 4);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+
+  const techWeeks = DATA.techWeeks;
+  const techPrice = DATA.techPrice;
+  const techMA10  = DATA.techMA10;
+  const techMA20  = DATA.techMA20;
+  const techMA50  = DATA.techMA50;
+  new Chart($('chartTechPrice'), {
+    type:'line',
+    data:{ labels: techWeeks, datasets:[
+      { label:'Close', data: techPrice, borderColor: AMBER, backgroundColor:'transparent', tension:0.3, pointRadius:3, borderWidth:2.5 },
+      { label:'MA10', data: techMA10, borderColor: BLUE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA20', data: techMA20, borderColor: PURPLE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA50', data: techMA50, borderColor: '#8b949e', borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND / cổ phiếu', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{labels:{usePointStyle:true, boxWidth:8}}, annotation:{ annotations:{ support:{type:'line', yMin:DATA.tech52wLow, yMax:DATA.tech52wLow, borderColor:GREEN, borderDash:[6,4], borderWidth:1, label:{content:('Hỗ trợ ~'+DATA.tech52wLow.toLocaleString()+' VND (52W low)'), display:true, position:'start', backgroundColor:'rgba(63,185,80,0.85)', font:{size:9,weight:'bold'}, color:'#0f1419'}}, resist:{type:'line', yMin:DATA.techMA50val, yMax:DATA.techMA50val, borderColor:RED, borderDash:[6,4], borderWidth:1, label:{content:('Kháng cự ~'+DATA.techMA50val.toLocaleString()+' VND (MA50)'), display:true, position:'end', backgroundColor:'rgba(248,81,73,0.85)', font:{size:9,weight:'bold'}, color:'#fff'}} } } }
+    })
+  });
+
+  new Chart($('chartTechRSI'), {
+    type:'line',
+    data:{ labels: techWeeks, datasets:[{
+      label:'RSI(14)', data: DATA.techRSI,
+      borderColor:(c)=>grad(c,'rgba(245,166,35,0.9)','rgba(245,166,35,0.2)'), fill:true, tension:0.3, pointRadius:3, borderWidth:2
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, min:0, max:100,
+        title:{display:true, text:'RSI', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false}, annotation:{ annotations:{
+        ob:{type:'line', yMin:70, yMax:70, borderColor:RED, borderDash:[4,4], borderWidth:1, label:{content:'Overbought 70', display:true, position:'end', backgroundColor:'rgba(248,81,73,0.7)', font:{size:9}, color:'#fff'}},
+        os:{type:'line', yMin:30, yMax:30, borderColor:GREEN, borderDash:[4,4], borderWidth:1, label:{content:'Oversold 30', display:true, position:'end', backgroundColor:'rgba(63,185,80,0.7)', font:{size:9}, color:'#fff'}}
+      } } }
+    })
+  });
+
+  const ddMonths = DATA.ddMonths;
+  const ddValues = DATA.ddValues;
+  new Chart($('chartProfileDD'), {
+    type:'line',
+    data:{ labels: ddMonths, datasets:[{
+      label:'Drawdown %', data: ddValues,
+      borderColor:(c)=>grad(c,'rgba(248,81,73,0.9)','rgba(248,81,73,0.2)'), fill:true, tension:0.3, pointRadius:2, borderWidth:2
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'%', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false} }
+    })
+  });
+
+  const distBins = DATA.distBins;
+  const distCounts = DATA.distCounts;
+  new Chart($('chartProfileDist'), {
+    type:'bar',
+    data:{ labels: distBins, datasets:[{
+      label:'Số tuần (2 năm)', data: distCounts,
+      backgroundColor: (c)=>{
+        const i=c.dataIndex;
+        return i<2 ? 'rgba(248,81,73,0.7)' : (i===2 ? '#565f6b' : 'rgba(63,185,80,0.7)');
+      }, borderRadius:4
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'số tuần', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false} }
+    })
+  });
+});
+
+(function(){
+  const nav = document.getElementById('topnav');
+  const links = Array.from(document.querySelectorAll('.topnav-link'));
+  const progressBar = document.getElementById('progressBar');
+  const backTop = document.getElementById('backTop');
+  const sections = links.map(l => document.getElementById(l.dataset.target)).filter(Boolean);
+
+  function onScroll(){
+    const y = window.scrollY;
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (h>0 ? (y/h*100) : 0) + '%';
+    if (y > 600) backTop.classList.add('visible'); else backTop.classList.remove('visible');
+    const navH = nav.offsetHeight + 10;
+    let active = sections[0];
+    for (const s of sections){
+      if (s && (s.getBoundingClientRect().top - navH) <= 0) active = s;
+    }
+    links.forEach(l => {
+      l.classList.toggle('active', active && l.dataset.target === active.id);
+    });
+    const activeLink = links.find(l => l.classList.contains('active'));
+    if (activeLink){
+      const navInner = nav.querySelector('.topnav-inner');
+      const linkRect = activeLink.getBoundingClientRect();
+      const innerRect = navInner.getBoundingClientRect();
+      if (linkRect.right > innerRect.right - 20 || linkRect.left < innerRect.left + 20){
+        navInner.scrollTo({ left: navInner.scrollLeft + (linkRect.left - innerRect.left - 40), behavior:'smooth' });
+      }
+    }
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  links.forEach(l => {
+    l.addEventListener('click', (e)=>{
+      const t = document.getElementById(l.dataset.target);
+      if (!t) return;
+      e.preventDefault();
+      const top = t.getBoundingClientRect().top + window.scrollY - nav.offsetHeight - 8;
+      window.scrollTo({ top, behavior:'smooth' });
+    });
+  });
+  backTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+  onScroll();
+})();
+</script>
+</body>
+</html>

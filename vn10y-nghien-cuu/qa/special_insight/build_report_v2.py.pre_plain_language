@@ -1,0 +1,593 @@
+#!/usr/bin/env python3
+"""CANONICAL GENERATOR for index.html restructure (decision-maker narrative).
+Architecture inspired by bak2 (depth/style), data ONLY from verified Ch1-4 artifacts.
+
+Hard rules enforced (asserts at end):
+  - Allowlist: only 6 verified topics; forbidden topics = BLOCKED.
+  - Evidence boundary: appears >=2 times (full in §1, compact near §3).
+  - "CÙNG KỲ" must appear on timeline chart context.
+  - 7 daily indices = overlapping components, NOT independent confirmations.
+  - "Protocol diễn giải" not "protocol giao dịch".
+  - No bak2 numbers (r=-0.327, beta=-6.92%/pp, 18 sectors, Indonesia, PCA, SCM...).
+  - Units locked: bps yield / % return / % breadth — never mixed.
+  - Only this generator writes index.html.
+"""
+import json, re, hashlib
+from pathlib import Path
+
+WORKDIR = Path("/Users/bobo/ZCodeProject/vn10y-nghien-cuu")
+BASE = WORKDIR / "index.html.pre_editorial_expansion"
+DATA = json.loads((WORKDIR / "qa/special_insight/special_insight_chart_data.json").read_text())
+OUT = WORKDIR / "index.html"
+
+# ===== CHART DATA (from verified payload) =====
+t = DATA["timeline"]; f = DATA["forest"]
+md = DATA["multi_index_daily"]; mm = DATA["multi_index_monthly"]; br = DATA["breadth"]
+ftl = br["f1_timeline"]
+import json as _j
+TL_LABELS = _j.dumps(t["labels"]); TL_D10Y = _j.dumps(t["d10y_bps"]); TL_VNI = _j.dumps(t["vnindex_ret_pct"])
+MD_IDX = _j.dumps(md["indices"]); MD_BETA = _j.dumps(md["beta_pct_per_10bps"])
+MM_IDX = _j.dumps([i+" (panel)" if i=="PANEL_CORE" else i for i in mm["indices"]])
+MM_BETA = _j.dumps(mm["beta_pct_per_10bps"])
+MM_COLOR = _j.dumps(['rgba(148,163,184,.5)' if i=='PANEL_CORE' else 'rgba(139,92,246,.7)' for i in mm["indices"]])
+B_LABELS = _j.dumps(ftl["labels"]); B_D2Y = _j.dumps(ftl["d2y_bps"]); B_NAS = _j.dumps(ftl["net_advance_share"])
+FD = f["daily"]; FM = f["monthly"]
+
+# ===== EXTRACT CSS + nav script from base (keep intact) =====
+base = BASE.read_text()
+# Extract <head>...</head> (CSS + chart.js CDN) and nav script
+head_match = re.search(r'(<head>.*?</head>)', base, re.DOTALL)
+HEAD = head_match.group(1)
+# Extract nav script (the second <script> block)
+nav_match = re.search(r'(<script>\s*\n\s*window\.addEventListener.*?</script>)', base, re.DOTALL)
+NAV_SCRIPT = nav_match.group(1) if nav_match else ""
+
+# ===== BUILD NEW BODY =====
+BODY = f'''<body class="">
+
+<!-- HERO -->
+<header class="hero">
+  <span class="badge">Tự nghiên cứu · 2014–2026 · 4 chương đã hoàn thành</span>
+  <h1>Lợi suất trái phiếu và cổ phiếu Việt Nam</h1>
+  <p class="sub">Khi lợi suất trái phiếu tăng, cổ phiếu thường yếu trong cùng khoảng thời gian — nhưng lợi suất không đi trước, không dự báo được tương lai.</p>
+  <div class="meta">Trái phiếu Chính phủ Việt Nam · Cổ phiếu HOSE · Cập nhật 26/06/2026</div>
+</header>
+
+<main class="container">
+
+<!-- ===== CARDS (positive-first, NOT null-first) ===== -->
+<div class="cards3">
+  <div class="card">
+    <div class="icon">📊</div>
+    <h4>Đi cùng — có bằng chứng</h4>
+    <p>7 chỉ số daily + 2 chỉ số monthly + panel: lợi suất tăng đi cùng return thấp hơn trong cùng cửa sổ thời gian.</p>
+  </div>
+  <div class="card">
+    <div class="icon">📐</div>
+    <h4>Độ rộng thị trường — có, nhưng nhỏ</h4>
+    <p>Breadth monthly (F1, F5) vượt Holm. Hiệu ứng ≈ −0,07 điểm % breadth cho +25 bps.</p>
+  </div>
+  <div class="card">
+    <div class="icon">🚫</div>
+    <h4>Đi trước — chưa tìm thấy</h4>
+    <p>Granger bond→equity: 0/150 daily + 0/150 monthly. OOS: 0/140 stable. Chưa phải tín hiệu dự báo.</p>
+  </div>
+</div>
+
+<!-- ═══ CONTEXT — 3 khái niệm ═══ -->
+<section id="context">
+  <h2 class="section-title"><span class="num">★</span>Ba khái niệm cần phân biệt ngay</h2>
+  <div class="callout info">
+    <h4>💡 Phân biệt này quyết định toàn bộ cách đọc</h4>
+    <p><strong>Đi cùng (đồng thời):</strong> hai thứ biến động trong cùng khoảng thời gian. Ví dụ: cùng trong tháng này, lợi suất trái phiếu tăng và cổ phiếu yếu. Cả hai có thể cùng phản ánh một yếu tố chung chưa được kiểm định.</p>
+    <p><strong>Đi trước (dẫn trước):</strong> một thứ biến động trước, thứ kia theo sau một thời gian. Đây là điều kiện cần — nhưng không đủ — để nghi ngờ quan hệ có tính dẫn dắt.</p>
+    <p><strong>Dự báo ngoài mẫu:</strong> dùng thông tin trong quá khứ để đoán tương lai trên dữ liệu chưa từng thấy, và xem có tốt hơn một mô hình nền đơn giản hay không. Đây là tiêu chuẩn khắt khe nhất — vượt được mới gọi là "dự báo được".</p>
+  </div>
+  <p>Bốn chương nghiên cứu đều nhất quán về một điều: lợi suất trái phiếu <strong>đi cùng</strong> cổ phiếu (có bằng chứng giới hạn), nhưng <strong>không đi trước</strong> và <strong>không dự báo ngoài mẫu</strong> được. Sự phân biệt này — giữa "đọc bối cảnh" và "dự báo tương lai" — là chìa khóa để dùng lợi suất trái phiếu đúng cách, không sai cách.</p>
+  <p>Nhiều người nhầm lẫn "đi cùng" với "đi trước", và từ đó suy ra rằng lợi suất trái phiếu là tín hiệu giao dịch. Báo cáo này trình bày đầy đủ bằng chứng để bạn tự đánh giá: phát hiện cùng kỳ có thật và có giá trị chẩn đoán, nhưng không biến nó thành quả cầu pha lê.</p>
+  <p>Cách đọc đúng: coi biến động lợi suất trái phiếu như một tín hiệu để kiểm tra thêm. Khi nó tăng mạnh, đó là lý do để xem kỹ trạng thái cổ phiếu, breadth và các yếu tố khác — không đủ để kết luận thị trường đang stress. Nhiệt kế cho biết nhiệt độ hiện tại, không phải dự báo thời tiết ngày mai. Đừng hủy chuyến đi (bán toàn bộ) chỉ vì thấy nóng; nhưng hãy mặc thêm áo (tăng thận trọng) và kiểm tra các dấu hiệu khác trước khi quyết định.</p>
+</section>
+
+<!-- ═══ §1 TRỤC CHÍNH — INSIGHT RETURN (30%) ═══ -->
+<section id="insight">
+  <h2 class="section-title"><span class="num">1</span>Trục chính — Khi lợi suất tăng, cổ phiếu yếu trong cùng thời gian</h2>
+
+  <div class="callout good"><h4>Phát hiện tích cực quan trọng nhất</h4><p>Trong cùng cửa sổ thời gian, khi lợi suất trái phiếu tăng, return cổ phiếu thường thấp hơn. Đây là quan hệ <strong>cùng kỳ</strong> — đã vượt hiệu chỉnh Holm trên nhiều chỉ số, không giới hạn ở VNINDEX. Đây không phải dự báo, nhưng là một liên hệ bối cảnh thật có giá trị chẩn đoán.</p></div>
+
+  <h3>Nói dễ hiểu</h3>
+  <p>Phần lớn nghiên cứu trả lời "không" cho câu hỏi dự báo. Nhưng giữa các kết quả âm tính có một phát hiện dương tính quan trọng: trong cùng cửa sổ thời gian — cùng 5 phiên, hoặc cùng 1 tháng — khi lợi suất trái phiếu biến động mạnh, return cổ phiếu thường biến động ngược chiều. Hai biến chuyển động cùng lúc, không phải một biến đi trước biến kia. Phát hiện này không giới hạn ở VNINDEX: nó nhất quán trên 7 chỉ số daily và có mặt ở cả tần suất monthly.</p>
+  <p>Điều này có ý nghĩa thực tế: khi thấy lợi suất trái phiếu biến động mạnh, đó là tín hiệu để kiểm tra thêm trạng thái cổ phiếu và breadth — nhưng không thể dùng thông tin đó để đoán tương lai. Đây là sự khác biệt giữa <strong>đọc tình hình hiện tại</strong> và <strong>dự báo tương lai</strong>.</p>
+
+  <h3>Tại sao lại có quan hệ này? Cách hiểu "common driver" — một giả thuyết chưa kiểm định</h3>
+  <p>Một câu hỏi tự nhiên: nếu lợi suất trái phiếu không <em>đi trước</em> cổ phiếu, tại sao hai thứ lại chuyển động ngược chiều cùng lúc? Một cách diễn giải hợp lý — nhưng <strong>chưa được kiểm định</strong> — là cả hai có thể cùng phản ánh một yếu tố thứ ba chưa xác định, thường được gọi là "common driver" (yếu tố chung). Nghiên cứu này không định nghĩa hay kiểm định "stress state", và không cô lập được common driver cụ thể.</p>
+  <p>Hãy hình dung: khi Ngân hàng Nhà nước điều chỉnh chính sách tiền tệ, hoặc khi lạm phát kỳ vọng thay đổi, hoặc khi dòng tiền quốc tế dịch chuyển — tất cả những sự kiện vĩ mô này tác động <em>cùng lúc</em> lên cả trái phiếu và cổ phiếu. Trái phiếu phản ứng qua lợi suất (nhà đầu tư đòi thêm phần bù rủi ro). Cổ phiếu phản ứng qua giá (chi phí vốn thay đổi, kỳ vọng lợi nhuận điều chỉnh). Hai phản ứng xảy ra trong cùng cửa sổ thời gian vì cùng một nguyên nhân gốc.</p>
+  <p>Đây là cách đọc "có thể cùng phản ánh" chứ không phải cách đọc "nhân quả". Nói "lợi suất trái phiếu tăng <em>làm</em> cổ phiếu giảm" là sai — chưa có bằng chứng cho điều đó. Nói "lợi suất trái phiếu tăng <em>có thể</em> cùng lúc cổ phiếu yếu vì cả hai <em>có thể</em> phản ánh một yếu tố chung chưa kiểm định" là thận trọng với bằng chứng. Sự khác biệt này quan trọng: cách đọc thứ nhất dẫn đến hành động giao dịch sai (bán vì bond tăng), cách đọc thứ hai dẫn đến đánh giá bối cảnh đúng (kiểm tra thêm trước khi kết luận).</p>
+  <p><strong>Nghiên cứu này chưa cô lập được yếu tố common driver cụ thể</strong> — không kiểm định trực tiếp cơ chế truyền dẫn. Đây là giới hạn cần ghi nhận: quan hệ cùng kỳ được xác nhận, nhưng "tại sao" vẫn là câu hỏi mở. Không biến common driver thành lời giải thích cơ chế khi chưa kiểm định.</p>
+
+  <h3>Độ mạnh thống kê — tại sao kết quả này đáng tin?</h3>
+  <p>Phát hiện cùng kỳ không phải kết quả ngẫu nhiên. Nó đã vượt một quy trình kiểm định nghiêm ngặt: bootstrap dependent-wild (Shao 2011) với plus-one p-values để tránh p=0 giả tạo; hiệu chỉnh Holm FWER 5% cho confirmatory families để kiểm soát tỷ lệ dương tính giả khi thử nhiều phép; hiệu chỉnh BH FDR 10% cho exploratory. Trên 7 chỉ số daily, quan hệ Δ2Y → return đều vượt Holm — không phải một phép thử may mắn.</p>
+  <p>Tuy nhiên, "vượt gate thống kê" không đồng nghĩa "hiệu ứng lớn". Quy mô hiệu ứng khá nhỏ: −0,24 điểm % return cho +10 bps lợi suất 2Y. Để có cảm nhận: biến động daily trung bình của VNINDEX khoảng 0,8–1,0%, lớn hơn nhiều so với −0,24% này. Vậy tại sao quan hệ này vẫn quan trọng? Vì nó nói rằng <strong>hướng</strong> chuyển động có hệ thống — khi bond tăng, stock có xu hướng giảm — dù biên độ nhỏ. Hướng có hệ thống là thông tin về môi trường thị trường, ngay cả khi biên độ không đủ để giao dịch.</p>
+
+  <h3>Đọc biểu đồ timeline đúng cách</h3>
+  <p>Hai panel timeline dưới đây cần được đọc cẩn thận. Đây là dữ liệu <strong>cùng kỳ</strong> — mỗi cột ở panel trên và cột cùng vị trí ở panel dưới thuộc về <em>cùng một tháng</em>. Khi bạn thấy panel trên có thanh hổ phách cao (lợi suất tăng mạnh) và panel dưới có thanh đỏ (return âm) ở cùng vị trí, đó là minh họa trực quan của quan hệ cùng kỳ.</p>
+  <p>Nhưng đừng rơi vào cạm bẫy "nhìn thấy trùng nhau = dự báo được". Hai biến trùng nhau trong cùng tháng <em>chính là</em> định nghĩa của quan hệ cùng kỳ — không phải bằng chứng về chiều dẫn trước. Để dự báo, bạn cần thấy panel trên dao động <em>trước</em> panel dưới một cách có hệ thống — và Granger (0/300) cho thấy điều đó không xảy ra.</p>
+  <p>Một cạm bẫy khác: chọn riêng một giai đoạn (như 2022) làm "bằng chứng". Đúng rằng 2022 — năm lãi suất tăng vọt — cũng là năm VNINDEX giảm mạnh (−34,85%). Nhưng đó là một trong 144 tháng, và chọn nó riêng là cherry-picking. Biểu đồ này phủ toàn bộ 144 tháng để bạn tự đánh giá: có nhiều tháng hai biến cùng dấu, nhiều tháng ngược dấu. Quan hệ là xu hướng trung bình, không phải quy tắc tuyệt đối cho từng tháng.</p>
+
+  <h3>Daily — Δ2Y trong 5 phiên đi cùng return thấp hơn (7 chỉ số)</h3>
+  <p>Khi lợi suất trái phiếu 2 năm tăng trong 5 phiên, return của các chỉ số cổ phiếu trong <em>cùng 5 phiên đó</em> thường thấp hơn. Hiệu ứng này vượt Holm trên 7 chỉ số: VNINDEX, VN30, VNCOND, VNCONS, VNFIN, VNHEAL, VNIT. Tất cả đều âm, từ −0,17 đến −0,33 điểm % cho mỗi +10 bps lợi suất 2Y.</p>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="val">7</div><div class="lab">Chỉ số daily headline significant (thành phần có thể chồng lấn, không độc lập)</div></div>
+    <div class="kpi"><div class="val">−0,17→−0,33</div><div class="lab">Điểm % return / +10bps 2Y (khoảng β)</div></div>
+    <div class="kpi green"><div class="val">0,015</div><div class="lab">Holm p (VNINDEX, T00002, B=999, n=2.912)</div></div>
+  </div>
+  <p><strong>Lưu ý quan trọng:</strong> 7 chỉ số này có thành phần chồng lấn (nhiều cổ phiếu nằm trong cả VNINDEX, VN30, VNCOND...). Đây không phải 7 lần xác nhận độc lập, mà là sự nhất quán của cùng một quan hệ trên các góc nhìn khác nhau của thị trường.</p>
+  <div class="chart-box">
+    <h4>β theo chỉ số (daily, điểm % return / +10bps 2Y) — CÙNG KỲ</h4>
+    <div class="desc">7 chỉ số headline significant. Tất cả âm — quan hệ nhất quán. Thành phần chỉ số có thể chồng lấn, không độc lập. Đơn vị: điểm % return cổ phiếu cho mỗi +10 bps lợi suất 2Y, trong cùng 5 phiên.</div>
+    <div class="chart-wrap"><canvas id="chartSiMultiDaily"></canvas></div>
+  </div>
+
+  <h3>Monthly — Δ10Y trong 1 tháng đi cùng return thấp hơn (2 chỉ số + panel)</h3>
+  <p>Ở tần suất tháng, quan hệ cũng xuất hiện nhưng mạnh hơn về biên độ: 2 chỉ số vượt Holm (VNINDEX, VNMAT), cùng với một kết quả panel tổng hợp (PANEL_CORE, p=0,015 nhưng headline_allowed=False vì là aggregate, không phải chỉ số). Biên độ từ −0,71 đến −1,29 điểm % cho mỗi +10 bps lợi suất 10Y trong cùng tháng.</p>
+  <div class="chart-box">
+    <h4>β theo chỉ số (monthly, điểm % return / +10bps 10Y) — CÙNG KỲ</h4>
+    <div class="desc">2 chỉ số (xanh tím) + 1 kết quả panel tổng hợp (xám — không phải chỉ số, headline_allowed=False). β monthly lớn hơn daily nhưng n nhỏ hơn (144 tháng), khoảng tin cậy rộng hơn. Đơn vị: điểm % return cho mỗi +10 bps lợi suất 10Y, trong cùng tháng.</div>
+    <div class="chart-wrap"><canvas id="chartSiMultiMonthly"></canvas></div>
+  </div>
+
+  <h3>VNINDEX — quy mô hai effect với khoảng tin cậy</h3>
+  <p>Lấy VNINDEX làm ví dụ diễn giải (không phải toàn bộ bằng chứng): mỗi +10 bps lợi suất 2Y trong 5 phiên đi cùng return VNINDEX thấp hơn khoảng <strong>−0,24 điểm %</strong> (CI 95% [−0,36; −0,13]). Mỗi +10 bps lợi suất 10Y trong 1 tháng đi cùng return thấp hơn khoảng <strong>−0,71 điểm %</strong> (CI [−1,18; −0,24]). Đây là khoảng tin cậy của <em>liên hệ cùng kỳ</em>, không phải khoảng dự báo cho kỳ tiếp theo.</p>
+  <div class="chart-box">
+    <h4>Forest plot VNINDEX — quy mô + CI (CÙNG KỲ)</h4>
+    <div class="desc">Điểm + whisker CI 95% của liên hệ cùng kỳ. Đơn vị: điểm % return cổ phiếu cho mỗi +10 bps lợi suất. KHÔNG phải khoảng dự báo cho kỳ tiếp theo.</div>
+    <div class="chart-wrap"><canvas id="chartSiForest"></canvas></div>
+  </div>
+
+  <h3>Timeline song hành — 144 tháng (CÙNG KỲ)</h3>
+  <p>Hai panel dưới đây cho thấy toàn bộ mẫu canonical của T00074 (2014-07 đến 2026-06, 144 tháng). Panel trên là biến động lợi suất 10Y theo tháng; panel dưới là return VNINDEX cùng tháng. Hai biến dùng trục riêng để bạn tự đánh giá xem chúng có chuyển động ngược chiều. Khi panel trên có thanh hổ phách cao (lợi suất tăng mạnh), panel dưới cùng tháng thường có thanh đỏ (return âm). Nhưng cũng có tháng hai biến cùng dấu — liên hệ là xu hướng trung bình, không phải quy tắc tuyệt đối.</p>
+  <div class="chart-box">
+    <h4>Δ10Y monthly (bps) — CÙNG KỲ — panel trên</h4>
+    <div class="desc">Biến động lợi suất 10 năm theo tháng, đơn vị bps. Dữ liệu CÙNG KỲ — không phải dự báo trước.</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="chartTimelineD10Y"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <h4>VNINDEX monthly return (%) — CÙNG KỲ — panel dưới</h4>
+    <div class="desc">Return VNINDEX cùng tháng với panel trên. Đơn vị %.</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="chartTimelineVNI"></canvas></div>
+  </div>
+
+  <h3>Cách hiểu hợp lệ</h3>
+  <p>Cách diễn giải đứng vững nhất: <strong>hai thị trường có thể cùng phản ánh những thay đổi vĩ mô hoặc tài chính chưa được nghiên cứu này cô lập</strong>. Khi có biến động lớn ở môi trường chung, cả trái phiếu và cổ phiếu cùng phản ứng trong cùng khoảng thời gian. Đây là cách đọc "common driver" — một yếu tố thứ ba có thể đẩy cả hai — nhưng yếu tố đó chưa được kiểm định trực tiếp. Nghiên cứu không chứng minh cơ chế truyền dẫn cụ thể; không chứng minh quan hệ nhân quả; không chứng minh lợi suất trái phiếu <em>làm</em> cổ phiếu giảm.</p>
+
+  <div class="callout limit"><h4>Evidence boundary — phạm vi của bằng chứng</h4>
+  <p><strong>Đi cùng (cùng kỳ):</strong> có bằng chứng giới hạn — 7 chỉ số daily + 2 chỉ số monthly + panel tổng hợp vượt Holm.</p>
+  <p><strong>Đi trước (dẫn trước):</strong> chưa tìm thấy — Granger bond→equity 0/150 daily + 0/150 monthly vượt Holm.</p>
+  <p><strong>Dự báo ngoài mẫu:</strong> chưa ổn định — 0/140 mô hình đủ depth đạt stable (35 insufficient depth).</p>
+  <p><strong>Thanh khoản/cơ hội:</strong> chưa được hỗ trợ — depth null sau controls equity, Ch3 volume 0/15 panel-parent.</p></div>
+</section>
+
+<!-- ═══ §2 BREADTH + MÔI TRƯỜNG ĐẦU TƯ (20%) ═══ -->
+<section id="breadth">
+  <h2 class="section-title"><span class="num">2</span>Độ rộng thị trường — Lợi suất tăng, độ rộng hẹp hơn trong cùng tháng</h2>
+
+  <div class="callout info"><h4>Liên hệ breadth monthly — nhỏ nhưng thật</h4><p>Chương 4 tìm thấy 2 liên hệ breadth monthly vượt Holm: khi lợi suất 2Y tăng, tỷ lệ cổ phiếu tiến (net advance share) trong cùng tháng hơi thấp hơn. Hiệu ứng rất nhỏ nhưng khác 0 về mặt thống kê sau hiệu chỉnh.</p></div>
+
+  <h3>F1 và F5 — hai liên hệ breadth vượt gate</h3>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="val">F1</div><div class="lab">Δ2Y → net_advance_share. Holm p=0,0415. β≈−0,0007 cho +25 bps. n=119 tháng.</div></div>
+    <div class="kpi"><div class="val">F5</div><div class="lab">Δ chênh lệch VN–US 2Y → net_advance_share. Holm p=0,0282. β≈−0,0007 cho +25 bps. n=119.</div></div>
+  </div>
+  <p>Cả hai dùng cùng outcome (net_advance_share — tỷ lệ cổ phiếu tiến ròng) nên không phải hai phát hiện độc lập, mà là hai góc nhìn (Δ2Y thuần Việt Nam vs chênh lệch VN–US) của cùng một loại quan hệ. Hiệu ứng khoảng −0,07 điểm % breadth cho +25 bps lợi suất — rất nhỏ so với biến động breadth bình thường, nhưng vượt gate thống kê.</p>
+
+  <h3>Ý nghĩa của breadth — khi nào thị trường "hẹp"?</h3>
+  <p>Breadth (độ rộng thị trường) đo lường tỷ lệ cổ phiếu tham gia vào xu hướng. Khi breadth cao, nhiều cổ phiếu cùng tăng — thị trường "rộng" và khỏe. Khi breadth thấp (net advance share âm), ít cổ phiếu tăng, nhiều cổ phiếu giảm — thị trường "hẹp" và yếu, ngay cả khi chỉ số tổng hợp có thể không giảm nhiều (vì một vài cổ phiếu lớn kéo chỉ số).</p>
+  <p>Phát hiện F1/F5 nói rằng: khi lợi suất trái phiếu tăng trong cùng tháng, breadth có xu hướng thấp hơn. Nghĩa là biến động lợi suất đi cùng không chỉ return chỉ số thấp hơn (§1) mà còn breadth thấp hơn — ít cổ phiếu tiến hơn. Đây có thể là cùng một quan hệ cùng kỳ phản ánh qua hai thước đo (return tổng hợp và độ rộng), nhưng "stress state" chưa được định nghĩa hay kiểm định trong nghiên cứu.</p>
+  <p>Nhưng cần thận trọng: hiệu ứng breadth rất nhỏ (−0,07 điểm % cho +25 bps). Nó có ý nghĩa thống kê (vượt Holm) nhưng quy mô quá nhỏ để dùng làm tín hiệu giao dịch độc lập. Hơn nữa, breadth dùng design khác (net_advance_share, n=119 tháng) so với tầng return — không so sánh trực tiếp về quy mô, chỉ về hướng.</p>
+  <p>F1 đặc biệt nằm cận ngưỡng Monte Carlo (raw p=0,0083, B=999; khoảng bất định [0,0065; 0,0101] cắt ngưỡng Holm 0,010). Điều này nghĩa là F1 nhạy với sai số mô phỏng — nếu chạy lại bootstrap với seed khác, F1 có thể không vượt Holm. F5 mạnh hơn một chút (Holm p=0,0282). Cả hai nên được đọc là "có tín hiệu breadth thật nhưng một phần cận ngưỡng", không phải "breadth được xác nhận chắc chắn".</p>
+
+  <h3>Breadth trong thực tế — khi nào quan trọng?</h3>
+  <p>Breadth đặc biệt hữu ích khi chỉ số tổng hợp (VNINDEX, VN30) che khuất cấu trúc bên trong. Có những giai đoạn VNINDEX đi lên nhờ vài cổ phiếu lớn (banking, real estate) trong khi đa số cổ phiếu khác đi xuống — breadth thấp cảnh báo sự phân kỳ này. Ngược lại, khi breadth cao, rally có nền tảng rộng — nhiều cổ phiếu cùng tham gia — thường bền vững hơn.</p>
+  <p>Phát hiện F1/F5 nói rằng môi trường lãi suất thắt đi cùng breadth thấp. Điều này nhất quán với trực giác: khi vốn đắt hơn (lợi suất tăng), công ty nhỏ và vốn hóa trung — những cổ phiếu nhạy cảm hơn với chi phí vốn — có xu hướng yếu trước và mạnh hơn. Breadth giảm vì phần "đuôi" thị trường (cổ phiếu nhỏ) chịu áp lực nhiều hơn phần "đầu" (cổ phiếu lớn kéo chỉ số).</p>
+  <p>Nhưng nhắc lại: đây là diễn giải kinh tế hợp lý, không phải cơ chế đã kiểm định. Nghiên cứu không test trực tiếp "cổ phiếu nhỏ nhạy hơn với lãi suất hơn cổ phiếu lớn". Diễn giải này nhất quán với dữ liệu nhưng chưa được verify bằng test riêng.</p>
+
+  <h3>Timeline breadth — 120 tháng quan sát (CÙNG KỲ)</h3>
+  <p>Hai panel cho thấy toàn bộ mẫu F1. Panel trên: Δ2Y monthly (bps). Panel dưới: net_advance_share (%) cùng tháng. <strong>120 tháng quan sát trên chart, 119 tháng trong regression F1</strong> (chênh 1 do complete-case controls). Giống như tầng return, khi panel trên có thanh hổ phách cao, panel dưới cùng tháng thường nghiêng âm. Nhưng breadth là design khác (net_advance_share, không phải index return) — không so sánh trực tiếp về quy mô.</p>
+  <div class="chart-box">
+    <h4>F1 song hành: Δ2Y vs net_advance_share — CÙNG KỲ</h4>
+    <div class="desc">Panel trên: Δ2Y monthly (bps). Panel dưới: net_advance_share (%) cùng tháng. 120 tháng quan sát, 119 trong regression. Đơn vị bps lợi suất / % breadth — không trộn.</div>
+    <div class="chart-wrap" style="height:180px"><canvas id="chartSiBreadthD2Y"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <h4>net_advance_share (%) — CÙNG KỲ — panel dưới</h4>
+    <div class="desc">Tỷ lệ cổ phiếu tiến ròng, cùng tháng với panel trên. Đơn vị %.</div>
+    <div class="chart-wrap" style="height:180px"><canvas id="chartSiBreadthNAS"></canvas></div>
+  </div>
+
+  <h3>Boundary — breadth không mở rộng sang depth/liquidity</h3>
+  <p>Liên hệ breadth chỉ限net_advance_share. Các nhánh cấu trúc thị trường khác <strong>không vượt gate</strong>:</p>
+  <ul class="bul">
+    <li><strong>Độ sâu/participation:</strong> không có liên hệ đáng tin sau khi kiểm soát các biến equity (VNINDEX return trễ, VNINDEX volatility 20 phiên trễ, regime MA200 trễ).</li>
+    <li><strong>Cơ hội +10/−5:</strong> không có liên hệ đáng tin.</li>
+    <li><strong>Khối lượng giao dịch (Ch3):</strong> đồng thời panel-parent 0/15, short-lag panel-parent 0/15, bond→volume Granger 0/150, OOS stable 0/15. (807 là tổng matrix bao gồm confirmatory + exploratory + sensitivity + blocked, không dùng làm mẫu số confirmatory.)</li>
+  </ul>
+  <p>Không suy diễn quan hệ breadth sang depth, liquidity hay opportunity — các nhánh đó null.</p>
+</section>
+
+<!-- ═══ §3 CÁCH SỬ DỤNG + 6 HIỂU LẦM (20%) ═══ -->
+<section id="use">
+  <h2 class="section-title"><span class="num">3</span>Cách sử dụng — Đọc bối cảnh, không dự báo</h2>
+
+  <div class="callout do"><h4>✅ Đây là protocol diễn giải, không phải protocol giao dịch</h4><p>Hướng dẫn dưới đây dựa trên bằng chứng đã xác nhận. Nó giúp đọc bối cảnh thị trường, không phải chiến lược giao dịch — chưa được backtest và không nên dùng để ra lệnh mua/bán.</p></div>
+
+  <h3>Tại sao "đọc bối cảnh" vẫn hữu ích dù "không dự báo được"?</h3>
+  <p>Nếu lợi suất trái phiếu không dự báo được cổ phiếu, tại sao còn quan tâm? Vì <strong>kiểm tra trạng thái hiện tại</strong> có giá trị khác với <strong>dự báo tương lai</strong>. Khi bạn thấy lợi suất trái phiếu tăng mạnh, đó là lý do để kiểm tra thêm trạng thái cổ phiếu, breadth và các yếu tố khác — không phải kết luận ngay rằng thị trường đang stress. Đó là dấu hiệu để xem thêm, không phải chẩn đoán cuối cùng.</p>
+  <p>Giá trị của việc kiểm tra này đến từ tính <strong>cùng kỳ</strong> của quan hệ. Vì lợi suất và cổ phiếu có xu hướng chuyển động ngược chiều trong cùng khoảng thời gian, biến động lợi suất là một tín hiệu để xem kỹ hơn trạng thái thị trường hiện tại. Bạn không biết ngày mai thế nào, nhưng bạn có thêm một góc nhìn về hôm nay — và điều đó giúp đánh giá rủi ro, quyết định mức độ thận trọng, và đặt các tín hiệu khác (breadth, thanh khoản) vào bối cảnh rộng hơn.</p>
+  <p>Điều quan trọng là không vượt quá giới hạn: nhiệt kế cho biết nhiệt độ hiện tại, không phải dự báo thời tiết ngày mai. Dùng nó để mặc thêm áo khi thấy lạnh (tăng thận trọng), không phải để hủy chuyến đi (bán toàn bộ danh mục).</p>
+
+  <h3>Protocol diễn giải — 4 bước</h3>
+  <ol class="steps">
+    <li><strong>Quan sát:</strong> Khi Δ2Y (biến động lợi suất 2 năm trong 5 phiên) hoặc Δ10Y (biến động lợi suất 10 năm trong 1 tháng) tăng mạnh, đó là tín hiệu môi trường tài chính đang biến động.</li>
+    <li><strong>Kết hợp:</strong> Kiểm tra thêm độ rộng giá (net advance share, F1/F5), thanh khoản, và tin tức vĩ mô. Nếu nhiều yếu tố cùng báo hiệu môi trường khó khăn, tăng thận trọng.</li>
+    <li><strong>Diễn giải:</strong> Hiểu rằng trái phiếu và cổ phiếu <em>có thể</em> cùng phản ánh một yếu tố chung chưa kiểm định — không phải trái phiếu <em>làm</em> cổ phiếu giảm, và không đủ kết luận thị trường đang stress.</li>
+    <li><strong>Không suy diễn:</strong> Biết Δ2Y tăng hôm nay không giúp đoán return 5 phiên tới. Không bán chỉ vì lợi suất tăng. Không coi quan hệ cùng kỳ là tín hiệu dự báo.</li>
+  </ol>
+
+  <div class="callout warn"><h4>⚠️ Evidence boundary — nhắc lại khi đọc cách dùng</h4>
+  <p><strong>Đi cùng:</strong> có. <strong>Đi trước:</strong> chưa. <strong>Dự báo ngoài mẫu:</strong> chưa ổn định. <strong>Thanh khoản/cơ hội:</strong> chưa hỗ trợ. Đọc bối cảnh được; dự báo không được.</p></div>
+
+  <h3>Sáu hiểu lầm thường gặp</h3>
+  <p>Nhiều cách dùng sai lợi suất trái phiếu xuất hiện lặp lại. Dưới đây là sáu hiểu lầm phổ biến nhất, kèm phản biện từ dữ liệu đã xác nhận.</p>
+
+  <div class="callout dont"><h4>❌ Hiểu lầm 1: "Lợi suất tăng là tín hiệu thị trường sắp giảm"</h4><p>Sai. Bằng chứng là quan hệ <strong>cùng kỳ</strong> — lợi suất tăng và cổ phiếu yếu trong cùng cửa sổ thời gian. Granger bond→equity: 0/150 daily + 0/150 monthly. Biết lợi suất tăng hôm nay không giúp đoán cổ phiếu ngày mai.</p></div>
+  <div class="callout good"><h4>✅ Đúng:</h4><p>Lợi suất tăng là lý do kiểm tra thêm trạng thái cổ phiếu và breadth ngay lúc đó — không phải kết luận thị trường đang stress.</p></div>
+
+  <div class="callout dont"><h4>❌ Hiểu lầm 2: "Quan hệ này chỉ tồn tại ở VNINDEX"</h4><p>Sai. Daily xuất hiện ở 7 chỉ số (VNINDEX, VN30, VNCOND, VNCONS, VNFIN, VNHEAL, VNIT). Monthly có 2 chỉ số (VNINDEX, VNMAT) và một kết quả panel tổng hợp (PANEL_CORE).</p></div>
+  <div class="callout good"><h4>✅ Đúng:</h4><p>Quan hệ nhất quán trên nhiều góc nhìn thị trường — dù thành phần chỉ số có chồng lấn.</p></div>
+
+  <div class="callout dont"><h4>❌ Hiểu lầm 3: "Mỗi lần lợi suất tăng thì cổ phiếu đều giảm"</h4><p>Sai. Beta mô tả quan hệ <strong>trung bình</strong>, không phải quy luật cho từng thời điểm. Có tháng lợi suất tăng và cổ phiếu cũng tăng. Quan hệ là xu hướng thống kê, không phải quy tắc tuyệt đối.</p></div>
+  <div class="callout good"><h4>✅ Đúng:</h4><p>Khi lợi suất tăng mạnh, xác suất return thấp hơn tăng — nhưng không đảm bảo từng lần.</p></div>
+
+  <div class="callout dont"><h4>❌ Hiểu lầm 4: "Hiệu ứng đủ lớn để tạo chiến lược giao dịch"</h4><p>Chưa có bằng chứng. OOS không ổn định (0/140 stable). Breadth chỉ ≈ −0,07 điểm % cho +25 bps. Quy mô hiệu ứng nhỏ hơn nhiều so với biến động daily bình thường của VNINDEX.</p></div>
+  <div class="callout good"><h4>✅ Đúng:</h4><p>Quan hệ có ý nghĩa thống kê (vượt Holm) nhưng chưa có giá trị giao dịch ngoài mẫu.</p></div>
+
+  <div class="callout dont"><h4>❌ Hiểu lầm 5: "Bond giải thích thanh khoản, khối lượng và cơ hội +10%"</h4><p>Sai theo phạm vi hiện tại. Các nhánh depth/participation, volume, opportunity +10/−5 đều không vượt gate. Chỉ breadth (net_advance_share) có liên hệ vượt Holm.</p></div>
+  <div class="callout good"><h4>✅ Đúng:</h4><p>Bond liên hệ với độ rộng thị trường (breadth), không phải thanh khoản hay cơ hội giá.</p></div>
+
+  <div class="callout dont"><h4>❌ Hiểu lầm 6: "Không dự báo được nghĩa là bond vô ích"</h4><p>Sai. Bond vẫn có giá trị đọc bối cảnh cùng thời điểm. Khi lợi suất biến động mạnh, đó là lý do để kiểm tra thêm trạng thái thị trường — không phải kết luận stress. Vô dụng cho dự báo ≠ vô dụng cho kiểm tra hiện tại.</p></div>
+  <div class="callout good"><h4>✅ Đúng:</h4><p>Bond là đèn vàng — nhắc kiểm tra thêm — không phải đèn đỏ lệnh dừng, càng không phải đèn xanh lệnh mua.</p></div>
+
+  <h3>Tóm tắt — bond là gì, không là gì?</h3>
+  <div class="compare">
+    <div class="col before">
+      <h4>✅ Bond LÀ</h4>
+      <ul class="bul">
+        <li>Thước đo bối cảnh tài chính cùng thời điểm</li>
+        <li>Lý do kiểm tra thêm trạng thái thị trường (khi tăng mạnh)</li>
+        <li>Liên hệ thật, vượt Holm, trên nhiều chỉ số</li>
+        <li>Công cụ chẩn đoán hiện tại</li>
+        <li>Đèn vàng — nhắc kiểm tra thêm</li>
+      </ul>
+    </div>
+    <div class="col after">
+      <h4>🚫 Bond KHÔNG LÀ</h4>
+      <ul class="bul">
+        <li>Tín hiệu dự báo tương lai</li>
+        <li>Công cụ định thời điểm thị trường</li>
+        <li>Nguyên nhân cổ phiếu giảm (chưa chứng minh nhân quả)</li>
+        <li>Chiến lược giao dịch độc lập</li>
+        <li>Đèn đỏ (lệnh dừng) hay đèn xanh (lệnh mua)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Checklist đọc bối cảnh</h3>
+  <table class="tbl">
+    <tr><th>Tình huống</th><th>Quan sát</th><th>Không suy diễn</th></tr>
+    <tr><td>Δ2Y tăng mạnh trong 5 phiên</td><td>Lý do kiểm tra breadth (F1/F5), thanh khoản, tin tức — chưa đủ kết luận stress</td><td>Không bán cổ phiếu chỉ vì Δ2Y tăng</td></tr>
+    <tr><td>Δ10Y tăng mạnh trong 1 tháng</td><td>Môi trường lãi suất dài hạn thay đổi — kiểm tra độ rộng thị trường</td><td>Không coi đó là dự báo tháng tới sẽ xấu</td></tr>
+    <tr><td>Nhiều tín hiệu cùng báo hiệu khó khăn</td><td>Tăng thận trọng, đánh giá lại danh mục</td><td>Không hành động chỉ dựa vào một tín hiệu (bond)</td></tr>
+    <tr><td>Δ2Y giảm mạnh</td><td>Môi trường nới lỏng — có thể thuận lợi hơn</td><td>Không mua chỉ vì lợi suất giảm</td></tr>
+  </table>
+</section>
+
+<!-- ═══ §4 TẠI SAO KHÔNG DỰ BÁO (20%) ═══ -->
+<section id="why-not">
+  <h2 class="section-title"><span class="num">4</span>Tại sao đây là chỉ báo bối cảnh, không phải tín hiệu dự báo</h2>
+
+  <p>Phần này giải thích chi tiết tại sao lợi suất trái phiếu — dù có quan hệ cùng kỳ thật — chưa được xác nhận là công cụ dự báo. Đây không phải để làm suy yếu phát hiện tích cực, mà để đặt nó trong đúng phạm vi: <strong>đọc bối cảnh được, dự báo không</strong>.</p>
+
+  <h3>Tại sao "đi cùng" không tự động thành "dự báo được"?</h3>
+  <p>Sự phân biệt giữa "đi cùng" (cùng kỳ) và "đi trước" (dẫn trước) là cốt lõi. Hai biến có thể chuyển động ngược chiều cùng lúc mà không có chiều thời gian — tức biến động hôm nay của trái phiếu không chứa thông tin gì thêm về return cổ phiếu ngày mai, ngoài những gì cổ phiếu đã tự phản ánh. Granger null (0/300) chính xác nói điều này: trong dữ liệu đã kiểm tra, biến động lợi suất không thêm thông tin dự báo ngoài lịch sử chính cổ phiếu.</p>
+  <p>Tại sao vậy? Nếu một common driver (yếu tố thứ ba, chưa xác định) tác động cùng lúc lên cả hai, thì khi bạn thấy lợi suất tăng, thông tin đó đã <em>cùng lúc</em> có thể được phản ánh vào giá cổ phiếu rồi. Bạn không có lợi thế thông tin — bạn chỉ đang thấy cùng một sự kiện từ hai góc nhìn. Để dự báo được, bạn cần một biến đi <em>trước</em> sự kiện, không phải đi <em>cùng</em> sự kiện. Lưu ý: common driver là một giả thuyết diễn giải, chưa được kiểm định.</p>
+  <p>OOS null củng cố điều này từ góc khác: ngay cả khi cố gắng dựng mô hình dự báo có cấu trúc, thêm lợi suất trái phiếu không cải thiện khả năng đoán so với baseline chỉ dùng return quá khứ. 0/140 mô hình đủ depth đạt stable — không có cửa sổ nào, không có cấu hình nào cho thấy trái phiếu cải thiện dự báo ngoài mẫu một cách ổn định.</p>
+
+  <h3>Có phải vì dữ liệu chưa đủ?</h3>
+  <p>Một câu hỏi tự nhiên: liệu null có phải vì n=119–144 tháng quá ít? Có thể — một phần. Với n tháng nhỏ, power phát hiện hiệu ứng dẫn trước yếu là hạn chế. Nhưng có hai lý do để không đơn giản đổ lỗi cho dữ liệu:</p>
+  <p>Thứ nhất, daily panel có ~25.000 phiên — power rất cao — và vẫn không thấy chiều dẫn trước (Granger 0/150 daily). Nếu tín hiệu dẫn trước tồn thất ở tần suất daily, dữ liệu đủ để bắt. Thứ hai, ngay cả nghiên cứu sơ khai với n hàng triệu (stock-panel) cũng không cho OOS ổn định — tín hiệu in-sample mạnh không chuyển sang ngoài mẫu.</p>
+  <p>Vậy câu trả lời thành thật: null ở tần suất tháng <em>có thể</em> một phần do thiếu power, nhưng null ở daily (n đủ lớn) và null ở OOS (cả daily lẫn monthly) cho thấy đây không chỉ là vấn đề cỡ mẫu. Có thể quan hệ dẫn trước thực sự không tồn tại, hoặc quá yếu để có giá trị thực tiễn.</p>
+
+  <h3>Điều gì cần xảy ra để nâng quan hệ này thành công cụ dự báo?</h3>
+  <p>Hiện tại, quan hệ cùng kỳ đã vượt gate nhưng chưa phải dự báo. Để cân nhắc nâng thành predictive research, <strong>tất cả</strong> năm điều kiện sau phải đạt — không chỉ một:</p>
+  <ol class="steps">
+    <li><strong>F1 vượt kiểm tra Monte Carlo sâu hơn.</strong> Hiện F1 cận ngưỡng (raw p=0,0083, khoảng bất định cắt Holm 0,010). Cần chạy B≥49.999 hoặc sequential MC để xác nhận F1 vượt ngưỡng một cách ổn định, không phụ thuộc seed.</li>
+    <li><strong>Beta ổn định qua interaction thời gian được đăng ký trước.</strong> Cần kiểm định xem beta có đổi theo sub-period (trước/sau COVID, trước/sau 2022) hay không — bằng interaction term định trước, không hậu nghiệm.</li>
+    <li><strong>Bond→equity precedence vượt hiệu chỉnh đa phép thử.</strong> Cần tìm ít nhất một cấu hình Granger bond→equity vượt Holm — hiện 0/300.</li>
+    <li><strong>OOS cải thiện vật chất và ổn định.</strong> Hiện OOS 0/140 stable, MIXED ≈ coin-flip (0,517). Cần cải thiện vượt ngưỡng vật chất (≥2% theo định nghĩa nghiên cứu) một cách ổn định, không chỉ một cửa sổ may mắn.</li>
+    <li><strong>Kết quả lặp lại trên dữ liệu tương lai chưa dùng khi xây mô hình.</strong> Cần collect thêm dữ liệu (tháng mới) và kiểm tra lại — không dùng cùng dữ liệu vừa xây vừa test.</li>
+  </ol>
+  <p>Nhiều dữ liệu hơn chỉ tăng precision — không tự biến contemporaneous association thành prediction. Đây là điểm quan trọng: mở rộng từ 144 lên 200 tháng không tự nhiên tạo ra chiều dẫn trước nếu nó không tồn tại. Dữ liệu thêm giúp phát hiện tín hiệu yếu hơn, nhưng không tạo tín hiệu mới. Hiện tại, đây là liên hệ bối cảnh đã vượt gate — không hơn, không kém.</p>
+
+  <div class="callout limit"><h4>Evidence boundary — tóm tắt cố định</h4>
+  <p><strong>Đi cùng:</strong> có bằng chứng giới hạn. <strong>Đi trước:</strong> chưa tìm thấy. <strong>Dự báo ngoài mẫu:</strong> chưa ổn định. <strong>Thanh khoản/cơ hội:</strong> chưa hỗ trợ.</p></div>
+
+  <details open>
+    <summary>Chi tiết: Granger — lợi suất có đi trước cổ phiếu không?</summary>
+    <div class="body">
+      <p>Granger kiểm tra xem biến động lợi suất trái phiếu có thêm thông tin dự báo ngoài những gì cổ phiếu đã tự nói. Kết quả ở chiều bond→equity: <strong>0/150 daily và 0/150 monthly</strong> vượt Holm — không có cấu hình nào cho thấy lợi suất trái phiếu đi trước cổ phiếu ở bất kỳ tần suất nào.</p>
+      <p><em>Chiều equity→bond chưa được kiểm định trong Chương 2</em> (scope gap, không kết luận null). Chương 4 có 7 test Granger mix 2 chiều (4 bond→equity + 3 equity→bond), p_adj_holm toàn = 1,0 → 0/7 reject.</p>
+      <p>Quan trọng: Granger null <strong>không</strong> là bằng chứng "không thể dự báo" — nó chỉ nói "chưa tìm thấy chiều dẫn trước trong các thiết kế đã kiểm định".</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Chi tiết: Dự báo ngoài mẫu (OOS) — thêm trái phiếu có cải thiện dự báo?</summary>
+    <div class="body">
+      <p>OOS so sánh mô hình "chỉ cổ phiếu" với mô hình "cổ phiếu + trái phiếu" trên dữ liệu chưa từng thấy. Kết quả: <strong>0/140</strong> mô hình đủ depth đạt stable. Trong số 175 mô hình đăng ký: 56 OOS_MIXED (improved-fraction median ≈ 0,517 — gần tung đồng xu, chỉ diagnostic, không phải kiểm định Bernoulli chính thức); 84 OOS_FAILED (median 0,472); 35 INSUFFICIENT_OOS_DEPTH (n_folds=0, không đủ dữ liệu).</p>
+      <p>Mẫu số đánh giá được là 140 (không phải 175), vì 35 mô hình không chạy được. Không dùng OOS như bằng chứng H0 đúng — chỉ nói "chưa tìm thấy khả năng dự báo ổn định".</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Chi tiết: Khối lượng giao dịch (Chương 3) — bond liên hệ volume không?</summary>
+    <div class="body">
+      <p>Chương 3 kiểm tra quan hệ giữa biến động lợi suất trái phiếu và khối lượng giao dịch chỉ số. Kết quả: đồng thời panel-parent 0/15, short-lag panel-parent 0/15, bond→volume Granger 0/150, OOS stable 0/15. Không có liên hệ xác nhận ở bất kỳ nhánh nào.</p>
+      <p>(807 là tổng matrix bao gồm confirmatory + exploratory + sensitivity + blocked, không dùng làm mẫu số confirmatory.) Có vài tín hiệu thăm dò về bất đối xứng theo tháng nhưng không vượt gate.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Chi tiết: Chương 1 — dự báo độc lập có vượt gate?</summary>
+    <div class="body">
+      <p>Chương 1 kiểm tra khả năng dự báo độc lập: biết lợi suất hôm nay, có đoán được return 5–20 phiên tới không? Kết quả: 0 phép thử vượt hiệu chỉnh đa phép thử, trên cả biến lợi suất thông thường và chỉ số căng thẳng tổng hợp. Khi ép mô hình dự báo trên dữ liệu chưa từng thấy, thêm lợi suất trái phiếu không cải thiện so với mô hình nền.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ═══ §5 PHƯƠNG PHÁP + GIỚI HẠN (10%) ═══ -->
+<section id="method">
+  <h2 class="section-title"><span class="num">5</span>Phương pháp và giới hạn</h2>
+
+  <p>Phần này dành cho người muốn hiểu sâu hơn về cách nghiên cứu được thực hiện và những giới hạn cần ghi nhận. Có thể bỏ qua nếu chỉ quan tâm đến kết quả và cách sử dụng.</p>
+
+  <details>
+    <summary>Phương pháp thống kê — chi tiết</summary>
+    <div class="body">
+      <h4>Bootstrap dependent-wild (Shao 2011)</h4>
+      <p>Nghiên cứu dùng dependent-wild bootstrap với shared innovation, block length=5. Phương pháp này bảo toàn cấu trúc phụ thuộc thời gian trong dữ liệu tài chính — quan trọng vì return cổ phiếu và biến động lợi suất đều có tự tương quan. Không dùng bootstrap iid (sai cho chuỗi thời gian) hay block bootstrap thông thường (kém hiệu quả hơn cho dependent data).</p>
+      <h4>P-value plus-one</h4>
+      <p>Công thức p = (#exceed + 1)/(B + 1) thay vì #exceed/B. Cộng 1 ở cả tử và mẫu tránh p=0 — không bao giờ tuyên bố "xác suất quan sát = 0" dù chạy nhiều bootstrap. Đây là quy ước bảo thủ, được khuyến nghị cho bootstrap inference. B=999 cho full matrix (đủ cho p≈0,001), B=9999 cho verdict candidates (độ phân giải cao hơn cho kết quả cận ngưỡng như F1).</p>
+      <h4>Hiệu chỉnh đa phép thử</h4>
+      <p>Holm FWER 5% cho confirmatory families — kiểm soát tỷ lệ ít nhất một dương tính giả khi thử nhiều phép. Holm nhân p với số phép trong từng family (m=3–5), không phải tổng toàn nghiên cứu. BH FDR 10% cho exploratory — lỏng hơn, cho phép khám phá nhưng kiểm soát tỷ lệ dương tính giả kỳ vọng.</p>
+      <h4>Granger VAR bivariate</h4>
+      <p>True bivariate VAR(p) với system BIC logdet chọn độ trễ. Restricted-null bootstrap — kiểm định trực tiếp restriction "bond không Granger-cause equity" bằng cách bootstrap dưới H0. Đây là cách đúng cho Granger (không dùng asymptotic χ² vì nhạy với specification).</p>
+      <h4>Power validation</h4>
+      <p>Size thực nghiệm 6,0% (target [1%,12%]) — test không phồng dương tính giả. Power 100% tại beta_alt=0,3 (effect lớn) — nhưng <strong>không suy rộng</strong> sang hiệu ứng thực tế nhỏ (≈−0,0007). Nói cách khác: test có thể phát hiện effect lớn với độ chắc chắn cao, nhưng chưa chứng minh đủ power cho effect nhỏ.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Giới hạn dữ liệu — chi tiết</summary>
+    <div class="body">
+      <h4>Cỡ mẫu</h4>
+      <p>Dữ liệu 2014–2026 (~12 năm). Ở tần suất tháng, n=119–144 — đủ để phát hiện hiệu ứng medium trở lên, nhưng có thể bỏ sót hiệu ứng nhỏ. Ở tần suất daily, n≈25.000 phiên — power rất cao, đủ để phát hiện hiệu ứng nhỏ. Null ở daily (Granger 0/150) đáng tin hơn null ở monthly vì n lớn hơn.</p>
+      <h4>Survivorship</h4>
+      <p>Chương 4 dùng 403 cổ phiếu current-active HOSE — tức cổ phiếu vẫn còn giao dịch đến hiện tại. Đây mang survivorship bias: cổ phiếu đã bị hủy niêm yết trong giai đoạn 2014–2026 không có mặt. Hạn chế này đã được disclosed trong universe contract nhưng cần ghi nhận khi diễn giải breadth.</p>
+      <h4>Block length</h4>
+      <p>Block length=5 cho dependent-wild bootstrap chưa có sensitivity analysis. Block quá ngắn có thể không giữ đủ phụ thuộc; block quá dài giảm số bootstrap hiệu quả. Đây là khoảng trống method cần bổ sung.</p>
+      <h4>Common driver chưa kiểm định</h4>
+      <p>Nghiên cứu xác nhận quan hệ cùng kỳ nhưng không cô lập common driver cụ thể (lạm phát? chính sách tiền tệ? dòng tiền ngoại?). "Cả hai phản ứng môi trường chung" là diễn giải hợp lý nhưng chưa kiểm định trực tiếp. Đây là hướng nghiên cứu tiếp theo.</p>
+      <h4>Chiều equity→bond chưa test (Ch2)</h4>
+      <p>Granger Ch2 chỉ kiểm định chiều bond→equity (0/300). Chiều equity→bond chưa được kiểm định — đây là scope gap, không kết luận null. Nếu nghiên cứu tương lai test chiều ngược và tìm thấy dẫn trước, câu chuyện có thể thay đổi.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Giả thuyết tương lai — câu hỏi mở, không phải kỳ vọng</summary>
+    <div class="body">
+      <p>Liệu quan hệ đồng thời này có phát triển thành thông tin dẫn trước khi dữ liệu dài hơn hay không vẫn là một câu hỏi mở. Điều đó chỉ được chấp nhận nếu xuất hiện precedence, ổn định thời gian và cải thiện OOS trên dữ liệu tương lai. Nhiều dữ liệu hơn chỉ tăng precision; không tự biến contemporaneous association thành prediction.</p>
+      <p>Điều kiện nâng predictive (tất cả phải đạt): (1) F1 vượt MC sâu hơn; (2) beta ổn định qua interaction thời gian đăng ký trước; (3) bond→equity precedence vượt correction; (4) OOS cải thiện vật chất ổn định; (5) lặp lại trên dữ liệu tương lai chưa dùng.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Artifact tham chiếu (8 nguồn, SHA256)</summary>
+    <div class="body">
+      <p>Mọi số liệu trong báo cáo map đến artifact đã hash. Build gate fail-closed nếu hash thay đổi.</p>
+      <ul class="bul">
+        <li>23_index_child_results_full.csv — T00002, T00074, multi-index betas</li>
+        <li>24_granger_results.csv — Granger 0/300</li>
+        <li>28_oos_results.json — OOS 0/140 + 35 insufficient</li>
+        <li>13_confirmatory_results.csv — F1/F5 breadth</li>
+        <li>research_long_history_trial.duckdb — VNINDEX monthly return (fail-closed)</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<!-- ===== MINIMAP ===== -->
+<aside class="minimap" id="minimap" aria-label="Mục lục">
+  <div class="mm-head"><span class="mm-title">Mục lục</span><span class="mm-pct" id="mmPct">0%</span></div>
+  <div class="mm-search"><input type="text" id="mmSearch" placeholder="Lọc..." autocomplete="off"></div>
+  <button class="mm-overlay-close" id="mmClose" aria-label="Đóng">✕</button>
+  <div class="mm-group open" data-group="a">
+    <button class="mm-group-head"><span class="chev">▶</span> Nội dung chính <span class="gcount">6</span></button>
+    <ul class="mm-items">
+      <li><a href="#context"><span class="dot"></span>★ Ba khái niệm</a></li>
+      <li><a href="#insight"><span class="dot"></span>1 — Trục chính: insight return</a></li>
+      <li><a href="#breadth"><span class="dot"></span>2 — Độ rộng thị trường</a></li>
+      <li><a href="#use"><span class="dot"></span>3 — Cách sử dụng + hiểu lầm</a></li>
+      <li><a href="#why-not"><span class="dot"></span>4 — Tại sao không dự báo</a></li>
+      <li><a href="#method"><span class="dot"></span>5 — Phương pháp + giới hạn</a></li>
+    </ul>
+  </div>
+  <div class="mm-no-result" id="mmNoResult">Không tìm thấy.</div>
+</aside>
+
+<button class="mm-fab" id="mmFab" aria-label="Mục lục">☰</button>
+<button class="to-top" id="toTop" aria-label="Lên đầu">↑</button>
+<div class="progress-bar" id="progressBar"></div>
+
+<footer>
+  Nghiên cứu tự thực hiện · 2014–2026 · Dữ liệu: Trái phiếu CP VN + Cổ phiếu HOSE<br>
+  Phương pháp: dependent-wild bootstrap · Holm FWER 5% · BH FDR 10% · Plus-one p-values
+</footer>
+
+__CHART_JS_BLOCK__
+
+{NAV_SCRIPT}
+</body>
+</html>'''
+
+# ===== ASSEMBLE =====
+html = f"""<!DOCTYPE html>
+<html lang="vi">
+{HEAD}
+{BODY}
+"""
+
+# ===== GATES (fail-closed) =====
+# 1. Allowlist: forbidden topics from bak2 must NOT appear
+FORBIDDEN_TOPICS = ["cointegration", "18 ngành", "18 sectors", "Indonesia", "peer tự nhiên",
+    "PCA", "phân tích thành phần chính", "synthetic control", "peak-influence",
+    "cross-country", "16 trái phiếu toàn cầu", "16 global bonds", "extreme event",
+    "term-β", "term beta", "r=-0,327", "r=−0,327", "β=-6,92", "β=−6,92",
+    "−6,92%", "-6.92%", "Nelson-Siegel", "Diebold-Yilmaz", "Markov-switching"]
+for topic in FORBIDDEN_TOPICS:
+    assert topic.lower() not in html.lower(), f"BLOCKED_FORBIDDEN_TOPIC: '{topic}' found in output"
+
+# 2. Evidence boundary appears >=2 times
+eb_count = html.count("Evidence boundary")
+assert eb_count >= 2, f"BLOCKED_EVIDENCE_BOUNDARY: only {eb_count} occurrences (need >=2)"
+
+# 3. "CÙNG KỲ" on charts
+assert "CÙNG KỲ" in html, "BLOCKED: 'CÙNG KỲ' missing from chart context"
+
+# 4. 7 indices NOT called independent
+assert "không độc lập" in html or "không phải 7 lần xác nhận độc lập" in html, "BLOCKED: 7 indices must be marked non-independent"
+
+# 5. Protocol is "diễn giải" not "giao dịch"
+assert "protocol diễn giải" in html.lower(), "BLOCKED: must say 'protocol diễn giải'"
+assert "không phải protocol giao dịch" in html.lower() or "không phải chiến lược giao dịch" in html.lower(), "BLOCKED: must disclaim trading protocol"
+
+# 6. No bak2-style causal mechanism claims
+assert "credit channel" not in html.lower() and "NIM compression" not in html.lower(), "BLOCKED: bak2 transmission mechanism leaked"
+
+# ===== INJECT CHART JS (plain-string, no f-string brace escaping) =====
+CHART_JS = '''<!-- SCRIPT: CHARTS -->
+<script>
+Chart.defaults.color='#94a3b8';
+Chart.defaults.font.family='-apple-system,Segoe UI,Roboto,sans-serif';
+Chart.defaults.borderColor='#334155';
+var GRID='#334155',TXT='#e2e8f0';
+
+// 1. Multi-index daily
+new Chart(document.getElementById('chartSiMultiDaily'),{type:'bar',
+  data:{labels:__MD_IDX__,
+  datasets:[{label:'β/10bps (%)',data:__MD_BETA__,
+    backgroundColor:'rgba(245,158,11,.7)',borderRadius:4,maxBarThickness:50}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:function(c){return c.parsed.y.toFixed(2)+' điểm % / +10bps 2Y (CÙNG KỲ, Holm p<0.05)';}}}},
+    scales:{y:{title:{display:true,text:'β (điểm % return / +10bps 2Y)',color:TXT},grid:{color:GRID},ticks:{font:{size:9}}},
+      x:{grid:{display:false},ticks:{font:{size:9}}}}}});
+
+// 2. Multi-index monthly
+new Chart(document.getElementById('chartSiMultiMonthly'),{type:'bar',
+  data:{labels:__MM_IDX__,
+  datasets:[{label:'β/10bps (%)',data:__MM_BETA__,
+    backgroundColor:__MM_COLOR__,borderRadius:4,maxBarThickness:50}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:function(c){var lbl=c.label.includes('panel')?' (panel tổng hợp, không phải chỉ số, headline_allowed=False)':' (Holm p<0.05)';return c.parsed.y.toFixed(2)+' điểm % / +10bps 10Y'+lbl;}}}},
+    scales:{y:{title:{display:true,text:'β (điểm % return / +10bps 10Y)',color:TXT},grid:{color:GRID},ticks:{font:{size:9}}},
+      x:{grid:{display:false},ticks:{font:{size:9}}}}}});
+
+// 3. Forest plot VNINDEX with CI whiskers
+new Chart(document.getElementById('chartSiForest'),{type:'bar',
+  data:{labels:['+10bps 2Y (5 phiên)\\n→ VNINDEX cùng 5 phiên','+10bps 10Y (1 tháng)\\n→ VNINDEX cùng tháng'],
+  datasets:[{label:'point',data:[__FD_PT__,__FM_PT__],
+    backgroundColor:['rgba(245,158,11,.2)','rgba(139,92,246,.2)'],borderColor:['rgba(245,158,11,.35)','rgba(139,92,246,.35)'],borderWidth:1,barPercentage:0.3,categoryPercentage:0.6}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{title:{display:true,text:'Điểm % return / +10bps (CÙNG KỲ)',color:TXT},grid:{color:GRID},ticks:{font:{size:9}},min:__XMIN__,max:0.1},
+      y:{grid:{display:false},ticks:{font:{size:10}}}}},
+  plugins:[{id:'siWhiskers',afterDatasetsDraw:function(chart){
+    var ctx=chart.ctx,meta=chart.getDatasetMeta(0),xs=chart.scales.x;
+    var data=[{lo:__FD_LO__,hi:__FD_HI__,pt:__FD_PT__,c:'245,158,11'},{lo:__FM_LO__,hi:__FM_HI__,pt:__FM_PT__,c:'139,92,246'}];
+    ctx.save();data.forEach(function(r,idx){var y=meta.data[idx].y,xLo=xs.getPixelForValue(r.lo),xHi=xs.getPixelForValue(r.hi),xPt=xs.getPixelForValue(r.pt);
+      ctx.strokeStyle='rgba('+r.c+',.9)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(xLo,y);ctx.lineTo(xHi,y);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(xLo,y-6);ctx.lineTo(xLo,y+6);ctx.moveTo(xHi,y-6);ctx.lineTo(xHi,y+6);ctx.stroke();
+      ctx.fillStyle='rgba('+r.c+',1)';ctx.beginPath();ctx.arc(xPt,y,4,0,Math.PI*2);ctx.fill();});
+    var x0=xs.getPixelForValue(0);ctx.strokeStyle='rgba(148,163,184,.4)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(x0,chart.chartArea.top);ctx.lineTo(x0,chart.chartArea.bottom);ctx.stroke();ctx.setLineDash([]);ctx.restore();}}]});
+
+// 4. Timeline Δ10Y
+var TL_L=__TL_LABELS__,TL_D=__TL_D10Y__,TL_V=__TL_VNI__;
+new Chart(document.getElementById('chartTimelineD10Y'),{type:'bar',
+  data:{labels:TL_L,datasets:[{label:'Δ10Y (bps)',data:TL_D,
+    backgroundColor:function(c){var v=c.parsed.y;return v>=0?'rgba(245,158,11,.7)':'rgba(59,130,246,.7)';},borderRadius:2,maxBarThickness:6}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:function(c){return TL_L[c[0].dataIndex]+' (CÙNG KỀ)';},label:function(c){var i=c.dataIndex;return 'Δ10Y='+c.parsed.y.toFixed(1)+'bps (VNINDEX cùng tháng '+TL_V[i].toFixed(1)+'%)';}}}},
+    scales:{y:{title:{display:true,text:'Δ10Y (bps)',color:TXT},grid:{color:GRID},ticks:{font:{size:9}}},x:{grid:{display:false},ticks:{font:{size:7},maxRotation:0,maxTicksLimit:10}}}}});
+
+// 5. Timeline VNINDEX
+new Chart(document.getElementById('chartTimelineVNI'),{type:'bar',
+  data:{labels:TL_L,datasets:[{label:'VNINDEX return (%)',data:TL_V,
+    backgroundColor:function(c){var v=c.parsed.y;return v>=0?'rgba(34,197,94,.6)':'rgba(239,68,68,.6)';},borderRadius:2,maxBarThickness:6}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:function(c){return TL_L[c[0].dataIndex]+' (CÙNG KỲ)';},label:function(c){var i=c.dataIndex;return 'VNINDEX='+c.parsed.y.toFixed(1)+'% (Δ10Y cùng tháng '+TL_D[i].toFixed(1)+'bps)';}}}},
+    scales:{y:{title:{display:true,text:'VNINDEX return (%)',color:TXT},grid:{color:GRID},ticks:{font:{size:9},callback:function(v){return v+'%';}}},x:{grid:{display:false},ticks:{font:{size:7},maxRotation:0,maxTicksLimit:10}}}}});
+
+// 6. Breadth Δ2Y
+var B_L=__B_LABELS__,B_D=__B_D2Y__,B_N=__B_NAS__;
+new Chart(document.getElementById('chartSiBreadthD2Y'),{type:'bar',
+  data:{labels:B_L,datasets:[{label:'Δ2Y (bps)',data:B_D,
+    backgroundColor:function(c){var v=c.parsed.y;return v>=0?'rgba(245,158,11,.7)':'rgba(59,130,246,.7)';},borderRadius:2,maxBarThickness:6}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:function(c){return B_L[c[0].dataIndex]+' (CÙNG KỀ)';},label:function(c){var i=c.dataIndex;return 'Δ2Y='+c.parsed.y.toFixed(1)+'bps (breadth '+B_N[i].toFixed(2)+'%)';}}}},
+    scales:{y:{title:{display:true,text:'Δ2Y (bps)',color:TXT},grid:{color:GRID},ticks:{font:{size:9}}},x:{grid:{display:false},ticks:{font:{size:7},maxRotation:0,maxTicksLimit:10}}}}});
+
+// 7. Breadth net_advance_share
+new Chart(document.getElementById('chartSiBreadthNAS'),{type:'bar',
+  data:{labels:B_L,datasets:[{label:'net_advance_share (%)',data:B_N,
+    backgroundColor:function(c){var v=c.parsed.y;return v>=0?'rgba(34,197,94,.6)':'rgba(239,68,68,.6)';},borderRadius:2,maxBarThickness:6}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:function(c){return B_L[c[0].dataIndex]+' (CÙNG KỲ)';},label:function(c){var i=c.dataIndex;return 'breadth='+c.parsed.y.toFixed(2)+'% (Δ2Y '+B_D[i].toFixed(1)+'bps)';}}}},
+    scales:{y:{title:{display:true,text:'net_advance_share (%)',color:TXT},grid:{color:GRID},ticks:{font:{size:9}}},x:{grid:{display:false},ticks:{font:{size:7},maxRotation:0,maxTicksLimit:10}}}}});
+</script>
+'''
+
+XMIN = round(min(FD["ci_low_pct_per_10bps"], FM["ci_low_pct_per_10bps"]) - 0.1, 2)
+repl = {
+    "__MD_IDX__": MD_IDX, "__MD_BETA__": MD_BETA,
+    "__MM_IDX__": MM_IDX, "__MM_BETA__": MM_BETA, "__MM_COLOR__": MM_COLOR,
+    "__FD_PT__": str(FD["point_pct_per_10bps"]), "__FM_PT__": str(FM["point_pct_per_10bps"]),
+    "__FD_LO__": str(FD["ci_low_pct_per_10bps"]), "__FD_HI__": str(FD["ci_high_pct_per_10bps"]),
+    "__FM_LO__": str(FM["ci_low_pct_per_10bps"]), "__FM_HI__": str(FM["ci_high_pct_per_10bps"]),
+    "__XMIN__": str(XMIN),
+    "__TL_LABELS__": TL_LABELS, "__TL_D10Y__": TL_D10Y, "__TL_VNI__": TL_VNI,
+    "__B_LABELS__": B_LABELS, "__B_D2Y__": B_D2Y, "__B_NAS__": B_NAS,
+}
+for k, v in repl.items():
+    CHART_JS = CHART_JS.replace(k, v)
+
+html = html.replace("__CHART_JS_BLOCK__", CHART_JS)
+
+OUT.write_text(html)
+print(f"Built index.html: {len(html)} bytes")
+
+# Word count
+import re as _re
+visible = _re.sub(r'<[^>]+>', ' ', _re.sub(r'<script.*?</script>', ' ', _re.sub(r'<style.*?</style>', ' ', html, flags=_re.DOTALL), flags=_re.DOTALL))
+words = len(visible.split())
+print(f"Visible words: {words}")
+print(f"Sections: {len(_re.findall(r'<section ', html))}")
+print(f"Canvases: {html.count('<canvas')}")
+print(f"Evidence boundary count: {eb_count}")
+print("ALL GATES PASSED")

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dòng tiền ngoại trên thị trường cổ phiếu Việt Nam</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#fafafa;--card:#fff;--border:#e2e2e2;--text:#1a1a1a;--tl:#666;--acc:#0b5cad;--grn:#2e7d32;--org:#e65100;--red:#c62828;--mw:920px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.78;font-size:17px}
+.container{max-width:var(--mw);margin:0 auto;padding:0 20px}
+.hero{background:linear-gradient(135deg,#0d6efd,#0a3d91);color:#fff;padding:64px 30px 56px;text-align:center;border-radius:0 0 24px 24px}
+.hero h1{font-size:2.1em;margin-bottom:16px;font-weight:800;letter-spacing:-.01em}
+.hero .sub{font-size:1.16em;opacity:.94;max-width:720px;margin:0 auto 22px;line-height:1.6}
+.hero .meta{font-size:.86em;opacity:.82;max-width:680px;margin:0 auto}
+.hero .pill{display:inline-block;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:4px 12px;border-radius:999px;font-size:.78em;margin:4px 4px 0}
+nav{position:sticky;top:0;background:var(--card);z-index:100;border-bottom:1px solid var(--border);padding:10px 0;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+nav .container{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+nav a{text-decoration:none;color:var(--acc);font-size:.82em;padding:6px 11px;border-radius:6px;transition:background .15s}
+nav a:hover{background:#e7f1fd}
+section{padding:42px 0;border-bottom:1px solid var(--border)}
+section h2{font-size:1.55em;margin-bottom:16px;color:#0a2f6b}
+section h3{font-size:1.16em;margin:22px 0 10px;color:var(--acc)}
+section p{margin-bottom:14px}
+section .lead{font-weight:600;font-size:1.06em}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:16px 0}
+.card.pos{border-left:4px solid var(--grn)}
+.card.neg{border-left:4px solid var(--red)}
+.card.neu{border-left:4px solid var(--acc)}
+.scn{background:#f6f7f9;border-radius:8px;padding:14px 16px;margin:12px 0;border-left:3px solid var(--acc)}
+.scn .obs{font-weight:600}.scn .rs{color:var(--text);margin:4px 0}.scn .di{color:var(--org);font-size:.9em;font-weight:600}
+.cc{background:var(--card);border-radius:12px;padding:18px;margin:20px 0;border:1px solid var(--border)}
+.cc canvas{max-height:340px}
+.cap{font-size:.86em;color:var(--tl);margin-top:8px;text-align:center;font-style:italic;line-height:1.5}
+.mt{width:100%;border-collapse:collapse;margin:16px 0;font-size:.92em}
+.mt th,.mt td{border:1px solid var(--border);padding:10px 12px;text-align:left}
+.mt th{background:#eef2f7;font-weight:700;color:#0a2f6b}
+.mt .vy{color:var(--grn);font-weight:700}.mt .vn{color:var(--tl)}.mt .vd{color:var(--acc);font-weight:700}
+details{background:#eef2f7;border-radius:8px;padding:12px 14px;margin:12px 0;cursor:pointer}
+details summary{font-weight:700;color:var(--acc);font-size:.9em}
+details[open]{padding-bottom:16px}
+details .inner{padding:12px 0 0;font-size:.88em;color:var(--text);line-height:1.6}
+details .inner p{margin-bottom:8px}
+footer{text-align:center;padding:42px 20px;color:var(--tl);font-size:.82em;line-height:1.7}
+.disc{background:#fff5e6;border-radius:8px;padding:16px;margin:20px 0;border-left:3px solid var(--org);font-size:.9em}
+.dbox{display:flex;gap:10px;margin:22px 0;flex-wrap:wrap;align-items:stretch}
+.dstep{flex:1;min-width:190px;background:var(--card);border:2px solid var(--border);border-radius:12px;padding:16px;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.dstep.act{border-color:var(--grn);background:#e9f6ea}
+.dstep.blk{border-color:var(--red);background:#fdecee;opacity:.78}
+.dstep h4{font-size:.96em;margin-bottom:8px}
+.dstep p{font-size:.82em;color:var(--tl);margin:0}
+.darr{display:flex;align-items:center;font-size:1.6em;color:var(--tl);min-width:24px;justify-content:center}
+.kbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kbox .k{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.kbox .k .num{font-size:1.5em;font-weight:800;color:var(--acc)}
+.kbox .k .lbl{font-size:.78em;color:var(--tl);margin-top:4px}
+@media(max-width:600px){.hero{padding:42px 18px}.hero h1{font-size:1.55em}.container{padding:0 14px}nav a{font-size:.76em;padding:4px 8px}.dbox{flex-direction:column}.darr{transform:rotate(90deg)}section h2{font-size:1.3em}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+<h1>Dòng tiền ngoại trên thị trường cổ phiếu Việt Nam</h1>
+<p class="sub">Dòng tiền ngoại giúp <strong>mô tả</strong> mức độ sôi động và biến động của thị trường cổ phiếu Việt Nam, nhưng nghiên cứu độc lập này <strong>không tìm thấy</strong> bằng chứng ổn định rằng nó <strong>dự báo được</strong> hướng giá, lợi suất cổ phiếu, hay sự thay đổi của lợi suất trái phiếu.</p>
+<p class="meta">Nghiên cứu độc lập · Thu thập 150 cổ phiếu HOSE, mẫu phân tích 149 mã · 4 chỉ số · 2014–2025 · Đây là tài liệu nghiên cứu, <strong>không phải khuyến nghị đầu tư</strong>.</p>
+<p class="meta"><span class="pill">34 kết luận</span><span class="pill">cùng ngày ≠ đi trước ≠ tín hiệu</span><span class="pill">1/5 câu hỏi có kết quả dương</span></p>
+</div>
+
+<nav><div class="container">
+<a href="#s1">90 giây</a><a href="#s2">Dòng ngoại là gì</a><a href="#s3">Năm câu hỏi</a><a href="#s4">Cùng ngày ≠ dự báo</a><a href="#s5">F1: Biến động</a><a href="#s6">F2: Chỉ số</a><a href="#s7">F3–F4: Lợi suất</a><a href="#s8">F5: Trái phiếu</a><a href="#s9">Ma trận</a><a href="#s10">Cách dùng</a><a href="#s11">Không suy diễn</a><a href="#s12">Giới hạn</a><a href="#s13">Phụ lục</a>
+</div></nav>
+
+<div class="container">
+
+<section id="s1">
+<h2>Đọc trong 90 giây</h2>
+<p class="lead">Dòng tiền ngoại có một liên hệ thật với độ lớn biến động của cổ phiếu, nhưng liên hệ đó xuất hiện <strong>cùng ngày</strong> — không phải dự báo đi trước. Nghiên cứu không tìm thấy dòng ngoại dự báo được hướng giá, lợi suất cổ phiếu, hay lợi suất trái phiếu.</p>
+<div class="card pos">
+<h3>Điều tìm thấy</h3>
+<p>Khi dòng ngoại mua hoặc bán mất cân bằng mạnh trong một phiên, độ lớn thay đổi giá tuyệt đối của cổ phiếu — tức khoảng cách từ giá đóng cửa hôm qua đến giá đóng cửa hôm nay — thường lớn hơn bình thường. Đây là quan hệ <strong>cùng ngày</strong>: dòng ngoại và biến động cùng xảy ra trong một phiên giao dịch. Quan hệ này lặp lại ở 5 trên 6 giai đoạn kiểm tra độc lập, với 241,613 dòng dự báo stock-day được ghi nhận.</p>
+</div>
+<div class="card neg">
+<h3>Điều không tìm thấy</h3>
+<p>Nghiên cứu không tìm thấy bằng chứng ổn định rằng dòng ngoại giúp dự báo được hướng giá (tăng hay giảm), lợi suất cổ phiếu ở bất kỳ khoảng thời gian nào, hay thay đổi lợi suất trái phiếu — dù đã kiểm tra cả hai chiều trái phiếu.</p>
+</div>
+<div class="kbox">
+<div class="k"><div class="num">280,645</div><div class="lbl">quan sát stock-day (F1)</div></div>
+<div class="k"><div class="num">149</div><div class="lbl">mã cổ phiếu trong mẫu</div></div>
+<div class="k"><div class="num">5/6</div><div class="lbl">giai đoạn ngoài mẫu tốt hơn</div></div>
+<div class="k"><div class="num">34</div><div class="lbl">kết luận, đều dẫn về inference.json</div></div>
+</div>
+</section>
+
+<section id="s2">
+<h2>Dòng tiền ngoại là gì?</h2>
+<p>"Dòng tiền ngoại" là tổng giá trị cổ phiếu mà nhà đầu tư nước ngoài mua và bán trên sàn giao dịch mỗi ngày. Khi mua nhiều hơn bán, người ta gọi là "mua ròng". Khi bán nhiều hơn mua, gọi là "bán ròng". Con số này được tổng hợp từ dữ liệu khớp lệnh chính thức trên HOSE.</p>
+<p>Nghiên cứu này đo dòng ngoại bằng một chỉ số gọi là "độ mất cân bằng": giá trị <strong>(giá trị mua − giá trị bán) / (giá trị mua + giá trị bán)</strong>, chạy từ −1 (toàn bán) đến +1 (toàn mua). Khi gần 0, ngoại mua bán cân bằng. Khi gần +1 hoặc −1, ngoại đang thiên rõ về một chiều.</p>
+<p>Nghiên cứu ưu tiên dữ liệu khớp lệnh (matched), không dùng giao dịch thỏa thuận (deal), vì giao dịch thỏa thuận có thể có kích thước rất lớn làm méo tín hiệu mà không phản ánh hoạt động giao dịch thông thường của nhà đầu tư nước ngoài.</p>
+<div class="scn"><p class="obs">Ví dụ thực tế: Một ngày ngoại mua ròng 500 tỷ đồng</p><p class="rs">Nghiên cứu nói: trong chính ngày đó, độ lớn thay đổi giá tuyệt đối của cổ phiếu có thể lớn hơn trung bình.</p><p class="di">Không được suy diễn: "ngoại mua ròng = thị trường sẽ tăng."</p></div>
+</section>
+
+<section id="s3">
+<h2>Năm câu hỏi nghiên cứu</h2>
+<p>Nghiên cứu đặt năm câu hỏi riêng biệt, mỗi câu trả lời một hướng quan hệ khác nhau:</p>
+<ol>
+<li><strong>Biến động cổ phiếu (F1):</strong> Khi dòng ngoại mất cân bằng mạnh, độ lớn thay đổi giá cổ phiếu có lớn hơn không?</li>
+<li><strong>Biến động chỉ số (F2):</strong> Dòng ngoại ở cấp chỉ số có liên hệ với biến động chỉ số không?</li>
+<li><strong>Lợi suất cổ phiếu (F3):</strong> Dòng ngoại có thêm thông tin cho dự báo lợi suất không?</li>
+<li><strong>Hướng giá (F4):</strong> Dòng ngoại có giúp đoán cổ phiếu sẽ tăng hay giảm không?</li>
+<li><strong>Trái phiếu (F5):</strong> Dòng ngoại cổ phiếu có liên hệ với thay đổi lợi suất trái phiếu không?</li>
+</ol>
+<p>Năm câu hỏi này độc lập. Việc dòng ngoại có liên hệ với biến động (F1) không có nghĩa nó dự báo được lợi suất (F3) hay hướng giá (F4). Mỗi câu hỏi được kiểm tra bằng một họ phép thử riêng, rồi hiệu chỉnh cho số lượng phép thử trong cùng họ.</p>
+</section>
+
+<section id="s4">
+<h2>"Cùng ngày" khác "dự báo" thế nào</h2>
+<p class="lead">Đây là phân biệt quan trọng nhất trong báo cáo. Phần lớn kết quả dương trong nghiên cứu là quan hệ "cùng ngày" — dòng ngoại và biến động cùng xuất hiện trong một phiên giao dịch.</p>
+<p>"Cùng ngày" nghĩa là: khi bạn nhìn thấy dòng ngoại hoạt động mạnh, độ lớn biến động giá đã xảy ra trong chính ngày đó. Bạn không có lợi thế thời gian — khi thấy tín hiệu, sự việc đã rồi.</p>
+<p>"Dự báo" sẽ cần: dòng ngoại hôm nay báo trước biến động của phiên kế tiếp. Khi đó bạn có cửa sổ hành động. Nghiên cứu đã kiểm tra cả hai, nhưng kết quả dương chỉ xuất hiện ở dạng "cùng ngày". Không có kết quả dương nào ở dạng "đi trước".</p>
+<div class="dbox">
+<div class="dstep act"><h4>Tầng 1: Quan sát cùng ngày</h4><p>Dòng ngoại và biến động cùng xuất hiện trong một phiên. Hữu ích để mô tả bối cảnh thị trường.</p></div>
+<div class="darr">→</div>
+<div class="dstep blk"><h4>Tầng 2: Đi trước (dự báo)</h4><p>Dòng ngoại hôm nay báo trước biến động phiên kế tiếp. Nghiên cứu không tìm thấy tầng này ổn định.</p></div>
+<div class="darr">→</div>
+<div class="dstep blk"><h4>Tầng 3: Tín hiệu giao dịch</h4><p>Dùng dòng ngoại để ra lệnh mua/bán. Không đạt được ở bất kỳ câu hỏi nào.</p></div>
+</div>
+<p>Nói cách khác: dòng ngoại giống nhiệt kế hơn là dự báo thời tiết. Nhiệt kế cho biết hôm nay nóng hay lạnh — nhưng không nói ngày mai sẽ ra sao. Biến độ lớn hơn hôm nay không cho phép bạn biết giá sẽ đi về đâu trong phiên kế tiếp.</p>
+</section>
+
+<section id="s5">
+<h2>Câu 1 (F1): Dòng ngoại và độ lớn thay đổi giá</h2>
+<p class="lead">Đây là kết quả dương duy nhất trong nghiên cứu. Khi dòng ngoại mất cân bằng mạnh trong một ngày, độ lớn thay đổi giá tuyệt đối của cổ phiếu trong chính ngày đó thường lớn hơn bình thường.</p>
+<p>"Độ lớn thay đổi giá tuyệt đối" nghĩa là khoảng cách từ giá đóng cửa hôm qua đến giá đóng cửa hôm nay — bất kể tăng hay giảm, tính bằng giá trị tuyệt đối của log tỷ lệ giá. Khi con số này lớn, cổ phiếu đã di chuyển mạnh. Khi nhỏ, cổ phiếu gần như đứng yên.</p>
+<p>Quan hệ này xuất hiện rõ khi so sánh những ngày ngoại mất cân bằng mạnh với những ngày ngoại hoạt động cân bằng. Trong mẫu 280,645 quan sát từ 149 mã cổ phiếu, hiệu ứng nhất quán qua các giai đoạn kiểm tra độc lập.</p>
+<div class="cc"><canvas id="cf1"></canvas><p class="cap">Trong 6 giai đoạn kiểm tra độc lập, 5 giai đoạn cho thấy thêm thông tin dòng ngoại giúp mô tả biến động tốt hơn. <strong>Một</strong> giai đoạn còn lại không cải thiện. Đây là quan hệ cùng ngày, không phải tín hiệu giao dịch.</p></div>
+<div class="card neu">
+<h3>Đọc kết quả đúng cách</h3>
+<p>Hiệu ứng này nói về <strong>độ lớn</strong> thay đổi giá, không phải <strong>hướng</strong>. Nó có nghĩa: "khi ngoại hoạt động mạnh, cổ phiếu sẽ di chuyển nhiều hơn bình thường" — nhưng nghiên cứu không cho biết giá sẽ đi lên hay đi xuống. Việc biết "biến động lớn" không giúp ra quyết định mua hay bán.</p>
+<p>Quan hệ này là <strong>cùng ngày</strong>: dòng ngoại mất cân bằng và biến động giá cùng xuất hiện trong một phiên giao dịch. Nó không cho biết điều gì sẽ xảy ra vào phiên kế tiếp. Kiểm tra ngoài mẫu (5/6 giai đoạn) chỉ xác nhận rằng quan hệ cùng ngày này lặp lại ổn định qua các khoảng thời gian khác nhau — không biến nó thành dự báo đi trước.</p>
+</div>
+<h3>Bốn tình huống thực tế</h3>
+<div class="scn"><p class="obs">Tình huống 1: Ngoại mua ròng rất mạnh, cổ phiếu tăng 3%</p><p class="rs">Phù hợp với quan hệ: độ lớn thay đổi giá lớn. Nhưng chiều tăng không do dòng ngoại dự báo — nó đã xảy ra cùng lúc.</p><p class="di">Không suy diễn: "lần tới ngoại mua mạnh, giá sẽ tăng."</p></div>
+<div class="scn"><p class="obs">Tình huống 2: Ngoại bán ròng rất mạnh, cổ phiếu giảm 4%</p><p class="rs">Phù hợp: độ lớn thay đổi giá lớn. Nhưng chiều giảm không do dòng ngoại dự báo.</p><p class="di">Không suy diễn: "lần tới ngoại bán mạnh, cần cắt lỗ."</p></div>
+<div class="scn"><p class="obs">Tình huống 3: Ngoại mua ròng mạnh, nhưng cổ phiếu chỉ tăng 0,3%</p><p class="rs">Quan hệ thống kê không xảy ra mỗi lần. Đây là trường hợp ngoại lệ — hiệu ứng là trung bình, không phải quy tắc tuyệt đối.</p></div>
+<div class="scn"><p class="obs">Tình huống 4: Dòng ngoại cân bằng, cổ phiếu biến động mạnh</p><p class="rs">Biến động có nhiều nguyên nhân khác ngoài dòng ngoại. Nghiên cứu chỉ đo một yếu tố trong số rất nhiều yếu tố tác động lên giá.</p></div>
+</section>
+
+<section id="s6">
+<h2>Câu 2 (F2): Dòng ngoại và biến động chỉ số</h2>
+<p class="lead">Ở cấp chỉ số, dấu hiệu đáng chú ý chỉ còn ở một chỉ số — VNFINSELECT. Các chỉ số còn lại không vượt qua bước hiệu chỉnh nghiêm ngặt cho số lượng phép thử.</p>
+<p>VNFINSELECT (chỉ số tài chính chọn lọc) cho thấy quan hệ cùng thời điểm giữa dòng ngoại và độ lớn thay đổi giá chỉ số. Nhưng đây là quan hệ "cùng lúc" — dòng ngoại và biến động chỉ số cùng xuất hiện trong một phiên, không có khoảng trễ để dự báo đi trước.</p>
+<p>VNINDEX, VN30 và VN100 cũng có dấu hiệu thô cùng thời điểm, nhưng không đủ mạnh để vượt qua bước kiểm tra nghiêm ngặt khi phải tính đến việc thử rất nhiều trường hợp cùng lúc. Khi hiệu chỉnh cho số lượng phép thử, các chỉ số này trở thành không đáng chú ý.</p>
+<p>Điều này cho thấy: quan hệ dòng ngoại — biến động có thật nhưng không lan rộng đều trên mọi chỉ số. Nó tập trung ở nhóm tài chính chọn lọc, và ngay cả ở đó, cũng chỉ là quan hệ cùng thời điểm chứ không phải dự báo đi trước.</p>
+<div class="scn"><p class="obs">Vì sao ba chỉ số lớn "biến mất" sau hiệu chỉnh?</p><p class="rs">Vì nghiên cứu thử cùng lúc nhiều chỉ số và nhiều độ dài thời gian. Khi bạn thử nhiều phép thử, một số sẽ trông có ý nghĩa chỉ do ngẫu nhiên. Bước hiệu chỉnh buộc phải thất kỷ: chỉ giữ lại quan hệ đủ mạnh để sống sót sau khi trừ bớt may mắn ngẫu nhiên. VNINDEX, VN30, VN100 không sống sót.</p></div>
+</section>
+
+<section id="s7">
+<h2>Câu 3 và 4 (F3, F4): Lợi suất và hướng giá</h2>
+<p class="lead">Nghiên cứu không tìm thấy bằng chứng ổn định rằng dòng ngoại giúp dự báo lợi suất cổ phiếu hoặc hướng giá.</p>
+<p><strong>Lợi suất (F3):</strong> Ở cả bốn khoảng thời gian (1, 5, 20 và 60 phiên), thêm thông tin dòng ngoại không cải thiện khả năng dự báo lợi suất. Đây là kết quả quan trọng: dù dòng ngoại có liên hệ với độ lớn biến động (F1), nó không cho biết giá sẽ tăng hay giảm bao nhiêu. Giá trị p thô tốt nhất trong nhóm này vẫn xa ngưỡng đáng chú ý.</p>
+<p><strong>Hướng giá (F4):</strong> Dòng ngoại không giúp đoán cổ phiếu sẽ lên hay xuống. Có một dấu hiệu thô ở khoảng 60 phiên, nhưng khi tính đến việc thử nhiều trường hợp, dấu hiệu này không còn đủ mạnh để giữ lại.</p>
+<p>Nói cách khác: dòng ngoại cho biết "thị trường sẽ biến động" — nhưng không cho biết "thị trường sẽ đi về đâu".</p>
+<div class="scn"><p class="obs">Ví dụ: Ngoại bán ròng mạnh 3 ngày liên tiếp</p><p class="rs">Chưa tìm thấy bằng chứng ổn định cho thấy bán ròng dự báo giá giảm. Dù biến động có thể lớn hơn, chiều đi không xác định được từ dòng ngoại.</p><p class="di">Không suy diễn: "ngoại bán ròng = cần bán theo."</p></div>
+<div class="scn"><p class="obs">Ví dụ: Ngoại mua ròng liên tục 5 ngày</p><p class="rs">Chưa tìm thấy bằng chứng ổn định cho thấy mua ròng dự báo giá tăng. Biến động có thể lớn, nhưng hướng không đoán được.</p><p class="di">Không suy diễn: "ngoại mua ròng = cần mua theo."</p></div>
+</section>
+
+<section id="s8">
+<h2>Câu 5 (F5): Dòng ngoại và trái phiếu</h2>
+<p class="lead">Nghiên cứu không xác nhận quan hệ dự báo hai chiều giữa dòng ngoại cổ phiếu và lợi suất trái phiếu Việt Nam.</p>
+<p>Kiểm tra cả hai hướng — dòng ngoại cổ phiếu đi trước lợi suất trái phiếu, và lợi suất trái phiếu đi trước dòng ngoại cổ phiếu — đều không tìm thấy quan hệ ổn định sau khi tính đến số lượng phép thử trong họ.</p>
+<p>Điều này không loại trừ khả năng có liên hệ trong một số giai đoạn cụ thể (ví dụ: khủng hoảng, thay đổi chính sách). Nhưng nghiên cứu không thể kết luận rằng một bên giúp dự báo bên kia một cách có hệ thống trên toàn bộ mẫu 2014–2025.</p>
+<p>Hai chiều (ngoại đến trái phiếu, trái phiếu đến ngoại) được kiểm tra riêng biệt. Không có chiều nào vượt qua ngưỡng đáng chú ý sau hiệu chỉnh. Cả họ ngoại-đến-trái-phieu và họ trái-phieu-đến-ngoại đều không cho ra kết quả dương.</p>
+</section>
+
+<section id="s9">
+<h2>Ma trận kết luận năm câu hỏi</h2>
+<p>Tổng hợp kết quả tất cả phép thử theo từng câu hỏi nghiên cứu, gom thành ba khẳng định có thể kiểm tra:</p>
+<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="mt"><thead><tr><th>Câu hỏi</th><th>Quan hệ cùng ngày</th><th>Dự báo đi trước</th><th>Tín hiệu giao dịch</th></tr></thead>
+<tbody>
+<tr><td><strong>F1:</strong> Biến động cổ phiếu</td><td class="vy">Có (ổn định 5/6 giai đoạn)</td><td class="vn">Không</td><td class="vn">Không</td></tr>
+<tr><td><strong>F2:</strong> Biến động chỉ số</td><td class="vd">Chỉ VNFINSELECT</td><td class="vn">Không</td><td class="vn">Không</td></tr>
+<tr><td><strong>F3:</strong> Lợi suất cổ phiếu</td><td class="vn">Không</td><td class="vn">Không</td><td class="vn">Không</td></tr>
+<tr><td><strong>F4:</strong> Hướng giá</td><td class="vn">Không</td><td class="vn">Không</td><td class="vn">Không</td></tr>
+<tr><td><strong>F5:</strong> Trái phiếu</td><td class="vn">Không</td><td class="vn">Không (cả hai chiều)</td><td class="vn">Không</td></tr>
+</tbody></table></div>
+<p>Chỉ F1 có kết quả dương (quan hệ cùng ngày ổn định). Tất cả câu hỏi khác không tìm thấy quan hệ đủ mạnh. Không câu hỏi nào đạt được tầng tín hiệu giao dịch. Tổng cộng có 34 kết luận, tất cả đều truy về nguồn tại inference.json.</p>
+</section>
+
+<section id="s10">
+<h2>Nhà đầu tư dùng kết quả này thế nào</h2>
+<p class="lead">Dùng dòng ngoại để đọc bối cảnh và nhận diện ngày bất thường — không dùng riêng làm lệnh mua hoặc bán.</p>
+<h3>Quy trình năm bước khi thấy dòng ngoại bất thường</h3>
+<ol>
+<li><strong>Nhận diện:</strong> So sánh độ mất cân bằng ngoại hôm nay với trung bình 20 phiên gần nhất. Nếu vượt 2 lần độ lệch chuẩn, đó là ngày bất thường.</li>
+<li><strong>Chuẩn bị tâm lý:</strong> Trong những ngày như vậy, độ lớn thay đổi giá có thể lớn hơn bình thường — nhưng chưa biết chiều.</li>
+<li><strong>Đối chiếu bối cảnh:</strong> Kiểm tra tin tức vĩ mô, cấu trúc giá, độ rộng thị trường, và tin doanh nghiệp riêng của mã. Dòng ngoại chỉ là một trong nhiều tín hiệu.</li>
+<li><strong>Kiểm tra nhóm ngành:</strong> Dòng ngoại có thể tập trung vào một nhóm (ví dụ: tài chính). Xem liệu sự tập trung này có phản ánh luồng tin tức ngành không.</li>
+<li><strong>Không hành động chỉ vì dòng ngoại:</strong> Quyết định mua hay bán cần dựa trên định giá, chất lượng doanh nghiệp, và quản trị rủi ro — không dựa trên một tín hiệu duy nhất.</li>
+</ol>
+<p>Cách dùng đúng: "Hôm nay ngoại bán ròng bất thường, thị trường có thể biến động mạnh. Tôi sẽ kiểm tra thêm tin tức và cấu trúc giá trước khi quyết định."</p>
+<p>Cách dùng sai: "Ngoại bán ròng mạnh, tôi phải bán theo để tránh sập." Nghiên cứu không hỗ trợ cách dùng này — bán ròng không được chứng minh là dự báo giá giảm.</p>
+<div class="disc"><strong>Đây không phải khuyến nghị đầu tư.</strong> Báo cáo là ghi chép nghiên cứu độc lập. Mọi quyết định giao dịch cần dựa trên đánh giá rủi ro cá nhân và nghiên cứu độc lập của chính nhà đầu tư.</div>
+</section>
+
+<section id="s11">
+<h2>Những điều không được suy diễn</h2>
+<p>Dưới đây là những kết luận sai mà người đọc có thể rút ra nếu hiểu quá nhanh. Nghiên cứu không nói những điều này:</p>
+<div class="scn"><p class="di">"Mua ròng mạnh = thị trường sẽ tăng"</p><p class="rs">Sai. Nghiên cứu không tìm thấy dòng ngoại dự báo được hướng giá. Mua ròng và giá tăng có thể cùng xảy ra, nhưng một bên không dự báo bên kia.</p></div>
+<div class="scn"><p class="di">"Bán ròng mạnh = thị trường sẽ giảm"</p><p class="rs">Sai. Không có bằng chứng ổn định cho chiều này.</p></div>
+<div class="scn"><p class="di">"Biến động lớn = biết trước chiều biến động"</p><p class="rs">Sai. Biến động lớn chỉ nói "dao động rộng", không nói "tăng hay giảm". F1 đo độ lớn, không đo hướng.</p></div>
+<div class="scn"><p class="di">"Dòng ngoại vô dụng vì không dự báo được"</p><p class="rs">Sai. Dòng ngoại có giá trị mô tả bối cảnh và phát hiện ngày bất thường — chỉ chưa đủ để giao dịch.</p></div>
+<div class="scn"><p class="di">"Nghiên cứu này chứng minh không có quan hệ nào"</p><p class="rs">Sai. "Chưa tìm thấy" khác "chắc chắn không tồn tại". Nghiên cứu có giới hạn về mẫu, năng lực phát hiện, và chỉ đo một số dạng quan hệ cụ thể.</p></div>
+<div class="scn"><p class="di">"5/6 giai đoạn tốt hơn nghĩa là dòng ngoại chắc chắn có hiệu lực"</p><p class="rs">Sai. Đó là bằng chứng nhất quán ngoài mẫu cho quan hệ <em>cùng ngày</em> ở F1 — không phải bằng chứng cho dự báo đi trước, và không tự biến thành tín hiệu giao dịch. Một giai đoạn không cải thiện là lời nhắc rằng hiệu ứng không hoàn hảo.</p></div>
+</section>
+
+<section id="s12">
+<h2>Giới hạn nghiên cứu</h2>
+<p class="lead">Mọi kết luận trong báo cáo này cần được đọc cùng giới hạn dưới đây.</p>
+<h3>Thiên lệch sống sót</h3>
+<p>Danh sách 150 mã cổ phiếu được chọn từ các mã HOSE <strong>hiện còn hoạt động</strong> và thanh khoản nhất. Mã đã bị hủy niêm yết trước thời điểm nghiên cứu không có trong mẫu. Điều này tạo thiên lệch sống sót: các mã "yếu" đã bị loại khỏi mẫu, khiến kết quả có thể lạc quan hơn thực tế. Toàn bộ kết quả cấp cổ phiếu mang nhãn giới hạn này.</p>
+<p>Thu thập 150 mã, nhưng mẫu phân tích thực tế dùng 149 mã. Một mã (HHV) bị loại vì không có dữ liệu giao dịch ngoại khớp lệnh trong toàn bộ khoảng thời gian nghiên cứu.</p>
+<h3>Dữ liệu khớp lệnh</h3>
+<p>Nghiên cứu ưu tiên dữ liệu khớp lệnh (matched), không dùng giao dịch thỏa thuận (deal). Giao dịch thỏa thuận có thể chiếm phần lớn ở một số mã lớn, nhưng thường có kích thước đột biến không phản ánh hoạt động giao dịch thông thường. Vì vậy, "dòng ngoại" trong báo cáo này là dòng ngoại qua khớp lệnh, không bao gồm thỏa thuận.</p>
+<h3>Năng lực phát hiện</h3>
+<p>Nghiên cứu có giới hạn về khả năng phát hiện hiệu ứng nhỏ. "Không tìm thấy" không có nghĩa "chắc chắn không tồn tại". Một hiệu ứng quá nhỏ hoặc quá thưa có thể bị bỏ sót. Cỡ mẫu lớn (hơn 280.000 quan sát stock-day ở F1) giúp phát hiện hiệu ứng vừa, nhưng không đảm bảo bắt được hiệu ứng rất nhỏ.</p>
+<h3>Không tái tạo được trạng thái điểm thời gian</h3>
+<p>Danh sách mã không tái tạo được trạng thái thị trường tại từng thời điểm trong quá khứ. Một mã được thêm vào mẫu có thể chưa niêm yết ở đầu khoảng 2014, làm giảm số quan sát ở giai đoạn sớm.</p>
+<h3>Không kiểm tra nhân quả</h3>
+<p>Nghiên cứu kiểm tra liên hệ thống kê, không kiểm tra nhân quả. Dòng ngoại và giá có thể cùng phản ứng với một yếu tố thứ ba (tin tức, chính sách, dòng vốn quốc tế) mà nghiên cứu không đo. Quan hệ cùng ngày đặc biệt dễ bị diễn giải sai thành nhân quả: hai sự kiện cùng xảy ra trong một phiên không có nghĩa là một sự kiện gây ra sự kiện kia.</p>
+<h3>Độ sâu lịch sử không đều</h3>
+<p>Các mã cổ phiếu trong mẫu có độ sâu lịch sử khác nhau. Một số mã niêm yết từ trước năm 2014 nên có dữ liệu xuyên suốt, trong khi các mã niêm yết sau chỉ đóng góp quan sát từ thời điểm niêm yết trở đi. Điều này khiến số quan sát ở các giai đoạn sớm trong khoảng 2014–2015 thấp hơn các giai đoạn sau, và cần lưu ý khi diễn giải sự ổn định qua thời gian.</p>
+<h3>241.613 dòng không phải 241.613 tín hiệu</h3>
+<p>Số 241,613 là số dòng dự báo stock-day trong kiểm tra ngoài mẫu F1, không phải số tín hiệu độc lập. Nó bao gồm nhiều mã cổ phiếu và nhiều ngày chồng lấn nhau. Đừng hiểu đây là 241.613 xác nhận độc lập — đó là tổng quan sát dự báo được gom lại qua 6 giai đoạn kiểm tra.</p>
+</section>
+
+<section id="s13">
+<h2>Phụ lục kỹ thuật</h2>
+<p>Chi tiết phương pháp dành cho người đọc có nền tảng thống kê. Khối này bị cổng ngôn ngữ loại khỏi phần công khai — tất cả thuật ngữ kỹ thuật chỉ xuất hiện ở đây.</p>
+<details data-layer="technical"><summary>Thiết kế nghiên cứu và phương pháp</summary><div class="inner">
+<p><strong>Mẫu:</strong> Thu thập 150 mã HOSE thanh khoản nhất. Mẫu phân tích: 149 mã (HHV loại: không có dữ liệu ngoại khớp lệnh). 4 chỉ số: VNINDEX, VN30, VN100, VNFINSELECT. Khoảng: 2014-01-02 đến 2025-12-31.</p>
+<p><strong>Biến độc lập chính:</strong> foreign_imbalance_matched = (buy_value_matched − sell_value_matched) / (buy_value_matched + sell_value_matched).</p>
+<p><strong>Target F1 abs_ret_1d:</strong> |log(close_t / close_{t−1})| — BIẾN ĐỒNG THỜI (cùng ngày với dòng ngoại, không phải dự báo ngày hôm sau).</p>
+<p><strong>Target F1 intraday_range_pct:</strong> (high − low) / close — NOT_SUPPORTED. Đây mới là "khoảng giá trong ngày", KHÔNG phải abs_ret_1d.</p>
+<p><strong>Ước lượng:</strong> Panel two-way clustered (Cameron-Gelbach-Miller); HAC Newey-West (statsmodels).</p>
+<p><strong>Nhị phân (F4):</strong> Restricted-null efficient-score multiplier bootstrap.</p>
+<p><strong>Bootstrap:</strong> B=999, rerun B=9999 khi raw_p &lt; 0.10.</p>
+<p><strong>Hiệu chỉnh đa phép thử:</strong> Holm step-down per-family. F1=5, F2=16, F3=4, F4=4, F5a=3, F5b=2.</p>
+<p><strong>OOS:</strong> Walk-forward, 6 folds, purge 60 days, paired complete-case.</p>
+<p><strong>Cap:</strong> RESEARCH_ONLY_SURVIVORSHIP_LIMITED.</p>
+</div></details>
+<details data-layer="technical"><summary>Kết quả chi tiết theo module</summary><div class="inner">
+<p><strong>F1 abs_ret_1d (CÙNG NGÀY):</strong> beta=0.000791, raw_p=0.0003, adjusted_p=0.0015 (denom=5). Verdict: OOS_CONSISTENT. OOS: 5/6 folds, 241,613 prediction rows.</p>
+<p><strong>F1 intraday_range_pct:</strong> NOT_SUPPORTED. Đây là "khoảng giá trong ngày", KHÔNG phải abs_ret_1d (abs_ret_1d là |log(close_t/close_{t−1})|).</p>
+<p><strong>F2 VNFINSELECT abs_ret_1d:</strong> beta=0.004307, adjusted_p=0.0438 (denom=16). DESCRIPTIVE_ASSOCIATION_ONLY — quan hệ cùng thời điểm, không dự báo đi trước.</p>
+<p><strong>F2 VNINDEX/VN30/VN100:</strong> raw p &lt; 0.05 nhưng Holm giết. NOT_SUPPORTED_HOLM_FAIL (adj_p &gt; 0.05).</p>
+<p><strong>F3 (lợi suất):</strong> All NOT_SUPPORTED. Best raw_p = 0.1686 (fwd_ret_log_1d).</p>
+<p><strong>F4 trend_up_60d:</strong> raw_p=0.0429, adjusted_p=0.1716. NOT_SUPPORTED_HOLM_FAIL.</p>
+<p><strong>F5a (foreign→bond):</strong> adjusted_p ≥ 0.3176. NOT_SUPPORTED.</p>
+<p><strong>F5b (bond→foreign):</strong> adjusted_p ≥ 0.1860. NOT_SUPPORTED.</p>
+</div></details>
+<details data-layer="technical"><summary>Claim registry và provenance</summary><div class="inner">
+<p><strong>Số claims:</strong> 34 (tất cả đều trỏ về inference.json)</p>
+<p><strong>Artifact chính:</strong> inference.json</p>
+<p><strong>SHA256 (inference.json):</strong> <code>a8788c0be16cd6cd25f51580a78fccbbe415e1e5809a6594f06336a5ee34c840</code></p>
+<p><strong>Verdict counts:</strong> OOS_CONSISTENT=1, DESCRIPTIVE_ASSOCIATION_ONLY=1, NOT_SUPPORTED_HOLM_FAIL=4, NOT_SUPPORTED=28</p>
+<p><strong>Tổng phép thử:</strong> 34 (5 F1 + 16 F2 + 4 F3 + 4 F4 + 3 F5a + 2 F5b).</p>
+</div></details>
+</section>
+
+</div>
+
+<footer><p>Nghiên cứu: equity_foreign_flow_relations_v1 · Tài liệu nghiên cứu độc lập · Không phải khuyến nghị đầu tư<br>Dữ liệu: vnstock_data Golden tier · 150 mã thu thập, 149 phân tích · 4 chỉ số · 2014–2025<br>Tất cả 34 kết luận truy về nguồn tại inference.json (SHA256 trong phụ lục).</p></footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('cf1');
+    if (!ctx) return;
+    var fd = [7e-06, 0.000572, -0.001579, 0.000134, 0.002034, 0.003064];
+    var labels = ['Giai đoạn 1','Giai đoạn 2','Giai đoạn 3','Giai đoạn 4','Giai đoạn 5','Giai đoạn 6'];
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Mức cải thiện',
+                data: fd,
+                backgroundColor: fd.map(function(v){ return v > 0 ? '#2e7d32' : '#e65100'; }),
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Thêm dòng ngoại giúp mô tả biến động tốt hơn ở giai đoạn nào?', font: { size: 14 } },
+                tooltip: { callbacks: { label: function(c) {
+                    if (c.raw > 0) return ' Giai đoạn này: mô hình có dòng ngoại tốt hơn (cùng ngày).';
+                    return ' Giai đoạn này: không cải thiện hoặc kém hơn.';
+                } } }
+            },
+            scales: {
+                y: { title: { display: true, text: 'Mức cải thiện (dương = tốt hơn)' } },
+                x: { ticks: { maxRotation: 0, autoSkip: false, font: { size: 10 } } }
+            }
+        }
+    });
+});
+</script>
+</body></html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Báo cáo vĩ mô VN · Tháng 6/2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg-0:#0a0a14;--bg-1:#10101f;--bg-2:#16162a;--card:rgba(28,28,48,0.55);--card-solid:#1a1a2e;--border:rgba(139,92,246,0.18);--border-hot:rgba(236,72,153,0.35);--text:#f0f0ff;--text-dim:#8b8ba7;--text-faint:#5a5a72;--purple:#a855f7;--purple-2:#8b5cf6;--pink:#ec4899;--cyan:#06b6d4;--green:#10d98a;--green-soft:rgba(16,217,138,0.15);--red:#ff4d6d;--red-soft:rgba(255,77,109,0.15);--amber:#fbbf24;--grad-main:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);--grad-amber:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg-0);color:var(--text);line-height:1.6;min-height:100vh;background-image:radial-gradient(ellipse at 20% 0%,rgba(139,92,246,0.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(236,72,153,0.10) 0%,transparent 50%);background-attachment:fixed}
+.container{max-width:1320px;margin:0 auto;padding:40px 32px 80px}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--amber)}
+.hero{background:var(--card);border:1px solid var(--border);border-radius:32px;padding:36px 40px;backdrop-filter:blur(20px);margin-bottom:28px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-10%;width:60%;height:200%;background:radial-gradient(ellipse,rgba(168,85,247,0.15) 0%,transparent 60%);pointer-events:none}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;position:relative;z-index:1;flex-wrap:wrap}
+.ticker-badge{display:inline-block;background:var(--grad-main);color:#fff;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:0.5px;margin-bottom:8px}
+.update-badge{display:inline-block;background:rgba(6,182,212,0.15);color:var(--cyan);padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;margin-left:6px;border:1px solid rgba(6,182,212,0.3)}
+.report-title{font-size:30px;font-weight:800;margin-top:12px;letter-spacing:-0.5px;line-height:1.2}
+.report-sub{font-size:13px;color:var(--text-dim);margin-top:8px;max-width:600px}
+.verdict-block{flex-shrink:0;text-align:right;min-width:320px}
+.verdict-badge{display:inline-block;background:var(--grad-amber);color:#1a1a2e;padding:10px 22px;border-radius:999px;font-weight:800;font-size:13px;letter-spacing:0.5px}
+.verdict-reason{color:var(--text-dim);font-size:12px;margin-top:10px;line-height:1.6;max-width:340px;text-align:right}
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:28px;position:relative;z-index:1}
+.kpi{background:rgba(22,22,42,0.6);border:1px solid var(--border);border-radius:18px;padding:18px 20px}
+.kpi-label{font-size:11px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px}
+.flag-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.flag-red{background:var(--red)}.flag-green{background:var(--green)}.flag-amber{background:var(--amber)}
+.kpi-value{font-size:32px;font-weight:800;margin:6px 0 4px}
+.kpi-delta{font-size:11px;font-weight:600}
+.coverage-warn{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:16px;padding:14px 20px;margin-bottom:24px;display:flex;gap:14px;align-items:flex-start}
+.coverage-warn .cw-icon{font-size:22px;flex-shrink:0}
+.coverage-warn .cw-text{font-size:12.5px;color:var(--text-dim);line-height:1.6}
+.coverage-warn strong{color:var(--amber)}
+.nav-tabs{position:sticky;top:0;z-index:50;display:flex;gap:8px;background:rgba(10,10,20,0.92);backdrop-filter:blur(20px);padding:14px 24px;border-bottom:1px solid var(--border);margin:0 -32px 28px}
+.nav-tab{background:transparent;border:1px solid transparent;color:var(--text-dim);padding:9px 18px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.nav-tab:hover{color:var(--text);background:rgba(168,85,247,0.08)}
+.nav-tab.active{background:var(--grad-main);color:#fff;box-shadow:0 4px 16px rgba(168,85,247,0.4)}
+.group-section{display:none;animation:fade .4s}
+.group-section.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.group-header{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:800;padding:5px 11px;border-radius:8px;letter-spacing:0.5px}
+.tag.g1{background:rgba(6,182,212,0.15);color:var(--cyan)}.tag.g2{background:rgba(168,85,247,0.15);color:var(--purple)}.tag.g3{background:rgba(236,72,153,0.15);color:var(--pink)}.tag.g4{background:rgba(251,191,36,0.15);color:var(--amber)}
+.group-header h2{font-size:21px;font-weight:700;letter-spacing:-0.3px}
+.divider-line{flex:1;height:1px;background:var(--border);min-width:40px}
+.src-note{font-size:11.5px;color:var(--text-faint)}
+.highlights{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:26px}
+.highlight-box{border-radius:18px;padding:18px 22px;backdrop-filter:blur(12px)}
+.highlight-box.neg{background:var(--red-soft);border:1px solid rgba(255,77,109,0.3)}
+.highlight-box.pos{background:var(--green-soft);border:1px solid rgba(16,217,138,0.3)}
+.hl-label{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.highlight-box.neg .hl-label{color:var(--red)}.highlight-box.pos .hl-label{color:var(--green)}
+.hl-items{list-style:none;padding:0;margin:0}
+.hl-items li{font-size:13px;color:var(--text-dim);padding:5px 0;line-height:1.55}
+.hl-val{font-weight:700;font-family:'JetBrains Mono',monospace}
+.data-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.data-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 20px;backdrop-filter:blur(12px);transition:transform .2s,border-color .2s;display:flex;flex-direction:column}
+.data-card:hover{transform:translateY(-2px);border-color:var(--border-hot)}
+.data-card.full{grid-column:1/-1}.data-card.span2{grid-column:span 2}
+.dc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:4px}
+.dc-name{font-size:13px;color:var(--text);font-weight:700;line-height:1.3}
+.dc-flag{font-size:14px;flex-shrink:0}
+.dc-value-row{display:flex;align-items:baseline;gap:8px;margin:8px 0 4px}
+.dc-value{font-size:30px;font-weight:800;line-height:1}
+.dc-unit{font-size:14px;color:var(--text-dim);font-weight:500}
+.dc-label{font-size:11px;color:var(--text-faint);font-weight:600;margin-bottom:6px}
+.dc-meta{display:flex;gap:14px;font-size:11px;color:var(--text-faint);flex-wrap:wrap;margin-top:4px;padding-bottom:8px;border-bottom:1px dashed rgba(139,92,246,0.12)}
+.dc-meta strong{font-family:'JetBrains Mono',monospace;font-weight:600}
+.dc-source{font-size:10px;color:var(--text-faint);margin-top:8px;font-style:italic}
+.dc-chart-btn{margin-top:10px;background:rgba(168,85,247,0.15);color:var(--purple);border:1px solid rgba(168,85,247,0.3);padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;align-self:flex-start}
+.dc-chart-btn:hover{background:rgba(168,85,247,0.3)}
+.dc-narrative{font-size:12.5px;color:var(--text-dim);line-height:1.65;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(139,92,246,0.12)}
+.dc-drivers{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.driver-tag{font-size:10px;background:rgba(139,92,246,0.12);color:var(--purple-2);padding:3px 8px;border-radius:6px;border:1px solid rgba(139,92,246,0.2)}
+.target-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-top:4px}
+.target-badge.warn{background:rgba(251,191,36,0.15);color:var(--amber);border:1px solid rgba(251,191,36,0.3)}
+.target-badge.ok{background:rgba(16,217,138,0.15);color:var(--green);border:1px solid rgba(16,217,138,0.3)}
+.pmi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.pmi-sub{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(22,22,42,0.5);border-radius:8px;font-size:11.5px}
+.pmi-sub .ps-name{flex:1;color:var(--text-dim)}.pmi-sub .ps-arrow{font-weight:700;font-size:13px}
+.pmi-sub .ps-note{font-size:10px;color:var(--text-faint);max-width:140px;line-height:1.3}
+.mini-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:11.5px}
+.mini-table th,.mini-table td{padding:7px 10px;text-align:left;border-bottom:1px solid rgba(139,92,246,0.1)}
+.mini-table th{color:var(--text-faint);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:0.3px}
+.mini-table td.num{font-family:'JetBrains Mono',monospace;text-align:right}
+.mini-table tr:hover{background:rgba(139,92,246,0.04)}
+.rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:36px}
+.rc-col h2{font-size:18px;font-weight:700;margin-bottom:14px}
+.rc-list{list-style:none}
+.rc-item{padding:12px 16px;border-radius:12px;margin-bottom:10px;font-size:12.5px;line-height:1.6;border:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.rc-item.high{background:var(--red-soft);border-color:rgba(255,77,109,0.3)}
+.rc-item.med{background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25)}
+.rc-item.catalyst{background:var(--green-soft);border-color:rgba(16,217,138,0.3)}
+.rc-level{flex-shrink:0;display:inline-block;font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:0.4px;min-width:36px;text-align:center;margin-top:2px}
+.rc-level.high{background:var(--red);color:#fff}.rc-level.med{background:var(--amber);color:#1a1a2e}
+.rc-item.catalyst .rc-level{background:var(--green);color:#0a0a14}
+.rc-text{flex:1}
+.kt-section{margin-top:36px;background:var(--card);border:1px solid var(--border-hot);border-radius:24px;padding:28px 32px;backdrop-filter:blur(12px)}
+.kt-section h2{font-size:20px;font-weight:700;margin-bottom:18px;background:var(--grad-main);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.kt-list{list-style:none;counter-reset:kt}
+.kt-list li{counter-increment:kt;padding:12px 0 12px 38px;position:relative;font-size:14px;line-height:1.65;color:var(--text);border-bottom:1px solid rgba(139,92,246,0.08)}
+.kt-list li:last-child{border-bottom:none}
+.kt-list li::before{content:counter(kt);position:absolute;left:0;top:11px;width:26px;height:26px;background:var(--grad-main);color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.kt-list li.star::before{content:'★';font-size:14px}
+.footer{margin-top:48px;padding-top:24px;border-top:1px solid var(--border);font-size:11.5px;color:var(--text-faint);line-height:1.7}
+.footer a{color:var(--cyan);text-decoration:none}.footer a:hover{text-decoration:underline}
+.footer strong{color:var(--text-dim)}
+.chart-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.chart-modal.open{display:flex}
+.chart-modal-content{background:var(--bg-1);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow:auto}
+.chart-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.chart-modal-head h3{font-size:16px;font-weight:700}
+.chart-modal-close{background:none;border:none;color:var(--text-dim);font-size:24px;cursor:pointer;line-height:1}
+.chart-modal-note{font-size:11px;color:var(--text-faint);margin-top:12px;line-height:1.5}
+@media (max-width:1100px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.data-grid{grid-template-columns:repeat(2,1fr)}.data-card.span2,.data-card.full{grid-column:span 2}.highlights,.rc-grid{grid-template-columns:1fr}}
+@media (max-width:600px){.container{padding:20px 16px 60px}.hero{padding:24px 20px;border-radius:24px}.hero-top{flex-direction:column}.verdict-block{text-align:left;min-width:0}.verdict-reason{text-align:left;max-width:none}.kpi-strip{grid-template-columns:1fr 1fr}.nav-tabs{flex-wrap:wrap;padding:10px 16px;margin:0 -16px 20px}.data-grid{grid-template-columns:1fr}.data-card.span2,.data-card.full{grid-column:span 1}.pmi-grid{grid-template-columns:1fr}.report-title{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="ticker-badge">📊 BÁO CÁO VĨ MÔ VIỆT NAM</span>
+        <span class="update-badge">✦ Tháng 6/2026</span>
+        <div class="report-title">Tình hình Kinh tế · Tiền tệ · Tài chính</div>
+        <div class="report-sub">Kỳ báo cáo: <strong>2026-06</strong> · Chốt dữ liệu: <strong>30/06/2026</strong> · 3/5 nguồn: TCTK · S&amp;P PMI · HTT Trái phiếu (tuần 22-26/6)</div>
+      </div>
+      <div class="verdict-block">
+        <div class="verdict-badge">⚖️ TĂNG TRƯỞNG MẠNH — ÁP LỰC NGOẠI THƯƠNG TĂNG</div>
+        <div class="verdict-reason">GDP Q2 +8,39% và IIP +11,2% cho thấy động lực rõ, nhưng nhập siêu 6 tháng -16,65 tỷ USD (đảo chiều từ +7,95 tỷ) và CPI YTD 4,38% sát target 4,5% là 2 điểm cần theo dõi khi Customs + VNBA publish.</div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi"><div class="kpi-label"><span class="flag-dot flag-amber"></span>CPI YoY</div><div class="kpi-value mono neu">4.69<span style="font-size:14px;color:var(--text-dim)">%</span></div><div class="kpi-delta neu">↓ hạ nhiệt từ 5,60% (-91 đcb) · YTD 4,38%</div></div>
+      <div class="kpi"><div class="kpi-label"><span class="flag-dot flag-green"></span>PMI Sản xuất</div><div class="kpi-value mono pos">51.8</div><div class="kpi-delta pos">↓ nhẹ từ 52,8 · mở rộng tháng thứ 12</div></div>
+      <div class="kpi"><div class="kpi-label"><span class="flag-dot flag-green"></span>XK tháng 6</div><div class="kpi-value mono pos">50.79<span style="font-size:14px;color:var(--text-dim)"> tỷ USD</span></div><div class="kpi-delta pos">↑ +28,1% YoY · nhưng nhập siêu -2,64 tỷ</div></div>
+      <div class="kpi"><div class="kpi-label"><span class="flag-dot flag-green"></span>LNH kỳ hạn 1W</div><div class="kpi-value mono neg">7.35<span style="font-size:14px;color:var(--text-dim)">%</span></div><div class="kpi-delta neg">↑ +205 đcb WoW · ON 2,91% (-150 đcb)</div></div>
+    </div>
+  </div>
+
+  <div class="coverage-warn">
+    <div class="cw-icon">⚠️</div>
+    <div class="cw-text"><strong>Báo cáo dùng 3/5 nguồn theo yêu cầu người dùng.</strong> Thiếu Customs (XNK cả tháng dự kiến 06/07) + VNBA monthly (lịch ~11-12/07). Số XNK tháng 6 lấy qua NSO (dẫn nguồn Cục Hải quan cung cấp 02/07/2026). Khuyến nghị: chạy lại sau 15/07/2026 khi đủ 5 nguồn.</div>
+  </div>
+
+  <nav class="nav-tabs">
+    <button class="nav-tab active" data-target="group1">🟦 Kinh tế thực</button>
+    <button class="nav-tab" data-target="group2">🟪 Tiền tệ &amp; Tài chính</button>
+    <button class="nav-tab" data-target="group3">🟧 Ngành &amp; Cơ cấu</button>
+    <button class="nav-tab" data-target="group4">🟫 Bối cảnh toàn cầu</button>
+    <button class="nav-tab" data-target="summary">📊 Tổng hợp</button>
+  </nav>
+
+  <section class="group-section active" id="group1">
+    <div class="group-header"><span class="tag g1">01</span><h2>Kinh tế thực — Động lực tăng trưởng &amp; lạm phát</h2><div class="divider-line"></div><span class="src-note">Nguồn: TCTK (NSO) + S&amp;P PMI</span></div>
+    <div class="highlights">
+      <div class="highlight-box neg"><div class="hl-label">🔴 TIÊU CỰC</div><ul class="hl-items"><li>CPI YTD avg <span class="hl-val neg">4,38%</span> sát target 4,5%</li><li>Nhập siêu 6 tháng <span class="hl-val neg">-16,65 tỷ USD</span>, đảo chiều từ +7,95 tỷ</li><li>DN mới tháng 6 <span class="hl-val neg">-31,0% YoY</span>, giải thể +79,6%</li></ul></div>
+      <div class="highlight-box pos"><div class="hl-label">🟢 TÍCH CỰC</div><ul class="hl-items"><li>GDP Q2 <span class="hl-val pos">+8,39% YoY</span></li><li>IIP Q2 <span class="hl-val pos">+11,2% YoY</span>, chế biến +11,4%</li><li>XK tháng 6 <span class="hl-val pos">+28,1% YoY</span>, FDI đăng ký <span class="hl-val pos">+61,0%</span></li></ul></div>
+    </div>
+    <div class="data-grid">
+      <div class="data-card span2">
+        <div class="dc-head"><span class="dc-name">CPI YoY</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu">4.69</span><span class="dc-unit">% YoY</span></div>
+        <div class="dc-label">Chỉ số giá tiêu dùng · tháng 6/2026</div>
+        <div class="dc-meta"><span>MoM <strong class="mono pos">-0.39%</strong></span><span>YoY <strong class="mono neu">4.69%</strong></span><span>YTD avg <strong class="mono">4.38%</strong></span><span>vs T12/2024 <strong class="mono">3.21%</strong></span><span>Cơ bản <strong class="mono">4.12%</strong></span></div>
+        <div class="target-badge warn">⚠️ YTD avg 4,38% — sát target 4,5% (còn 0,12 đđ)</div>
+        <div class="dc-narrative">CPI YoY hạ nhiệt từ 5,60% (tháng 5) xuống 4,69% (tháng 6) — mức giảm 91 đcb trong 1 tháng. Cùng lúc PMI Input Costs (S&amp;P) cũng chậm lại ở mức thấp nhất từ đầu năm — hai con số từ hai phương pháp khác nhau (giá cả thực tế vs khảo sát DN) cùng kể câu chuyện áp lực chi phí đang hạ nhiệt. Tuy nhiên YTD avg 4,38% chỉ còn cách target Quốc hội 4,5% đúng 0,12 điểm phần trăm, và lạm phát cơ bản 4,12% cho thấy áp lực không chỉ đến từ năng lượng.</div>
+        <div class="dc-drivers"><span class="driver-tag">Giá vàng -8,46% MoM</span><span class="driver-tag">USD +0,11% MoM</span><span class="driver-tag">Lạm phát cơ bản 4,12%</span></div>
+        <div class="dc-source">📍 Nguồn: NSO · báo cáo KTXH Q2 &amp; 6 tháng 2026</div>
+        <button class="dc-chart-btn" data-indicator="cpi_yoy_pct">📊 Biểu đồ</button>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">PMI Sản xuất (S&amp;P)</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">51.8</span><span class="dc-unit">điểm</span></div>
+        <div class="dc-label">↓ -1,0 từ 52,8 · mở rộng tháng thứ 12</div>
+        <div class="dc-meta"><span>Tháng trước <strong class="mono">52.8</strong></span><span>Ngưỡng 50 <strong class="mono pos">▲ vượt</strong></span></div>
+        <div class="target-badge ok">✓ Tháng thứ 12 liên tiếp mở rộng</div>
+        <div class="dc-narrative" style="font-size:11.5px">Headline giảm nhưng cấu trúc cải thiện: Output tăng nhanh nhất 4 tháng, New Orders tăng do cầu thực. Employment giảm là 'weak spot'.</div>
+        <div class="dc-source">📍 S&amp;P Global (qua VOV/VNNews)</div>
+        <button class="dc-chart-btn" data-indicator="pmi">📊 Biểu đồ</button>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">IIP</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">+11.2</span><span class="dc-unit">% YoY (Q2)</span></div>
+        <div class="dc-label">Chỉ số sản xuất công nghiệp · Q2/2026</div>
+        <div class="dc-meta"><span>6 tháng <strong class="mono pos">+10.8%</strong></span><span>Cùng kỳ 2025 <strong class="mono">+8.7%</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Tăng tốc so với +8,7% cùng kỳ. PMI Output cao nhất 4 tháng — 2 nguồn xác nhận. Tăng cả 34 địa phương.</div>
+        <div class="dc-drivers"><span class="driver-tag">Chế biến +11,4%</span><span class="driver-tag">Điện +9,6%</span><span class="driver-tag">Khai khoáng +5,8%</span></div>
+        <div class="dc-source">📍 NSO</div>
+        <button class="dc-chart-btn" data-indicator="iip_yoy_pct">📊 Biểu đồ</button>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">GDP</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">+8.39</span><span class="dc-unit">% YoY (Q2)</span></div>
+        <div class="dc-label">Tổng sản phẩm trong nước · Q2/2026</div>
+        <div class="dc-meta"><span>6 tháng <strong class="mono pos">+8.18%</strong></span><span>Cùng kỳ 2025 <strong class="mono">+7.63%</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Công nghiệp-XD +10,51% (50%), dịch vụ +7,87% (44%). Nông-Lâm-Thủy sản +4,06% (5,65%).</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Cán cân thương mại</span><span class="dc-flag">🔴</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neg">-2.64</span><span class="dc-unit">tỷ USD (tháng 6)</span></div>
+        <div class="dc-label">Nhập siêu · 6 tháng YTD <strong class="mono neg">-16,65 tỷ</strong></div>
+        <div class="dc-meta"><span>6 tháng 2025 <strong class="mono pos">+7.95 tỷ</strong></span><span>Dịch chuyển <strong class="mono neg">-24.6 tỷ</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Đảo chiều sắc: nội địa nhập siêu 24,95 tỷ, FDI xuất siêu 8,3 tỷ. Khoảng cách 2 khu vực nới rộng.</div>
+        <div class="dc-source">📍 NSO (dẫn Cục Hải quan 02/07/2026)</div>
+        <button class="dc-chart-btn" data-indicator="trade_balance_b_usd">📊 Biểu đồ</button>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Xuất khẩu</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">50.79</span><span class="dc-unit">tỷ USD</span></div>
+        <div class="dc-label">Tháng 6/2026 · +28,1% YoY</div>
+        <div class="dc-meta"><span>MoM <strong class="mono pos">+8.2%</strong></span><span>6 tháng <strong class="mono">266.52 tỷ</strong> (+21,0%)</span><span>FDI <strong class="mono">79.9%</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">FDI +26,0%, nội địa chỉ +4,6% — xuất khẩu VN = câu chuyện FDI.</div>
+        <div class="dc-source">📍 NSO (dẫn Cục Hải quan)</div>
+        <button class="dc-chart-btn" data-indicator="exports_b_usd">📊 Biểu đồ</button>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Nhập khẩu</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu">53.43</span><span class="dc-unit">tỷ USD</span></div>
+        <div class="dc-label">Tháng 6/2026 · +45,2% YoY</div>
+        <div class="dc-meta"><span>MoM <strong class="mono pos">+2.5%</strong></span><span>6 tháng <strong class="mono">283.17 tỷ</strong> (+33,4%)</span></div>
+        <div class="dc-narrative" style="font-size:11.5px">NK tăng nhanh hơn XK 17 đđ — nguyên liệu cho H2. Cả FDI (+37,3%) lẫn nội địa (+24,3%) đều tăng.</div>
+        <div class="dc-source">📍 NSO (dẫn Cục Hải quan)</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">FDI thực hiện</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">13.03</span><span class="dc-unit">tỷ USD</span></div>
+        <div class="dc-label">6 tháng 2026 · +11,2% YoY</div>
+        <div class="dc-narrative" style="font-size:11.5px">Vốn thực đến ổn định. Cùng lúc FDI đăng ký +61,0% — dòng mới đổ vào mạnh.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">FDI đăng ký</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">34.65</span><span class="dc-unit">tỷ USD</span></div>
+        <div class="dc-label">6 tháng 2026 · <strong class="mono pos">+61,0% YoY</strong></div>
+        <div class="dc-narrative" style="font-size:11.5px">Con số nổi bật nhất ngoại thương. Đi cùng nhập siêu -16,65 tỷ: vốn đến + nguyên liệu nhập.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Bán lẻ &amp; DV tiêu dùng</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">665.6</span><span class="dc-unit">nghìn tỷ VND</span></div>
+        <div class="dc-label">Tháng 6/2026 · +14,8% YoY (danh nghĩa)</div>
+        <div class="dc-meta"><span>Thực (trừ giá) <strong class="mono">~+7.5%</strong></span><span>6 tháng <strong class="mono">3.889,5</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Gần 1/2 tăng trưởng danh nghĩa là do giá (lạm phát 7,3%) — cùng câu chuyện với CPI.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">DN thành lập mới</span><span class="dc-flag">🔴</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neg">16.8</span><span class="dc-unit">nghìn DN</span></div>
+        <div class="dc-label">Tháng 6/2026 · <strong class="mono neg">-31,0% YoY</strong></div>
+        <div class="dc-meta"><span>Giải thể hoàn tất <strong class="mono neg">+79.6%</strong></span><span>6 tháng rút lui <strong class="mono neg">151,1 nghìn</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Đối lập GDP +8,39% — tăng trưởng vĩ mô mạnh nhưng áp lực vi mô tăng.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Khách quốc tế</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">1.68</span><span class="dc-unit">triệu lượt</span></div>
+        <div class="dc-label">Tháng 6/2026 · +14,7% YoY</div>
+        <div class="dc-meta"><span>6 tháng <strong class="mono pos">12,3 triệu</strong></span><span>XK du lịch <strong class="mono">9,0 tỷ USD</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Gần bằng cả năm 2024 (12,6 triệu). MoM -5,7% do mùa vụ thấp điểm hè.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+      <div class="data-card span2">
+        <div class="dc-head"><span class="dc-name">Thu/chi Ngân sách NN</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">1.568</span><span class="dc-unit">nghìn tỷ VND (thu, 6 tháng)</span></div>
+        <div class="dc-label">62% KH năm · +17,4% YoY · chi chỉ 36,4% KH</div>
+        <table class="mini-table"><thead><tr><th>Chỉ tiêu</th><th class="num">6 tháng 2026</th><th class="num">YoY</th><th class="num">% KH năm</th></tr></thead><tbody><tr><td>Thu NSNN</td><td class="num">1.568,2 nghìn tỷ</td><td class="num pos">+17,4%</td><td class="num pos">62,0%</td></tr><tr><td>Chi NSNN</td><td class="num">1.149,1 nghìn tỷ</td><td class="num">+0,1%</td><td class="num">36,4%</td></tr><tr><td>Đầu tư thực hiện XH</td><td class="num">1.807,8 nghìn tỷ</td><td class="num pos">+12,9%</td><td class="num">—</td></tr></tbody></table>
+        <div class="dc-narrative">Chênh lệch tiến độ thu-chi cho thấy dư địa chi tiêu tài khóa H2 rất lớn — đòn bẩy hỗ trợ tăng trưởng nếu cần.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+      <div class="data-card span2">
+        <div class="dc-head"><span class="dc-name">Snapshot Nông/Lâm/Thủy sản (6 tháng)</span><span class="dc-flag">🟡</span></div>
+        <table class="mini-table"><thead><tr><th>Chỉ tiêu</th><th class="num">Giá trị</th><th class="num">YoY</th><th>Ghi chú</th></tr></thead><tbody><tr><td>Lúa đông xuân</td><td class="num">20,5 triệu tấn</td><td class="num pos">+88,1 nghìn</td><td>Diện tích 2.932,1 nghìn ha</td></tr><tr><td>Thủy sản</td><td class="num">4.954,2 nghìn tấn</td><td class="num pos">+3,6%</td><td>Nuôi trồng 2.993,1 (+5,7%)</td></tr><tr><td>Đàn lợn</td><td class="num">—</td><td class="num pos">+2,2%</td><td>Chăn nuôi ổn định</td></tr><tr><td>Đàn gia cầm</td><td class="num">—</td><td class="num pos">+3,1%</td><td>—</td></tr><tr><td>Đàn trâu</td><td class="num">—</td><td class="num neg">-6,6%</td><td>Cấu trúc chuyển dịch</td></tr><tr><td>Rừng trồng mới</td><td class="num">145,7 nghìn ha</td><td class="num neg">-3,5%</td><td>Thiệt hại 347 ha (-59,1%)</td></tr></tbody></table>
+        <div class="dc-narrative" style="font-size:11.5px">Nông nghiệp GDP +3,87% — khu vực ổn định, không phải động lực tăng trưởng chính. Chăn nuôi: lợn/gia cầm tăng nhưng trâu/bò giảm.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="group-section" id="group2">
+    <div class="group-header"><span class="tag g2">02</span><h2>Tiền tệ &amp; Tài chính — Thanh khoản, lãi suất, trái phiếu</h2><div class="divider-line"></div><span class="src-note">Nguồn: VBMA tuần 22-26/6</span></div>
+    <div class="highlights">
+      <div class="highlight-box neg"><div class="hl-label">🔴 TIÊU CỰC</div><ul class="hl-items"><li>LNH 1W <span class="hl-val neg">7,35%</span> (+205 đcb WoW)</li><li>TPCP 10Y <span class="hl-val neg">4,40%</span> (+3 đcb WoW, +119 đcb YoY)</li><li>Khối ngoại bán ròng TPCP <span class="hl-val neg">~606 tỷ/tuần</span></li></ul></div>
+      <div class="highlight-box pos"><div class="hl-label">🟢 TÍCH CỰC</div><ul class="hl-items"><li>LNH ON <span class="hl-val pos">2,91%</span> (-150 đcb WoW)</li><li>Tỷ giá trung tâm <span class="hl-val pos">25.195</span> ổn định</li><li>TPDN phát hành tháng 6 <span class="hl-val pos">36.486 tỷ</span></li></ul></div>
+    </div>
+    <div class="data-grid">
+      <div class="data-card span2">
+        <div class="dc-head"><span class="dc-name">Lãi suất liên ngân hàng (LNH)</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu">2.91</span><span class="dc-unit">% ON (26/6/2026)</span></div>
+        <div class="dc-label">Phân kỳ kỳ hạn: ON↓ nhưng 1W↑</div>
+        <table class="mini-table"><thead><tr><th>Kỳ hạn</th><th class="num">26/6</th><th class="num">19/6</th><th class="num">WoW (đcb)</th><th class="num">MoM (đcb)</th></tr></thead><tbody><tr><td>ON</td><td class="num neu">2.91%</td><td class="num">4.41%</td><td class="num pos">-150</td><td class="num pos">-477</td></tr><tr><td>1W</td><td class="num neg">7.35%</td><td class="num">5.30%</td><td class="num neg">+205</td><td class="num">-13</td></tr><tr><td>2W</td><td class="num">7.72%</td><td class="num">7.54%</td><td class="num">+18</td><td class="num">+24</td></tr><tr><td>1M</td><td class="num">7.57%</td><td class="num">8.17%</td><td class="num pos">-60</td><td class="num">+8</td></tr><tr><td>3M</td><td class="num">8.19%</td><td class="num">7.83%</td><td class="num">+36</td><td class="num">+44</td></tr><tr><td>6M</td><td class="num">8.60%</td><td class="num">7.57%</td><td class="num neg">+103</td><td class="num">+5</td></tr></tbody></table>
+        <div class="dc-narrative">Phân kỳ rõ: ON giảm 150 đcb (thanh khoản qua đêm nới lỏng) nhưng 1W tăng 205 đcb (thắt tuần). So tháng trước ON giảm tới 477 đcb. NHNN bơm ròng 3,9 nghìn tỷ qua OMO. Thanh khoản rất ngắn nới lỏng nhưng chi phí vốn tuần vẫn cao — NIM NH có thể bị ép.</div>
+        <div class="dc-source">📍 VBMA tuần 22-26/6 · NHNN</div>
+        <button class="dc-chart-btn" data-indicator="interbank_on_pct">📊 Biểu đồ</button>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Tỷ giá trung tâm USD/VND</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu">25.195</span><span class="dc-unit">VND/USD</span></div>
+        <div class="dc-label">26/6/2026 · +14 VND WoW · YTD +0,11%</div>
+        <div class="dc-meta"><span>VCB mua <strong class="mono">26.114</strong></span><span>VCB bán <strong class="mono">26.454</strong></span><span>Spread <strong class="mono">1.259</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Gần như đi ngang cả tháng. VND yếu nhẹ ở kênh thương mại (YTD +8,12%). DXY -0,82% YTD + dầu -10% cân bằng áp lực.</div>
+        <div class="dc-source">📍 VBMA · NHNN</div>
+        <button class="dc-chart-btn" data-indicator="fx_central_vnd">📊 Biểu đồ</button>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Lợi suất TPCP 10 năm</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu">4.40</span><span class="dc-unit">%</span></div>
+        <div class="dc-label">26/6/2026 · +3 đcb WoW · +119 đcb YoY</div>
+        <table class="mini-table"><thead><tr><th>Kỳ hạn</th><th class="num">26/6</th><th class="num">WoW</th></tr></thead><tbody><tr><td>1Y</td><td class="num">3.38%</td><td class="num">+1</td></tr><tr><td>3Y</td><td class="num">3.56%</td><td class="num">+1</td></tr><tr><td>5Y</td><td class="num">4.19%</td><td class="num">+2</td></tr><tr><td>10Y</td><td class="num neu">4.40%</td><td class="num">+3</td></tr><tr><td>30Y</td><td class="num">4.69%</td><td class="num">+1</td></tr></tbody></table>
+        <div class="dc-narrative" style="font-size:11.5px">YoY tăng 119-153 đcb mọi kỳ hạn — TPCP đắt hơn rõ. Đấu thầu tuần: tỷ lệ trúng 25-48%, cầu yếu.</div>
+        <div class="dc-source">📍 VBMA · HNX</div>
+        <button class="dc-chart-btn" data-indicator="govt_bond_10y_yield_pct">📊 Biểu đồ</button>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Tăng trưởng tín dụng</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu">7.41</span><span class="dc-unit">% YTD</span></div>
+        <div class="dc-label">Tới 26/6/2026 · vs cùng kỳ 2025 là 8,3%</div>
+        <div class="dc-meta"><span>Huy động <strong class="mono">5,02%</strong></span><span>Chậm hơn <strong class="mono neg">-0,89 đđ</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Cả cung lẫn cầu vốn đều thận trọng. LNH 1W 7,35% — chi phí vốn tăng. Tín dụng chậm + chi phí tăng = dè chừng H2.</div>
+        <div class="dc-source">📍 NSO (dẫn NHNN)</div>
+      </div>
+      <div class="data-card span2">
+        <div class="dc-head"><span class="dc-name">Trái phiếu doanh nghiệp (TPDN)</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">36.486</span><span class="dc-unit">tỷ VND (phát hành tháng 6)</span></div>
+        <div class="dc-label">37 đợt · YTD 180.525 tỷ · riêng lẻ 86,24%</div>
+        <table class="mini-table"><thead><tr><th>Chỉ tiêu</th><th class="num">Tháng 6</th><th class="num">YTD 6 tháng</th><th class="num">Ghi chú</th></tr></thead><tbody><tr><td>Phát hành</td><td class="num">36.486 tỷ</td><td class="num">180.525 tỷ</td><td class="num">118 đợt riêng lẻ + 22 công chúng</td></tr><tr><td>Mua lại trước hạn</td><td class="num">47.098 tỷ</td><td class="num">129.412 tỷ (+25% YoY)</td><td class="num">Ngân hàng chiếm 86,7%</td></tr><tr><td>Đáo hạn H2 còn lại</td><td class="num">—</td><td class="num neg">119.009 tỷ</td><td class="num neg">BĐS 55,2% (65.670 tỷ)</td></tr></tbody></table>
+        <div class="dc-narrative">NH chủ động mua lại TPDN của mình (86,7%). H2 còn 119.009 tỷ đáo hạn, BĐS chiếm 55,2% — điểm rủi ro cần theo dõi.</div>
+        <div class="dc-source">📍 VBMA tuần 22-26/6 (HNX+SSC)</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Phát hành TPCP</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu">182.561</span><span class="dc-unit">tỷ VND YTD</span></div>
+        <div class="dc-label">36,5% KH 500.000 tỷ · chậm tiến độ</div>
+        <div class="dc-meta"><span>Tuần 24/6 gọi <strong class="mono">17.000</strong>, trúng <strong class="mono">4.385</strong></span><span>10Y trúng <strong class="mono">4.35%</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">Cầu yếu, đặc biệt dài hạn — kỳ hạn 15Y không trúng thầu. 10Y chiếm 83% tổng phát hành.</div>
+        <div class="dc-source">📍 VBMA · KBNN</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="group-section" id="group3">
+    <div class="group-header"><span class="tag g3">03</span><h2>Ngành &amp; Cơ cấu — Phân tích sâu</h2><div class="divider-line"></div><span class="src-note">Nguồn: S&amp;P PMI · NSO aggregate</span></div>
+    <div class="highlights">
+      <div class="highlight-box neg"><div class="hl-label">🔴 TIÊU CỰC</div><ul class="hl-items"><li>PMI Employment <span class="hl-val neg">GIẢM</span> dù Output + Orders tăng</li><li>Stocks of Purchases sụt <span class="hl-val neg">nhanh nhất 1 năm</span></li></ul></div>
+      <div class="highlight-box pos"><div class="hl-label">🟢 TÍCH CỰC</div><ul class="hl-items"><li>PMI Output <span class="hl-val pos">4-mo high</span>, New Orders tăng do cầu thực</li><li>FDI chiếm <span class="hl-val pos">79,9%</span> XK — dẫn dắt rõ</li></ul></div>
+    </div>
+    <div class="data-grid">
+      <div class="data-card full">
+        <div class="dc-head"><span class="dc-name">PMI sub-indices (8 chỉ số thành phần)</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-label">Định tính — S&amp;P không public số chính xác dạng free</div>
+        <div class="pmi-grid">
+          <div class="pmi-sub"><span class="ps-name">Output</span><span class="ps-arrow pos">↑↑</span><span class="ps-note">Tháng thứ 14, nhanh nhất 4 tháng</span></div>
+          <div class="pmi-sub"><span class="ps-name">New Orders</span><span class="ps-arrow pos">↑</span><span class="ps-note">Cầu khách hàng thực</span></div>
+          <div class="pmi-sub"><span class="ps-name">New Export Orders</span><span class="ps-arrow pos">↑</span><span class="ps-note">Nhỏ hơn tổng new business</span></div>
+          <div class="pmi-sub"><span class="ps-name">Employment</span><span class="ps-arrow neg">↓</span><span class="ps-note">'Weak spot' — còn dư địa công suất</span></div>
+          <div class="pmi-sub"><span class="ps-name">Purchasing Activity</span><span class="ps-arrow pos">↑</span><span class="ps-note">Tháng thứ 2, nhanh hơn T5</span></div>
+          <div class="pmi-sub"><span class="ps-name">Input Costs</span><span class="ps-arrow neu">↑ (chậm)</span><span class="ps-note">Lowest since start year</span></div>
+          <div class="pmi-sub"><span class="ps-name">Output Prices</span><span class="ps-arrow neu">↑ (chậm)</span><span class="ps-note">Lowest 6 months</span></div>
+          <div class="pmi-sub"><span class="ps-name">Stocks of Purchases</span><span class="ps-arrow neg">↓↓</span><span class="ps-note">Sụt nhanh nhất 1 năm</span></div>
+          <div class="pmi-sub"><span class="ps-name">Supplier Delivery</span><span class="ps-arrow neg">kéo dài</span><span class="ps-note">Supply-chain delays</span></div>
+          <div class="pmi-sub"><span class="ps-name">Confidence 12M</span><span class="ps-arrow pos">↑</span><span class="ps-note">Cao nhất 4 tháng</span></div>
+        </div>
+        <div class="dc-narrative">Cấu trúc PMI tháng 6 khác hẳn tháng 5: tăng trưởng do CẦU THẬT (new orders từ khách hàng) chứ không phải tích trữ tồn kho an toàn. Input costs chậm lại — cùng lúc CPI YoY giảm 91 đcb. Employment giảm là 'weak spot' duy nhất.</div>
+        <div class="dc-source">📍 S&amp;P Global (qua VOV English + VietnamNews)</div>
+      </div>
+      <div class="data-card span2">
+        <div class="dc-head"><span class="dc-name">XNK theo khu vực kinh tế (6 tháng)</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-label">FDI vs nội địa · aggregate NSO</div>
+        <table class="mini-table"><thead><tr><th>Khu vực</th><th class="num">XK (tỷ USD)</th><th class="num">YoY</th><th class="num">NK (tỷ USD)</th><th class="num">YoY</th><th class="num">Cán cân</th></tr></thead><tbody><tr><td>FDI</td><td class="num">213,01</td><td class="num pos">+26,0%</td><td class="num">204,71</td><td class="num pos">+37,3%</td><td class="num pos">+8,30</td></tr><tr><td>Nội địa</td><td class="num">53,51</td><td class="num">+4,6%</td><td class="num">78,46</td><td class="num pos">+24,3%</td><td class="num neg">-24,95</td></tr><tr style="font-weight:700"><td>Tổng</td><td class="num">266,52</td><td class="num pos">+21,0%</td><td class="num">283,17</td><td class="num pos">+33,4%</td><td class="num neg">-16,65</td></tr></tbody></table>
+        <div class="dc-narrative">FDI và nội địa kể 2 câu chuyện khác nhau: FDI xuất siêu 8,3 tỷ, nội địa nhập siêu 24,95 tỷ. FDI chiếm 79,9% XK và tăng 26% — nội địa chỉ +4,6%.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Top thị trường XNK</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-label">6 tháng 2026 · aggregate NSO</div>
+        <table class="mini-table"><thead><tr><th>Vị trí</th><th>Thị trường</th><th class="num">Kim ngạch</th></tr></thead><tbody><tr><td>XK lớn nhất</td><td>🇺🇸 Hoa Kỳ</td><td class="num">86,5 tỷ USD</td></tr><tr><td>NK lớn nhất</td><td>🇨🇳 Trung Quốc</td><td class="num">115,2 tỷ USD</td></tr></tbody></table>
+        <div class="dc-narrative" style="font-size:11.5px">Cấu trúc kinh điển: bán sang Mỹ, mua nguyên liệu từ TQ. Chênh XK Mỹ (86,5) vs NK TQ (115,2) — phần nào giải thích nhập siêu.</div>
+        <div class="dc-source">📍 NSO</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="group-section" id="group4">
+    <div class="group-header"><span class="tag g4">04</span><h2>Bối cảnh toàn cầu</h2><div class="divider-line"></div><span class="src-note">Nguồn: VBMA tuần (tin quốc tế)</span></div>
+    <div class="highlights">
+      <div class="highlight-box neg"><div class="hl-label">🔴 TIÊU CỰC</div><ul class="hl-items"><li>Core PCE Mỹ <span class="hl-val neg">3,4%</span> — đỉnh từ 10/2023</li><li>FedWatch <span class="hl-val neg">86%</span> xác suất Fed tăng</li><li>USD/JPY <span class="hl-val neg">161,76</span> — JPY yếu kỷ lục</li></ul></div>
+      <div class="highlight-box pos"><div class="hl-label">🟢 TÍCH CỰC</div><ul class="hl-items"><li>Brent <span class="hl-val pos">~72 USD</span> (-10% tuần) — Hormuz phục hồi 75%</li><li>DXY <span class="hl-val pos">-0,82% YTD</span> — USD yếu năm tới nay</li></ul></div>
+    </div>
+    <div class="data-grid">
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Chính sách Fed</span><span class="dc-flag">🔴</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neg">4.25-4.50</span><span class="dc-unit">% (dự báo BofA)</span></div>
+        <div class="dc-label">3 lần tăng 25bps · FedWatch <strong class="mono neg">86%</strong> tăng</div>
+        <div class="dc-meta"><span>Core PCE <strong class="mono neg">3,4%</strong></span><span>Tăng sớm nhất <strong class="mono">họp 9</strong></span></div>
+        <div class="dc-narrative" style="font-size:11.5px">BofA điều chỉnh dự báo lên 3 lần tăng. Core PCE củng cố luận điểm thắt chặt. Tác động VN: FDI trực tiếp mạnh (+61%) nhưng danh mục có thể chịu áp lực.</div>
+        <div class="dc-source">📍 VBMA (dẫn BofA + CME FedWatch)</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Giá dầu Brent</span><span class="dc-flag">🟢</span></div>
+        <div class="dc-value-row"><span class="dc-value mono pos">~72</span><span class="dc-unit">USD/thùng</span></div>
+        <div class="dc-label">26/6/2026 · -10% WoW</div>
+        <div class="dc-narrative" style="font-size:11.5px">Hormuz phục hồi 75% — Saudi xuất từ Ras Tanura. Tàu Ever Lovely trúng đạn 25/6 làm đà giảm đảo phần. Giá dầu giảm = giảm áp lực CPI VN.</div>
+        <div class="dc-source">📍 VBMA tuần 22-26/6</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Chỉ số USD (DXY)</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu">101.36</span><span class="dc-unit">điểm</span></div>
+        <div class="dc-label">26/6/2026 · <strong class="mono pos">-0,82% YTD</strong></div>
+        <table class="mini-table"><thead><tr><th>Cặp</th><th class="num">26/6</th><th class="num">WoW</th><th class="num">YTD</th></tr></thead><tbody><tr><td>EUR/USD</td><td class="num">1,138</td><td class="num neg">-0,74%</td><td class="num pos">+3,99%</td></tr><tr><td>USD/CNY</td><td class="num">6,798</td><td class="num">+0,43%</td><td class="num pos">-4,82%</td></tr><tr><td>USD/JPY</td><td class="num neg">161,76</td><td class="num">+0,28%</td><td class="num neg">+13,93%</td></tr><tr><td>GBP/USD</td><td class="num">1,320</td><td class="num neg">-0,23%</td><td class="num pos">+4,67%</td></tr></tbody></table>
+        <div class="dc-narrative" style="font-size:11.5px">USD mạnh nhẹ tuần nhưng yếu YTD. JPY yếu kỷ lục. CNY mạnh YTD (-4,82%) — nguyên liệu nhập từ TQ đắt hơn.</div>
+        <div class="dc-source">📍 VBMA (dẫn investing.com)</div>
+      </div>
+      <div class="data-card">
+        <div class="dc-head"><span class="dc-name">Rủi ro địa chính trị (Hormuz)</span><span class="dc-flag">🟡</span></div>
+        <div class="dc-value-row"><span class="dc-value mono neu" style="font-size:20px">Phục hồi 75%</span></div>
+        <div class="dc-label">nhưng còn rủi ro</div>
+        <div class="dc-narrative" style="font-size:11.5px">Saudi bắt đầu xuất từ Ras Tanura. Tàu Ever Lovely trúng đạn 25/6 cho thấy rủi ro vẫn hiện hữu. PMI Confidence 12 tháng VN vẫn dưới mức trước xung đột.</div>
+        <div class="dc-source">📍 VBMA tuần 22-26/6</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5: TỔNG HỢP — Rủi ro + Động lực + Key takeaways -->
+  <section class="group-section" id="summary">
+    <div class="group-header"><span class="tag g1" style="background:rgba(168,85,247,0.15);color:var(--purple)">05</span><h2>Tổng hợp — Rủi ro · Động lực · Điểm chốt</h2><div class="divider-line"></div><span class="src-note">Tổng hợp từ 4 nhóm trên</span></div>
+
+  <div class="rc-grid">
+    <div class="rc-col">
+      <h2>⚠️ Rủi ro</h2>
+      <ul class="rc-list">
+        <li class="rc-item high"><span class="rc-level high">Cao</span><span class="rc-text"><strong>Nhập siêu -16,65 tỷ USD</strong> (6 tháng, đảo chiều từ +7,95 tỷ) đặt áp lực tỷ giá khi Customs công bố chính thức 06/07. FDI xuất siêu 8,3 tỷ nhưng nội địa nhập siêu 24,95 tỷ — cấu trúc mất cân.</span></li>
+        <li class="rc-item high"><span class="rc-level high">Cao</span><span class="rc-text"><strong>CPI YTD 4,38%</strong> chỉ còn 0,12 đđ dự phòng trước target Quốc hội 4,5%. Nếu dầu/Hormuz quay lại tăng hoặc Fed thắt chặt, target có thể bị phá.</span></li>
+        <li class="rc-item high"><span class="rc-level high">Cao</span><span class="rc-text"><strong>DN mới -31% YoY</strong>, giải thể hoàn tất +79,6%. 6 tháng rút lui 151,1 nghìn DN (+18,8%). Tăng trưởng vĩ mô mạnh nhưng áp lực vi mô tăng.</span></li>
+        <li class="rc-item med"><span class="rc-level med">TC</span><span class="rc-text"><strong>TPDN đáo hạn H2: 119.009 tỷ</strong>, BĐS chiếm 55,2% (65.670 tỷ). NH đã mua lại 129.412 tỷ YTD (+25%) — chủ động, nhưng BĐS còn nhiều đáo hạn phía trước.</span></li>
+        <li class="rc-item med"><span class="rc-level med">TC</span><span class="rc-text"><strong>Fed có thể thắt chặt thêm</strong> (FedWatch 86%). Core PCE Mỹ 3,4% đỉnh từ 10/2023. Dòng vốn danh mục VN có thể chịu áp lực, dù FDI trực tiếp vẫn mạnh (+61%).</span></li>
+      </ul>
+    </div>
+    <div class="rc-col">
+      <h2>🚀 Động lực tích cực</h2>
+      <ul class="rc-list">
+        <li class="rc-item catalyst"><span class="rc-level">Cao</span><span class="rc-text"><strong>FDI đăng ký +61,0% YoY</strong> (34,65 tỷ USD) — dòng vốn mới đổ vào mạnh. Khi chuyển thành thực hiện sẽ hỗ trợ tăng trưởng + XK H2-H1/2027.</span></li>
+        <li class="rc-item catalyst"><span class="rc-level">Cao</span><span class="rc-text"><strong>Dư địa tài khóa lớn</strong>: thu NSNN 62% KH, chi 36,4% KH — có không gian chi tiêu kích cầu H2 nếu cần.</span></li>
+        <li class="rc-item catalyst"><span class="rc-level">TC</span><span class="rc-text"><strong>PMI cấu trúc cải thiện</strong>: Output 4-mo high, New Orders tăng do cầu thực, Input Costs chậm lại. Tăng trưởng tháng 7 có thể bền hơn tháng 5.</span></li>
+        <li class="rc-item catalyst"><span class="rc-level">TC</span><span class="rc-text"><strong>Giá dầu giảm 10%</strong> (Brent ~72 USD) + Hormuz phục hồi 75% — giảm áp lực CPI và chi phí vận tải.</span></li>
+        <li class="rc-item catalyst"><span class="rc-level">TC</span><span class="rc-text"><strong>IIP tăng cả 34 địa phương</strong>, khai khoáng đảo chiều (-3,5% → +5,8%) — diện rộng, không phụ thuộc vài tỉnh.</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="kt-section">
+    <h2>🎯 Key takeaways — 3 điểm chốt</h2>
+    <ol class="kt-list">
+      <li class="star">Tăng trưởng H1/2026 rất mạnh (GDP Q2 +8,39%, IIP +11,2%, XK +21%) nhưng đi kèm nhập siêu -16,65 tỷ và CPI sát target — câu chuyện <strong>"tăng trưởng có giá"</strong>.</li>
+      <li><strong>Rủi ro lớn nhất tháng tới</strong>: khi Customs công bố nhập siêu -16,65 tỷ chính thức (06/07), NHNN có thể để VND yếu thêm. Cùng lúc Fed 86% xác suất tăng — áp lực kép tỷ giá.</li>
+      <li><strong>Động lực tích cực lớn nhất</strong>: FDI đăng ký +61% YoY + dư địa tài khóa (chi 36,4% KH) = 2 đòn bẩy H2 chưa dùng hết.</li>
+    </ol>
+  </div>
+
+  </section>
+
+  <div class="footer">
+    <p><strong>Báo cáo vĩ mô VN · Tháng 6/2026</strong> · Chốt dữ liệu 30/06/2026 · Xuất bản 03/07/2026</p>
+    <p style="margin-top:8px"><strong>Nguồn dữ liệu (3/5):</strong></p>
+    <ul style="margin:6px 0 0 18px;line-height:1.8">
+      <li><a href="https://www.nso.gov.vn/bai-top/2026/07/bao-cao-tinh-hinh-kinh-te-xa-hoi-quy-ii-va-sau-thang-dau-nam-2026/" target="_blank">NSO — Báo cáo KTXH Q2 &amp; 6 tháng 2026</a> (Tổng cục Thống kê, đăng 03/07/2026)</li>
+      <li><a href="https://www.pmi.spglobal.com/Public/Home/PressRelease/d05d320a82f840b4b910a30255537863" target="_blank">S&amp;P Global Vietnam Manufacturing PMI June 2026</a> (truy cập qua VOV/VNNews)</li>
+      <li><a href="https://vbma.org.vn/vi/reports/weekly" target="_blank">VBMA — Báo cáo tuần 22-26/6/2026</a> (Hiệp hội TT Trái phiếu)</li>
+    </ul>
+    <p style="margin-top:10px;color:var(--text-faint);font-size:10.5px">Báo cáo kể chuyện số liệu — KHÔNG phải khuyến nghị đầu tư. Mọi số trong report.json trace được tới file cụ thể trong <code>sources_cache/</code>. Tự động tạo bởi skill <code>vn-macro-monthly</code>.</p>
+  </div>
+</div>
+
+<div class="chart-modal" id="chartModal">
+  <div class="chart-modal-content">
+    <div class="chart-modal-head"><h3 id="chartModalTitle">Dữ liệu lịch sử</h3><button class="chart-modal-close" id="chartModalClose">×</button></div>
+    <canvas id="chartModalCanvas" height="200"></canvas>
+    <div class="chart-modal-note" id="chartModalNote"></div>
+  </div>
+</div>
+
+<script>
+const history = {"series":{"cpi_yoy_pct":[{"month":"2026-06","value":4.69}],"cpi_mom_pct":[{"month":"2026-06","value":-0.39}],"pmi":[{"month":"2026-06","value":51.8}],"iip_yoy_pct":[{"month":"2026-06","value":11.2}],"exports_b_usd":[{"month":"2026-06","value":50.79}],"trade_balance_b_usd":[{"month":"2026-06","value":-2.64}],"interbank_on_pct":[{"month":"2026-06","value":2.91}],"fx_central_vnd":[{"month":"2026-06","value":25195}],"govt_bond_10y_yield_pct":[{"month":"2026-06","value":4.40}]}};
+document.querySelectorAll('.nav-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.group-section').forEach(s=>s.classList.remove('active'));tab.classList.add('active');const target=document.getElementById(tab.dataset.target);if(target)target.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});});});
+const MIN_POINTS_FOR_CHART=6;let modalChart=null;
+document.querySelectorAll('.dc-chart-btn').forEach(btn=>{const key=btn.dataset.indicator;const series=history.series[key]||[];if(series.length<MIN_POINTS_FOR_CHART){btn.style.display='none';}else{btn.addEventListener('click',()=>openChartModal(key));}});
+function openChartModal(key){const series=history.series[key]||[];const labels=series.map(s=>s.month);const values=series.map(s=>s.value);document.getElementById('chartModalTitle').textContent=`Dữ liệu lịch sử — ${key} (${series.length} kỳ)`;document.getElementById('chartModal').classList.add('open');document.getElementById('chartModalNote').textContent=`Nguồn: history.json. ${series.length} điểm dữ liệu.`;if(modalChart)modalChart.destroy();const ctx=document.getElementById('chartModalCanvas').getContext('2d');const grad=ctx.createLinearGradient(0,0,0,200);grad.addColorStop(0,'rgba(168,85,247,0.4)');grad.addColorStop(1,'rgba(168,85,247,0)');modalChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:values,borderColor:'#a855f7',backgroundColor:grad,fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'#ec4899'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(139,92,246,0.08)'}},y:{grid:{color:'rgba(139,92,246,0.08)'}}}}});}
+document.getElementById('chartModalClose').addEventListener('click',()=>{document.getElementById('chartModal').classList.remove('open');if(modalChart){modalChart.destroy();modalChart=null;}});
+document.getElementById('chartModal').addEventListener('click',(e)=>{if(e.target.id==='chartModal'){document.getElementById('chartModal').classList.remove('open');if(modalChart){modalChart.destroy();modalChart=null;}}});
+Chart.defaults.color='#8b8ba7';Chart.defaults.font.family="'Inter',sans-serif";
+</script>
+</body>
+</html>

@@ -41,11 +41,30 @@ def _score_url(page: PageMeta, brand: Brand) -> int:
     return 0
 
 
+def _is_placeholder(img: Image.Image) -> bool:
+    """Phát hiện ảnh placeholder/default (khối màu gần đồng nhất).
+
+    Placeholder xám của FB có entropy rất thấp — gần như đồng nhất.
+    Ảnh thật (avatar brand, avatar giả mạo) luôn có chi tiết → entropy cao.
+
+    Dùng std dev của pixel values: <5.0 = placeholder, >=5.0 = ảnh thật.
+    """
+    import numpy as np
+    arr = np.array(img.convert("L"))
+    return float(arr.std()) < 5.0
+
+
 def _phash_distance(image_path_or_url: str) -> imagehash.ImageHash | None:
     """Compute pHash từ path hoặc URL. Trả về None nếu fail.
 
     B.2 FIX: khi download URL fail (FB CDN 403 signature mismatch), log warning
-    ra stderr để caller biết — không silent fail."""
+    ra stderr để caller biết — không silent fail.
+
+    C.1 FIX (revised): Thay vì reject theo file-size cứng (<5KB) — vốn reject cả
+    ảnh thật nhỏ và test fixtures — dùng _is_placeholder() kiểm tra entropy pixel.
+    Placeholder xám đồng nhất (FB default avatar) có std-dev < 5.0 → skip.
+    Ảnh thật dù nhỏ vẫn pass.
+    """
     if not image_path_or_url:
         return None
     local_temp: str | None = None
@@ -68,6 +87,11 @@ def _phash_distance(image_path_or_url: str) -> imagehash.ImageHash | None:
                 print(f"[!] pHash: local file not found: {image_path_or_url}", file=sys.stderr)
                 return None
             img = Image.open(p)
+        if _is_placeholder(img):
+            import sys
+            print(f"[!] pHash: placeholder image detected (low entropy), skipping: {image_path_or_url[:80]}",
+                  file=sys.stderr)
+            return None
         return imagehash.phash(img)
     except Exception as e:
         import sys
@@ -97,6 +121,30 @@ def _download_to_temp(url: str) -> str | None:
             return f.name
     except Exception:
         return None
+
+
+def preflight_brand_assets(brand: Brand) -> list[str]:
+    """Check brand avatar + cover files exist and are not placeholders.
+
+    Returns list of error messages (empty = all OK).
+    Called before scan to fail-closed: if brand assets are broken,
+    scoring will silently produce all-zero avatar/cover scores.
+    """
+    errors: list[str] = []
+    for label, path in [("avatar", brand.avatar_path), ("cover", brand.cover_path)]:
+        p = Path(path)
+        if not p.exists():
+            errors.append(f"{label} file not found: {path}")
+            continue
+        try:
+            img = Image.open(p)
+            img.verify()  # Verify it's a valid image
+            img = Image.open(p)  # Reopen after verify
+            if _is_placeholder(img):
+                errors.append(f"{label} appears to be a placeholder/solid-color image: {path}")
+        except Exception as e:
+            errors.append(f"{label} cannot be opened as image: {path} ({e})")
+    return errors
 
 
 def _bucket_score(distance: int, cfg: dict[str, Any], prefix: str) -> int:

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Phân kỳ giá–khối lượng: kết luận R6 cho nhà đầu tư</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f8f8f4;--ink:#17222b;--muted:#58646e;--blue:#12658a;--blue2:#e7f3f8;--orange:#b85d20;--orange2:#fff0e4;--line:#d8dedc;--card:#fff}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-wrap:anywhere}
+.wrap{width:min(920px,calc(100% - 32px));margin:auto} .hero{padding:64px 0 52px;background:linear-gradient(135deg,#0b4f70,#167aa6);color:#fff}h1{font-size:clamp(29px,5vw,45px);line-height:1.14;margin:0 0 20px;max-width:830px}h2{font-size:clamp(24px,4vw,31px);line-height:1.2;margin:0 0 10px}h3{margin:0 0 8px;font-size:19px}.lede{font-size:clamp(18px,3vw,22px);max-width:820px}.meta{font-size:13px;opacity:.85;margin-top:25px}
+nav{position:sticky;top:0;z-index:3;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto}nav div{display:flex;gap:5px;padding:8px 0}nav a{white-space:nowrap;padding:7px 10px;text-decoration:none;color:var(--ink);font-size:13px;border-radius:6px}nav a:hover{background:var(--blue2)}section{padding:52px 0;border-bottom:1px solid var(--line);scroll-margin-top:55px}p{margin:0 0 16px}.answer{color:var(--blue);font-size:19px;font-weight:650}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;margin:18px 0}.card.blue{border-left:5px solid var(--blue)}.card.warn{border-left:5px solid var(--orange);background:var(--orange2)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:15px}.num{font-size:30px;color:var(--blue);font-weight:750}.label{font-size:13px;color:var(--muted)}.chart{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin:20px 0}canvas{width:100%!important;max-height:330px}.small{font-size:14px;color:var(--muted)}details{background:#fff;border:1px solid var(--line);border-radius:9px;padding:13px 17px;margin:12px 0}summary{cursor:pointer;color:var(--blue);font-weight:650}pre{font-size:12px;white-space:pre-wrap;word-break:break-all;max-height:370px;overflow:auto}footer{padding:38px 0;color:var(--muted);font-size:14px}@media(max-width:480px){.hero{padding:46px 0}section{padding:36px 0}.stats{grid-template-columns:1fr}.wrap{width:min(100% - 24px,920px)}.chart{padding:12px}}
+</style><style>.master-report-bar{background:#f4f6f1;color:#17231d;border-bottom:1px solid #cbd5ce;padding:11px 20px;font:600 14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.master-report-bar__inner{max-width:1120px;margin:auto;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}.master-report-bar a{color:#0e6249;text-decoration:underline;text-underline-offset:3px}.master-report-bar__links{display:flex;gap:14px;flex-wrap:wrap}@media(max-width:640px){.master-report-bar__inner{align-items:flex-start;flex-direction:column;gap:6px}}</style></head><body><aside class="master-report-bar" aria-label="Báo cáo tổng hợp"><div class="master-report-bar__inner"><span>Chuyên khảo 05 thuộc bộ Nghiên cứu thị trường Việt Nam</span><span class="master-report-bar__links"><a href="https://vn-market-research-master.vercel.app">Đọc báo cáo tổng hợp</a><a href="https://vn-market-research-master.vercel.app/chapters/stock-divergence.html">Xem chương này trong master</a></span></div></aside>
+<header class="hero"><div class="wrap"><h1>Khi một cổ phiếu giảm giá nhưng khối lượng tăng, nghiên cứu hiện chưa cho thấy trạng thái đó giúp dự báo sự hồi phục một cách ổn định.</h1><p class="lede">Một vài kết quả riêng lẻ xuất hiện trong mẫu, nhưng không vượt qua kiểm tra theo nhóm và không cải thiện dự báo ngoài mẫu.</p><p class="meta">R6 · 110 cổ phiếu HOSE đang hoạt động · 2014–2026 · tài liệu nghiên cứu, không phải khuyến nghị đầu tư</p></div></header>
+<nav><div class="wrap"><a href="#30s">30 giây</a><a href="#quan-sat">Quan sát</a><a href="#bon-row">Bốn hàng</a><a href="#ngoai-mau">Kiểm tra mới</a><a href="#corporate">Corporate actions</a><a href="#cach-hieu">Cách hiểu</a><a href="#chua-chung-minh">Chưa chứng minh</a><a href="#ket-luan">Kết luận</a><a href="#ky-thuat">Chi tiết</a></div></nav>
+<main>
+<section id="30s"><div class="wrap"><h2>Câu trả lời trong 30 giây</h2><p class="answer">Chưa có cơ sở ổn định để dùng phân kỳ giá–khối lượng làm công cụ giao dịch.</p><div class="card blue"><p>Nghiên cứu R6 kiểm tra 3.032 trường hợp theo 54 nhóm kiểm tra. Có bốn hàng vượt ngưỡng riêng lẻ, nhưng cả bốn đều bị chặn khi phải đi qua cấp kiểm tra rộng hơn. Kết quả cuối cùng: không có phát hiện mô tả đủ điều kiện và không có claim hỗ trợ giao dịch.</p></div><div class="stats"><div class="stat"><div class="num">3.032</div><div class="label">trường hợp được kiểm tra</div></div><div class="stat"><div class="num">0</div><div class="label">kết quả đủ điều kiện mô tả</div></div><div class="stat"><div class="num">1/6</div><div class="label">giai đoạn ngoài mẫu tốt hơn</div></div></div></div></section>
+<section id="quan-sat"><div class="wrap"><h2>Điều nghiên cứu thực sự quan sát</h2><p class="answer">Đây là một trạng thái để kiểm tra thêm, không phải lời hứa về lần kế tiếp.</p><p>Nghiên cứu so sánh lúc giá đang giảm nhưng khối lượng tăng với lúc cả hai cùng giảm. Nó theo dõi kết quả ở các khoảng thời gian khác nhau, rồi yêu cầu mọi kết quả vượt qua cả kiểm tra trong nhóm lẫn kiểm tra cấp cha. Danh sách cổ phiếu là ảnh chụp các mã đang hoạt động, vì vậy không tái hiện trọn lịch sử các mã đã rời sàn.</p><div class="card warn"><h3>Giới hạn chính</h3><p>Kết quả không hỗ trợ không chứng minh phân kỳ vô dụng. Với khả năng phát hiện 0,44, thiết kế này vẫn có thể bỏ sót một hiệu ứng nhỏ.</p></div></div></section>
+<section id="bon-row"><div class="wrap"><h2>Vì sao bốn kết quả riêng lẻ không đủ</h2><p class="answer">Bốn hàng có số liệu nổi bật riêng lẻ, nhưng đều không có sự ủng hộ của cấp cha.</p><div class="chart"><h3>Bốn hàng dừng ở kiểm tra cấp cha</h3><canvas id="hierarchy"></canvas><p class="small">Mỗi hàng phải có đồng thời bằng chứng ở cấp riêng và cấp rộng hơn. Cả bốn bị dừng ở bước thứ hai, nên không được diễn giải thành kết quả đầu tư.</p></div><p>Điều này giúp tránh chọn một lát cắt đẹp trong rất nhiều lát cắt đã xem. Trong R6, 3.014 trường hợp không được hỗ trợ và 14 trường hợp không đủ điều kiện tính đầy đủ.</p></div></section>
+<section id="ngoai-mau"><div class="wrap"><h2>Kiểm tra ngoài mẫu</h2><p class="answer">Thêm thông tin khối lượng không cải thiện kết quả một cách nhất quán ở phần dữ liệu để riêng.</p><div class="chart"><h3>Sáu giai đoạn kiểm tra</h3><canvas id="folds"></canvas><p class="small">Cột xanh: sai số giảm. Cột cam: sai số tăng. Chỉ một trong sáu giai đoạn tốt hơn; mức thay đổi tổng thể là -0.000738, không đạt mức ý nghĩa thực hành.</p></div><div class="chart"><h3>Kiểm tra theo từng mã</h3><canvas id="stock"></canvas><p class="small">30 mã được chọn theo giá trị giao dịch trung vị: 13 mã có đủ sáu giai đoạn, 17 mã chỉ có kết quả một phần. Có 26,854 dòng dự báo; kết quả một phần không được dùng để nâng kết luận.</p></div></div></section>
+<section id="corporate"><div class="wrap"><h2>Corporate actions và giới hạn dữ liệu</h2><p class="answer">Khối lượng đã được điều chỉnh cho 140 sự kiện, nhưng điều đó không xóa hết bất định.</p><p>Độ nhảy trung vị quanh sự kiện giảm nhẹ từ 0.27108 xuống 0.26849. Tuy nhiên, trong 138 sự kiện đánh giá được, 67 tốt hơn hoặc không đổi và 71 xấu hơn. Vì vậy báo cáo chỉ nói điều chỉnh không làm trung vị xấu hơn, không nói vấn đề đã được giải quyết hoàn toàn.</p><div class="chart"><h3>Chẩn đoán quanh sự kiện</h3><canvas id="actions"></canvas><p class="small">Hai trong bốn hàng riêng lẻ biến mất khi bỏ các cửa sổ gần sự kiện; hai hàng còn lại vẫn bị kiểm tra cấp cha chặn.</p></div></div></section>
+<section id="cach-hieu"><div class="wrap"><h2>Cách nhà đầu tư nên hiểu</h2><p class="answer">Hãy coi phân kỳ là lời nhắc kiểm tra bối cảnh, không phải căn cứ độc lập để ra lệnh.</p><ol><li>Kiểm tra xu hướng, thanh khoản và tin doanh nghiệp.</li><li>Không gán xác suất hồi phục từ riêng trạng thái giá–khối lượng.</li><li>Không chọn vài ví dụ đẹp để bỏ qua toàn bộ kết quả còn lại.</li><li>Ghi nhận giới hạn của mẫu cổ phiếu đang hoạt động và dữ liệu ngoài mẫu.</li></ol></div></section>
+<section id="chua-chung-minh"><div class="wrap"><h2>Điều nghiên cứu chưa chứng minh</h2><p class="answer">Nghiên cứu chưa cho thấy phân kỳ giúp giao dịch ổn định; nó cũng không bác bỏ vĩnh viễn mọi hiệu ứng nhỏ.</p><ul><li>Không xác nhận một quy tắc giao dịch có thể dùng ngay.</li><li>Không đại diện đầy đủ cho toàn bộ lịch sử thị trường tại từng thời điểm.</li><li>Không nói corporate-action adjustment xử lý trọn mọi nhiễu.</li><li>Không biến kết quả âm thành bằng chứng rằng phân kỳ vô dụng.</li></ul></div></section>
+<section id="ket-luan"><div class="wrap"><h2>Kết luận</h2><p class="answer">CLOSEOUT_INCONCLUSIVE_POWER_LIMITED.</p><p>R6 không tạo claim hỗ trợ giao dịch. Bốn hàng vượt ngưỡng riêng lẻ đều không qua hierarchy; kiểm tra ngoài mẫu không cải thiện và power còn hạn chế. Cách diễn giải thận trọng nhất là: chưa có bằng chứng đủ ổn định trong thiết kế này, đồng thời chưa thể loại trừ hết hiệu ứng nhỏ.</p></div></section>
+<section id="ky-thuat"><div class="wrap"><h2>Chi tiết kỹ thuật</h2><details data-layer="technical"><summary>Phạm vi và verdict</summary><p>3.032 tests; 54 families; 3.018 OK; 14 FIT_FAILED; 4 Holm survivors; DESCRIPTIVE=0; NOT_SUPPORTED=3.014; PARENT_GATE_FAIL=4.</p></details><details data-layer="technical"><summary>Ngoài mẫu và power</summary><p>114.623 pooled predictions; improvement=-0.000737901; 1/6 better; materiality=false. Per-stock: 13 OK, 17 partial, 26.854 prediction rows. M=200; B=199; power=0,44; heteroskedastic size=0,015.</p></details><details data-layer="technical"><summary>Source hashes</summary><pre>{
+  &quot;r6_claim_evidence_map.json&quot;: &quot;1890764eda734f174e31ea0ee242c00742a449238b6f88b9d227696273773e1b&quot;,
+  &quot;r6_corporate_action_sensitivity.json&quot;: &quot;73d7374ad5f903bd745343ea5560e98e4a97792936adebd895a3f475ac413587&quot;,
+  &quot;r6_corrected_verdicts.json&quot;: &quot;53a7a0b904dd0417f8594d5eb54e7962cd71bde7fd0ca7b5c2a38a30b0e26ff2&quot;,
+  &quot;r6_data_integrity_audit.json&quot;: &quot;1211f8d4cbdc352a309b3c4f924697bb8bd88a9e2fb24ba24a04b82674a84f83&quot;,
+  &quot;r6_expected_test_matrix.csv&quot;: &quot;f2bf90dc5e535aad2de816135c952983754daf6451136537eb730cc5b483802c&quot;,
+  &quot;r6_freeze_manifest.json&quot;: &quot;f811ec4867f633210ec568c6c79048024dae4677f4697f8a8ba12746d8d0f833&quot;,
+  &quot;r6_multiple_testing.csv&quot;: &quot;07559ab91b365956dabfaedb2f973ae2491aa60acd975862fa3bfdf42dd388b9&quot;,
+  &quot;r6_oos_per_stock_results.json&quot;: &quot;9095c93630a46fbad8884bf1ae00941555872cd481b47e8bfc8d9ec2a28902ca&quot;,
+  &quot;r6_oos_pooled_results.json&quot;: &quot;cd728503772b122814d36ba3be9b8470ddc994bc68dabcc3f6dcadc13438dc5e&quot;,
+  &quot;r6_power_analysis.json&quot;: &quot;7a60016ae485129705872901a5c9c0bb2a40b7e4d20b6053ced243c772f89458&quot;,
+  &quot;r6_source_reconciliation.json&quot;: &quot;38e0a5dbd3842ba155ac8bba6da1a36bdacf9b8e84da0ea56a471226454f5356&quot;,
+  &quot;r6_verdict_trace.json&quot;: &quot;ee3750fc39766134898bdd92c99b836237050ac151c6f6739296c74833809654&quot;
+}</pre></details><details data-layer="technical"><summary>Claim registry</summary><pre>{
+  &quot;scope&quot;: {
+    &quot;artifact&quot;: &quot;r6_expected_test_matrix.csv&quot;,
+    &quot;test_id_or_key&quot;: &quot;ALL&quot;,
+    &quot;sha256&quot;: &quot;f2bf90dc5e535aad2de816135c952983754daf6451136537eb730cc5b483802c&quot;,
+    &quot;exact_value&quot;: {
+      &quot;tests&quot;: 3032,
+      &quot;families&quot;: 54
+    },
+    &quot;limitation_or_cap&quot;: &quot;fixed research scope; current-active snapshot&quot;
+  },
+  &quot;verdicts&quot;: {
+    &quot;artifact&quot;: &quot;r6_corrected_verdicts.json&quot;,
+    &quot;test_id_or_key&quot;: &quot;ALL&quot;,
+    &quot;sha256&quot;: &quot;53a7a0b904dd0417f8594d5eb54e7962cd71bde7fd0ca7b5c2a38a30b0e26ff2&quot;,
+    &quot;exact_value&quot;: {
+      &quot;FIT_FAILED&quot;: 14,
+      &quot;NOT_SUPPORTED&quot;: 3014,
+      &quot;NOT_SUPPORTED_PARENT_GATE_FAIL&quot;: 4
+    },
+    &quot;limitation_or_cap&quot;: &quot;zero descriptive rows; no operational claim&quot;
+  },
+  &quot;survivors&quot;: {
+    &quot;artifact&quot;: &quot;r6_multiple_testing.csv&quot;,
+    &quot;test_id_or_key&quot;: &quot;four Holm rows&quot;,
+    &quot;sha256&quot;: &quot;07559ab91b365956dabfaedb2f973ae2491aa60acd975862fa3bfdf42dd388b9&quot;,
+    &quot;exact_value&quot;: [
+      {
+        &quot;test_id&quot;: &quot;PARENT_sector_Technology_fwd_max_drawdown_DIVERGE_UP&quot;,
+        &quot;raw_p&quot;: 0.0007,
+        &quot;adjusted_p&quot;: 0.011899999999999999
+      },
+      {
+        &quot;test_id&quot;: &quot;PARENT_sector_Technology_fwd_return_DIVERGE_UP&quot;,
+        &quot;raw_p&quot;: 0.0006,
+        &quot;adjusted_p&quot;: 0.010199999999999999
+      },
+      {
+        &quot;test_id&quot;: &quot;PARENT_sector_Technology_opp_plus10_neg5_60d_DIVERGE_UP&quot;,
+        &quot;raw_p&quot;: 0.0009,
+        &quot;adjusted_p&quot;: 0.0153
+      },
+      {
+        &quot;test_id&quot;: &quot;SECONDARY_stock_CTG_H20_fwd_max_drawdown_DIVERGE_DOWN_vs_CONFIRM_DOWN&quot;,
+        &quot;raw_p&quot;: 0.0004,
+        &quot;adjusted_p&quot;: 0.044000000000000004
+      }
+    ],
+    &quot;limitation_or_cap&quot;: &quot;all four fail recursive ancestor support&quot;
+  },
+  &quot;pooled_oos&quot;: {
+    &quot;artifact&quot;: &quot;r6_oos_pooled_results.json&quot;,
+    &quot;test_id_or_key&quot;: &quot;pooled primary&quot;,
+    &quot;sha256&quot;: &quot;cd728503772b122814d36ba3be9b8470ddc994bc68dabcc3f6dcadc13438dc5e&quot;,
+    &quot;exact_value&quot;: {
+      &quot;predictions&quot;: 114623,
+      &quot;improvement&quot;: -0.0007379005937686589,
+      &quot;better_periods&quot;: 1,
+      &quot;materiality_pass&quot;: false
+    },
+    &quot;limitation_or_cap&quot;: &quot;one of six periods better; not actionable&quot;
+  },
+  &quot;per_stock_oos&quot;: {
+    &quot;artifact&quot;: &quot;r6_oos_per_stock_results.json&quot;,
+    &quot;test_id_or_key&quot;: &quot;top30 by median_value_vnd&quot;,
+    &quot;sha256&quot;: &quot;9095c93630a46fbad8884bf1ae00941555872cd481b47e8bfc8d9ec2a28902ca&quot;,
+    &quot;exact_value&quot;: {
+      &quot;ok&quot;: 13,
+      &quot;partial&quot;: 17,
+      &quot;prediction_rows&quot;: 26854
+    },
+    &quot;limitation_or_cap&quot;: &quot;partial rows do not establish support&quot;
+  },
+  &quot;power&quot;: {
+    &quot;artifact&quot;: &quot;r6_power_analysis.json&quot;,
+    &quot;test_id_or_key&quot;: &quot;power_0.1 and heteroskedastic&quot;,
+    &quot;sha256&quot;: &quot;7a60016ae485129705872901a5c9c0bb2a40b7e4d20b6053ced243c772f89458&quot;,
+    &quot;exact_value&quot;: {
+      &quot;power&quot;: 0.44,
+      &quot;heteroskedastic_size&quot;: 0.015
+    },
+    &quot;limitation_or_cap&quot;: &quot;power-limited and conservative&quot;
+  },
+  &quot;corporate_actions&quot;: {
+    &quot;artifact&quot;: &quot;r6_data_integrity_audit.json&quot;,
+    &quot;test_id_or_key&quot;: &quot;corporate-action diagnostics&quot;,
+    &quot;sha256&quot;: &quot;1211f8d4cbdc352a309b3c4f924697bb8bd88a9e2fb24ba24a04b82674a84f83&quot;,
+    &quot;exact_value&quot;: {
+      &quot;events&quot;: 140,
+      &quot;improved_or_equal&quot;: 67,
+      &quot;worsened&quot;: 71,
+      &quot;median_raw&quot;: 0.2710779410602363,
+      &quot;median_adjusted&quot;: 0.26849431188072415
+    },
+    &quot;limitation_or_cap&quot;: &quot;median not worsened; not a complete resolution&quot;
+  },
+  &quot;event_sensitivity&quot;: {
+    &quot;artifact&quot;: &quot;r6_corporate_action_sensitivity.json&quot;,
+    &quot;test_id_or_key&quot;: &quot;main survivors&quot;,
+    &quot;sha256&quot;: &quot;73d7374ad5f903bd745343ea5560e98e4a97792936adebd895a3f475ac413587&quot;,
+    &quot;exact_value&quot;: {
+      &quot;PARENT_sector_Technology_fwd_max_drawdown_DIVERGE_UP&quot;: true,
+      &quot;PARENT_sector_Technology_fwd_return_DIVERGE_UP&quot;: true,
+      &quot;PARENT_sector_Technology_opp_plus10_neg5_60d_DIVERGE_UP&quot;: false,
+      &quot;SECONDARY_stock_CTG_H20_fwd_max_drawdown_DIVERGE_DOWN_vs_CONFIRM_DOWN&quot;: false
+    },
+    &quot;limitation_or_cap&quot;: &quot;two of four do not survive exclusion; none is an investment result&quot;
+  },
+  &quot;survivorship&quot;: {
+    &quot;artifact&quot;: &quot;r6_claim_evidence_map.json&quot;,
+    &quot;test_id_or_key&quot;: &quot;caps&quot;,
+    &quot;sha256&quot;: &quot;1890764eda734f174e31ea0ee242c00742a449238b6f88b9d227696273773e1b&quot;,
+    &quot;exact_value&quot;: &quot;CURRENT_ACTIVE_SNAPSHOT&quot;,
+    &quot;limitation_or_cap&quot;: &quot;does not represent a full point-in-time market history&quot;
+  }
+}</pre></details></div></section>
+</main><footer><div class="wrap">Authority: R6, independently accepted by Session 2 R2. Report is research communication, not investment advice.</div></footer>
+<script>
+const FOLDS=[{"fold": 1, "delta": -1.1566503112308793e-07}, {"fold": 2, "delta": 2.005561427578942e-05}, {"fold": 3, "delta": 7.172274972400363e-05}, {"fold": 4, "delta": 2.7791945416191008e-05}, {"fold": 5, "delta": 4.767348670184004e-05}, {"fold": 6, "delta": 6.05478042415349e-06}]; const HIER=[{"label": "sector_Technology_fwd_max_drawdown_DIVERGE_UP", "ancestor": "PARENT_pooled_fwd_max_drawdown_DIVERGE_UP"}, {"label": "sector_Technology_fwd_return_DIVERGE_UP", "ancestor": "PARENT_pooled_fwd_return_DIVERGE_UP"}, {"label": "sector_Technology_opp_plus10_neg5_60d_DIVERGE_UP", "ancestor": "PARENT_pooled_opp_plus10_neg5_60d_DIVERGE_UP"}, {"label": "CTG_H20_fwd_max_drawdown_DIVERGE_DOWN_vs_CONFIRM_DOWN", "ancestor": "PARENT_pooled_fwd_max_drawdown_DIVERGE_DOWN"}];
+const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+new Chart(document.getElementById('folds'),{type:'bar',data:{labels:FOLDS.map(x=>'Giai đoạn '+x.fold),datasets:[{data:FOLDS.map(x=>x.delta*100000),backgroundColor:FOLDS.map(x=>x.delta<0?'#12658a':'#b85d20')}]},options:{...base,scales:{y:{title:{display:true,text:'Chênh lệch sai số ×100.000 (âm là tốt hơn)'}}}}});
+new Chart(document.getElementById('stock'),{type:'doughnut',data:{labels:['Đủ sáu giai đoạn','Kết quả một phần'],datasets:[{data:[13,17],backgroundColor:['#12658a','#b85d20']}]},options:{...base,plugins:{legend:{position:'bottom'}}}});
+new Chart(document.getElementById('hierarchy'),{type:'bar',data:{labels:HIER.map(x=>x.label),datasets:[{label:'Bị kiểm tra cấp cha chặn',data:[1,1,1,1],backgroundColor:'#b85d20'}]},options:{...base,indexAxis:'y',scales:{x:{display:false}}}});
+new Chart(document.getElementById('actions'),{type:'bar',data:{labels:['Tốt hơn hoặc không đổi','Xấu hơn'],datasets:[{data:[67,71],backgroundColor:['#12658a','#b85d20']}]},options:{...base,scales:{y:{beginAtZero:true,title:{display:true,text:'Số sự kiện đánh giá được'}}}}});
+</script></body></html>

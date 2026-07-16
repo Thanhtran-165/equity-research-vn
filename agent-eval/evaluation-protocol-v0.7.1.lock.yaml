@@ -1,0 +1,100 @@
+protocol_version: 0.7.1
+relation_to_previous: SOURCE_PACK_QUALIFICATION_POST_V0_7_0 (no agent runs under v0.7.0)
+baseline_protocol_sha256: cf953a51382d8be2fa61ac0c18dd6d536651745315d51fd45e0db44165fd5b9c
+frozen_before_execution: true
+frozen_at: '2026-07-13T21:30:00'
+verification_layer_version: 0.1.4 (UNCHANGED)
+runner_version: 0.3.2 (UNCHANGED)
+builder_change: |
+  build_data_contract.py hardened: added _validate_source_schema() fail-closed gate.
+  OLD hash 10da8b35 → NEW hash 8c5eb381. Removes silent 'CTD' ticker default that
+  produced fabricated-looking data (PNJ pack rendered as ticker="CTD", company="", price=0).
+  Now raises SystemExit(2) with structured FAIL_SOURCE_SCHEMA record when canonical
+  fields (symbol/organ_name/current_price>0) are absent. This is infrastructure
+  hardening, NOT a skill patch: verifier/requirements/phases/runner all unchanged.
+source_pack_qualification:
+  CTD: unchanged
+  KDH: unchanged
+  PNJ: overview.json NORMALIZED — added canonical fields (symbol/organ_name/current_price/market_cap) alongside original fields. Original data preserved for provenance. Fixes: ticker was silently defaulted to "CTD", company was empty, price was 0. Now: ticker=PNJ, PE=7.19, PB=6.4.
+  VCB: overview.json PRICE REPLACED — placeholder 50000 → verified 61400 VND (vnstock close 2026-06-26, =61.4 nghìn VND × 1000). Full provenance added (_price_provenance block). Banking sector: revenue=0 is correct (banks report NIM not revenue/COGS).
+  FPT: overview.json PRICE REPLACED — placeholder 50000 → verified 70800 VND (vnstock close 2026-06-26, =70.8 nghìn VND × 1000). Full provenance added.
+purpose: cross_ticker_generalization — does the skill generalize beyond CTD?
+tickers:
+- CTD
+- KDH
+- PNJ
+- VCB
+- FPT
+runs_per_ticker: 2
+total_planned_runs: 10
+run_naming: C-{TICKER}-{01|02}
+patches_during_cohort: prohibited
+unchanged:
+- skill prompts
+- verifier 0.1.4
+- requirements.yaml
+- runner 0.3.2
+- phase4a_gate
+- phase6_preflight
+- model_backends
+- scoring thresholds
+- requirements.yaml
+frozen_component_hashes:
+  verifier: cf870dee9c2b8df5
+  runner: 42ff820d036f295d
+  builder: 8c5eb3815e57422f
+  phase4a_gate: b3c6edb912eaf053
+  phase6_preflight: 7f29f328c9b202c4
+  model_backends: fcfcf01b6df07e75
+  requirements: ffeb27c68a019882
+frozen_source_pack_hashes:
+  CTD: 3d4fef96895e8ee8 (overview.json per-file; pack dir hash 89877b8b)
+  KDH: 9e88620ff8b20ee0 (overview.json per-file; pack dir hash d821f850)
+  PNJ: 3af67aa586ced185 (overview.json per-file; pack dir hash a36f34cd)
+  VCB: 35ac88af1ebfff3a (overview.json per-file; pack dir hash 0affa8f8)
+  FPT: 010a361e479313ef (overview.json per-file; pack dir hash f0a7e0c1)
+classification_thresholds:
+  10_or_9_of_10: STABLE_CANDIDATE
+  8_of_10: FUNCTIONAL_CROSS_TICKER_WITH_VARIANCE
+  6_to_7_of_10: needs_sector_hardening
+  5_or_below: overfit_CTD_suspected
+  any_ticker_0_of_2: sector_gap_confirmed
+REQ_020_threshold:
+  0_or_1_of_10: residual
+  2_plus: deterministic_DOM_gate
+REQ_025_threshold:
+  any: review
+  2_plus: phase6_contract_match_gate
+cohort_C_release_gate:
+  genuine_completed_runs: 10
+  autonomous_final_pass_rate: '>=90%'
+  critical_failure_rate: 0
+  fabricated_data_rate: 0
+  data_accuracy_pass_rate: 100%
+  html_output_rate: 100%
+  no_ticker_with_0_of_2_PASS: true
+  verifier_false_positive_affecting_verdict: 0
+  recurring_cross_ticker_defects: 0
+stop_conditions:
+  snapshot_drift: true
+  secret_leak: true
+  fabricated_data_detected: true
+  verifier_or_runner_crash_unclassified: true
+  critical_failure: true
+  source_pack_or_oracle_corruption: true
+model_config:
+  backend: zai
+  model_id: GLM-5.2
+  base_url: https://api.z.ai/api/anthropic
+  interface: anthropic
+  key_source: ZCode config (not source code)
+  max_tokens: 32768
+  streaming: required
+transport_policy:
+  max_retries: 2
+  retryable: true
+  logical_run_id_preserved_across_retries: true
+phase_local_gates:
+  phase4a: tech_score_in_range + verdict_consistency (1 initial + 2 recovery = 3 max)
+  phase6: HTML structure preflight + content gate (refs>=10, sections>=20) (1 initial + 2 recovery = 3 max)
+protocol_sha256: e6240e725eb233f4978c5b4564903f9556ab5be5d6bd494a496ab89c76fd2df4

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meta-Skill · Hệ thống Skill Quản Lý Skill</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06080c; --card:rgba(22,27,34,0.6); --border:rgba(255,255,255,0.06);
+  --text:#f0f6fc; --dim:#8b949e; --faint:#484f58;
+  --amber:#f5a623; --blue:#58a6ff; --green:#3fb950; --red:#f85149;
+  --purple:#bc8cff; --pink:#ff7eb6; --cyan:#2ee5e5;
+  --grad:linear-gradient(135deg,#f5a623,#ff7eb6,#bc8cff,#58a6ff);
+  --mono:'JetBrains Mono',monospace; --sans:'Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
+
+.fx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.fx .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.12}
+.fx .o1{width:600px;height:600px;background:var(--amber);top:-200px;left:-100px;animation:d1 20s ease-in-out infinite}
+.fx .o2{width:500px;height:500px;background:var(--purple);bottom:-100px;right:-100px;animation:d2 25s ease-in-out infinite}
+.fx .o3{width:400px;height:400px;background:var(--blue);top:40%;left:55%;animation:d3 30s ease-in-out infinite}
+@keyframes d1{0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(60px,80px)scale(1.1)}}
+@keyframes d2{0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(-80px,-60px)scale(0.9)}}
+@keyframes d3{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(-40px,60px)scale(1.05)}66%{transform:translate(50px,-30px)scale(0.95)}}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:rgba(6,8,12,0.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
+nav .brand{font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px}
+nav .brand .pulse{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber);animation:beat 1.5s infinite}
+@keyframes beat{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.7)}}
+nav .links{display:flex;gap:20px}
+nav .links a{color:var(--dim);font-size:12px;text-decoration:none;transition:color 0.2s}
+nav .links a:hover{color:var(--text)}
+
+.wrap{max-width:960px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.hero-badge{padding:6px 16px;border-radius:999px;background:rgba(188,140,255,0.08);border:1px solid rgba(188,140,255,0.2);color:var(--purple);font-size:12px;font-weight:600;margin-bottom:24px}
+.hero h1{font-size:clamp(34px,5.5vw,60px);font-weight:900;line-height:1.08;letter-spacing:-2px;margin-bottom:16px}
+.hero h1 .g{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(15px,2vw,18px);color:var(--dim);max-width:580px;line-height:1.6}
+.hero-stats{display:flex;gap:36px;margin-top:40px;flex-wrap:wrap;justify-content:center}
+.hero-stat .n{font-size:38px;font-weight:900;font-family:var(--mono);background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-stat .l{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:1.5px}
+
+.s{padding:88px 0;scroll-margin-top:60px}
+.s-tag{display:inline-block;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.s-title{font-size:clamp(22px,4vw,32px);font-weight:800;letter-spacing:-0.5px;line-height:1.2}
+.s-sub{font-size:15px;color:var(--dim);margin-top:8px;max-width:660px}
+
+.card{background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:18px;padding:24px;transition:all 0.3s;position:relative;overflow:hidden}
+.card:hover{border-color:rgba(245,166,35,0.15);transform:translateY(-2px)}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px}
+.card.ca::before{background:var(--amber)}.card.cb::before{background:var(--blue)}
+.card.cg::before{background:var(--green)}.card.cp::before{background:var(--purple)}
+.card.ck::before{background:var(--pink)}.card.cc::before{background:var(--cyan)}
+.card.cr::before{background:var(--red)}
+.card h3{font-size:18px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card p{font-size:13.5px;color:var(--dim);line-height:1.65}
+.card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.t{font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px}
+.ta{background:rgba(245,166,35,0.1);color:var(--amber)}.tb{background:rgba(88,166,255,0.1);color:var(--blue)}
+.tg{background:rgba(63,185,80,0.1);color:var(--green)}.tp{background:rgba(188,140,255,0.1);color:var(--purple)}
+.tk{background:rgba(255,126,182,0.1);color:var(--pink)}.tc{background:rgba(46,229,229,0.1);color:var(--cyan)}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:768px){.g2,.g3{grid-template-columns:1fr}}
+
+.co{border-radius:14px;padding:20px 24px;margin:24px 0;border:1px solid var(--border)}
+.co-a{border-left:4px solid var(--amber);background:rgba(245,166,35,0.03)}
+.co-r{border-left:4px solid var(--red);background:rgba(248,81,73,0.03)}
+.co-title{font-size:13px;font-weight:700;margin-bottom:8px}
+.co-body{font-size:14px;color:var(--dim);line-height:1.7}
+.co-body strong{color:var(--text)}
+
+/* Meta concept diagram */
+.meta-diagram{display:flex;align-items:center;justify-content:center;gap:24px;margin:32px 0;flex-wrap:wrap}
+.meta-box{padding:16px 24px;border-radius:14px;text-align:center;border:2px solid;min-width:140px}
+.meta-box .icon{font-size:32px;margin-bottom:8px}
+.meta-box .label{font-size:14px;font-weight:700}
+.meta-box .desc{font-size:11px;color:var(--dim);margin-top:4px}
+.meta-box.worker{border-color:var(--green);background:rgba(63,185,80,0.05)}
+.meta-box.meta{border-color:var(--purple);background:rgba(188,140,255,0.05)}
+.meta-arrow{font-size:28px;color:var(--faint)}
+
+/* Flow */
+.flow{position:relative;padding-left:44px;margin-top:28px}
+.flow::before{content:'';position:absolute;left:14px;top:8px;bottom:8px;width:2px;background:linear-gradient(to bottom,var(--amber),var(--purple),var(--blue),var(--cyan),transparent)}
+.fi{position:relative;margin-bottom:20px}
+.fi::before{content:'';position:absolute;left:-37px;top:0;width:16px;height:16px;border-radius:50%;background:var(--bg);border:3px solid;z-index:1}
+.fi:nth-child(1)::before{border-color:var(--amber);box-shadow:0 0 10px rgba(245,166,35,0.3)}
+.fi:nth-child(2)::before{border-color:var(--blue);box-shadow:0 0 10px rgba(88,166,255,0.3)}
+.fi:nth-child(3)::before{border-color:var(--green);box-shadow:0 0 10px rgba(63,185,80,0.3)}
+.fi:nth-child(4)::before{border-color:var(--purple);box-shadow:0 0 10px rgba(188,140,255,0.3)}
+.fi:nth-child(5)::before{border-color:var(--pink);box-shadow:0 0 10px rgba(255,126,182,0.3)}
+.fc{background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+.fc h4{font-size:14px;font-weight:700;margin-bottom:4px}
+.fc p{font-size:12.5px;color:var(--dim);line-height:1.5}
+
+.cw{position:relative;height:300px}
+
+.l-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
+.l-item:last-child{border:none}
+.l-num{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;font-family:var(--mono);flex-shrink:0;transition:transform 0.2s}
+.l-item:hover .l-num{transform:scale(1.1)}
+.l-num.a{background:rgba(245,166,35,0.1);color:var(--amber)}
+.l-num.b{background:rgba(88,166,255,0.1);color:var(--blue)}
+.l-num.g{background:rgba(63,185,80,0.1);color:var(--green)}
+.l-num.p{background:rgba(188,140,255,0.1);color:var(--purple)}
+.l-num.k{background:rgba(255,126,182,0.1);color:var(--pink)}
+.l-num.c{background:rgba(46,229,229,0.1);color:var(--cyan)}
+.l-num.r{background:rgba(248,81,73,0.1);color:var(--red)}
+.l-text h4{font-size:14px;font-weight:700;margin-bottom:2px}
+.l-text p{font-size:12.5px;color:var(--dim);line-height:1.55}
+
+.quote{text-align:center;padding:40px 20px}
+.quote-mark{font-size:56px;color:rgba(245,166,35,0.15);font-family:Georgia,serif;line-height:0}
+.quote-text{font-size:clamp(18px,3vw,26px);font-weight:600;line-height:1.5;max-width:660px;margin:12px auto}
+.quote-author{font-size:12px;color:var(--faint);margin-top:10px}
+
+footer{text-align:center;padding:48px 20px 36px;border-top:1px solid var(--border);margin-top:64px}
+footer p{color:var(--faint);font-size:12px;margin-bottom:6px}
+footer a{color:var(--blue)}
+
+.expand{display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.expand.show{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.btn-expand{margin-top:12px;padding:6px 16px;border-radius:8px;background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);color:var(--amber);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-expand:hover{background:rgba(245,166,35,0.15)}
+</style>
+</head>
+<body>
+<div class="fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<nav>
+  <div class="brand"><span class="pulse"></span>Meta-Skill</div>
+  <div class="links">
+    <a href="#concept">Concept</a>
+    <a href="#system">Hệ thống</a>
+    <a href="#skills">Từng skill</a>
+    <a href="#flow">Vận hành</a>
+    <a href="#lessons">Bài học</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🧠 Meta-Skill Ecosystem</div>
+  <h1>Skill quản lý <span class="g">Skill</span><br>không phải Skill làm việc</h1>
+  <p>Hệ thống 8 skill tự xây: skill thường tạo sản phẩm (báo cáo, dịch, dashboard). Meta-skill <strong>soi lỗi</strong> skill thường và <strong>dọn dẹp</strong> kho skill. Giống HR manager — không làm thay nhân viên, chỉ chẩn đoán + đề xuất.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="n">8</div><div class="l">Skill</div></div>
+    <div class="hero-stat"><div class="n">3</div><div class="l">Meta-skill</div></div>
+    <div class="hero-stat"><div class="n">5</div><div class="l">Worker skill</div></div>
+    <div class="hero-stat"><div class="n">86+</div><div class="l">Bug fix</div></div>
+  </div>
+</div>
+
+<!-- CONCEPT: Meta-skill là gì -->
+<div class="s" id="concept">
+  <div class="wrap">
+    <div class="s-tag" style="background:rgba(188,140,255,0.1);color:var(--purple)">🧠 Khái niệm</div>
+    <div class="s-title">Meta-skill là gì?</div>
+    <div class="s-sub">Skill thường tạo ra sản phẩm cho người dùng. Meta-skill tạo ra <strong style="color:var(--purple)">kiến thức về skill khác</strong> — cho tác giả skill.</div>
+
+    <div class="meta-diagram">
+      <div class="meta-box worker">
+        <div class="icon">🔧</div>
+        <div class="label">Worker Skill</div>
+        <div class="desc">Input → Sản phẩm<br>VD: báo cáo cổ phiếu</div>
+      </div>
+      <div class="meta-arrow">⬌</div>
+      <div class="meta-box meta">
+        <div class="icon">🔍</div>
+        <div class="label">Meta-Skill</div>
+        <div class="desc">Skill → Điểm mù<br>VD: bug, blind spot</div>
+      </div>
+    </div>
+
+    <div class="co co-a">
+      <div class="co-title">💡 Ví dụ đời thường</div>
+      <div class="co-body">
+        <strong>Worker</strong> = nhân viên viết báo cáo → output cho sếp.<br>
+        <strong>Meta-skill</strong> = bộ phận kiểm toán → output cho nhân viên (đây là lỗi, đây là cách sửa).<br>
+        <strong>HR manager</strong> = local-skill-curator → scan toàn bộ phòng ban, flag ai thiếu giấy tờ, ai có rác trong ngăn kéo.
+        <br><br>
+        Meta-skill <strong>KHÔNG</strong> tạo ra báo cáo cổ phiếu. Nó tạo ra <strong>kiến thức về chất lượng</strong> của skill tạo báo cáo.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SYSTEM: Hệ thống tổng thể -->
+<div class="s" id="system">
+  <div class="wrap">
+    <div class="s-tag" style="background:rgba(245,166,35,0.1);color:var(--amber)">🏗️ Hệ thống</div>
+    <div class="s-title">3 Meta-skill + 5 Worker skill</div>
+    <div class="s-sub">Meta-skill ở trên soi xuống. Worker skill ở dưới tạo sản phẩm. Hai lớp riêng biệt, không trộn lẫn.</div>
+
+    <div class="card cp" style="margin-bottom:16px">
+      <h3>🔍 Lớp Meta (3 skill)</h3>
+      <p>Soi điểm mù + quản lý kho skill + phối hợp nền tảng. Output = kiến thức/cleanup, KHÔNG phải sản phẩm người dùng.</p>
+    </div>
+
+    <div class="g2" style="margin-bottom:16px">
+      <div class="card cp">
+        <h3>🔍 skill-premortem</h3>
+        <p>Đọc skill khác → tìm blind spot trước/sau khi build. 3 lens: giả định yếu / silent failure / đúng bài. Tìm 86+ bug thật qua 8 vòng.</p>
+        <div class="tags"><span class="t tp">3 lens</span><span class="t tp">Pattern library</span><span class="t tp">Stop signal</span></div>
+      </div>
+      <div class="card cp">
+        <h3>🧹 local-skill-curator</h3>
+        <p>HR manager cho 54 skill. Scan + classify 7 lớp ownership + audit frontmatter/folder/clutter. Safety model: zero auto-delete.</p>
+        <div class="tags"><span class="t tp">7 lớp</span><span class="t tp">pytest</span><span class="t tp">--diff</span></div>
+      </div>
+    </div>
+
+    <div class="card cg" style="margin-bottom:24px">
+      <h3>🔧 Lớp Worker (5 skill)</h3>
+      <p>Tạo sản phẩm: báo cáo cổ phiếu, báo cáo vĩ mô, bài longform, bản dịch, dashboard HTML. Output cho người dùng.</p>
+    </div>
+
+    <div class="g2">
+      <div class="card ca">
+        <h3>🇺🇸 US Equity Research</h3>
+        <p>Gõ 1 lệnh → báo cáo 22 sections + charts + deploy. Insight Engine động: 12 frames tự chọn theo ngành. 9 bẫy data US.</p>
+        <div class="tags"><span class="t ta">12 frames</span><span class="t ta">Preflight</span><span class="t ta">Quality Gate</span></div>
+        <button class="btn-expand" onclick="toggle('us')">Chi tiết ▾</button>
+        <div class="expand" id="us">
+          <p><strong>Cách hoạt động:</strong></p>
+          <p>1. Preflight kiểm tra trước (công ty lỗ? ADR? ticker sai?)<br>
+          2. Fetch data thật (yfinance + WebFetch multi-source)<br>
+          3. Insight Engine chọn 3-4 góc nhìn theo ngành (vd: gold mining → AISC/PNAV/reserves)<br>
+          4. Mỗi insight có "honest correction" BẮT BUỘC — challenge bull case<br>
+          5. Render HTML 22 sections + 13 charts + deploy Vercel<br>
+          6. Quality Gate 12 checks BLOCK deploy nếu thiếu charts/citations</p>
+          <p style="margin-top:8px"><strong>Đã test:</strong> ORCL, MSFT, NEM (3 ngành khác nhau)<br>
+          <strong>Repo:</strong> github.com/Thanhtran-165/nghiencuucous</p>
+        </div>
+      </div>
+
+      <div class="card cg">
+        <h3>🇻🇳 VN Equity Research</h3>
+        <p>7 skill con phối hợp. 35 insight frames VN. Bẫy 5B: split-adjustment sai → PE sai 60%. Đã test: CTD, HPG, FPT.</p>
+        <div class="tags"><span class="t tg">35 frames</span><span class="t tg">Bẫy 5B</span><span class="t tg">Sponsor Gold</span></div>
+        <button class="btn-expand" onclick="toggle('vn')">Chi tiết ▾</button>
+        <div class="expand" id="vn">
+          <p><strong>Cách hoạt động:</strong></p>
+          <p>1. Step 0: Detect Sponsor Gold (vnstock_data 40+ kỳ vs community 8 kỳ)<br>
+          2. Preflight + audit_split.py (Bẫy 5B tự động)<br>
+          3. Fetch BCTC qua Sponsor venv + cross-check CafeF/Vietstock<br>
+          4. Insight Engine chọn frames theo ngành (xây dựng → backlog, ngân hàng → NIM/CASA)<br>
+          5. Đặc thù ngành (Section F): 6 ngành VN có "lens đọc số" riêng<br>
+          6. Render + Quality Gate + deploy</p>
+          <p style="margin-top:8px"><strong>Đã test:</strong> BSR, FPT, HPG, CTD<br>
+          <strong>Repo:</strong> github.com/Thanhtran-165/equity-research-vn</p>
+        </div>
+      </div>
+
+      <div class="card cc">
+        <h3>📉 Rates Weekly + Macro Monthly</h3>
+        <p>Báo cáo tuần lãi suất (35 chỉ số, 3 nguồn PDF) + tháng vĩ mô (41 chỉ số, 5 nguồn). Audit trung thực + QA 4-gate.</p>
+        <div class="tags"><span class="t tc">76 chỉ số</span><span class="t tc">QA 4-gate</span><span class="t tc">Audit 3 chiều</span></div>
+        <button class="btn-expand" onclick="toggle('rates')">Chi tiết ▾</button>
+        <div class="expand" id="rates">
+          <p><strong>Rates Weekly:</strong> Rolling cache 4 tuần từ SBV+VBMA+VNBA. Narrative 7.000 từ 2-phase. Forbidden words + regex patterns bắt speculation. 15 pitfalls.</p>
+          <p style="margin-top:6px"><strong>Macro Monthly:</strong> All-or-nothing gate (5/5 nguồn mới chạy). No-placeholder principle. Cross-card synthesis. Data provenance tracking.</p>
+          <p style="margin-top:8px"><strong>Repo:</strong> baocaolaisuatvatiente + vimovietnam</p>
+        </div>
+      </div>
+
+      <div class="card ck">
+        <h3>📖 Longform + Translation</h3>
+        <p>Bài dài 15-40 chương (2 trục: số liệu + học thuật) + dịch EN→VN pipeline 7 bước (219 termbase + MQM 9 nhóm).</p>
+        <div class="tags"><span class="t tk">Fact-check 4 lớp</span><span class="t tk">Anti-fake-reporting</span><span class="t tk">Number gate</span></div>
+        <button class="btn-expand" onclick="toggle('lf')">Chi tiết ▾</button>
+        <div class="expand" id="lf">
+          <p><strong>Longform:</strong> 10 pitfalls thực tế. Pitfall 8 = rule mạnh nhất: "KHÔNG BAO GIỜ báo done khi chưa verify bằng công cụ". 4 lớp fact-check (số liệu + lý thuyết + dịch + PDF). QA Playwright.</p>
+          <p style="margin-top:6px"><strong>Translation:</strong> 10 nguyên tắc (đúng nghĩa > hoa mỹ). Protected tokens. Editorial overreach detection (similarity ≥70%). Adaptive train protocol.</p>
+          <p style="margin-top:8px"><strong>Repo:</strong> longformskill + vietnamese-document-translation-skill</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VẬN HÀNH -->
+<div class="s" id="flow">
+  <div class="wrap">
+    <div class="s-tag" style="background:rgba(255,126,182,0.1);color:var(--pink)">🔄 Vận hành</div>
+    <div class="s-title">Meta-skill + Worker phối hợp thế nào?</div>
+    <div class="s-sub">Ví dụ: user gõ <code style="background:var(--card);padding:2px 8px;border-radius:4px;color:var(--amber)">/equity-research-vn CTD</code>. Worker tạo báo cáo. Meta-skill soi lỗi trước + sau.</div>
+
+    <div class="flow">
+      <div class="fi"><div class="fc"><h4>🔍 Meta: Premortem TRƯỚC khi build</h4><p>Skill-premortem đọc equity-research-vn → tìm blind spot (vd: thiếu đặc thù ngành xây dựng, thiếu sponsor detection). Flag → tác giả fix spec TRƯỚC.</p></div></div>
+      <div class="fi"><div class="fc"><h4>🔧 Worker: Build báo cáo CTD</h4><p>Equity-research-vn chạy pipeline: preflight → fetch → insight engine → render → deploy. 22 sections + 13 charts + Quality Gate 12 checks.</p></div></div>
+      <div class="fi"><div class="fc"><h4>📊 Worker: Sản phẩm ra</h4><p>Báo cáo CTD deploy Vercel. Có: valuation, insight động, technical, risk matrix, analyst synthesis, data quality matrix, disclaimer.</p></div></div>
+      <div class="fi"><div class="fc"><h4>🔍 Meta: Premortem SAU khi chạy thật</h4><p>Chạy thật phát hiện territory ≠ map (vd: HBC không thuộc hệ sinh thái NBD — subagent sai). Flag → fix Bẫy 8 (verify qualitative claims) → spec tốt hơn.</p></div></div>
+      <div class="fi"><div class="fc"><h4>🧹 Meta: Curator audit định kỳ</h4><p>Local-skill-curator scan 54 skill → flag clutter (__pycache__), frontmatter sai, legacy files. Cleanup proposal (user confirmed, zero auto-delete).</p></div></div>
+    </div>
+
+    <div class="co co-a" style="margin-top:24px">
+      <div class="co-title">💡 Vòng lặp</div>
+      <div class="co-body">
+        <strong>Meta soi trước → Worker build → Sản phẩm → Meta soi sau → Spec tốt hơn → Lần sau Worker build đúng hơn</strong><br>
+        Mỗi vòng = skill tiệm cận "vùng đất" hơn. Không bao giờ dừng — luôn có blind spot mới.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUG CHART -->
+<div class="s">
+  <div class="wrap">
+    <div class="s-tag" style="background:rgba(248,81,73,0.1);color:var(--red)">🐛 Evidence</div>
+    <div class="s-title">86+ bug — Meta-skill đã tìm được gì</div>
+    <div class="s-sub">Số liệu thật. Mỗi bug = 1 lần Meta-skill chứng minh giá trị.</div>
+
+    <div class="card" style="padding:24px">
+      <div class="cw"><canvas id="chartBugs"></canvas></div>
+    </div>
+
+    <div class="co co-a">
+      <div class="co-title">💡 Diminishing return</div>
+      <div class="co-body">
+        Vòng 1-2: tìm <strong>P0</strong> (silent failure — bug thật). Vòng 3-4: <strong>polish</strong>. Vòng 5+: <strong>stop signal</strong> → dừng.<br>
+        Meta-skill biết tự dừng — tiếp tục = lãng phí context. Đây là rule trong skill-premortem.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BÀI HỌC -->
+<div class="s" id="lessons">
+  <div class="wrap">
+    <div class="s-tag" style="background:rgba(63,185,80,0.1);color:var(--green)">🎓 Bài học</div>
+    <div class="s-title">7 nguyên tắc đi vào máu</div>
+
+    <div class="card" style="padding:24px">
+      <div class="l-item"><div class="l-num a">1</div><div class="l-text"><h4>🗺️ Bản đồ ≠ Vùng đất</h4><p>Skill = bản đồ. Chạy thật = vùng đất. Luôn lệch. Verify bằng công cụ, đừng tin "nhớ".</p></div></div>
+      <div class="l-item"><div class="l-num b">2</div><div class="l-text"><h4>🐢 Chất lượng > Tốc độ</h4><p>Thà deploy chậm đúng spec, hơn nhanh rồi sửa 14 lần. Quality Gate BLOCK nếu thiếu.</p></div></div>
+      <div class="l-item"><div class="l-num g">3</div><div class="l-text"><h4>🏭 Đặc thù ngành = Lens</h4><p>P/E ngân hàng ≠ P/E thép. Không hiểu ngành → số đúng nhưng kết luận sai.</p></div></div>
+      <div class="l-item"><div class="l-num r">4</div><div class="l-text"><h4>🚫 Chống báo cáo ngụy tạo</h4><p>KHÔNG báo "done" khi chưa verify. "15/22 xong" trung thực hơn "gần hết".</p></div></div>
+      <div class="l-item"><div class="l-num p">5</div><div class="l-text"><h4>🤖 AI sai — verify!</h4><p>Subagent = input, không phải truth. "HBC thuộc NBD" → SAI. Verify ≥2 nguồn.</p></div></div>
+      <div class="l-item"><div class="l-num k">6</div><div class="l-text"><h4>🔗 Cross-skill pattern</h4><p>Bug lặp giữa skills. Pattern library check chéo trước khi soi skill mới.</p></div></div>
+      <div class="l-item"><div class="l-num c">7</div><div class="l-text"><h4>🛑 Biết dừng</h4><p>Diminishing return. <3 P0/P1 → dừng. Tiếp = lãng phí.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DISCLAIMER -->
+<div class="s">
+  <div class="wrap">
+    <div class="co co-r">
+      <div class="co-title">⚠️ AI có thể sai — đã xảy ra</div>
+      <div class="co-body">
+        Subagent gán nhầm sở hữu. yfinance trả stale data. Regex match sai ticker. <strong>Đây không phải lý thuyết.</strong>
+        <br><br>
+        4 lớp phòng vệ: <strong>9-10 bẫy dữ liệu</strong> + <strong>Quality Gate 12 checks</strong> + <strong>Disclaimer 3 kỷ luật</strong> + <strong>Nhãn HIGHQ/MEDQ/LOWQ</strong>.
+        <br><br>
+        <strong>Nhưng AI không thay thế phán đoán của bạn. Verify trước khi quyết định.</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Meta-Skill Ecosystem · 3 meta + 5 worker · 86+ bug fix · 4 vòng premortem</p>
+  <p style="margin-top:6px">Bắt đầu từ bài <a href="https://x.com/trq212/article/2073100352921215386">Thariq — "A Field Guide to Fable"</a> · ZCode · Vercel</p>
+</footer>
+
+<script>
+function toggle(id){var e=document.getElementById(id);e.classList.toggle('show');var b=e.previousElementSibling;b.textContent=e.classList.contains('show')?'Thu gọn ▴':'Chi tiết ▾';}
+
+Chart.defaults.color='#8b949e';Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.borderColor='rgba(255,255,255,0.05)';
+new Chart(document.getElementById('chartBugs'),{
+  type:'bar',
+  data:{labels:['US Equity','VN Equity','Premortem','Rates Weekly','Macro Monthly','Translation','Curator','Longform'],
+  datasets:[{label:'Bug tìm + fix',data:[17,17,12,9,9,8,8,6],
+    backgroundColor:['#f5a623','#3fb950','#bc8cff','#2ee5e5','#58a6ff','#3fb950','#f5a623','#ff7eb6'],
+    borderColor:['#f5a623','#3fb950','#bc8cff','#2ee5e5','#58a6ff','#3fb950','#f5a623','#ff7eb6'],
+    borderWidth:2,borderRadius:10}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+' bugs found + fixed'}}},
+    scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{stepSize:5}},
+      x:{grid:{display:false},ticks:{font:{size:10}}}}}
+});
+</script>
+</body>
+</html>

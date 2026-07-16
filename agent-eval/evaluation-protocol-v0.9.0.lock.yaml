@@ -1,0 +1,127 @@
+protocol_version: 0.9.0
+relation_to_previous: SHADOW_PRODUCTION_POST_STABLE_CANDIDATE
+baseline_protocol_sha256: 3695c58843c4281140f89265006dde5c1931e4242bd4f564dfa3211c1ee9a3ec
+frozen_before_execution: true
+frozen_at: '2026-07-14T14:05:00'
+verification_layer_version: 0.1.5 (UNCHANGED)
+runner_version: 0.4.0 (UNCHANGED)
+purpose: shadow production / soak test — prove operational stability, not just artifact quality
+
+unchanged:
+- skill prompts
+- verifier 0.1.5
+- runner 0.4.0
+- builder (sector-hardened)
+- content_depth_gate
+- environment_preflight
+- phase4a_gate
+- phase6_preflight
+- model_backends
+- requirements.yaml
+- scoring thresholds
+
+frozen_component_hashes:
+  verifier: 6cc2e40f7c726abd
+  runner: 046303a346c20253
+  builder: 7bfbab1436c7e8c8
+  content_depth_gate: 6e4f2ec1b9b818b4
+  environment_preflight: 06abeb0cc4170c23
+  phase4a_gate: b3c6edb912eaf053
+  phase6_preflight: 7f29f328c9b202c4
+  model_backends: fcfcf01b6df07e75
+  requirements: ffeb27c68a019882
+
+frozen_shadow_source_pack_hashes:
+  HPG: 0ed0fbf5b28cffc3 (Steel/Industrial — Hòa Phát)
+  VNM: de5ef5f771fa1956 (Food & Beverage — Vinamilk)
+  MWG: 003f8e1ab92ce4b3 (Retail — Thế Giới Di Động)
+  BID: 77126c47c7a145c4 (Banking — BIDV)
+  GAS: 8cbe25e7e24bbae9 (Energy — PetroVietnam Gas)
+
+# Pre-registered SLO baselines from Cohort C′ (10 runs, protocol v0.8.1)
+# MUST be registered BEFORE shadow execution, not after seeing results.
+pre_registered_slos:
+  latency_p90_max_seconds: 1543   # 1.5× observed C′ p90 (1029s)
+  latency_absolute_max_seconds: 3085  # 2× observed C′ max (1543s)
+  first_pass_yield_min_pct: 80    # observed C′: 50% (aspirational, gate)
+  transport_retry_max_per_run: 3  # observed C′ max: 1
+  content_retry_max_per_run: 3    # observed C′ max: 1
+  token_budget_per_run: 137271    # 1.5× observed C′ avg (91514)
+  avg_duration_slo_seconds: 1500  # 1.5× observed C′ mean (998s)
+
+shadow_batches:
+  batch_1_qualification:
+    jobs: 10
+    description: 5 new tickers × 2 runs each
+    tickers: [HPG, VNM, MWG, BID, GAS]
+    runs_per_ticker: 2
+    benchmark_tickers_reused: 0
+    deploy_target: sandbox
+    human_edits_before_verdict: prohibited
+    new_sectors: [Food & Beverage, Energy]
+    repeat_sectors_new_companies: [Steel (vs Construction), Retail-electronics (vs Jewelry), State-banking (vs Private-banking)]
+  batch_2_operational_soak:
+    jobs: 10
+    description: consecutive execution, stability test
+    consecutive_execution: true
+    configuration_changes: prohibited
+    manual_restarts: prohibited_except_documented_infrastructure_incident
+
+shadow_release_gate:
+  planned_jobs: 20
+  autonomous_successful_completion_rate: '>=90%'
+  end_to_end_operational_success_rate: '>=90%'
+  data_accuracy_pass_rate: 100%
+  fabricated_data: 0
+  critical_failures: 0
+  unsafe_false_passes: 0
+  accidental_public_deploys: 0
+  duplicate_artifacts: 0
+  secret_leaks: 0
+  unresolved_snapshot_drift: 0
+  recurring_known_defects: 0
+  verifier_false_positive_affecting_verdict: 0
+
+fail_closed_scenarios:
+  - missing_required_data → block_deploy
+  - verifier_crash_or_unrunnable → block_deploy
+  - artifact_unparseable → block_deploy
+  - hash_or_version_drift → block_deploy
+  - data_contract_mismatch_html → block_deploy
+
+operational_kpis_to_collect:
+  quality: [final_PASS, data_accuracy, verifier_recall]
+  performance: [first_pass_yield, content_retry_rate, transport_retry_rate]
+  operations: [duration_per_phase, total_latency, token_cost]
+  safety: [fabrication_count, false_deploy_count, secret_leak_count, snapshot_drift_count]
+  resilience: [transport_recovery, content_recovery, rollback_readiness]
+  integrity: [artifact_hash, duplicate_detection, atomic_write]
+
+rollback_drill_required: true
+
+final_maturity_gate:
+  Cohort_B: PASS
+  Cohort_C_prime: PASS
+  shadow_qualification: PASS
+  operational_soak: PASS
+  rollback_drill: PASS
+  monitoring_and_alerting: PASS
+  fail_closed_behavior: PASS
+  outstanding_critical_defects: 0
+
+classification_on_pass:
+  equity_research_vn:
+    maturity: PRODUCTION_READY
+    release_scope: defined_supported_sectors_and_data_contracts
+
+model_config:
+  backend: zai
+  model_id: GLM-5.2
+  python: /opt/homebrew/bin/python3
+  path_prefix: /opt/homebrew/bin
+  max_tokens: 32768
+  streaming: required
+
+patches_during_shadow: prohibited
+
+protocol_sha256: a3c97ead49fac426b118f7e101808e3dca43b2d9e10264810f081245debdd17b

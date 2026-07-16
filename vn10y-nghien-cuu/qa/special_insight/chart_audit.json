@@ -1,0 +1,62 @@
+{
+  "source_hashes": {
+    "23_index_child_results_full.csv": "3b708a20931b0fac84b803f21d9ed602e118c73987f11a2e285cb8db3c2900a2",
+    "24_granger_results.csv": "a342828a3a9f04df8dcd7bdee93419272141a4e4e1a942bddd89ff92c51048ea",
+    "28_oos_results.json": "d5c9dfe5cccb03cecb7db573e5d416c1e94556c896f0b14f732fee61bc2434de",
+    "13_confirmatory_results.csv": "8622da898b9ab443bcad7e72427eb7aec485ef3db0987efd83609b782c2c4ae3",
+    "14d_effect_sizes.csv": "a4182e308c25c58c9117803d91baada6021f35b20c5aac352dd624a71bca1370",
+    "open_questions_for_review.md": "0880129a848a455f9a4826ba73d010be9330303bc5a78d6fe06869f4c2a315e9",
+    "monthly_bond.parquet": "74165fc563204cf198a8d4e272683593e4b45b0c4d8707f1862bc3d9d00403b4",
+    "research_long_history_trial.duckdb": "97aebf4362126b37ef4c69e6458e2b56ba789c6875f2bf7195b1680e537a4411"
+  },
+  "t00002": {
+    "test_id": "T00002",
+    "frequency": "daily",
+    "x": "d_y2_5d_bps",
+    "y": "ret_log_5d_aligned",
+    "index": "VNINDEX",
+    "beta_per_10bps": -0.002429,
+    "beta_std": -0.11386,
+    "ci_low": -0.00036089,
+    "ci_high": -0.00012499,
+    "p_adjusted": 0.015,
+    "n_boot": 999,
+    "effective_n": 2912
+  },
+  "t00074": {
+    "test_id": "T00074",
+    "frequency": "monthly",
+    "x": "m_d_y10_bps",
+    "y": "monthly_ret_log",
+    "index": "VNINDEX",
+    "beta_per_10bps": -0.007073,
+    "beta_std": -0.32967,
+    "ci_low": -0.00117866,
+    "ci_high": -0.00023588,
+    "p_adjusted": 0.027,
+    "n_boot": 999,
+    "effective_n": 144
+  },
+  "timeline": {
+    "n_reconstructed": 144,
+    "n_artifact_effective": 144,
+    "n_match": true,
+    "ym_start": "2014-07",
+    "ym_end": "2026-06",
+    "corr_d10y_ret": -0.3328,
+    "reconstruction_method": "design_builders.build_monthly_design replication: monthly_bond m_d_y10_bps + VNINDEX monthly_ret_log (sum of daily log returns) + controls computed over full panel then complete-case drop",
+    "vnindex_source": "research_long_history_trial.duckdb equity_index_ohlcv_daily WHERE index_name='VNINDEX'",
+    "vnindex_source_sha256": "97aebf4362126b37ef4c69e6458e2b56ba789c6875f2bf7195b1680e537a4411",
+    "vnindex_source_gate": "fail-closed — build aborts if DuckDB hash changes"
+  },
+  "forest_conversion": "point = beta_per_10bps x100; CI = ci_raw x1000 (ci is of beta_raw, scaled x10 to per-10bps then x100 to pct)",
+  "forbidden_check": {
+    "no_dual_axis_overlay": true,
+    "no_reverse_axis": true,
+    "no_sign_flip": true,
+    "no_annual_avg_vs_sum": true,
+    "no_cherry_picked_period": true,
+    "causal_language": false,
+    "predictive_overclaim": false
+  }
+}

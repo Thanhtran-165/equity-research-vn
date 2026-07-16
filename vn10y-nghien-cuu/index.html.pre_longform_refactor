@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lợi suất trái phiếu và cổ phiếu Việt Nam</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--txt:#e2e8f0;--muted:#94a3b8;--line:#334155;--amber:#f59e0b;--red:#ef4444;--green:#22c55e;--blue:#3b82f6;--cyan:#06b6d4}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.8;font-size:17px;overflow-wrap:break-word;word-wrap:break-word;overflow-x:hidden}
+.hero{background:linear-gradient(135deg,#1e3a5f 0%,#1e293b 50%,#0f172a 100%);padding:50px 24px 40px;text-align:center}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.08);padding:5px 14px;border-radius:999px;font-size:.8rem;letter-spacing:.05em;color:#fde68a;margin-bottom:16px;border:1px solid rgba(255,255,255,.15)}
+.hero h1{font-size:clamp(1.5rem,3.5vw,2.4rem);font-weight:800;line-height:1.25;max-width:760px;margin:0 auto 12px}
+.hero .sub{color:#cbd5e1;font-size:1.05rem;max-width:680px;margin:0 auto}
+.hero .meta{margin-top:16px;color:#64748b;font-size:.82rem}
+.wrap{max-width:780px;width:100%;min-width:0;margin:0 auto;padding:0 24px}
+main{padding:40px 0 60px;width:100%;min-width:0}
+section{margin-bottom:48px;scroll-margin-top:20px;width:100%;min-width:0}
+h2{font-size:1.35rem;font-weight:700;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:10px;overflow-wrap:break-word;min-width:0}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.85rem;font-weight:800;flex-shrink:0}
+h3{font-size:1.1rem;margin:20px 0 8px;color:var(--amber);overflow-wrap:break-word}
+h4{overflow-wrap:break-word}
+p{margin-bottom:14px;color:#cbd5e1}
+strong{color:#fff}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:20px 0;min-width:0}
+.toc h4{font-size:.85rem;color:var(--amber);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.toc ol{margin:0;padding-left:20px}
+.toc ol li{margin-bottom:4px;font-size:.9rem}
+.toc ol li a{color:#cbd5e1;text-decoration:none}
+.toc ol li a:hover{color:var(--amber)}
+.chap-banner{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin:30px 0 24px;text-align:center;width:100%;min-width:0}
+.chap-banner .chap-tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);background:rgba(245,158,11,.12);padding:4px 14px;border-radius:999px;border:1px solid rgba(245,158,11,.25);margin-bottom:12px}
+.chap-banner h3{font-size:1.15rem;color:#fff;font-weight:700;margin-bottom:8px}
+.chap-banner p{font-size:.88rem;color:var(--muted);margin:0}
+.chap-banner .verdict{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:.92rem;color:#cbd5e1}
+.chap-banner .verdict strong{color:var(--amber)}
+.chap-status{display:inline-block;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:6px;margin-left:8px;vertical-align:middle}
+.chap-status.done{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.chap-status.soon{background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.3)}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;min-width:0;overflow-wrap:break-word}
+.card .icon{font-size:1.6rem;margin-bottom:8px}
+.card h4{font-size:1rem;margin-bottom:6px;color:#fff}
+.card p{font-size:.9rem;color:var(--muted);margin:0}
+.badge-label{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-bottom:8px;font-weight:600}
+.label-found{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+.label-null{background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.3)}
+.label-use{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.callout{border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid}
+.callout-warn{background:rgba(245,158,11,.08);border-color:var(--amber)}
+.callout-limit{background:rgba(239,68,68,.08);border-color:var(--red)}
+.callout-info{background:rgba(59,130,246,.08);border-color:var(--blue)}
+.callout-do{background:rgba(34,197,94,.08);border-color:var(--green)}
+.callout-dont{background:rgba(239,68,68,.08);border-color:var(--red)}
+.callout h4{font-size:.95rem;margin-bottom:6px}
+.callout p{font-size:.92rem;margin-bottom:4px}
+.callout p:last-child{margin-bottom:0}
+table.tbl{width:100%;max-width:100%;border-collapse:collapse;margin:14px 0;font-size:.88rem;table-layout:fixed}
+table.tbl th{background:var(--card);color:var(--amber);padding:8px 10px;text-align:left;border-bottom:2px solid var(--line);font-size:.82rem}
+table.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);color:#cbd5e1}
+.chart-box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0;width:100%;min-width:0}
+.chart-box h4{font-size:.92rem;margin-bottom:4px;color:#fff}
+.chart-box .desc{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.chart-wrap{height:300px;position:relative;width:100%;min-width:0}
+.chart-wrap.tall{height:340px}
+.chart-wrap canvas{max-width:100%!important;min-width:0;display:block}
+ul.bul{margin:10px 0 14px;padding-left:20px}
+ul.bul li{margin-bottom:6px;color:#cbd5e1}
+ul.bul li::marker{color:var(--amber)}
+ol.steps{margin:10px 0 14px;padding-left:22px}
+ol.steps li{margin-bottom:10px;color:#cbd5e1}
+ol.steps li::marker{color:var(--amber);font-weight:700}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0;margin:12px 0}
+details summary{cursor:pointer;padding:12px 16px;font-size:.9rem;color:var(--muted);font-weight:600;list-style:none}
+details summary::after{content:" ▸";color:var(--amber)}
+details[open] summary::after{content:" ▾"}
+details .body{padding:0 16px 14px}
+footer{text-align:center;padding:30px 24px;color:#475569;font-size:.8rem;border-top:1px solid var(--line);margin-top:40px}
+@media(max-width:600px){.hero{padding:36px 16px 28px}.hero h1{font-size:1.4rem}.wrap{padding:0 16px}body{font-size:15px}.chart-wrap{height:220px}.chart-wrap.tall{height:260px}.cards3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <span class="badge">Tự nghiên cứu · 2014–2026 · 4 chương đã hoàn thành</span>
+  <h1>Lợi suất trái phiếu và cổ phiếu Việt Nam</h1>
+  <p class="sub">Giúp hiểu trạng thái thị trường, nhưng không phải cỗ máy dự báo.</p>
+  <div class="meta">Trái phiếu Chính phủ Việt Nam · Cổ phiếu HOSE · Cập nhật 26/06/2026</div>
+</header>
+
+<main class="wrap">
+
+<div class="chap-banner">
+  <span class="chap-tag">Chương 1</span><span class="chap-status done">Đã hoàn thành</span>
+  <h3>Trái phiếu có thể dự báo độc lập thị trường cổ phiếu không?</h3>
+  <p>Kiểm định dự báo trên nhiều phép thử chỉ số, theo cả ngày và tháng.</p>
+  <div class="verdict"><strong>Kết luận:</strong> Không tìm thấy bằng chứng dự báo xác nhận ổn định.</div>
+</div>
+
+<div class="chap-banner">
+  <span class="chap-tag">Chương 2</span><span class="chap-status done">Đã hoàn thành</span>
+  <h3>Thay đổi lợi suất trái phiếu có đi cùng lợi suất chỉ số không?</h3>
+  <p>1.485 phép thử trên 15 chỉ số, kiểm định đồng thời, dẫn trước và ngoài mẫu.</p>
+  <div class="verdict"><strong>Kết luận:</strong> Hai quan hệ đồng thời được xác nhận. Không có bằng chứng dẫn trước hay dự báo ngoài mẫu.</div>
+</div>
+
+<div class="chap-banner">
+  <span class="chap-tag">Chương 3</span><span class="chap-status done">Đã hoàn thành</span>
+  <h3>Trái phiếu và khối lượng giao dịch</h3>
+  <p>807 phép thử trên 15 chỉ số: khối lượng giao dịch có đi cùng hoặc đi sau trái phiếu không?</p>
+  <div class="verdict"><strong>Kết luận:</strong> Chưa tìm thấy quan hệ xác nhận giữa biến động trái phiếu và khối lượng chỉ số.</div>
+</div>
+
+<div class="chap-banner">
+  <span class="chap-tag">Chương 4</span><span class="chap-status done">Đã hoàn thành</span>
+  <h3>Bên trong VN-INDEX: độ rộng, độ sâu và cơ hội</h3>
+  <p>403 cổ phiếu HOSE, 1,07 triệu phiên giao dịch: cấu trúc bên trong thị trường có liên hệ với trái phiếu không?</p>
+  <div class="verdict"><strong>Kết luận:</strong> Có liên hệ đồng thời nhỏ với độ rộng theo tháng. Không có dẫn trước, không có dự báo ngoài mẫu.</div>
+</div>
+
+<div class="toc">
+  <h4>Mục lục</h4>
+  <ol>
+    <li><a href="#open">Tổng quan</a></li>
+    <li><a href="#ch1">Chương 1 — Kiểm tra khả năng dự báo</a></li>
+    <li><a href="#ch2">Chương 2 — Quan hệ đồng thời</a></li>
+    <li><a href="#daily">Quan hệ theo ngày</a></li>
+    <li><a href="#monthly">Quan hệ theo tháng</a></li>
+    <li><a href="#timing">Kiểm tra chiều thời gian</a></li>
+    <li><a href="#ch3">Chương 3 — Trái phiếu và khối lượng giao dịch</a></li>
+    <li><a href="#ch4">Chương 4 — Bên trong VN-INDEX</a></li>
+    <li><a href="#conclusion">Kết luận — Trái phiếu như chỉ báo bối cảnh</a></li>
+    <li><a href="#limits">Giới hạn nghiên cứu</a></li>
+  </ol>
+</div>
+
+<div class="cards3">
+  <div class="card">
+    <div class="icon">📊</div>
+    <span class="badge-label label-found">Điều tìm thấy</span>
+    <h4>Hai quan hệ đồng thời</h4>
+    <p>Δ2Y 5 phiên đi cùng lợi suất index 5 phiên; Δ10Y tháng đi cùng lợi suất tháng.</p>
+  </div>
+  <div class="card">
+    <div class="icon">🚫</div>
+    <span class="badge-label label-null">Điều không tìm thấy</span>
+    <h4>Không dẫn trước, không dự báo</h4>
+    <p>Chương 2: Granger bond→equity 0/150, OOS 0/175. Chương 3: không có quan hệ khối lượng xác nhận. Chương 4: breadth đồng thời theo tháng, 0/7 Granger, 0/3 OOS.</p>
+  </div>
+  <div class="card">
+    <div class="icon">💡</div>
+    <span class="badge-label label-use">Cách dùng hợp lý</span>
+    <h4>Đèn vàng, không quyết định thay</h4>
+    <p>Dùng trái phiếu để đọc môi trường, không dùng làm lệnh mua/bán.</p>
+  </div>
+</div>
+
+<section id="open">
+  <h2><span class="n">1</span>Tổng quan</h2>
+  <p>Nghiên cứu này đặt câu hỏi: biến động lợi suất trái phiếu Chính phủ Việt Nam có liên quan gì đến cổ phiếu? Câu trả lời qua bốn chương:</p>
+  <ul class="bul">
+    <li><strong>Chương 1:</strong> Lợi suất trái phiếu <em>không</em> dự báo được cổ phiếu. Không có phép thử dự báo nào vượt hiệu chỉnh đa phép thử — cả trên biến lợi suất lẫn chỉ số căng thẳng.</li>
+    <li><strong>Chương 2:</strong> Trái phiếu <em>có đi cùng</em> cổ phiếu trong cùng thời kỳ — nhưng không đi trước. Đây là quan hệ đồng thời, không phải dự báo.</li>
+    <li><strong>Chương 3:</strong> Biến động trái phiếu <em>chưa cho thấy</em> quan hệ ổn định với khối lượng giao dịch của các chỉ số — cả cùng lúc lẫn theo sau.</li>
+    <li><strong>Chương 4:</strong> Bên trong VN-INDEX, trái phiếu <em>đi cùng</em> độ rộng thị trường theo tháng — nhưng hiệu ứng nhỏ và vẫn không đi trước.</li>
+  </ul>
+  <div class="callout callout-info">
+    <h4>💡 Phân biệt quan trọng</h4>
+    <p>"Đi cùng" (đồng thời) nghĩa là hai thứ biến động trong cùng khoảng thời gian. "Đi trước" (dẫn trước) nghĩa là một thứ biến động trước, thứ kia theo sau. Bốn chương đều nhất quán: trái phiếu có thể phản ánh môi trường chung, nhưng chưa chứng minh được khả năng dự báo.</p>
+  </div>
+</section>
+
+<section id="ch1">
+  <h2><span class="n">2</span>Chương 1 — Kiểm tra khả năng dự báo</h2>
+  <p>Chương 1 hỏi thẳng: biết lợi suất trái phiếu thay đổi hôm nay, có đoán được cổ phiếu 5–20 phiên tới không?</p>
+  <p>Kết quả: <strong>không có phép thử dự báo nào</strong> vượt hiệu chỉnh đa phép thử — trên cả biến lợi suất thông thường lẫn chỉ số căng thẳng. Dù thử nhiều cấu hình khác nhau, kết quả đều âm tính.</p>
+  <p>Nói dân dã: các dấu hiệu có vẻ hợp lý khi nhìn lại quá khứ, nhưng khi ép mô hình dự báo trên dữ liệu chưa từng thấy, thêm trái phiếu <strong>không cải thiện</strong> so với mô hình nền.</p>
+  <div class="callout callout-limit">
+    <h4>⚠️ Điều không được suy ra</h4>
+    <p>"Không có bằng chứng dự báo" <strong>không</strong> đồng nghĩa "không có quan hệ". Chương 2 sẽ cho thấy quan hệ tồn tại — chỉ là không theo chiều dự báo.</p>
+  </div>
+</section>
+
+<section id="ch2">
+  <h2><span class="n">3</span>Chương 2 — Quan hệ đồng thời</h2>
+  <p>Chương 2 mở rộng sang 15 chỉ số HOSE và kiểm tra ba câu hỏi:</p>
+  <ol class="steps">
+    <li><strong>Quan hệ đồng thời:</strong> trái phiếu và cổ phiếu có biến động cùng lúc không?</li>
+    <li><strong>Quan hệ dẫn trước:</strong> trái phiếu có biến động trước cổ phiếu không?</li>
+    <li><strong>Giá trị dự báo ngoài mẫu:</strong> thêm trái phiếu có giúp dự đoán tốt hơn không?</li>
+  </ol>
+  <p>Kết quả: <strong>hai quan hệ đồng thời</strong> được xác nhận, nhưng không có quan hệ dẫn trước và không có giá trị dự báo ngoài mẫu.</p>
+
+  <div class="chart-box">
+    <h4>Tổng quan kết quả bốn chương</h4>
+    <div class="desc">Bốn chương, một thông điệp xuyên suốt: quan hệ đồng thời có, quan hệ dự báo thì không. Chương 2 và Chương 4 tìm thấy quan hệ đồng thời giới hạn; không chương nào tìm thấy dự báo.</div>
+    <div class="chart-wrap tall"><canvas id="chartOverview"></canvas></div>
+  </div>
+</section>
+
+<section id="daily">
+  <h2><span class="n">4</span>Quan hệ theo ngày</h2>
+  <p>Khi lợi suất trái phiếu 2 năm tăng mạnh trong 5 phiên, lợi suất của các chỉ số cổ phiếu trong cùng 5 phiên thường <strong>yếu hơn</strong>.</p>
+  <p>Đây là quan hệ <strong>biến động cùng thời kỳ</strong> — trái phiếu và cổ phiếu phản ứng trong cùng cửa sổ 5 phiên, không phải trái phiếu đi trước.</p>
+  <p>Quan hệ này ổn định qua 13 chỉ số cốt lõi (VN-INDEX, VN30, VN100 và 10 chỉ số ngành) và vượt được hiệu chỉnh đa phép thử ở cấp panel.</p>
+  <div class="callout callout-warn">
+    <h4>⚠️ Đây không phải dự báo</h4>
+    <p>Biết Δ2Y tăng trong 5 phiên qua <strong>không</strong> giúp đoán lợi suất 5 phiên tới. Kiểm tra dẫn trước (Granger) cho 0/150 bond→equity — không có bằng chứng lợi suất trái phiếu đi trước.</p>
+  </div>
+</section>
+
+<section id="monthly">
+  <h2><span class="n">5</span>Quan hệ theo tháng</h2>
+  <p>Ở tần suất tháng, quan hệ chuyển sang lợi suất 10 năm: khi Δ10Y trong tháng tăng, lợi suất index cùng tháng thường <strong>yếu hơn</strong>.</p>
+  <p>Tương tự như daily, đây là quan hệ đồng thời. Không thể dùng Δ10Y tháng này để đoán lợi suất tháng tới.</p>
+  <div class="chart-box">
+    <h4>Phân bổ kết quả ngoài mẫu</h4>
+    <div class="desc">Thêm trái phiếu không tạo ra dự báo ổn định. Chương 2: 0/175 mô hình ổn định. Chương 3: 0/15 mô hình khối lượng ổn định.</div>
+    <div class="chart-wrap tall"><canvas id="chartOOS"></canvas></div>
+  </div>
+</section>
+
+<section id="timing">
+  <h2><span class="n">6</span>Kiểm tra chiều thời gian</h2>
+  <p>Để phân biệt "đi cùng" và "đi trước", nghiên cứu dùng hai công cụ:</p>
+  <ul class="bul">
+    <li><strong>Granger (VAR):</strong> kiểm tra xem biến động lợi suất trái phiếu có thêm thông tin dự báo ngoài những gì cổ phiếu đã tự nói hay không. Kết quả: <strong>0/150</strong> bond→equity — không có bằng chứng dẫn trước.</li>
+    <li><strong>Kiểm tra ngoài mẫu:</strong> so sánh mô hình "chỉ cổ phiếu" với "cổ phiếu + trái phiếu" trên dữ liệu chưa từng thấy. Kết quả: <strong>0/175</strong> mô hình ổn định — trái phiếu không cải thiện dự báo nhất quán.</li>
+  </ul>
+  <div class="callout callout-info">
+    <h4>💡 Điều này nghĩa là gì?</h4>
+    <p>Trái phiếu và cổ phiếu di chuyển cùng nhau khi môi trường thay đổi (quan hệ đồng thời), nhưng trái phiếu <strong>không mang thông tin tương lai</strong> vượt qua những gì cổ phiếu đã phản ánh.</p>
+  </div>
+</section>
+
+<section id="ch3">
+  <h2><span class="n">7</span>Chương 3 — Trái phiếu và khối lượng giao dịch</h2>
+
+  <h3>Câu hỏi</h3>
+  <p>Khi lợi suất, đường cong và khoảng cách lãi suất Việt Nam–Mỹ (spread) thay đổi, <strong>khối lượng giao dịch</strong> của các chỉ số cổ phiếu có thay đổi cùng lúc hay sau đó không?</p>
+
+  <h3>Dữ liệu</h3>
+  <p>Khối lượng giao dịch được thu riêng cho từng chỉ số trên 15 chỉ số HOSE (VN-INDEX, VN30, VN100 và 12 chỉ số ngành, chuyên biệt hoặc quy mô). Mỗi chỉ số có chuỗi khối lượng độc lập — không phải một con số tổng thị trường được sao chép cho tất cả.</p>
+
+  <h3>Kết quả chính</h3>
+  <p>Nói trước, đếm sau: trong dữ liệu hiện có, biến động trái phiếu <strong>chưa cho thấy</strong> khả năng giải thích hoặc báo trước khối lượng giao dịch của các chỉ số một cách đủ ổn định.</p>
+  <table class="tbl">
+    <tr><th>Kiểm tra</th><th>Kết quả</th></tr>
+    <tr><td>Quan hệ đồng thời ở cấp panel (15 phép thử)</td><td>0/15 vượt hiệu chỉnh</td></tr>
+    <tr><td>Quan hệ ngắn hạn (khối lượng sau vài phiên, 15 phép thử)</td><td>0/15 vượt hiệu chỉnh</td></tr>
+    <tr><td>Trái phiếu dẫn trước khối lượng (150 phép thử Granger)</td><td>0/150 vượt hiệu chỉnh</td></tr>
+    <tr><td>Mô hình dự báo khối lượng ổn định ngoài mẫu (15 mô hình)</td><td>0/15 ổn định</td></tr>
+  </table>
+  <div class="callout callout-warn">
+    <h4>⚠️ Phân loại</h4>
+    <p>Phân loại chính thức: <strong>chưa được hỗ trợ</strong> và <strong>chưa vận hành được</strong> — không thể dùng trái phiếu làm công cụ dự báo khối lượng một cách ổn định.</p>
+  </div>
+
+  <h3>Hiểu kết quả bằng lời bình thường</h3>
+  <p>Trong dữ liệu hiện có, biến động lợi suất trái phiếu chưa cho thấy khả năng giải thích hoặc báo trước khối lượng chỉ số một cách đủ ổn định. Tức là biết lợi suất trái phiếu tăng hay giảm <strong>không giúp</strong> đoán được khối lượng giao dịch của chỉ số sẽ tăng hay giảm — cả trong cùng thời điểm lẫn vài phiên/tuần sau đó.</p>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Điều không được suy ra</h4>
+    <p>"Chưa tìm thấy bằng chứng xác nhận" <strong>không</strong> đồng nghĩa "trái phiếu chắc chắn không liên quan đến khối lượng". Có thể mối quan hệ tồn tại nhưng ở dạng mà bộ dữ liệu và thiết kế hiện tại chưa đủ để phát hiện ổn định.</p>
+  </div>
+
+  <h3>Tín hiệu thăm dò (chỉ ghi chú, không phải kết luận)</h3>
+  <p>Một số kết quả thăm dò được ghi lại nhưng <strong>không nâng</strong> phân loại lên, và không được dùng làm kết luận chính:</p>
+  <ul class="bul">
+    <li>Ở tần suất tháng, bốn tương tác bất đối xứng (khối lượng phản ứng khác nhau khi lợi suất trái phiếu tăng so với giảm) vượt ngưỡng thăm dò. Đây chỉ là tín hiệu thăm dò, chưa đủ để kết luận.</li>
+    <li>Tại chỉ số VNREAL, có một quan hệ <strong>ngược</strong> — khối lượng dẫn trước một biến spread trái phiếu. Đây là chiều ngược (khối lượng đi trước trái phiếu), <strong>không</strong> phải bằng chứng trái phiếu dự báo khối lượng.</li>
+    <li>Một số điểm gãy cấu trúc được ghi nhận nhưng chỉ ở mức thăm dò danh nghĩa, không phải kết luận chính.</li>
+  </ul>
+  <div class="callout callout-info">
+    <h4>Phạm vi của Chương 3</h4>
+    <p>Chương 3 nghiên cứu <strong>khối lượng giao dịch của chỉ số</strong>. Câu hỏi về cấu trúc bên trong thị trường — độ rộng, độ sâu, cơ hội — thuộc về Chương 4.</p>
+  </div>
+</section>
+
+<section id="ch4">
+  <h2><span class="n">8</span>Chương 4 — Bên trong VN-INDEX</h2>
+
+  <h3>Câu hỏi của chương</h3>
+  <p>Ba chương đầu nhìn thị trường từ bên ngoài — qua chỉ số tổng hợp và khối lượng chỉ số. Chương 4 đi <strong>bên trong</strong>: lấy dữ liệu giá và khối lượng của từng cổ phiếu trong universe current-active HOSE dùng làm proxy cho cấu trúc thị trường, rồi tổng hợp thành các chỉ số về độ rộng, độ sâu và cơ hội. Câu hỏi đặt ra: khi lợi suất trái phiếu, đường cong và chênh lệch lãi suất Việt Nam–Mỹ thay đổi, cấu trúc bên trong thị trường cổ phiếu có phản ứng cùng lúc hay theo sau không?</p>
+
+  <h3>"Bên trong VN-INDEX" nghĩa là gì</h3>
+  <p>Thay vì dùng một con số chỉ số, Chương 4 sử dụng 403 cổ phiếu phổ thông current-active trên HOSE, dùng như một proxy survivorship-limited để quan sát cấu trúc bên trong thị trường — với hơn 1,07 triệu phiên giao dịch từ 2014 đến 2026. Từ đó, mỗi phiên được tổng hợp thành ba lớp thông tin: <strong>độ rộng</strong> (bao nhiêu cổ phiếu tăng, bao nhiêu giảm, bao nhiêu trên đường trung bình), <strong>độ sâu</strong> (mức tham gia giao dịch, thanh khoản, tập trung) và <strong>cơ hội</strong> (tỷ lệ cổ phiếu đạt +10% trước khi giảm -5% trong 60 phiên tiếp theo).</p>
+  <p>Một lưu ý quan trọng: đây <strong>không phải</strong> danh sách thành viên VN-INDEX theo lịch sử (historical membership). Nó là tập cổ phiếu hiện đang hoạt động, do đó nghiêng về những mã tồn tại đến nay — một giới hạn được ghi rõ và không thể tránh khỏi với dữ liệu hiện có.</p>
+
+  <h3>Độ rộng thị trường</h3>
+  <p>Độ rộng cho biết thị trường đang "rộng" (nhiều cổ phiếu cùng tăng) hay "hẹp" (chỉ vài cổ phiếu kéo chỉ số). Chương 4 tính 13 chỉ số độ rộng, từ tỷ lệ cổ phiếu tăng, tỷ lệ trên đường trung bình 200 phiên, đến độ phân tán lợi suất giữa các cổ phiếu.</p>
+
+  <h3>Độ sâu và mức tham gia</h3>
+  <p>Độ sâu đo mức độ tham gia giao dịch: tổng giá trị giao dịch, tỷ lệ cổ phiếu có khối lượng bất thường, mức tập trung vào 10 cổ phiếu lớn nhất. Đây là lớp thông tin mà chỉ số tổng hợp không thấy được.</p>
+
+  <h3>Khả năng hình thành cơ hội</h3>
+  <p>Đây là lớp quan trọng nhất. Với mỗi cổ phiếu ở mỗi phiên, Chương 4 theo dõi đường giá 60 phiên tiếp theo và xem cổ phiếu đó có đạt +10% <em>trước khi</em> giảm -5% hay không. Nếu đạt trước, đó là một "cơ hội" đã hình thành trong quá khứ. Tỷ lệ này mô tả mức độ xuất hiện cơ hội lịch sử trong universe proxy. Chú ý: đây là <strong>cơ hội theo dữ liệu lịch sử</strong>, không phải lợi nhuận giao dịch thực tế.</p>
+
+  <h3>Kết quả chính</h3>
+  <p>Ở tần suất <strong>tháng</strong>, có hai liên hệ đồng thời sống sót qua hiệu chỉnh đa phép thử: khi lợi suất trái phiếu 2 năm hoặc chênh lệch lãi suất Việt Nam–Mỹ thay đổi trong một tháng, độ rộng thị trường trong <em>cùng tháng đó</em> có xu hướng yếu hơn. Nói bằng lời thường: khi lợi suất trái phiếu tăng trong tháng, tỷ lệ cổ phiếu tăng giá tháng đó thường thấp hơn.</p>
+  <div class="callout callout-warn">
+    <h4>⚠️ Hiệu ứng rất nhỏ</h4>
+    <p>Một thay đổi 25 điểm cơ sở (bps) ở lợi suất chỉ đi kèm độ rộng giảm khoảng <strong>0,0007 đơn vị</strong> — nhỏ hơn 0,1 điểm phần trăm. Liên hệ có ý nghĩa thống kê, nhưng kích thước quá nhỏ để coi là tín hiệu thực tế đáng chú ý.</p>
+  </div>
+  <p>Tuy nhiên, liên hệ này <strong>không</strong> tồn tại theo chiều dự báo. Biết lợi suất trái phiếu tăng tháng này <em>không</em> giúp đoán độ rộng tháng tới. Cụ thể: không có quan hệ dẫn trước (Granger 0/7), không có mô hình ngoài mẫu ổn định (0/3), và không có liên hệ đáng tin với cơ hội +10/-5 sau khi xử lý 591 trường hợp cùng phiên đạt mục tiêu lẫn chặn.</p>
+
+  <h3>Điều chưa được xác nhận</h3>
+  <ul class="bul">
+    <li><strong>Không có dẫn trước:</strong> trái phiếu không đi trước độ rộng, thanh khoản hay cơ hội.</li>
+    <li><strong>Không có dự báo ngoài mẫu:</strong> thêm trái phiếu vào mô hình không cải thiện dự đoán một cách ổn định.</li>
+    <li><strong>Không liên hệ thanh khoản sau kiểm soát:</strong> khi đã loại bỏ ảnh hưởng của biến động cổ phiếu chung, trái phiếu không giải thích thêm mức tham gia giao dịch.</li>
+    <li><strong>Cơ hội +10/-5 không đạt:</strong> không có bằng chứng trái phiếu đi kèm hay đi trước sự thay đổi tỷ lệ cơ hội.</li>
+  </ul>
+
+  <h3>Cách đọc đúng</h3>
+  <p>Khi lợi suất trái phiếu tăng trong một tháng, độ rộng thị trường có xu hướng yếu hơn trong cùng tháng. Hiệu ứng này nhỏ và không cho biết tháng tiếp theo thị trường sẽ giảm. Đây là <strong>liên hệ đồng thời</strong> — hai thứ có thể cùng phản ánh một môi trường chung — không phải dự báo.</p>
+  <details>
+    <summary>Ghi chú kỹ thuật: tín hiệu thăm dò</summary>
+    <div class="body">
+      <p>Một số phép thử thăm dò (5/8) vượt ngưỡng khám phá 10%, chủ yếu ở biến thể cơ hội +12%, +14% và mức biến động bất lợi (MAE) 60 phiên. Đây chỉ là tín hiệu thăm dò, <strong>không nâng</strong> kết luận, và không được dùng làm headline. Ký hiệu bất lợi: beta âm trên MAE nghĩa là lợi suất trái phiếu tăng đi kèm biến động bất lợi lớn hơn — nhất quán với câu chuyện "môi trường khó hơn".</p>
+    </div>
+  </details>
+</section>
+
+<section id="conclusion">
+  <h2><span class="n">9</span>Kết luận — Trái phiếu như chỉ báo bối cảnh</h2>
+
+  <h3>Nghiên cứu bắt đầu từ đâu</h3>
+  <p>Quan sát ban đầu rất đơn giản: có những lúc trái phiếu và cổ phiếu di chuyển cùng nhau. Khi lợi suất tăng, thị trường cổ phiếu có vẻ yếu đi. Câu hỏi tự nhiên là — trái phiếu có thể dùng để dự báo cổ phiếu không?</p>
+  <p>Nhưng "di chuyển cùng nhau" có nhiều nghĩa khác nhau, và việc phân biệt chúng là chìa khóa của cả nghiên cứu:</p>
+  <ul class="bul">
+    <li><strong>Đi cùng</strong> — hai thứ biến động trong cùng khoảng thời gian.</li>
+    <li><strong>Đi trước</strong> — một thứ biến động trước, thứ kia theo sau.</li>
+    <li><strong>Dự báo được</strong> — biết một thứ giúp đoán thứ kia trên dữ liệu chưa thấy.</li>
+    <li><strong>Sử dụng được</strong> — dự báo đủ ổn định để ứng dụng thực tế.</li>
+  </ul>
+  <p>Bốn chương đã tách bốn cấp độ này ra, và câu trả lời ở mỗi cấp đều rõ ràng.</p>
+
+  <h3>Bốn chương đã tìm thấy gì</h3>
+  <table class="tbl">
+    <tr><th>Chương</th><th>Câu hỏi</th><th>Kết quả</th></tr>
+    <tr><td>1</td><td>Bond có dự báo độc lập không?</td><td>Không được xác nhận</td></tr>
+    <tr><td>2</td><td>Bond có liên hệ lợi suất chỉ số không?</td><td>Có đồng chuyển giới hạn</td></tr>
+    <tr><td>3</td><td>Bond có liên hệ khối lượng không?</td><td>Không được xác nhận</td></tr>
+    <tr><td>4</td><td>Bond có liên hệ cấu trúc bên trong không?</td><td>Có liên hệ breadth cùng kỳ theo tháng, hiệu ứng nhỏ</td></tr>
+  </table>
+
+  <h3>Kết luận xuyên suốt</h3>
+  <div class="callout callout-info">
+    <h4>Thông điệp cốt lõi</h4>
+    <p>Trái phiếu có thể phản ánh cùng một môi trường với thị trường cổ phiếu, nhưng chưa chứng minh được khả năng đi trước hoặc dự báo thị trường một cách ổn định.</p>
+  </div>
+  <p>Bằng chứng đồng chuyển chỉ xuất hiện giới hạn ở lợi suất chỉ số (Chương 2) và độ rộng theo tháng (Chương 4); không được xác nhận với khối lượng, thanh khoản hoặc cơ hội +10/-5. Nghiên cứu chưa cho thấy trái phiếu mang thông tin tương lai ổn định vượt qua những gì cổ phiếu đã tự phản ánh.</p>
+
+  <h3>Cách sử dụng thực tế</h3>
+  <p>Khi lợi suất trái phiếu tăng đáng kể trong một tháng, nhà đầu tư có thể coi đó là lý do để thận trọng hơn và kiểm tra lại độ rộng, xu hướng giá và thanh khoản. Không nên mua hoặc bán chỉ vì lợi suất trái phiếu thay đổi.</p>
+  <div class="callout callout-warn">
+    <h4>⚠️ Đây không phải hệ thống cảnh báo</h4>
+    <p>Nghiên cứu này không tạo ngưỡng cảnh báo, không tính điểm số, không làm đèn xanh/vàng/đỏ tự động, không đề xuất phân bổ hay chiến lược giao dịch. Trái phiếu là <strong>bối cảnh</strong> để đọc cùng các tín hiệu khác, không phải công cụ ra quyết định.</p>
+  </div>
+
+  <h3>Những điều bond không làm được</h3>
+  <ul class="bul">
+    <li>Không dự báo đáng tin cậy hướng đi tiếp theo của thị trường.</li>
+    <li>Không tạo lợi thế ổn định trên dữ liệu ngoài mẫu.</li>
+    <li>Không giải thích ổn định khối lượng giao dịch.</li>
+    <li>Không xác nhận thay đổi tỷ lệ cơ hội +10/-5.</li>
+    <li>Không thay thế phân tích giá, độ rộng và doanh nghiệp cụ thể.</li>
+  </ul>
+
+  <h3>Vì sao dừng tại Chương 4</h3>
+  <p>Kế hoạch ban đầu hình dung thêm Chương 5 về đường cong ảnh hưởng theo thời gian và Chương 6 về hệ thống cảnh báo. Nhưng mở hai chương đó chỉ có ý nghĩa khi có quan hệ đủ mạnh và ổn định để xây dựng — và bốn chương đã cho thấy điều kiện đó không đạt.</p>
+  <p>Dừng lại ở đây là quyết định <strong>dựa trên bằng chứng</strong>, không phải nghiên cứu thất bại. Tiếp tục tối ưu hóa trên dữ liệu hiện có có nguy cơ overfit — tìm ra mẫu hình ngẫu nhiên và gán cho nó ý nghĩa dự báo. Một câu trả lời "chưa đủ bằng chứng" trung thực hơn một tín hiệu giả.</p>
+
+  <h3>Khi nào nên mở lại nghiên cứu</h3>
+  <p>Nghiên cứu này nên xem xét lại nếu có ít nhất một trong các điều kiện:</p>
+  <ul class="bul">
+    <li>Dữ liệu dài hơn, đặc biệt qua nhiều chu kỳ lãi suất.</li>
+    <li>Danh sách cổ phiếu điểm-trong-thời-gian đầy đủ hơn.</li>
+    <li>Dữ liệu thanh khoản trái phiếu và đấu giá đáng tin cậy.</li>
+    <li>Tập dữ liệu holdout hoàn toàn mới để kiểm chứng.</li>
+    <li>Tín hiệu dẫn trước lặp lại một cách nhất quán.</li>
+    <li>Lợi thế ngoài mẫu vượt ngưỡng vật chất ổn định.</li>
+    <li>Bằng chứng độc lập từ nguồn dữ liệu khác.</li>
+  </ul>
+</section>
+
+<section id="limits">
+  <h2><span class="n">10</span>Giới hạn nghiên cứu</h2>
+  <p>Mọi kết luận trên chỉ đúng trong phạm vi dữ liệu và thiết kế hiện có. Một số giới hạn cần ghi nhận:</p>
+  <ul class="bul">
+    <li>Dữ liệu chủ yếu từ 2014–2026 — chưa trải qua nhiều chu kỳ lãi suất hoàn chỉnh.</li>
+    <li>Danh sách cổ phiếu Chương 4 là current-active HOSE, nghiêng survivorship — không phải tập điểm-trong-thời-gian.</li>
+    <li>Không có dữ liệu thành viên chỉ số lịch sử đầy đủ.</li>
+    <li>Không có dữ liệu thanh khoản trái phiếu và sổ lệnh sâu.</li>
+    <li>Số quan sát ở tần suất tháng tương đối nhỏ (119 tháng hiệu dụng).</li>
+    <li>Quan hệ thống kê không chứng minh nhân quả — hai thứ cùng biến động không nghĩa là một gây ra kia.</li>
+    <li>Kết quả âm tính nghĩa là "chưa đủ bằng chứng", không phải "chắc chắn không có quan hệ".</li>
+  </ul>
+  <div class="callout callout-limit">
+    <h4>⚠️ Lời cuối</h4>
+    <p>Nghiên cứu này không chứng minh trái phiếu <em>không</em> liên quan đến cổ phiếu. Nó chỉ cho rằng, với dữ liệu và phương pháp hiện có, trái phiếu chưa đóng vai trò dự báo được. Đó là một câu trả lời khiêm tốn — nhưng trung thực.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>Nghiên cứu độc lập · Trái phiếu Chính phủ Việt Nam · Cổ phiếu HOSE</p>
+  <p>Chương 1: không có phép thử dự báo nào vượt hiệu chỉnh. Chương 2: hai quan hệ đồng thời xác nhận, 0/150 Granger bond→equity, 0/175 OOS. Chương 3: chưa tìm thấy quan hệ khối lượng xác nhận. Chương 4: liên hệ breadth đồng thời theo tháng (hiệu ứng nhỏ), 0/7 Granger, 0/3 OOS.</p>
+  <p>Kết quả âm tính = "chưa đủ bằng chứng", không phải "không có quan hệ".</p>
+</footer>
+
+<script>
+Chart.defaults.color='#94a3b8';
+Chart.defaults.font.family='-apple-system,Segoe UI,Roboto,sans-serif';
+Chart.defaults.borderColor='#334155';
+
+new Chart(document.getElementById('chartOverview'), {
+  type:'bar',
+  data:{labels:['Ch1\nDự báo','Ch2\nĐồng thời (panel)','Ch2\nDẫn trước','Ch2\nNgoài mẫu','Ch3\nKhối lượng đồng thời','Ch3\nTrái phiếu→khối lượng','Ch3\nNgoài mẫu','Ch4\nBreadth đồng thời (tháng)','Ch4\nDẫn trước','Ch4\nNgoài mẫu'],
+    datasets:[{label:'Số kết quả vượt kiểm định',data:[0,2,0,0,0,0,0,2,0,0],
+      backgroundColor:['rgba(148,163,184,.5)','rgba(59,130,246,.7)','rgba(148,163,184,.5)','rgba(148,163,184,.5)','rgba(148,163,184,.5)','rgba(148,163,184,.5)','rgba(148,163,184,.5)','rgba(6,182,212,.7)','rgba(148,163,184,.5)','rgba(148,163,184,.5)'],
+      borderRadius:4,maxBarThickness:48}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,max:4,ticks:{stepSize:1},title:{display:true,text:'Số quan hệ vượt kiểm định',color:'#e2e8f0'},grid:{color:'#334155'}},
+      x:{grid:{display:false},ticks:{font:{size:8},maxRotation:0}}
+    }
+  }
+});
+
+new Chart(document.getElementById('chartOOS'), {
+  type:'bar',
+  data:{labels:['Ổn định','Trung tính','Không ổn định','Không đủ dữ liệu'],
+    datasets:[
+      {label:'Chương 2 (175 mô hình)',data:[0,56,84,35],
+        backgroundColor:'rgba(59,130,246,.6)',borderRadius:5,maxBarThickness:54},
+      {label:'Chương 3 (15 mô hình)',data:[0,0,15,0],
+        backgroundColor:'rgba(6,182,212,.6)',borderRadius:5,maxBarThickness:54}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{boxWidth:14,font:{size:11}}}},
+    scales:{y:{beginAtZero:true,title:{display:true,text:'Số mô hình',color:'#e2e8f0'},grid:{color:'#334155'}},
+      x:{grid:{display:false}}
+    }
+  }
+});
+</script>
+
+</body>
+</html>

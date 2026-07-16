@@ -1,0 +1,73 @@
+protocol_version: 0.8.1
+relation_to_previous: CROSS_TICKER_POST_REQ007_ENTITY_INTERRUPTION_FIX
+baseline_protocol_sha256: cad6e183d7a52135c872aa0b5f4b01a0f6252b3f05cc39229968a3f9710a3848
+frozen_before_execution: true
+frozen_at: '2026-07-14T09:35:00'
+verification_layer_version: 0.1.4 → 0.1.5 (REQ-007 entity-interruption fix)
+changes_from_v0_8_0:
+  req007_verifier_patch: |
+    independent_verifier.py verify_non_advice_check(): P5 fix for entity-interruption-
+    tolerant disclaimer matching. Problem: "không khuyến nghị mua/bán VCB" was flagged
+    as advice because old patterns required exact "không phải khuyến nghị mua/bán" with
+    no entity between tokens. Fix: grammar-level rules allowing ticker/company names
+    between negation and advice keywords + sentence-level negation removal + final
+    negation guard + expanded advice signals ("có thể mua/bán").
+    Verifier hash: cf870dee → 6cc2e40f.
+  fixture_validation: |
+    13/13 fixture tests PASS (specificity 9/9, sensitivity 4/4).
+    Clean control: 3 Tier-1 PASS artifacts still 28/28 (no regression).
+    Rescore: T-VCB-01 FAIL→PASS (REQ-007 fixed for right reason). 4/6 perfect PASS.
+unchanged:
+- skill prompts
+- runner 0.4.0
+- builder (sector-hardened)
+- content_depth_gate
+- environment_preflight
+- phase4a_gate
+- phase6_preflight
+- model_backends
+- requirements.yaml
+- scoring thresholds
+frozen_component_hashes:
+  verifier: 6cc2e40f7c726abd
+  runner: 046303a346c20253
+  builder: 7bfbab1436c7e8c8
+  content_depth_gate: 6e4f2ec1b9b818b4
+  environment_preflight: 06abeb0cc4170c23
+  phase4a_gate: b3c6edb912eaf053
+  phase6_preflight: 7f29f328c9b202c4
+  model_backends: fcfcf01b6df07e75
+  requirements: ffeb27c68a019882
+purpose: cross_ticker_generalization with clean verifier (no known false positives)
+tickers: [CTD, KDH, PNJ, VCB, FPT]
+runs_per_ticker: 2
+total_planned_runs: 10
+run_naming: Cp-{TICKER}-{01|02}
+patches_during_cohort: prohibited
+cohort_C_prime_release_gate:
+  genuine_completed_runs: 10
+  final_PASS: '>=9/10'
+  critical_failures: 0
+  fabricated_data: 0
+  data_accuracy_pass_rate: 100%
+  REQ_013_occurrences: '0 or 1/10'
+  REQ_020_occurrences: '0 or 1/10'
+  REQ_025_occurrences: '0 or 1/10'
+  verifier_false_positive_affecting_verdict: 0
+  no_ticker_with_0_of_2_PASS: true
+classification_thresholds:
+  10_or_9_of_10: STABLE_CANDIDATE
+  8_of_10: FUNCTIONAL_CROSS_TICKER_WITH_VARIANCE
+  6_to_7_of_10: needs_sector_hardening
+  5_or_below: overfit_CTD_suspected
+  any_ticker_0_of_2: sector_gap_confirmed
+REQ_020_threshold: {0_or_1_of_10: residual, 2_plus: deterministic_DOM_gate}
+REQ_025_threshold: {any: review, 2_plus: phase6_contract_match_gate}
+model_config:
+  backend: zai
+  model_id: GLM-5.2
+  python: /opt/homebrew/bin/python3
+  path_prefix: /opt/homebrew/bin
+  max_tokens: 32768
+  streaming: required
+protocol_sha256: 3695c58843c4281140f89265006dde5c1931e4242bd4f564dfa3211c1ee9a3ec

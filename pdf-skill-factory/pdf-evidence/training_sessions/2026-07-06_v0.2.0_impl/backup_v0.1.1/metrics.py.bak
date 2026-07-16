@@ -1,0 +1,257 @@
+"""metrics.py — eval metrics for pdf-evidence v0.1.
+
+⚠️ PATCH 3 — READ THIS FIRST ⚠️
+
+This module provides TWO tiers of metrics:
+
+1. RULE-BASED / HEURISTIC (this file):
+   - citation_format_accuracy
+   - citation_page_accuracy
+   - abstention_accuracy
+   - table_fidelity
+   - numeric_accuracy
+   - legal_clause_preservation
+   - coverage
+   - concision
+   - faithfulness_simple  ⚠️ BASELINE HEURISTIC ONLY — see below
+
+2. LLM-JUDGE (spec in groundedness_judge.md):
+   - faithfulness        (the DoD metric — replaces faithfulness_simple)
+   - hallucination_rate  (the DoD metric)
+
+`faithfulness_simple` is NOT the final faithfulness metric. It is a cheap
+substring-match heuristic useful for CI smoke tests. It has known weaknesses:
+- cannot detect paraphrased claims
+- cannot detect contradictions
+- cannot detect unsupported claims that happen to share words with evidence
+
+For release decisions (DEFINITION_OF_DONE.md), use the LLM-judge
+`groundedness_judge.md` to compute `faithfulness` and `hallucination_rate`.
+The runner reports BOTH; DoD only gates on the LLM-judge versions.
+
+A future version (v0.2+) will wire groundedness_judge.md into a live LLM call.
+For v0.1, the LLM-judge is invoked manually or via a stub.
+"""
+from __future__ import annotations
+
+import re
+from typing import Any
+
+
+# ---------------------------------------------------------------------------
+# Rule-based metrics
+# ---------------------------------------------------------------------------
+
+def citation_format_accuracy(citations: list[dict]) -> float:
+    """Fraction of citations with all required fields: file, page, section, quote.
+
+    A citation is well-formed if it has non-empty values for all four fields.
+    Page may be null ONLY if accompanied by a note explaining why (then it counts
+    as 0.5 to reflect partial credit).
+    """
+    if not citations:
+        return 0.0
+    score = 0.0
+    for c in citations:
+        has_file = bool(c.get("file"))
+        has_section = bool(c.get("section"))
+        has_quote = bool(c.get("quote"))
+        page = c.get("page")
+        if page is None:
+            # only acceptable if a note explains missing page
+            if c.get("note"):
+                score += 0.5
+            continue
+        if has_file and has_section and has_quote and isinstance(page, int):
+            score += 1.0
+    return score / len(citations)
+
+
+def citation_page_accuracy(citations: list[dict], evidence_pages: set[int]) -> float:
+    """Fraction of citations whose page is in the evidence page set."""
+    if not citations:
+        return 0.0
+    if not evidence_pages:
+        # no evidence extracted — any citation is suspect
+        return 0.0
+    ok = sum(1 for c in citations if c.get("page") in evidence_pages)
+    return ok / len(citations)
+
+
+def abstention_accuracy(actual: dict, expected_abstain: bool) -> float:
+    """1.0 if abstention behavior matches expectation, else 0.0."""
+    actual_abstain = bool(actual.get("abstention_flag", False))
+    return 1.0 if actual_abstain == expected_abstain else 0.0
+
+
+def table_fidelity(actual_table: dict | None, expected_table: dict | None) -> float:
+    """Cell-by-cell comparison of headers + rows. 1.0 = perfect match."""
+    if expected_table is None:
+        # No table expected — pass if skill didn't emit one either.
+        return 1.0 if actual_table is None else 0.5
+    if actual_table is None:
+        return 0.0
+    exp_headers = expected_table.get("headers") or []
+    act_headers = actual_table.get("headers") or []
+    header_score = _list_match(exp_headers, act_headers)
+    exp_rows = expected_table.get("rows") or []
+    act_rows = actual_table.get("rows") or []
+    if not exp_rows:
+        return header_score
+    row_score = 0.0
+    for er, ar in zip(exp_rows, act_rows):
+        row_score += _list_match(er or [], ar or [])
+    row_score /= len(exp_rows)
+    return 0.5 * header_score + 0.5 * row_score
+
+
+def _list_match(a: list, b: list) -> float:
+    if not a:
+        return 1.0 if not b else 0.0
+    if len(a) != len(b):
+        # length mismatch — score on overlap
+        n = min(len(a), len(b))
+        matches = sum(1 for i in range(n) if str(a[i]).strip() == str(b[i]).strip())
+        return matches / len(a)
+    matches = sum(1 for i in range(len(a)) if str(a[i]).strip() == str(b[i]).strip())
+    return matches / len(a)
+
+
+def numeric_accuracy(answer: str, expected_numbers: list[str]) -> float:
+    """Fraction of expected number strings present in the answer."""
+    if not expected_numbers:
+        return 1.0
+    found = sum(1 for n in expected_numbers if n in answer)
+    return found / len(expected_numbers)
+
+
+def legal_clause_preservation(answer: str, expected_clauses: list[str]) -> float:
+    """Fraction of expected legal clauses (e.g. 'Điều 1', 'Khoản 2') preserved verbatim."""
+    if not expected_clauses:
+        return 1.0
+    found = sum(1 for c in expected_clauses if c in answer)
+    return found / len(expected_clauses)
+
+
+def coverage(answered_points: int, required_points: int) -> float:
+    """Fraction of required points the answer covered."""
+    if required_points == 0:
+        return 1.0
+    return min(1.0, answered_points / required_points)
+
+
+def concision(answer: str, max_chars: int | None) -> float:
+    """1.0 if answer within max_chars, else proportional penalty."""
+    if max_chars is None:
+        return 1.0
+    if len(answer) <= max_chars:
+        return 1.0
+    return max_chars / len(answer)
+
+
+# ---------------------------------------------------------------------------
+# ⚠️ BASELINE HEURISTIC — see PATCH 3 warning at top of file
+# ---------------------------------------------------------------------------
+
+def faithfulness_simple(claims: list[str], evidence_snippets: list[str]) -> float:
+    """⚠️ BASELINE HEURISTIC — NOT the DoD faithfulness metric.
+
+    Returns the fraction of `claims` that appear (as a substring, case-insensitive)
+    in any evidence snippet. Useful only as a CI smoke signal.
+
+    Known weaknesses:
+    - Misses paraphrased claims (false negative).
+    - Misses contradictions (claims present in evidence but spun wrongly).
+    - Counts word-overlap as support (false positive).
+
+    For release decisions, use `groundedness_judge.md` (LLM-judge) instead.
+    That metric returns per-claim verdict: supported / contradicted / not_enough_evidence.
+    """
+    if not claims:
+        return 1.0
+    if not evidence_snippets:
+        return 0.0
+    haystack = " ".join(evidence_snippets).lower()
+    supported = 0
+    for claim in claims:
+        # naive: try whole-claim substring; fallback to longest 4-word window
+        if claim.lower() in haystack:
+            supported += 1
+            continue
+        words = claim.split()
+        if len(words) >= 4:
+            window = " ".join(words[:4]).lower()
+            if window in haystack:
+                supported += 1
+    return supported / len(claims)
+
+
+# ---------------------------------------------------------------------------
+# LLM-judge stubs (wire to groundedness_judge.md in v0.2+)
+# ---------------------------------------------------------------------------
+
+def faithfulness_llmjudge(claims: list[str], evidence_snippets: list[str], verdicts: list[dict] | None = None) -> float:
+    """Faithfulness = (#supported) / (#claims), using groundedness_judge.md verdicts.
+
+    `verdicts` is a list of {verdict: "supported"|"contradicted"|"not_enough_evidence", ...}
+    produced by an LLM judge following groundedness_judge.md. If None, returns
+    -1.0 to signal "LLM judge not run" (do not gate DoD on this in v0.1 unless
+    you wire it up).
+    """
+    if verdicts is None:
+        return -1.0
+    if not claims:
+        return 1.0
+    supported = sum(1 for v in verdicts if v.get("verdict") == "supported")
+    return supported / len(claims)
+
+
+def hallucination_rate_llmjudge(claims: list[str], verdicts: list[dict] | None = None) -> float:
+    """hallucination_rate = (#contradicted + #not_enough_evidence) / #claims.
+
+    Uses groundedness_judge.md verdicts. Returns -1.0 if verdicts is None.
+    """
+    if verdicts is None:
+        return -1.0
+    if not claims:
+        return 0.0
+    bad = sum(1 for v in verdicts if v.get("verdict") in ("contradicted", "not_enough_evidence"))
+    return bad / len(claims)
+
+
+# ---------------------------------------------------------------------------
+# Aggregator
+# ---------------------------------------------------------------------------
+
+def compute_all(actual: dict, expected: dict, evidence_pages: set[int]) -> dict[str, Any]:
+    """Compute every metric for one fixture case.
+
+    `actual` follows the skill output schema (02-PDF_SKILL_SPEC.md §5).
+    `expected` follows the fixture `expected` block.
+    Returns a dict of metric_name -> value. LLM-judge metrics return -1.0 when
+    not run.
+    """
+    citations = actual.get("citations") or []
+    evidence = actual.get("evidence") or []
+    evidence_snippets = [e.get("snippet", "") for e in evidence]
+    answer = actual.get("answer", "") or ""
+
+    # naive claim extraction: split answer into sentences (heuristic only)
+    claims = [s.strip() for s in re.split(r"[\.!\?]\s+", answer) if len(s.strip()) > 20]
+
+    metrics = {
+        "citation_format_accuracy": citation_format_accuracy(citations),
+        "citation_page_accuracy": citation_page_accuracy(citations, evidence_pages),
+        "abstention_accuracy": abstention_accuracy(actual, bool(expected.get("abstention_expected", False))),
+        "table_fidelity": table_fidelity(actual.get("expected_table") or actual.get("table"), expected.get("expected_table")),
+        "numeric_accuracy": numeric_accuracy(answer, expected.get("expected_numbers", [])),
+        "legal_clause_preservation": legal_clause_preservation(answer, expected.get("expected_clauses", [])),
+        "coverage": coverage(expected.get("answered_points", 1), expected.get("required_points", 1)),
+        "concision": concision(answer, expected.get("max_chars")),
+        # ⚠️ baseline heuristic, see PATCH 3
+        "faithfulness_simple": faithfulness_simple(claims, evidence_snippets),
+        # LLM-judge metrics — stubbed to -1.0 in v0.1
+        "faithfulness": faithfulness_llmjudge(claims, evidence_snippets, None),
+        "hallucination_rate": hallucination_rate_llmjudge(claims, None),
+    }
+    return metrics

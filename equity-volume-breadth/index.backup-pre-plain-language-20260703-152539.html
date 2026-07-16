@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khối lượng, Giá và Độ rộng thị trường VN — Nghiên cứu nội bộ equity</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0f172a;--bg2:#1e293b;--card:#1e293b;--card2:#273449;--txt:#e2e8f0;--muted:#94a3b8;--line:#334155;--red:#ef4444;--amber:#f59e0b;--green:#22c55e;--blue:#3b82f6;--violet:#8b5cf6;--cyan:#06b6d4}
+  *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.8;font-size:17px}
+  .hero{background:linear-gradient(135deg,#082f49 0%,#0e7490 45%,#1e3a8a 100%);padding:90px 24px 70px;text-align:center;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.08),transparent 40%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.06),transparent 40%);pointer-events:none}
+  .hero .badge{display:inline-block;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:999px;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:#a5f3fc;margin-bottom:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2)}
+  .hero h1{font-size:clamp(1.9rem,4.5vw,3.2rem);font-weight:800;line-height:1.2;max-width:960px;margin:0 auto 18px}
+  .hero p.sub{color:#e2e8f0;font-size:1.12rem;max-width:800px;margin:0 auto;opacity:.92}
+  .hero .meta{margin-top:28px;color:#cbd5e1;font-size:.9rem}
+  .hero .meta span{display:inline-block;margin:0 10px}
+  .container{max-width:800px;margin:0 auto;padding:0 24px}main{padding:50px 0 80px}section{margin-bottom:56px;scroll-margin-top:90px}
+  h2.section-title{font-size:1.5rem;font-weight:700;margin-bottom:14px;padding-bottom:16px;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,var(--cyan),rgba(6,182,212,.2),transparent) 1;display:flex;align-items:center;gap:14px}
+  h2.section-title .num{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--cyan),#0891b2);color:#fff;font-size:.95rem;font-weight:800;flex-shrink:0;box-shadow:0 4px 12px rgba(6,182,212,.3),inset 0 1px 0 rgba(255,255,255,.2)}
+  h3{font-size:1.18rem;margin:28px 0 10px;color:#67e8f9;display:flex;align-items:center;gap:8px}
+  h4{font-size:1.05rem;margin:18px 0 8px;color:#fff}
+  p{margin-bottom:16px;color:#cbd5e1}strong{color:#fff}em{color:#fcd34d;font-style:normal}
+  ul.bul{margin:12px 0 18px 4px;padding-left:22px}ul.bul li{margin-bottom:8px;color:#cbd5e1;position:relative;padding-left:4px}ul.bul li::marker{color:var(--cyan)}
+  ol.numlist{margin:12px 0 18px 4px;padding-left:22px}ol.numlist li{margin-bottom:8px;color:#cbd5e1}
+  a.src{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue)}
+  .ref{display:inline-block;font-size:.65rem;font-weight:700;color:#67e8f9;background:rgba(103,232,249,.12);border:1px solid rgba(103,232,249,.3);border-radius:4px;padding:0 4px;margin:0 1px;line-height:1.4;vertical-align:super;text-decoration:none;transition:.15s;min-width:16px;text-align:center}
+  .ref:hover{background:rgba(103,232,249,.3);color:#a5f3fc;transform:translateY(-1px)}
+  ol.refs{list-style:none;counter-reset:ref;padding-left:0;margin:18px 0}
+  ol.refs li{counter-increment:ref;display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:.86rem;line-height:1.55;align-items:flex-start}
+  ol.refs li:last-child{border-bottom:none}
+  ol.refs li::before{content:counter(ref);display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--cyan),#0891b2);color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:1px}
+  ol.refs li a{color:#93c5fd;text-decoration:none;border-bottom:1px dotted #93c5fd;word-break:break-all}
+  ol.refs li .src-meta{color:var(--muted);font-size:.78rem;display:block;margin-top:3px}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:22px 0}
+  .kpi{background:linear-gradient(180deg,rgba(6,182,212,.06),rgba(30,41,59,.6));border:1px solid rgba(6,182,212,.25);border-radius:14px;padding:20px 18px;transition:.22s;position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),transparent)}
+  .kpi:hover{transform:translateY(-3px);border-color:var(--cyan);box-shadow:0 8px 24px rgba(6,182,212,.15)}
+  .kpi .val{font-size:1.85rem;font-weight:800;color:#67e8f9;line-height:1;text-shadow:0 0 24px rgba(103,232,249,.3)}
+  .kpi .lab{font-size:.82rem;color:var(--muted);margin-top:10px;line-height:1.4}
+  .kpi.red{border-color:rgba(239,68,68,.3);background:linear-gradient(180deg,rgba(239,68,68,.06),rgba(30,41,59,.6))}.kpi.red::before{background:linear-gradient(90deg,var(--red),transparent)}.kpi.red:hover{border-color:var(--red)}.kpi.red .val{color:var(--red)}
+  .kpi.green{border-color:rgba(34,197,94,.3);background:linear-gradient(180deg,rgba(34,197,94,.06),rgba(30,41,59,.6))}.kpi.green::before{background:linear-gradient(90deg,var(--green),transparent)}.kpi.green:hover{border-color:var(--green)}.kpi.green .val{color:var(--green)}
+  .kpi.amber{border-color:rgba(245,158,11,.3);background:linear-gradient(180deg,rgba(245,158,11,.06),rgba(30,41,59,.6))}.kpi.amber::before{background:linear-gradient(90deg,var(--amber),transparent)}.kpi.amber:hover{border-color:var(--amber)}.kpi.amber .val{color:var(--amber)}
+  .kpi.violet{border-color:rgba(139,92,246,.3);background:linear-gradient(180deg,rgba(139,92,246,.06),rgba(30,41,59,.6))}.kpi.violet::before{background:linear-gradient(90deg,var(--violet),transparent)}.kpi.violet:hover{border-color:var(--violet)}.kpi.violet .val{color:var(--violet)}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:24px 0}
+  .compare .col{border-radius:14px;padding:0;border:1px solid var(--line);overflow:hidden;transition:.22s}.compare .col:hover{transform:translateY(-2px)}
+  .compare .col h4{margin:0;padding:16px 22px 12px;font-size:1.05rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .compare .col ul.bul{padding:14px 22px 20px;margin:0}
+  .compare .before{background:linear-gradient(180deg,rgba(59,130,246,.10),rgba(59,130,246,.02));border-color:rgba(59,130,246,.35)}.compare .before h4{background:linear-gradient(180deg,rgba(59,130,246,.12),transparent)}
+  .compare .after{background:linear-gradient(180deg,rgba(6,182,212,.10),rgba(6,182,212,.02));border-color:rgba(6,182,212,.35)}.compare .after h4{background:linear-gradient(180deg,rgba(6,182,212,.12),transparent)}
+  .compare .tag{display:inline-block;font-size:.7rem;padding:3px 12px;border-radius:999px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-left:auto}
+  .compare .before .tag{background:linear-gradient(135deg,var(--blue),#1d4ed8);color:#dbeafe}
+  .compare .after .tag{background:linear-gradient(135deg,var(--cyan),#0891b2);color:#042f2e}
+  @media(max-width:720px){.compare{grid-template-columns:1fr}}
+  table.tbl{width:100%;border-collapse:collapse;margin:20px 0;font-size:.92rem;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  table.tbl th,table.tbl td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  table.tbl thead th{background:linear-gradient(180deg,rgba(6,182,212,.16),rgba(6,182,212,.06));color:#67e8f9;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid rgba(6,182,212,.3)}
+  table.tbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  table.tbl tbody tr:hover td{background:rgba(6,182,212,.06)}
+  table.tbl tr:last-child td{border-bottom:none}table.tbl td strong{color:#fcd34d}
+  .callout{position:relative;background:linear-gradient(135deg,rgba(139,92,246,.10),rgba(59,130,246,.05));border:1px solid rgba(139,92,246,.25);border-left:4px solid var(--violet);padding:18px 22px 18px 24px;border-radius:0 14px 14px 0;margin:22px 0;transition:.2s}
+  .callout:hover{box-shadow:0 4px 18px rgba(139,92,246,.12);transform:translateX(2px)}
+  .callout.warn{border-color:rgba(239,68,68,.25);border-left-color:var(--red);background:linear-gradient(135deg,rgba(239,68,68,.10),rgba(239,68,68,.03))}
+  .callout.good{border-color:rgba(34,197,94,.25);border-left-color:var(--green);background:linear-gradient(135deg,rgba(34,197,94,.10),rgba(34,197,94,.03))}
+  .callout.info{border-color:rgba(59,130,246,.25);border-left-color:var(--blue);background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(59,130,246,.03))}
+  .callout h4{color:#fff;margin-bottom:6px;font-size:1rem;display:flex;align-items:center;gap:8px}.callout p{margin:0;color:#e2e8f0}
+  .chart-box{background:linear-gradient(180deg,var(--card),rgba(15,23,42,.6));border:1px solid var(--line);border-radius:16px;padding:22px;margin:24px 0;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .chart-box::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),var(--blue),transparent)}
+  .chart-box h4{color:#67e8f9;margin-bottom:6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .chart-box .desc{color:var(--muted);font-size:.85rem;margin-bottom:16px;padding-left:10px;border-left:2px solid rgba(6,182,212,.3);font-style:italic}
+  .chart-wrap{position:relative;height:340px}
+  footer{text-align:center;padding:30px 24px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+  .progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#67e8f9,#06b6d4,#3b82f6);z-index:1000;transition:width .12s ease-out}
+  .minimap{position:fixed;top:24px;right:24px;width:272px;max-height:calc(100vh - 48px);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;overflow-y:auto;z-index:50;opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .35s ease,transform .35s ease;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none}
+  @media(min-width:1024px){body.nav-active .minimap{display:block;opacity:1;transform:translateX(0);pointer-events:auto}}
+  .minimap::-webkit-scrollbar{width:6px}.minimap::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .minimap .mm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
+  .minimap .mm-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+  .minimap .mm-pct{font-size:.72rem;color:#67e8f9;font-weight:700}
+  .mm-search{position:relative;margin-bottom:12px}
+  .mm-search input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 10px 8px 30px;font-size:.82rem;outline:none;transition:.2s}
+  .mm-search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+  .mm-search::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.75rem;opacity:.7}
+  .mm-group{margin-bottom:4px;border-radius:9px;overflow:hidden}
+  .mm-group-head{display:flex;align-items:center;gap:7px;width:100%;background:transparent;border:none;color:#cbd5e1;cursor:pointer;padding:8px 8px;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:left;border-radius:8px;transition:.15s}
+  .mm-group-head:hover{background:rgba(255,255,255,.04);color:#fff}
+  .mm-group-head .chev{font-size:.65rem;transition:transform .2s;color:var(--muted);width:10px}
+  .mm-group.open .mm-group-head .chev{transform:rotate(90deg)}
+  .mm-group-head .gcount{margin-left:auto;font-size:.66rem;color:var(--muted);font-weight:600;background:var(--bg2);padding:1px 7px;border-radius:999px}
+  .mm-items{list-style:none;padding:2px 0 6px 14px;margin:0;max-height:0;overflow:hidden;transition:max-height .3s ease;border-left:1px solid var(--line);margin-left:8px}
+  .mm-group.open .mm-items{max-height:500px}
+  .mm-items li{margin:0}
+  .mm-items a{display:flex;align-items:center;gap:7px;text-decoration:none;color:var(--muted);font-size:.8rem;padding:5px 8px;border-radius:6px;transition:.15s;line-height:1.3}
+  .mm-items a:hover{color:#67e8f9;background:rgba(255,255,255,.03)}
+  .mm-items a .dot{width:6px;height:6px;border-radius:50%;background:var(--line);flex-shrink:0;transition:.2s}
+  .mm-items a.active{color:#67e8f9;font-weight:600;background:rgba(103,232,249,.08)}
+  .mm-items a.active .dot{background:#67e8f9;box-shadow:0 0 0 3px rgba(103,232,249,.2)}
+  .mm-no-result{display:none;font-size:.78rem;color:var(--muted);font-style:italic;padding:14px 8px;text-align:center}
+  .minimap.searching .mm-no-result.show{display:block}
+  .mm-fab{display:none;position:fixed;bottom:24px;right:24px;z-index:200;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;font-size:1.3rem;box-shadow:0 8px 24px rgba(6,182,212,.4);align-items:center;justify-content:center}
+  @media(max-width:1023px){.mm-fab{display:flex}.minimap{display:none;top:0;right:0;left:0;bottom:0;width:auto;max-height:none;border-radius:0;border:none;transform:translateY(20px)}body.nav-mobile-open .minimap{display:block;opacity:1;transform:translateY(0);pointer-events:auto}body.nav-mobile-open .mm-fab{display:none}}
+  .mm-overlay-close{display:none;position:absolute;top:14px;right:16px;font-size:1.6rem;background:none;border:none;color:var(--muted);cursor:pointer;line-height:1}
+  @media(max-width:1023px){.mm-overlay-close{display:block}}
+  .to-top{position:fixed;bottom:24px;left:24px;z-index:200;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}
+  body.nav-active .to-top.show,body.loaded .to-top.show{opacity:1;transform:translateY(0);pointer-events:auto}
+  .to-top:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+  @media(max-width:1023px){.to-top{bottom:88px}}
+  .pres-btn{position:fixed;top:24px;left:24px;z-index:300;width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(59,130,246,.4);opacity:0;transform:translateY(-10px);pointer-events:none;transition:.3s}
+  body.nav-active .pres-btn,body.loaded .pres-btn{opacity:1;transform:translateY(0);pointer-events:auto}
+  .pres-overlay{position:fixed;inset:0;z-index:9999;background:#0a0f1d;display:flex;flex-direction:column;height:100vh;opacity:0;pointer-events:none;transition:opacity .4s ease}.pres-overlay.active{opacity:1;pointer-events:auto}
+  .pres-top{display:flex;align-items:center;gap:16px;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .pres-progress-bg{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}.pres-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#67e8f9,#ef4444);border-radius:2px;transition:width .4s ease}
+  .pres-counter{font-size:.85rem;color:#94a3b8;white-space:nowrap}.pres-counter b{color:#67e8f9;font-size:1.05rem}
+  .pres-exit{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:.82rem;transition:.2s}.pres-exit:hover{background:rgba(239,68,68,.3);color:#fff}
+  .pres-stage{flex:1 1 auto;position:relative;overflow:hidden;min-height:0;width:100%}
+  .pres-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 7%;text-align:center;opacity:0;transform:translateX(60px) scale(.97);transition:opacity .5s ease,transform .5s cubic-bezier(.22,1,.36,1);pointer-events:none}
+  .pres-slide.active{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}.pres-slide.prev{transform:translateX(-60px) scale(.97)}
+  .pres-slide .slide-inner{width:100%;max-width:1100px;margin:auto}
+  .slide-title .badge{display:inline-block;background:rgba(255,255,255,.1);padding:6px 18px;border-radius:999px;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:#a5f3fc;margin-bottom:22px;border:1px solid rgba(255,255,255,.18)}
+  .slide-title h1{font-size:clamp(2rem,5.5vw,4rem);font-weight:800;line-height:1.1;margin:0 0 18px;background:linear-gradient(135deg,#fff,#a5f3fc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .slide-title .sub{font-size:clamp(1rem,2vw,1.35rem);color:#cbd5e1;max-width:760px;margin:0 auto 24px}
+  .slide-section{background:radial-gradient(circle at 50% 40%,rgba(6,182,212,.12),transparent 60%)}.slide-section .sec-num{font-size:clamp(4rem,12vw,8rem);font-weight:800;line-height:1;color:rgba(255,255,255,.08)}.slide-section .sec-label{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:#67e8f9;margin-bottom:8px}.slide-section h2{font-size:clamp(1.8rem,4.5vw,3.2rem);font-weight:800;color:#fff;margin:8px 0 0;line-height:1.15}
+  .slide-quote{background:radial-gradient(circle at 50% 40%,rgba(6,182,212,.12),transparent 60%)}.slide-quote .qmark{font-size:5rem;color:rgba(103,232,249,.3);line-height:.5;margin-bottom:10px}.slide-quote .qtext{font-size:clamp(1.4rem,3vw,2.1rem);font-weight:700;color:#fff;line-height:1.35;max-width:880px;margin:0 auto 16px}.slide-quote .qsource{font-size:.9rem;color:#94a3b8;margin-top:10px}
+  .pres-bottom{display:flex;align-items:center;justify-content:center;gap:18px;padding:14px 28px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .pres-nav{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.15rem;display:flex;align-items:center;justify-content:center;transition:.2s}.pres-nav:hover:not(:disabled){background:var(--blue);border-color:var(--blue);transform:scale(1.1)}.pres-nav:disabled{opacity:.3;cursor:not-allowed}
+  .pres-dots{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:65%}.pres-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.25s;border:none;padding:0}.pres-dot:hover{background:rgba(255,255,255,.4)}.pres-dot.active{background:#67e8f9;width:22px;border-radius:4px}
+  .pres-hint{font-size:.72rem;color:#64748b;text-align:center;padding:2px 0 6px;flex-shrink:0}
+</style>
+</head>
+<body>
+<header class="hero">
+  <span class="badge">Nghiên cứu nội bộ equity · amendment v2_2</span>
+  <h1>Khối lượng giao dịch, Giá và Độ rộng thị trường Việt Nam</h1>
+  <p class="sub">Volume ↔ Price, Volume ↔ Breadth, Breadth ↔ VNINDEX — ba module kiểm định quan hệ cùng kỳ và dẫn trước, với OOS fold-internal và baseline mạnh.</p>
+  <div class="meta">
+    <span>🗓️ Cập nhật: 03/07/2026</span>
+    <span>📐 364 test-ids · 15 indices · 403 mã HOSE</span>
+    <span>📚 8 chương</span>
+  </div>
+</header>
+
+<main class="container">
+
+  <section id="chuong-1">
+    <h2 class="section-title"><span class="num">I</span>Câu hỏi nghiên cứu</h2>
+    <p>Báo cáo này kiểm định ba quan hệ nội bộ thị trường cổ phiếu Việt Nam: <strong>khối lượng giao dịch với giá</strong>, <strong>khối lượng với độ rộng thị trường</strong>, và <strong>độ rộng với VNINDEX</strong>. Đây là nghiên cứu <em>nội bộ equity</em> — không đưa biến trái phiếu, yield curve, VN-US spread hay stress index vào ma trận kiểm định.</p>
+    <div class="callout warn">
+      <h4>⚠️ Quy ước thuật ngữ quan trọng</h4>
+      <p>Trong toàn bộ báo cáo, <em>vol</em> nghĩa là <strong>VOLUME — khối lượng giao dịch</strong> (cổ phiếu/đơn vị giao dịch), KHÔNG PHẢI volatility. Khi cần kiểm soát volatility, biến được đặt tên đầy đủ <code>own_realized_volatility_lag1</code>.</p>
+    </div>
+    <p>Câu hỏi cốt lõi: <em>khối lượng có đi trước giá hay độ rộng không, hay ngược lại — giá và độ rộng mới là thứ đi trước khối lượng?</em> Câu hỏi này quan trọng vì nhiều nhà đầu tư coi khối lượng như "dấu hiệu" dẫn — nhưng bằng chứng thực nghiệm cần phân tách theo từng chiều, không gộp.</p>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="val">364</div><div class="lab">Test-ids trong ma trận khóa trước</div></div>
+      <div class="kpi green"><div class="val">328</div><div class="lab">Test computed (đủ dữ liệu)</div></div>
+      <div class="kpi amber"><div class="val">90</div><div class="lab">Hàng kiểm định có ý nghĩa sau hiệu chỉnh (thuộc nhiều nhóm liên quan, không phải 90 phát hiện độc lập)</div></div>
+      <div class="kpi violet"><div class="val">999</div><div class="lab">Bootstrap iterations (B)</div></div>
+    </div>
+  </section>
+
+  <section id="chuong-2">
+    <h2 class="section-title"><span class="num">II</span>Phương pháp kiểm định</h2>
+    <p>Thiết kế phân tách rõ hai lớp quan hệ để tránh nhầm <em>quan hệ cùng kỳ</em> thành <em>dẫn trước</em>:</p>
+    <div class="compare">
+      <div class="col before">
+        <h4>Layer A — cùng kỳ <span class="tag">Association</span></h4>
+        <ul class="bul">
+          <li>X[t] ~ Y[t] — cùng thời điểm</li>
+          <li>Không nói gì về dẫn trước</li>
+          <li>Verdict: <em>REGIME_ASSOCIATION</em></li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Layer B — dẫn trước <span class="tag">Precedence</span></h4>
+        <ul class="bul">
+          <li>X[t] ~ Y[t+h] — X hôm nay, Y tương lai</li>
+          <li>Y forward; X luôn cùng kỳ (không look-ahead)</li>
+          <li>Verdict: <em>PREDICTIVE_PRECEDENCE</em></li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout info">
+      <h4>🔒 Quy tắc thiết kế cốt lõi</h4>
+      <p><strong>X luôn cùng kỳ</strong> — biến forward (fwd_*) không bao giờ làm X. Đây là sửa lỗi look-ahead quan trọng: phiên bản đầu của nghiên cứu từng đưa <code>fwd_d_log_volume</code> vào X, tạo precedence giả. <strong>Controls bắt buộc</strong> — thiếu control khiến test bị BLOCK, không tự động bỏ. <strong>HAC horizon-aware</strong> — horizon lấy từ biến Y (1 phiên hoặc 5 phiên), không hardcode.</p>
+    </div>
+    <h3>Hai chiều mỗi module</h3>
+    <p>Mỗi module kiểm định <em>cả hai chiều</em>: volume→price VÀ price→volume; volume→breadth VÀ breadth→volume. Đây là điểm quan trọng — vì <strong>phát hiện mạnh thực ra nằm ở chiều ngược</strong> với giả thuyết "volume dẫn" (xem Chương 4–6).</p>
+    <p>Granger hai chiều (bivariate VAR) chạy trên cặp biến tường minh, stationary, non-overlapping — không suy luận từ tên biến. Bootstrap dependent-wild (shared-innovation, non-circular) với B=999. Hiệu chỉnh: Holm FWER 5% cho confirmatory, BH FDR 10% cho Granger (không bao giờ elevate từ NOT_SUPPORTED).</p>
+  </section>
+
+  <section id="chuong-3">
+    <h2 class="section-title"><span class="num">III</span>Dữ liệu và vũ trụ</h2>
+    <p>Dữ liệu đọc read-only từ trial DuckDB (bảng <code>equity_index_ohlcv_daily</code>) và stock SQLite (bảng <code>stock_price_history</code>). Production DB chỉ hash, không mở.</p>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="val">15</div><div class="lab">Indices (VNINDEX + 14 sub-indices)</div></div>
+      <div class="kpi green"><div class="val">403</div><div class="lab">Mã HOSE (current-active universe)</div></div>
+      <div class="kpi amber"><div class="val">5.593</div><div class="lab">Phiên VNINDEX (2004–2026)</div></div>
+      <div class="kpi violet"><div class="val">4,51 triệu</div><div class="lab">Rows stock OHLCV</div></div>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Hạn chế survivorship — bắt buộc công bố</h4>
+      <p>Vũ trụ breadth là <strong>current-active HOSE</strong> (403 mã listed, không delisted) — KHÔNG phải point-in-time, KHÔNG phải historical VNINDEX constituents. Điều này tạo <em>survivorship bias</em>: các mã đã delisted bị loại, làm breadth lịch sử "đẹp" hơn thực. Mọi artifact breadth đều ghi rõ <code>is_point_in_time: false</code> và <code>survivorship_limitation_disclosed: true</code>.</p>
+    </div>
+    <div class="chart-box">
+      <h4>📊 Coverage dữ liệu index</h4>
+      <div class="desc">15 indices, chiều dài series khác nhau — VNINDEX dài nhất (2004), VNMIDCAP/VNSML ngắn nhất (2024).</div>
+      <div class="chart-wrap"><canvas id="chartCoverage"></canvas></div>
+    </div>
+  </section>
+
+  <section id="chuong-4">
+    <h2 class="section-title"><span class="num">IV</span>M1: Volume ↔ Price</h2>
+    <p>Module 1 kiểm định khối lượng và giá index. Phân tách hai chiều cho ra kết quả <em>không đối xứng</em> — đây là phát hiện quan trọng nhất.</p>
+    <table class="tbl">
+      <thead><tr><th>Chiều</th><th>Tần suất</th><th>Layer A (cùng kỳ)</th><th>Layer B (dẫn trước)</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Price → Volume</strong></td><td>daily</td><td>1</td><td><strong>13</strong></td><td>PREDICTIVE_PRECEDENCE_ONLY</td></tr>
+        <tr><td><strong>Price → Volume</strong></td><td>monthly</td><td>3</td><td>1</td><td>PREDICTIVE_PRECEDENCE_ONLY</td></tr>
+        <tr><td><strong>Volume → Price</strong></td><td>daily</td><td>1</td><td>0</td><td>REGIME_ASSOCIATION</td></tr>
+        <tr><td><strong>Volume → Price</strong></td><td>monthly</td><td>7</td><td>1</td><td>PREDICTIVE_PRECEDENCE_ONLY</td></tr>
+      </tbody>
+    </table>
+    <div class="callout good">
+      <h4>✅ Phát hiện: Price đi trước Volume (trong mẫu)</h4>
+      <p>Price→Volume daily có <strong>13 kết quả Layer-B có ý nghĩa</strong> — quan hệ dẫn trước trong mẫu. Ngược lại, Volume→Price daily chỉ có quan hệ cùng kỳ (Layer A=1, Layer B=0). Lưu ý: Volume→Price <em>monthly</em> có 1 kết quả Layer-B — chưa đủ để bác bỏ hoàn toàn chiều volume→price, nhưng chưa được xác nhận OOS. Tất cả các quan hệ dẫn trước này <strong>chưa ổn định ngoài mẫu</strong> (OOS MIXED), nên chỉ gọi là precedence trong mẫu, không phải dự báo vận hành được.</p>
+    </div>
+    <div class="chart-box">
+      <h4>📊 M1 — so sánh hai chiều (Layer-B significant)</h4>
+      <div class="desc">Price→Volume vượt trội: 14 kết quả dẫn trước (daily+monthly) vs Volume→Price chỉ 1 monthly (daily=0).</div>
+      <div class="chart-wrap"><canvas id="chartM1"></canvas></div>
+    </div>
+    <div class="callout info">
+      <h4>🔍 Lưu ý về Granger reverse</h4>
+      <p>Granger reverse (price→volume) có 15 kết quả significant — nhưng đây là chiều <em>phụ</em>, không elevate verdict. Quy tắc: Granger BH 10% không bao giờ elevate từ NOT_SUPPORTED, và reverse-Granger không bao giờ elevate chiều chính.</p>
+    </div>
+  </section>
+
+  <section id="chuong-5">
+    <h2 class="section-title"><span class="num">V</span>M2: Volume ↔ Breadth</h2>
+    <p>Module 2 kiểm định khối lượng index với độ rộng thị trường (net advance share, advance/decline ratio, % above MA). Tương tự M1, phát hiện mạnh ở chiều <em>breadth → volume</em>.</p>
+    <table class="tbl">
+      <thead><tr><th>Chiều</th><th>Tần suất</th><th>Layer A</th><th>Layer B</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Breadth → Volume</strong></td><td>daily</td><td>4</td><td><strong>8</strong></td><td>PREDICTIVE_PRECEDENCE_ONLY</td></tr>
+        <tr><td><strong>Breadth → Volume</strong></td><td>monthly</td><td>2</td><td>0</td><td>REGIME_ASSOCIATION</td></tr>
+        <tr><td><strong>Volume → Breadth</strong></td><td>daily</td><td>4</td><td>0</td><td>REGIME_ASSOCIATION</td></tr>
+        <tr><td><strong>Volume → Breadth</strong></td><td>monthly</td><td>2</td><td>0</td><td>REGIME_ASSOCIATION</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <h4>⚠️ Vì sao baseline mạnh quan trọng ở M2</h4>
+      <p>Breadth (như <code>net_advance_share</code>, <code>equal_weight_return</code>) chứa trạng thái giá hiện tại. Nếu baseline chỉ có return trễ + volatility trễ, breadth có thể chỉ <em>thay thế</em> cho biến equity/volume bị thiếu — tạo cải thiện OOS giả. Baseline mạnh thêm: <strong>current volume change</strong>, <strong>VNINDEX return hiện tại</strong>, <strong>lag của outcome volume</strong>. Với baseline này, toàn bộ OOS breadth→volume trở thành MIXED — MSE ratio dao động từ khoảng −2,5% (tốt hơn baseline) đến +1,5% (kém hơn), <strong>không mô hình nào đạt STABLE</strong>.</p>
+    </div>
+    <div class="callout info">
+      <h4>📐 Lưu ý: equal_weight_return là biến lợi suất</h4>
+      <p><code>equal_weight_return</code> kỹ thuật là <em>biến lợi suất</em> (equal-weight HOSE return), không phải breadth thuần túy. Nó được gộp vào nhóm breadth vì phản ánh độ rộng tham gia, nhưng cần đọc kết quả với nhận thức này.</p>
+    </div>
+  </section>
+
+  <section id="chuong-6">
+    <h2 class="section-title"><span class="num">VI</span>M3: Breadth ↔ VNINDEX</h2>
+    <p>Module 3 kiểm định độ rộng thị trường với VNINDEX. Breadth→VNINDEX daily có 2 kết quả Layer-B — ứng viên precedence trong mẫu.</p>
+    <table class="tbl">
+      <thead><tr><th>Chiều</th><th>Tần suất</th><th>Layer A</th><th>Layer B</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Breadth → VNINDEX</strong></td><td>daily</td><td>6</td><td><strong>2</strong></td><td>PREDICTIVE_PRECEDENCE_ONLY</td></tr>
+        <tr><td><strong>Breadth → VNINDEX</strong></td><td>monthly</td><td>3</td><td>0</td><td>REGIME_ASSOCIATION</td></tr>
+        <tr><td><strong>VNINDEX → Breadth</strong></td><td>daily</td><td>6</td><td>0</td><td>REGIME_ASSOCIATION</td></tr>
+        <tr><td><strong>VNINDEX → Breadth</strong></td><td>monthly</td><td>3</td><td>0</td><td>REGIME_ASSOCIATION</td></tr>
+      </tbody>
+    </table>
+    <p>Hai kết quả Layer-B breadth→VNINDEX là tín hiệu dẫn trước <em>trong mẫu</em>, nhưng OOS vẫn MIXED — chưa đủ để gọi operational. Nhận định trung thực: đây là <em>ứng viên precedence trong mẫu</em>, cần xác nhận thêm ngoài mẫu.</p>
+  </section>
+
+  <section id="chuong-7">
+    <h2 class="section-title"><span class="num">VII</span>OOS và selection leakage</h2>
+    <p>Out-of-sample là cổng kiểm định cuối. Hai lỗi thiết kế OOS phổ biến đã được sửa trong nghiên cứu này:</p>
+    <div class="compare">
+      <div class="col before">
+        <h4>Lỗi v1 — Selection leakage <span class="tag">Sai</span></h4>
+        <ul class="bul">
+          <li>Chọn model từ full-sample significance</li>
+          <li>Sau đó chạy OOS trên chính giai đoạn đã chọn</li>
+          <li>OOS không còn độc lập → operational giả</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Sửa v2_2 — Fold-internal <span class="tag">Đúng</span></h4>
+        <ul class="bul">
+          <li>Candidates declared từ contract LINKS</li>
+          <li>Mỗi fold: augmented-vs-baseline fit tươi</li>
+          <li>Không dùng full-sample sig để chọn</li>
+        </ul>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="val">120</div><div class="lab">OOS runs (unique test-ids)</div></div>
+      <div class="kpi amber"><div class="val">107</div><div class="lab">OOS_MIXED</div></div>
+      <div class="kpi red"><div class="val">1</div><div class="lab">OOS_FAILED</div></div>
+      <div class="kpi green"><div class="val">0</div><div class="lab">OOS_STABLE (baseline mạnh)</div></div>
+    </div>
+    <div class="callout good">
+      <h4>✅ Kết quả: không còn PREDICTIVE_OPERATIONAL</h4>
+      <p>Với baseline mạnh + OOS fold-internal (không leakage), <strong>không chiều nào đạt OOS_STABLE</strong>. Verdict mạnh nhất còn lại là <em>PREDICTIVE_PRECEDENCE_ONLY</em> — precedence trong mẫu, chưa vận hành được ngoài mẫu.</p>
+    </div>
+    <div class="chart-box">
+      <h4>📊 Phân bố verdict OOS</h4>
+      <div class="desc">107 MIXED, 1 FAILED, 12 INSUFFICIENT — không STABLE nào với baseline mạnh.</div>
+      <div class="chart-wrap"><canvas id="chartOOS"></canvas></div>
+    </div>
+  </section>
+
+  <section id="chuong-8">
+    <h2 class="section-title"><span class="num">VIII</span>Tổng hợp verdict</h2>
+    <p>Sau khi sửa look-ahead, monthly pooling, baseline yếu và selection leakage, kết quả trung thực là:</p>
+    <div class="chart-box">
+      <h4>📊 Verdict theo chiều (Layer-B significant)</h4>
+      <div class="desc">Phát hiện mạnh tập trung ở price→volume và breadth→volume. Volume→price daily không có precedence (chỉ cùng kỳ); monthly có 1 kết quả chưa OOS-confirmed.</div>
+      <div class="chart-wrap"><canvas id="chartVerdict"></canvas></div>
+    </div>
+    <h3>Kết luận được phép sử dụng</h3>
+    <ul class="bul">
+      <li><strong>Price → Volume:</strong> có precedence trong mẫu (daily 13, monthly 1); OOS không ổn định.</li>
+      <li><strong>Volume → Price:</strong> daily chỉ cùng kỳ (Layer B=0); monthly có một kết quả precedence trong mẫu nhưng chưa được xác nhận OOS — không bác bỏ hoàn toàn chiều này.</li>
+      <li><strong>Breadth → Volume:</strong> có precedence trong mẫu; baseline mạnh làm toàn bộ OOS MIXED.</li>
+      <li><strong>Volume → Breadth:</strong> chỉ quan hệ cùng kỳ.</li>
+      <li><strong>Breadth → VNINDEX:</strong> hai kết quả dẫn trước trong mẫu; OOS MIXED.</li>
+      <li><strong>Không chiều nào vận hành được</strong> — không có PREDICTIVE_OPERATIONAL.</li>
+    </ul>
+    <div class="callout warn">
+      <h4>⚠️ Đây không phải khuyến nghị đầu tư</h4>
+      <p>Báo cáo là <strong>ghi chép tự nghiên cứu</strong> về quan hệ thống kê, không phải tín hiệu giao dịch. Verdict PREDICTIVE_PRECEDENCE_ONLY nghĩa là "có precedence trong mẫu nhưng OOS không stable" — chưa đủ để vận hành. Nature: association / predictive precedence, <em>không phải nhân quả</em>.</p>
+    </div>
+  </section>
+
+  <section id="tai-lieu">
+    <h2 class="section-title"><span class="num">📚</span>Tài liệu tham khảo</h2>
+    <p>Nghiên cứu tái sử dụng code đã nghiệm thu từ ba chương trước (bond_equity_chapter2/3/4) với controlled inheritance — mỗi file dùng ghi SHA256 parent, không copy toàn bộ.</p>
+    <h3>I. Phương pháp thống kê</h3>
+    <ol class="refs">
+      <li><div><strong>Shao, X. (2010)</strong> — "The Dependent Wild Bootstrap" — <em>Journal of the American Statistical Association</em>, 105(489), 218–235. <a href="https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.tm08744" target="_blank" rel="noopener">DOI: 10.1198/jasa.2009.tm08744</a><sup class="ref">1</sup><span class="src-meta">Bootstrap method cho time-series với shared-innovation, non-circular. Reused từ bond_equity_chapter3_volume_v1/inference.py.</span></div></li>
+      <li><div><strong>Cameron, Gelbach &amp; Miller (2011)</strong> — "Robust Inference With Multiway Clustering" — two-way clustered covariance<sup class="ref">2</sup><span class="src-meta">Cluster theo date + index. Reused từ inference core.</span></div></li>
+      <li><div><strong>Lütkepohl (2005)</strong> — <em>New Introduction to Multiple Time Series Analysis</em> — system BIC via 2×2 residual covariance logdet<sup class="ref">3</sup><span class="src-meta">VAR model selection. Reused cho bivariate VAR Granger.</span></div></li>
+      <li><div><strong>Holm (1979)</strong> — "A Simple Sequentially Rejective Multiple Test Procedure" — FWER step-down<sup class="ref">4</sup><span class="src-meta">Confirmatory family correction (α=5%).</span></div></li>
+      <li><div><strong>Benjamini &amp; Hochberg (1995)</strong> — "Controlling the False Discovery Rate" — BH FDR<sup class="ref">5</sup><span class="src-meta">Exploratory/Granger family (q=10%), không elevate từ NOT_SUPPORTED.</span></div></li>
+    </ol>
+    <h3>II. Nguồn dữ liệu</h3>
+    <ol class="refs" start="6">
+      <li><div><strong>ResearchLab trial DuckDB</strong> — <code>equity_index_ohlcv_daily</code> (15 indices, 2004–2026)<span class="src-meta">Read-only. Hash trial=97aebf43 (khớp parent studies).</span></div></li>
+      <li><div><strong>market_cache/stock_ohlcv/latest.sqlite</strong> — <code>stock_price_history</code> (403 mã HOSE, 4,51 triệu rows)<span class="src-meta">Current-active HOSE universe, survivorship-limited.</span></div></li>
+    </ol>
+    <div class="callout info">
+      <h4>💡 Bản chất báo cáo</h4>
+      <p>Đây là <strong>nghiên cứu nội bộ equity</strong>, tách biệt hoàn toàn với báo cáo bond (vn10y). Không đưa biến trái phiếu vào confirmatory matrix. Mọi số liệu trong báo cáo derive từ artifact trong <code>outputs/</code> — có thể đối chiếu độc lập.</p>
+    </div>
+  </section>
+
+</main>
+
+<aside class="minimap" id="minimap" aria-label="Mục lục điều hướng">
+  <div class="mm-head"><span class="mm-title">Mục lục</span><span class="mm-pct" id="mmPct">0%</span></div>
+  <div class="mm-search"><input type="text" id="mmSearch" placeholder="Lọc mục lục..." autocomplete="off"></div>
+  <button class="mm-overlay-close" id="mmClose" aria-label="Đóng">✕</button>
+  <div class="mm-group open" data-group="a">
+    <button class="mm-group-head"><span class="chev">▶</span> Mở đầu <span class="gcount">3</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-1"><span class="dot"></span>I — Câu hỏi nghiên cứu</a></li>
+      <li><a href="#chuong-2"><span class="dot"></span>II — Phương pháp kiểm định</a></li>
+      <li><a href="#chuong-3"><span class="dot"></span>III — Dữ liệu và vũ trụ</a></li>
+    </ul>
+  </div>
+  <div class="mm-group open" data-group="b">
+    <button class="mm-group-head"><span class="chev">▶</span> Ba module <span class="gcount">3</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-4"><span class="dot"></span>IV — M1: Volume ↔ Price</a></li>
+      <li><a href="#chuong-5"><span class="dot"></span>V — M2: Volume ↔ Breadth</a></li>
+      <li><a href="#chuong-6"><span class="dot"></span>VI — M3: Breadth ↔ VNINDEX</a></li>
+    </ul>
+  </div>
+  <div class="mm-group open" data-group="c">
+    <button class="mm-group-head"><span class="chev">▶</span> Validity &amp; kết luận <span class="gcount">3</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-7"><span class="dot"></span>VII — OOS và selection leakage</a></li>
+      <li><a href="#chuong-8"><span class="dot"></span>VIII — Tổng hợp verdict</a></li>
+      <li><a href="#tai-lieu"><span class="dot"></span>📚 Tài liệu tham khảo</a></li>
+    </ul>
+  </div>
+  <div class="mm-no-result" id="mmNoResult">Không tìm thấy mục nào.</div>
+</aside>
+
+<button class="mm-fab" id="mmFab" aria-label="Mở mục lục">☰</button>
+<button class="to-top" id="toTop" aria-label="Lên đầu trang">↑</button>
+<button class="pres-btn" id="presBtn" aria-label="Trình chiếu" title="Trình chiếu">📽️</button>
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="pres-overlay" id="presOverlay" aria-hidden="true">
+  <div class="pres-top">
+    <div class="pres-progress-bg"><div class="pres-progress-fill" id="presProgress"></div></div>
+    <div class="pres-counter"><b id="presCurrent">1</b> / <span id="presTotal">3</span></div>
+    <button class="pres-exit" id="presExit">✕ Thoát (ESC)</button>
+  </div>
+  <div class="pres-stage" id="presStage"></div>
+  <div class="pres-hint">← → để chuyển slide · ESC để thoát</div>
+  <div class="pres-bottom">
+    <button class="pres-nav" id="presPrev" aria-label="Slide trước">←</button>
+    <div class="pres-dots" id="presDots"></div>
+    <button class="pres-nav" id="presNext" aria-label="Slide sau">→</button>
+  </div>
+</div>
+
+<footer>
+  equity_price_volume_breadth_v1 — Nghiên cứu nội bộ equity<br>
+  Dựng bởi ZCode · Cập nhật 03/07/2026 · KHÔNG phải khuyến nghị đầu tư
+</footer>
+
+<script>
+Chart.defaults.color='#94a3b8';Chart.defaults.font.family='-apple-system, Segoe UI, Roboto, sans-serif';Chart.defaults.borderColor='#334155';
+
+new Chart(document.getElementById('chartCoverage'),{
+  type:'bar',
+  data:{labels:['VNINDEX','VN30','VNCOND/CONS/ENE/FIN/HEAL/MAT/REAL','VNDIAMOND/FINSELECT','VNIT','VN100','VNMIDCAP','VNSML'],
+    datasets:[{label:'Số phiên',data:[5593,3590,2267,1647,1615,1003,542,515],backgroundColor:'rgba(6,182,212,.7)',borderRadius:5}]},
+  options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y+' phiên';}}}},
+    scales:{y:{beginAtZero:true,grid:{color:'#334155'},title:{display:true,text:'số phiên'}},x:{grid:{display:false},ticks:{font:{size:9}}}}}
+});
+
+new Chart(document.getElementById('chartM1'),{
+  type:'bar',
+  data:{labels:['Price→Volume (daily)','Price→Volume (monthly)','Volume→Price (daily)','Volume→Price (monthly)'],
+    datasets:[{label:'Layer-B significant',data:[13,1,0,1],backgroundColor:'rgba(34,197,94,.7)',borderRadius:5}]},
+  options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y+' kết quả';}}}},
+    scales:{y:{beginAtZero:true,grid:{color:'#334155'},title:{display:true,text:'Layer-B sig'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+});
+
+new Chart(document.getElementById('chartOOS'),{
+  type:'bar',
+  data:{labels:['OOS_MIXED','OOS_FAILED','INSUFFICIENT','OOS_STABLE'],
+    datasets:[{label:'Số runs',data:[107,1,12,0],backgroundColor:['rgba(245,158,11,.7)','rgba(239,68,68,.7)','rgba(148,163,184,.5)','rgba(34,197,94,.7)'],borderRadius:5}]},
+  options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y+' runs';}}}},
+    scales:{y:{beginAtZero:true,grid:{color:'#334155'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+});
+
+new Chart(document.getElementById('chartVerdict'),{
+  type:'bar',
+  data:{labels:['Price→Vol','Breadth→Vol','Breadth→VNINDEX','Vol→Price','Vol→Breadth','VNINDEX→Breadth'],
+    datasets:[{label:'Layer-B daily',data:[13,8,2,0,0,0],backgroundColor:'rgba(6,182,212,.7)',borderRadius:5}]},
+  options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y+' kết quả dẫn trước';}}}},
+    scales:{y:{beginAtZero:true,grid:{color:'#334155'},title:{display:true,text:'Layer-B significant'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+});
+</script>
+
+<script>
+(function(){
+  const body=document.body,minimap=document.getElementById('minimap'),fab=document.getElementById('mmFab'),closeBtn=document.getElementById('mmClose'),toTop=document.getElementById('toTop'),progressBar=document.getElementById('progressBar'),mmPct=document.getElementById('mmPct'),search=document.getElementById('mmSearch'),noResult=document.getElementById('mmNoResult'),groups=Array.from(document.querySelectorAll('.mm-group')),allLinks=Array.from(document.querySelectorAll('.mm-items a')),sections=allLinks.map(a=>{const id=a.getAttribute('href').slice(1);return{link:a,section:document.getElementById(id),id}}).filter(x=>x.section);
+  setTimeout(()=>document.body.classList.add('loaded'),800);
+  function openGroupContaining(link){const grp=link.closest('.mm-group');if(grp&&!grp.classList.contains('open'))grp.classList.add('open');}
+  const observer=new IntersectionObserver((entries)=>{entries.forEach(entry=>{if(entry.isIntersecting){const id=entry.target.id;const found=sections.find(s=>s.id===id);if(found){sections.forEach(s=>s.link.classList.remove('active'));found.link.classList.add('active');openGroupContaining(found.link);}}});},{rootMargin:'-90px 0px -70% 0px'});
+  sections.forEach(s=>observer.observe(s.section));
+  function onScroll(){const h=document.documentElement.scrollHeight-window.innerHeight;const pct=Math.min(100,Math.max(0,(window.scrollY/h)*100));progressBar.style.width=pct+'%';mmPct.textContent=Math.round(pct)+'%';if(window.scrollY>400){body.classList.add('nav-active');toTop.classList.add('show');}else{body.classList.remove('nav-active');toTop.classList.remove('show');}}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+  groups.forEach(g=>{const head=g.querySelector('.mm-group-head');head.addEventListener('click',()=>g.classList.toggle('open'));});
+  search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();minimap.classList.toggle('searching',!!q);let anyVisible=false;allLinks.forEach(a=>{const text=a.textContent.toLowerCase();const match=!q||text.includes(q);a.style.display=match?'':'none';if(match)anyVisible=true;if(match&&q)openGroupContaining(a);});noResult.classList.toggle('show',!anyVisible);});
+  fab.addEventListener('click',()=>body.classList.add('nav-mobile-open'));
+  closeBtn.addEventListener('click',()=>body.classList.remove('nav-mobile-open'));
+  allLinks.forEach(a=>{a.addEventListener('click',()=>{if(window.innerWidth<1024)body.classList.remove('nav-mobile-open');});});
+})();
+</script>
+
+<script>
+(function(){
+  const presBtn=document.getElementById('presBtn'),overlay=document.getElementById('presOverlay'),exitBtn=document.getElementById('presExit'),prevBtn=document.getElementById('presPrev'),nextBtn=document.getElementById('presNext'),stage=document.getElementById('presStage'),dotsBox=document.getElementById('presDots'),progressFill=document.getElementById('presProgress'),currentEl=document.getElementById('presCurrent'),totalEl=document.getElementById('presTotal');
+  if(!presBtn||!overlay)return;
+  const SLIDES=[
+    {type:'title',badge:'Nghiên cứu nội bộ equity',title:'Khối lượng, Giá và Độ rộng thị trường VN',sub:'Volume ↔ Price, Volume ↔ Breadth, Breadth ↔ VNINDEX',meta:'Cập nhật 03/07/2026 · 364 test-ids · 8 chương'},
+    {type:'section',num:'I',label:'Chương 1',title:'Câu hỏi nghiên cứu'},
+    {type:'quote',q:'"Phát hiện mạnh là price và breadth đi trước volume — volume→price daily không có precedence (chỉ cùng kỳ)"',source:'Kết luận — sau khi sửa look-ahead và dùng baseline mạnh'}
+  ];
+  let current=0,built=false,slideEls=[];
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function renderSlide(sl,idx){const cls='slide-'+sl.type;let inner='';
+    if(sl.type==='title'){inner='<div class="slide-inner"><span class="badge">'+esc(sl.badge)+'</span><h1>'+esc(sl.title)+'</h1><p class="sub">'+esc(sl.sub)+'</p><p class="sub" style="color:#94a3b8;font-size:.9rem;margin-top:18px">'+esc(sl.meta)+'</p></div>';}
+    else if(sl.type==='section'){inner='<div class="slide-inner"><div class="sec-num">'+esc(sl.num)+'</div><div class="sec-label">'+esc(sl.label)+'</div><h2>'+esc(sl.title)+'</h2></div>';}
+    else if(sl.type==='quote'){inner='<div class="slide-inner"><div class="qmark">"</div><p class="qtext">'+esc(sl.q)+'</p><p class="qsource">'+esc(sl.source)+'</p></div>';}
+    return '<div class="pres-slide '+cls+(idx===0?' active':'')+'" data-idx="'+idx+'">'+inner+'</div>';}
+  function build(){if(built)return;built=true;stage.innerHTML=SLIDES.map(function(sl,i){return renderSlide(sl,i);}).join('');slideEls=Array.from(stage.children);totalEl.textContent=SLIDES.length;SLIDES.forEach(function(_,i){const d=document.createElement('button');d.className='pres-dot'+(i===0?' active':'');d.setAttribute('aria-label','Slide '+(i+1));d.addEventListener('click',function(){goTo(i);});dotsBox.appendChild(d);});}
+  function updateUI(){progressFill.style.width=((current+1)/SLIDES.length*100)+'%';currentEl.textContent=current+1;prevBtn.disabled=current===0;nextBtn.disabled=current===SLIDES.length-1;Array.from(dotsBox.children).forEach(function(d,i){d.classList.toggle('active',i===current);});}
+  function goTo(idx){if(idx<0||idx>=SLIDES.length||idx===current)return;const dir=idx>current?'forward':'back';const old=slideEls[current],nw=slideEls[idx];old.classList.remove('active');if(dir==='forward')old.classList.add('prev');else old.classList.remove('prev');nw.classList.remove('prev');void nw.offsetWidth;nw.classList.add('active');current=idx;updateUI();}
+  function open(){build();overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';current=0;updateUI();}
+  function close(){overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');document.body.style.overflow='';}
+  presBtn.addEventListener('click',open);exitBtn.addEventListener('click',close);prevBtn.addEventListener('click',function(){goTo(current-1);});nextBtn.addEventListener('click',function(){goTo(current+1);});
+  document.addEventListener('keydown',function(e){if(!overlay.classList.contains('active'))return;if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();goTo(current+1);}else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();goTo(current-1);}else if(e.key==='Escape'){close();}else if(e.key==='Home'){goTo(0);}else if(e.key==='End'){goTo(SLIDES.length-1);}});
+  overlay.addEventListener('click',function(e){if(e.target===overlay)close();});
+})();
+</script>
+</body>
+</html>

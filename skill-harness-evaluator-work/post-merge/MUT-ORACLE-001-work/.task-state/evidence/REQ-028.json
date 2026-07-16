@@ -1,0 +1,74 @@
+{
+  "requirement_id": "REQ-028",
+  "text": "Chart render-readiness: mỗi canvas ID referenced trong Chart() phải có HTML element, không duplicate, có DATA object. (Học từ PNJ v2 test: 27/27 PASS nhưng charts vẫn crash do duplicate canvas sau </body>.)",
+  "priority": "high",
+  "method": "chart_runtime_check",
+  "status": "pass",
+  "evidence": {
+    "canvas_ids_found": [
+      "chartHistRev",
+      "chartSegMix",
+      "chartThesisCapex",
+      "chartValPE",
+      "chartPeerScatter",
+      "chartBSDt",
+      "chartBSDt2",
+      "chartTechPrice",
+      "chartTechRSI",
+      "chartProfileDD",
+      "chartProfileDist"
+    ],
+    "chart_ids_referenced": [
+      "chartHistCash",
+      "chartTechRSI",
+      "chartSegMix",
+      "chartThesisRPO",
+      "chartPeerScatter",
+      "chartHistRev",
+      "chartBSDt",
+      "chartBSDt2",
+      "chartTechPrice",
+      "chartValPE",
+      "chartReturns",
+      "chartThesisCapex",
+      "chartProfileDist",
+      "chartProfileDD"
+    ],
+    "unconditional_required": [
+      "chartHistCash",
+      "chartTechRSI",
+      "chartSegMix",
+      "chartPeerScatter",
+      "chartTechPrice",
+      "chartHistRev",
+      "chartBSDt",
+      "chartBSDt2",
+      "chartValPE",
+      "chartThesisCapex",
+      "chartProfileDist",
+      "chartProfileDD"
+    ],
+    "missing_canvas_required": [
+      "chartHistCash"
+    ],
+    "missing_canvas_optional": [
+      "chartReturns",
+      "chartThesisRPO"
+    ],
+    "duplicates": {},
+    "has_data_object": true,
+    "has_chart_js": true,
+    "critical_issues": [],
+    "advisory": [
+      "Required canvas missing: ['chartHistCash'] (8% of 12 unconditional charts)",
+      "Optional canvas absent (not deploy-blocking): ['chartReturns', 'chartThesisRPO']"
+    ],
+    "issues": [
+      "WARN: Required canvas missing: ['chartHistCash'] (8% of 12 unconditional charts)",
+      "WARN: Optional canvas absent (not deploy-blocking): ['chartReturns', 'chartThesisRPO']"
+    ],
+    "patch_note": "P0-1: conditional/fallback refs excluded from required; advisory split from critical"
+  },
+  "verified_at": "2026-07-12T13:33:31.038503",
+  "artifact": "/Users/bobo/ZCodeProject/skill-harness-evaluator-work/post-merge/MUT-ORACLE-001-work/MUT-ORACLE-001.html"
+}

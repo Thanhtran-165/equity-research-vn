@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lợi suất trái phiếu và cổ phiếu Việt Nam</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--txt:#e2e8f0;--muted:#94a3b8;--line:#334155;--amber:#f59e0b;--red:#ef4444;--green:#22c55e;--blue:#3b82f6;--cyan:#06b6d4}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.8;font-size:17px;overflow-x:hidden}
+.hero{background:linear-gradient(135deg,#1e3a5f 0%,#1e293b 50%,#0f172a 100%);padding:50px 24px 40px;text-align:center}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.08);padding:5px 14px;border-radius:999px;font-size:.8rem;letter-spacing:.05em;color:#fde68a;margin-bottom:16px;border:1px solid rgba(255,255,255,.15)}
+.hero h1{font-size:clamp(1.5rem,3.5vw,2.4rem);font-weight:800;line-height:1.25;max-width:760px;margin:0 auto 12px}
+.hero .sub{color:#cbd5e1;font-size:1.05rem;max-width:680px;margin:0 auto}
+.hero .meta{margin-top:16px;color:#64748b;font-size:.82rem}
+.wrap{max-width:780px;margin:0 auto;padding:0 24px}
+main{padding:40px 0 60px}
+section{margin-bottom:48px;scroll-margin-top:20px}
+h2{font-size:1.35rem;font-weight:700;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:10px}
+h2 .n{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.85rem;font-weight:800;flex-shrink:0}
+h3{font-size:1.1rem;margin:20px 0 8px;color:var(--amber)}
+p{margin-bottom:14px;color:#cbd5e1}
+strong{color:#fff}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:20px 0}
+.toc h4{font-size:.85rem;color:var(--amber);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.toc ol{margin:0;padding-left:20px}
+.toc ol li{margin-bottom:4px;font-size:.9rem}
+.toc ol li a{color:#cbd5e1;text-decoration:none}
+.toc ol li a:hover{color:var(--amber)}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.card .icon{font-size:1.6rem;margin-bottom:8px}
+.card h4{font-size:1rem;margin-bottom:6px;color:#fff}
+.card p{font-size:.9rem;color:var(--muted);margin:0}
+.badge-label{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:6px;margin-bottom:8px;font-weight:600}
+.label-context{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.label-null{background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.3)}
+.label-use{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+.callout{border-radius:12px;padding:16px 20px;margin:16px 0;border-left:4px solid}
+.callout-warn{background:rgba(245,158,11,.08);border-color:var(--amber)}
+.callout-limit{background:rgba(239,68,68,.08);border-color:var(--red)}
+.callout-info{background:rgba(59,130,246,.08);border-color:var(--blue)}
+.callout-do{background:rgba(34,197,94,.08);border-color:var(--green)}
+.callout-dont{background:rgba(239,68,68,.08);border-color:var(--red)}
+.callout h4{font-size:.95rem;margin-bottom:6px}
+.callout p{font-size:.92rem;margin-bottom:4px}
+.callout p:last-child{margin-bottom:0}
+table.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:.88rem}
+table.tbl th{background:var(--card);color:var(--amber);padding:8px 10px;text-align:left;border-bottom:2px solid var(--line);font-size:.82rem}
+table.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);color:#cbd5e1}
+table.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.ev-matrix{display:grid;grid-template-columns:1fr;gap:10px;margin:16px 0}
+.ev-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.4fr;gap:8px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.ev-row.head{background:transparent;border:none;padding:4px 12px}
+.ev-row.head span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.ev-layer{font-size:.88rem;color:#fff;font-weight:600}
+.ev-cell{font-size:.82rem;color:var(--muted);text-align:center}
+.ev-zero{color:#94a3b8;font-weight:700}
+.chart-box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
+.chart-box h4{font-size:.92rem;margin-bottom:4px;color:#fff}
+.chart-box .desc{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.chart-wrap{height:300px;position:relative}
+.chart-wrap.tall{height:360px}
+ul.bul{margin:10px 0 14px;padding-left:20px}
+ul.bul li{margin-bottom:6px;color:#cbd5e1}
+ul.bul li::marker{color:var(--amber)}
+ol.steps{margin:10px 0 14px;padding-left:22px}
+ol.steps li{margin-bottom:10px;color:#cbd5e1}
+ol.steps li::marker{color:var(--amber);font-weight:700}
+details{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0;margin:12px 0}
+details summary{cursor:pointer;padding:12px 16px;font-size:.9rem;color:var(--muted);font-weight:600;list-style:none}
+details summary::after{content:" ▸";color:var(--amber)}
+details[open] summary::after{content:" ▾"}
+details .body{padding:0 16px 14px}
+.chap-banner{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin:40px 0 24px;text-align:center}
+.chap-banner .chap-tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);background:rgba(245,158,11,.12);padding:4px 14px;border-radius:999px;border:1px solid rgba(245,158,11,.25);margin-bottom:12px}
+.chap-banner h3{font-size:1.3rem;color:#fff;font-weight:700;margin-bottom:8px}
+.chap-banner p{font-size:.88rem;color:var(--muted);margin:0}
+.chap-banner .verdict{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:.92rem;color:#cbd5e1}
+.chap-banner .verdict strong{color:var(--amber)}
+.chap-banner.closed{opacity:.95}
+.chap-status{display:inline-block;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:6px;margin-left:8px;vertical-align:middle}
+.chap-status.done{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+footer{text-align:center;padding:30px 24px;color:#475569;font-size:.8rem;border-top:1px solid var(--line);margin-top:40px}
+@media(max-width:600px){.hero{padding:36px 16px 28px}.hero h1{font-size:1.4rem}.wrap{padding:0 16px}body{font-size:15px}.chart-wrap{height:220px}.chart-wrap.tall{height:280px}.cards3{grid-template-columns:1fr}.ev-row{grid-template-columns:1fr 1fr;gap:6px}.ev-row.head{display:none}.ev-layer{grid-column:1/-1}.toc ol{padding-left:16px}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <span class="badge">Tự nghiên cứu · 2014–2026</span>
+  <h1>Lợi suất trái phiếu và cổ phiếu Việt Nam</h1>
+  <p class="sub">Một tín hiệu bối cảnh rủi ro, không phải cỗ máy dự báo.</p>
+  <div class="meta">Trái phiếu Chính phủ Việt Nam · Cổ phiếu HOSE · Cập nhật 26/06/2026</div>
+</header>
+
+<main class="wrap">
+
+<div class="chap-banner closed">
+  <span class="chap-tag">Chương 1</span><span class="chap-status done">Đã hoàn thành</span>
+  <h3>Trái phiếu có thể trở thành công cụ dự báo độc lập cho thị trường cổ phiếu Việt Nam không?</h3>
+  <p>Kiểm định forward forecast trên ba tầng: chỉ số, cấu trúc theo ngày, cấu trúc theo tháng.</p>
+  <div class="verdict"><strong>Kết luận:</strong> Không tìm thấy bằng chứng đủ ổn định để sử dụng độc lập trong phạm vi dữ liệu hiện có.</div>
+</div>
+
+<div class="toc">
+  <h4>Mục lục — Chương 1</h4>
+  <ol>
+    <li><a href="#s1">Câu hỏi thực sự là gì?</a></li>
+    <li><a href="#s2">Khi chỉ nhìn vào chỉ số</a></li>
+    <li><a href="#s3">Nhìn vào bên trong thị trường theo ngày</a></li>
+    <li><a href="#s4">Khi kéo góc nhìn ra theo tháng</a></li>
+    <li><a href="#s5">Vì sao trái phiếu hợp làm đèn vàng hơn dự báo?</a></li>
+    <li><a href="#s6">Cách sử dụng thực tế</a></li>
+    <li><a href="#s7">Giới hạn và cách đọc kết quả</a></li>
+  </ol>
+</div>
+
+<div class="cards3">
+  <div class="card">
+    <div class="icon">🔍</div>
+    <span class="badge-label label-context">Điều tìm thấy</span>
+    <h4>Có liên hệ mô tả</h4>
+    <p>Lợi suất trái phiếu và cổ phiếu có đi cùng nhau theo một số cách, nhưng không có quan hệ xác nhận đủ ổn định.</p>
+  </div>
+  <div class="card">
+    <div class="icon">🚫</div>
+    <span class="badge-label label-null">Điều không tìm thấy</span>
+    <h4>Không cải thiện dự báo</h4>
+    <p>Biết thêm lợi suất trái phiếu không giúp dự đoán cấu trúc thị trường ngoài mẫu một cách nhất quán.</p>
+  </div>
+  <div class="card">
+    <div class="icon">💡</div>
+    <span class="badge-label label-use">Cách dùng hợp lý</span>
+    <h4>Đèn vàng, không quyết định thay</h4>
+    <p>Xem biến động trái phiếu bất thường như tín hiệu kiểm tra thêm độ rộng giá và khối lượng cổ phiếu.</p>
+  </div>
+</div>
+
+<section id="s1">
+  <h2><span class="n">1</span>Câu hỏi thực sự là gì?</h2>
+  <p>Khi nghe "lãi suất tăng thì cổ phiếu giảm", người ta thường trộn bốn ý rất khác nhau vào một câu. Bài viết này phân biệt rõ:</p>
+  <ul class="bul">
+    <li><strong>Tương quan</strong> — hai đại lượng di chuyển cùng hoặc ngược chiều khi đo trong cùng khoảng thời gian. Có thể thật hoặc do ngẫu nhiên.</li>
+    <li><strong>Bối cảnh cảnh báo</strong> — khi trái phiếu biến động mạnh, nhà đầu tư nên kiểm tra thêm trạng thái thị trường cổ phiếu (độ rộng, khối lượng). Đây là vai trò "đèn vàng".</li>
+    <li><strong>Dự báo</strong> — trái phiếu tự nói trước hướng đi hoặc sụt giảm tương lai của cổ phiếu. Nghiên cứu này <strong>không xác nhận</strong> điều đó.</li>
+    <li><strong>Tín hiệu giao dịch</strong> — điều kiện đủ để mua/bán. Tuyệt đối <strong>không</strong> được tuyên bố.</li>
+  </ul>
+  <p>Nghiên cứu được mở rộng từ bề mặt chỉ số (VN-INDEX) sang <strong>cấu trúc bên trong thị trường</strong>: bao nhiêu cổ phiếu cùng tăng/giảm, bao nhiêu mã còn đứng trên đường trung bình, cổ phiếu bình quân so với VN-INDEX, và khối lượng tăng/giảm ra sao. Mục tiêu là xem trái phiếu có "nhìn thấu" được sức khỏe bên trong thị trường hay không.</p>
+  <div class="callout callout-info">
+    <h4>💡 Cách đọc nhanh</h4>
+    <p>Suy luận từ mạnh đến yếu: <strong>nhân quả</strong> (không có) → <strong>dự báo</strong> (không có) → <strong>cảnh báo/bối cảnh</strong> (đáng xem thêm) → <strong>tín hiệu giao dịch</strong> (không có). Bài này dừng ở mức "đáng xem thêm".</p>
+  </div>
+</section>
+
+<section id="s2">
+  <h2><span class="n">2</span>Khi chỉ nhìn vào chỉ số</h2>
+  <p>Phân tích đầu tiên đặt câu hỏi thẳng: biết lợi suất trái phiếu 10 năm thay đổi, có dự báo được lợi suất cổ phiếu (VN-INDEX) về trước không? Kết quả kiểm định chặt trên 90 phép thử biến động lợi suất thô cho thấy <strong>không có phép nào vượt hiệu chỉnh đa phép thử</strong>.</p>
+  <p>Một nhánh bổ sung dùng chỉ số căng thẳng tổng hợp. Đây chỉ là nghiên cứu phụ, không thay câu hỏi chính. Trên 42 phép thử, cũng <strong>không có phép nào vượt hiệu chỉnh</strong>.</p>
+
+  <div class="ev-matrix">
+    <div class="ev-row head"><span>Tầng bằng chứng</span><span>Kiểm định xác nhận</span><span>Ngoài mẫu ổn định</span><span>Kết luận</span></div>
+    <div class="ev-row">
+      <span class="ev-layer">Chỉ số (lợi suất thô)</span>
+      <span class="ev-cell ev-zero">0/90</span>
+      <span class="ev-cell ev-zero">Không</span>
+      <span class="ev-cell">Chưa đủ tin cậy</span>
+    </div>
+    <div class="ev-row">
+      <span class="ev-layer">Chỉ số (căng thẳng, phụ)</span>
+      <span class="ev-cell ev-zero">0/42</span>
+      <span class="ev-cell ev-zero">Không</span>
+      <span class="ev-cell">Bổ sung, không thay chính</span>
+    </div>
+  </div>
+
+  <p>Nói dân dã: các dấu hiệu ban đầu có thể trông hợp lý khi nhìn lại quá khứ. Nhưng khi ép mô hình dự báo trên dữ liệu chưa từng thấy, trái phiếu <strong>không cải thiện</strong> so với mô hình nền đơn giản. Không có bằng chứng ổn định để biến trái phiếu thành công cụ dự báo độc lập.</p>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Điều không được suy ra</h4>
+    <p>"Không có bằng chứng xác nhận" <strong>không</strong> đồng nghĩa "không có quan hệ". Nó có nghĩa là: trong phạm vi dữ liệu và phương pháp hiện có, quan hệ (nếu có) chưa đủ ổn định và rõ ràng để tin cậy.</p>
+  </div>
+
+  <details><summary>Phương pháp (chi tiết)</summary>
+  <div class="body">
+    <p><strong>Lợi suất thô:</strong> 90 phép thử biến động lợi suất (theo điểm cơ bản), hồi quy tuyến tính + Newey-West HAC (độ trễ ≥ horizon), Holm FWER 5%. <strong>0/90</strong> vượt Holm.</p>
+    <p><strong>Nhánh căng thẳng (phụ):</strong> 42 phép thử trên chỉ số căng thẳng tổng hợp, Holm 5%. <strong>0/42</strong>. Chỉ là bổ sung, không thay lợi suất thô.</p>
+    <p><strong>Kiểm tra ngoài mẫu:</strong> 48 mô hình trực tiếp có 266 lượt cải thiện và 324 lượt xấu đi; không hình thành lợi thế nhất quán.</p>
+  </div>
+  </details>
+</section>
+
+<section id="s3">
+  <h2><span class="n">3</span>Nhìn vào bên trong thị trường theo ngày</h2>
+  <p>Có thể trái phiếu không dự báo được chỉ số, nhưng vẫn "nhìn thấu" được sức khỏe bên trong? Để trả lời, nghiên cứu xây dựng các chỉ số cấu trúc thị trường theo ngày:</p>
+  <ul class="bul">
+    <li><strong>Độ rộng giá</strong> — bao nhiêu cổ phiếu cùng tăng/giảm, bao nhiêu mã còn đứng trên các đường trung bình (MA50, MA200), cổ phiếu bình quân so với VN-INDEX.</li>
+    <li><strong>Độ rộng khối lượng</strong> — tỷ lệ khối lượng vào mã tăng hay mã giảm, mức độ tham gia, khối lượng bất thường.</li>
+    <li><strong>Phân tán và sụt giảm</strong> — mức độ phân kỳ lợi nhuận giữa các mã, tỷ lệ mã sụt mạnh.</li>
+  </ul>
+  <p>Sau kiểm định chặt (lấy mẫu lặp có phụ thuộc thời gian + hiệu chỉnh đa phép thử), kết quả: <strong>0/6 giả thuyết xác nhận được hỗ trợ</strong>. Trái phiếu không dự báo được các chỉ số cấu trúc này theo ngày.</p>
+
+  <div class="chart-box">
+    <h4>Trái phiếu cải thiện dự báo ngoài mẫu bao nhiêu?</h4>
+    <div class="desc">So sánh mô hình "chỉ cổ phiếu" với "cổ phiếu + trái phiếu". 0 = trái phiếu không giúp gì. <strong>Đây không phải tỷ lệ thành công.</strong></div>
+    <div class="chart-wrap"><canvas id="chartOOS"></canvas></div>
+  </div>
+
+  <div class="ev-matrix">
+    <div class="ev-row head"><span>Tầng</span><span>Xác nhận</span><span>Ngoài mẫu</span><span>Điểm gãy cấu trúc</span></div>
+    <div class="ev-row">
+      <span class="ev-layer">Cấu trúc theo ngày</span>
+      <span class="ev-cell ev-zero">0/6</span>
+      <span class="ev-cell ev-zero">0/6</span>
+      <span class="ev-cell ev-zero">độ dốc 0/6 · toàn phương trình 0/6</span>
+    </div>
+  </div>
+
+  <p>Kiểm tra độ ổn định cấu trúc cho thấy cũng <strong>không có điểm gãy đáng kể</strong> — quan hệ (hoặc sự vắng mặt của nó) khá ổn định theo thời gian, chứ không phải "khó bắt vì liên tục biến đổi".</p>
+
+  <div class="callout callout-warn">
+    <h4>⚠️ Cảnh báo theo ngày</h4>
+    <p>Phân tích cảnh báo theo ngày cho thấy một vài tín hiệu tăng nhẹ khi trái phiếu biến động mạnh, nhưng mẫu kiểm tra cuối mỏng (2–12 sự kiện) và khoảng tin cậy rộng. Đây là <strong>phân tích độ nhạy thăm dò</strong>, chưa phải cảnh báo đã xác nhận.</p>
+  </div>
+</section>
+
+<section id="s4">
+  <h2><span class="n">4</span>Khi kéo góc nhìn ra theo tháng</h2>
+  <p>Có một lý do hợp lý để tin phân tích theo tháng sẽ tốt hơn: tháng giảm nhiễu ngắn hạn, và gần với kênh chiết khấu trong lý thuyết tài chính hơn. Vì vậy nghiên cứu lặp lại toàn bộ khung phân tích theo tháng, trên 150 tháng dữ liệu (120 tháng đạt đủ độ phủ để phân tích).</p>
+  <p>Kết quả vẫn là <strong>0/6 giả thuyết xác nhận được hỗ trợ</strong>. Kiểm tra ngoài mẫu tốt hơn chút (trái phiếu cải thiện 2/6 outcome), nhưng <strong>không ổn định</strong> qua các lần kiểm tra nên vẫn <strong>không vận hành được</strong>.</p>
+
+  <div class="ev-matrix">
+    <div class="ev-row head"><span>Tầng</span><span>Xác nhận</span><span>Ngoài mẫu</span><span>Điểm gãy cấu trúc</span></div>
+    <div class="ev-row">
+      <span class="ev-layer">Cấu trúc theo tháng</span>
+      <span class="ev-cell ev-zero">0/6</span>
+      <span class="ev-cell">2/6 (không ổn định)</span>
+      <span class="ev-cell ev-zero">độ dốc 0/6 · toàn phương trình 0/6</span>
+    </div>
+  </div>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Dữ liệu tháng không "cứu" giả thuyết</h4>
+    <p>Viết thẳng: <strong>phân tích tháng không xác nhận</strong> điều phân tích ngày không tìm thấy. Cả hai tần suất đều không có bằng chứng xác nhận. Không nói "tháng yếu hơn" hay "mạnh hơn" chỉ dựa vào p-value.</p>
+  </div>
+
+  <div class="callout callout-warn">
+    <h4>⚠️ Cảnh báo theo tháng quá mỏng</h4>
+    <p>Cảnh báo theo tháng thậm chí còn mỏng hơn theo ngày (kiểm tra cuối chỉ 1–2 cảnh báo mỗi điều kiện kích hoạt). Quá ít để diễn giải xác suất một cách đáng tin cậy.</p>
+  </div>
+
+  <div class="chart-box">
+    <h4>Độ sâu cảnh báo — số cảnh báo trên tập kiểm tra cuối</h4>
+    <div class="desc">Mỗi cột là một điều kiện kích hoạt khác nhau. Mẫu quá mỏng (đặc biệt theo tháng) để biến thành xác suất dự báo. <strong>Số lượng, không phải tỷ lệ thành công.</strong></div>
+    <div class="chart-wrap tall"><canvas id="chartAlert"></canvas></div>
+  </div>
+</section>
+
+<section id="s5">
+  <h2><span class="n">5</span>Vì sao trái phiếu hợp làm đèn vàng hơn dự báo?</h2>
+  <p>Lợi suất trái phiếu phản ánh nhiều lực cùng lúc: lạm phát, thanh khoản hệ thống, kỳ vọng chính sách, và cung cầu trái phiếu Chính phủ. Một biến động trái phiếu có thể xuất hiện mà cổ phiếu <strong>chưa phản ứng theo cùng cách</strong> ngay — hoặc phản ứng phân tán giữa các mã.</p>
+  <p>Điều đó lý giải vì sao trái phiếu có thể là <strong>tín hiệu bối cảnh</strong> chứ không phải công cụ dự báo tuyến tính:</p>
+  <ul class="bul">
+    <li>Trái phiếu gộp nhiều thông tin vĩ mô vào một con số, nên biến động lớn đáng chú ý.</li>
+    <li>Nhưng cổ phiếu phản ứng qua nhiều kênh và với độ trễ khác nhau, nên không có quan hệ một-một ổn định.</li>
+    <li>Cảnh báo trái phiếu xuất hiện <strong>hiếm</strong> và mẫu kiểm tra cuối <strong>mỏng</strong>, nên không thể tính xác suất chính xác.</li>
+    <li>Không có cải thiện dự báo ngoài mẫu ổn định ở bất kỳ tần suất nào.</li>
+  </ul>
+  <div class="callout callout-info">
+    <h4>💡 Kết luận vai trò</h4>
+    <p>Trái phiếu có thể khiến nhà đầu tư <strong>kiểm tra thêm</strong>, nhưng <strong>không đủ để quyết định thay</strong> họ. Đó là đèn vàng, không phải tín hiệu xanh/đỏ.</p>
+  </div>
+</section>
+
+<section id="s6">
+  <h2><span class="n">6</span>Cách sử dụng thực tế</h2>
+  <p>Đây là quy trình quan sát ba bước, <strong>không phải quy tắc giao dịch</strong>. Không có ngưỡng mua/bán, không hứa xác suất.</p>
+  <ol class="steps">
+    <li><strong>Trái phiếu biến động bất thường</strong> — bật trạng thái theo dõi. Đây chỉ là dấu hiệu kiểm tra thêm, chưa phải hành động.</li>
+    <li><strong>Kiểm tra độ rộng giá</strong> — tỷ lệ mã suy yếu, bao nhiêu mã còn trên đường trung bình, cổ phiếu bình quân so với VN-INDEX, mức phân tán.</li>
+    <li><strong>Kiểm tra khối lượng</strong> — khối lượng vào mã giảm, mức tham gia, khối lượng bất thường.</li>
+  </ol>
+  <p>Chỉ khi <strong>nhiều lớp cùng xấu đi</strong> mới tăng mức thận trọng. Một trái phiếu tăng một mình, chưa đủ.</p>
+
+  <div class="callout callout-do">
+    <h4>✅ Nên làm</h4>
+    <ul class="bul" style="margin:0">
+      <li>Dùng trái phiếu như một trong nhiều tín hiệu bối cảnh.</li>
+      <li>Kết hợp với độ rộng giá và khối lượng cổ phiếu.</li>
+      <li>Tăng thận trọng khi nhiều lớp cùng báo hiệu xấu.</li>
+    </ul>
+  </div>
+
+  <div class="callout callout-dont">
+    <h4>🚫 Không nên làm</h4>
+    <ul class="bul" style="margin:0">
+      <li>Không bán chỉ vì lợi suất tăng.</li>
+      <li>Không mua chỉ vì lợi suất giảm.</li>
+      <li>Không dùng trái phiếu để định thời điểm thị trường.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="s7">
+  <h2><span class="n">7</span>Giới hạn và cách đọc kết quả</h2>
+
+  <div class="callout callout-limit">
+    <h4>⚠️ Giới hạn dữ liệu</h4>
+    <ul class="bul" style="margin:0">
+      <li><strong>Tập cổ phiếu</strong> là 403 cổ phiếu HOSE hiện còn giao dịch, có thiên lệch sống sót — chỉ giữ mã còn niêm yết, không phải lịch sử đầy đủ.</li>
+      <li>Không phải dữ liệu điểm trong thời gian thực, không phải danh sách thành phần VN-INDEX lịch sử chính thức.</li>
+      <li>Khoảng cách cổ phiếu bình quân − VN-INDEX là <strong>số xấp xỉ</strong> vì tập cổ phiếu không khớp chính xác rổ VN-INDEX.</li>
+      <li>Phân tích theo ngày và theo tháng dùng hai bản chụp dữ liệu cổ phiếu khác nhau (do cơ sở dữ liệu cập nhật giữa chừng), nên so sánh chỉ mang tính phương pháp, không phải so sánh cùng một bản dữ liệu.</li>
+      <li>Mẫu cảnh báo mỏng, đặc biệt theo tháng.</li>
+    </ul>
+  </div>
+
+  <div class="callout callout-info">
+    <h4>💡 Cách đọc kết quả âm tính</h4>
+    <p>"Nghiên cứu chưa tìm thấy bằng chứng xác nhận đủ ổn định trong phạm vi dữ liệu hiện có." Điều này <strong>không</strong> đồng nghĩa "không có quan hệ" — nó có nghĩa quan hệ (nếu có) chưa đủ mạnh và ổn định để tin cậy với phương pháp này.</p>
+  </div>
+
+  <details><summary>Phương pháp thống kê (chi tiết)</summary>
+  <div class="body">
+    <p><strong>Suy luận thống kê:</strong> hồi quy tuyến tính + Newey-West HAC (độ trễ ≥ horizon), với bootstrap phụ thuộc hạn chế null để tính p-value. Độ dài khối ≥ horizon.</p>
+    <p><strong>Bỏ chọn đa phép thử:</strong> Holm bước xuống FWER 5% cho nhóm xác nhận; Benjamini-Hochberg FDR 10% cho nhóm thăm dò, hai nhóm tách riêng.</p>
+    <p><strong>Điểm gãy cấu trúc:</strong> sup-F (toàn phương trình: hệ số góc + hệ số chặn) và sup-Wald (chỉ hệ số góc), hai nhóm Holm riêng; ngày gãy được ánh xạ trên mảng tháng/ngày đã căn chỉnh. Công thức phương sai hệ số góc dùng n/det (đã được kiểm tra lại).</p>
+    <p><strong>Kiểm tra ngoài mẫu:</strong> cửa sổ mở rộng, khoảng cách ly ≥ horizon cho mỗi nhãn forward; so sánh baseline "chỉ cổ phiếu" với "cổ phiếu + trái phiếu".</p>
+    <p><strong>Cảnh báo:</strong> ngưỡng chỉ được học trên dữ liệu huấn luyện; đánh giá độc lập và phần quy kết được báo cáo riêng; kết quả tách riêng, không gộp.</p>
+  </div>
+  </details>
+</section>
+
+<div class="chap-banner">
+  <span class="chap-tag">Chương 2</span><span class="chap-status" style="background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.3)">Sắp mở</span>
+  <h3>Khi lợi suất trái phiếu tăng hoặc giảm, có tác động lên biến động, thanh khoản và độ rộng thị trường không?</h3>
+  <p>Chương 1 test dự báo forward (kết quả âm tính). Chương 2 sẽ test quan hệ đồng thời và tác động ngắn hạn — câu hỏi mà dữ liệu hiện chưa trả lời trực tiếp.</p>
+</div>
+
+</main>
+
+<footer>
+  <p>Nghiên cứu độc lập · Trái phiếu Chính phủ Việt Nam · Cổ phiếu HOSE</p>
+  <p>Chương 1 (dự báo độc lập): chỉ số 0/90 · theo ngày 0/6 · theo tháng 0/6 — kết quả âm tính.</p>
+  <p>Chương 2 (tác động đồng thời): sắp mở.</p>
+  <p>Kết quả âm tính = "không tìm thấy bằng chứng xác nhận", không phải "không có quan hệ".</p>
+</footer>
+
+<script>
+Chart.defaults.color='#94a3b8';
+Chart.defaults.font.family='-apple-system,Segoe UI,Roboto,sans-serif';
+Chart.defaults.borderColor='#334155';
+
+new Chart(document.getElementById('chartOOS'), {
+  type:'bar',
+  data:{ labels:['Theo ngày','Theo tháng'],
+    datasets:[{ label:'Kết quả trái phiếu cải thiện (trên 6)', data:[0,2],
+      backgroundColor:['rgba(148,163,184,.6)','rgba(59,130,246,.7)'], borderRadius:6, maxBarThickness:90 }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false},
+      tooltip:{ callbacks:{ label:(c)=>c.parsed.y+'/6 kết quả — không ổn định, không vận hành' } } },
+    scales:{ y:{ beginAtZero:true, max:6, ticks:{ stepSize:1 },
+        title:{display:true,text:'Số kết quả cải thiện (trên 6)',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false} } }
+  }
+});
+
+new Chart(document.getElementById('chartAlert'), {
+  type:'bar',
+  data:{ labels:['Δ2Y 5 phiên','Δ2Y 20 phiên','Biến động 2Y','Độ dốc mở rộng'],
+    datasets:[
+      { label:'Theo ngày', data:[10,3,2,12], backgroundColor:'rgba(56,189,248,.7)', borderRadius:4 },
+      { label:'Theo tháng', data:[1,2,1,2], backgroundColor:'rgba(139,92,246,.7)', borderRadius:4 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:true, position:'top', labels:{color:'#e2e8f0', font:{size:11}}},
+      tooltip:{ callbacks:{ label:(c)=>c.dataset.label+': '+c.parsed.y+' cảnh báo (mẫu, không phải tỷ lệ)' } } },
+    scales:{ y:{ beginAtZero:true, title:{display:true,text:'Số cảnh báo trên tập kiểm tra cuối',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+</script>
+
+</body>
+</html>

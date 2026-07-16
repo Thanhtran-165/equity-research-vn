@@ -1,0 +1,52 @@
+protocol_version: 0.9.1
+relation_to_previous: SHADOW_HARDENING_POST_BATCH_1_DIAGNOSTIC
+baseline_protocol_sha256: a3c97ead49fac426b118f7e101808e3dca43b2d9e10264810f081245debdd17b
+frozen_before_execution: true
+frozen_at: '2026-07-14T21:55:00'
+verification_layer_version: 0.1.5 (UNCHANGED)
+runner_version: 0.5.0 → 0.5.1 (no-source gate retry removed — detect-only)
+changes_from_v0_9_0:
+  branch_A_source_readiness: |
+    NEW module source_pack_readiness.py: semantic readiness gate.
+    All 5 shadow packs now have real news/events data.
+  branch_B_no_source_gate: |
+    NEW module no_source_claim_gate.py: detect-only scan for unprovenanced
+    external claims. CRITICAL FIX: retry mechanism removed because it caused
+    the model to regenerate the entire dashboard from scratch, destroying
+    DATA object, charts, and sections (18KB stripped vs 100KB+ normal).
+    Gate is now DETECT-ONLY — logs findings for observability; verifier's
+    REQ-027 enforces at final verification (working correctly).
+    Runner hashes: 046303a3 (v0.4.0) → d44c14e6 (with retry bug) → 846729a2 (fixed).
+  branch_C_gas_investigation: |
+    GAS-02: agent produced 12 canvases but 0 'new Chart()' calls.
+    Content variance, not verifier defect.
+unchanged:
+- skill prompts
+- verifier 0.1.5
+- builder
+- content_depth_gate
+- environment_preflight
+- phase4a_gate
+- phase6_preflight
+- model_backends
+- requirements.yaml
+frozen_component_hashes:
+  verifier: 6cc2e40f7c726abd
+  runner: 846729a2f977ea5c
+  builder: 7bfbab1436c7e8c8
+  content_depth_gate: 6e4f2ec1b9b818b4
+  environment_preflight: 06abeb0cc4170c23
+  source_pack_readiness: 80d25f2a75de05c2
+  no_source_claim_gate: eb752159460f4730
+  phase4a_gate: b3c6edb912eaf053
+  phase6_preflight: 7f29f328c9b202c4
+  model_backends: fcfcf01b6df07e75
+  requirements: ffeb27c68a019882
+model_config:
+  backend: zai
+  model_id: GLM-5.2
+  python: /opt/homebrew/bin/python3
+  path_prefix: /opt/homebrew/bin
+  max_tokens: 32768
+patches_during_validation: prohibited
+protocol_sha256: f1c7df7ef066439f5601c04085d5ec299e8666966b2c93f47df8fd75c1928496

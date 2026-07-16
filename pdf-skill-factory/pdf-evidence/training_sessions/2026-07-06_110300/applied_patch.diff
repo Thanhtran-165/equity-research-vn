@@ -1,0 +1,76 @@
+--- training_sessions/2026-07-06_110300/backup_pre_patch/SKILL.md.bak	2026-07-06 11:08:02
++++ SKILL.md	2026-07-06 11:10:17
+@@ -29,7 +29,7 @@
+ 1. **Intake** — validate documents/question/constraint.
+ 2. **Classify** — mỗi PDF: digital_text | scanned | mixed | table_heavy | legal | financial | academic | policy | slide_export | low_quality_ocr. (script: `scripts/classify.py`)
+ 3. **Route parser** — bảng routing ở `references/parsers.md`. Scan → **abstain + cảnh báo** v0.1 (OCR thật v0.5+).
+-4. **Extract evidence** — snippet + page + section. (script: `scripts/extract.py`)
++4. **Extract evidence** — snippet + page + section + `table_id` (nếu claim từ bảng/chart). (script: `scripts/extract.py`)
+ 5. **Sufficiency check** — đủ trả lời không? Không → abstain.
+ 6. **Answer with citation** — mỗi claim kèm citation.
+ 7. **Self-check** — `references/policies.md` các mục check + `references/failure_modes.md` 20 lỗi phải tránh.
+@@ -72,8 +72,10 @@
+ - Quote tồn tại verbatim trong PDF?
+ - Có hallucination (claim không support)?
+ - Có trộn kiến thức ngoài (`pdf_only=true`)?
+-- Bảng: giữ header/đơn vị/kỳ?
++- Bảng: giữ header/đơn vị/kỳ? Claim từ bảng → dùng format `[file, page, table_id, row/col]`.
+ - Số tài chính: dấu/đơn vị/% đúng?
++- Số dự báo: đã khai báo loại {actual/forecast/target/probability_range} + time horizon?
++- Khi ≥ 2 forecast horizon trong 1 câu trả lời: đã gắn nhãn horizon từng số?
+ - Đủ evidence? Không → abstain.
+ 
+ > 30%+ claim fail self-check → `RefineAnswer` hoặc abstain.
+--- training_sessions/2026-07-06_110300/backup_pre_patch/policies.md.bak	2026-07-06 11:08:02
++++ references/policies.md	2026-07-06 11:08:36
+@@ -14,6 +14,13 @@
+ [file, page, table_id, row_or_column_reference]
+ ```
+ 
++**Khi nào dùng format bảng** (trigger):
++- Cited page có bảng/chart được parser detect VÀ
++- Claim tham chiếu số liệu/range từ visual đó
++→ PHẢI dùng format bảng với `table_id` (hoặc `chart_id` nếu là chart).
++- Nếu visual parse không chắc → vẫn dùng format bảng + `note: "uncertain parse"`.
++- KHÔNG dùng format text-citation cho claim bắt nguồn từ bảng/chart.
++
+ Quy ước:
+ - `file` = alias user cung cấp (vd `report_2026`) hoặc tên file ngắn.
+ - `page` = số trang (1-based). Nếu parser không xác định → `note: "Không xác định được trang từ parser hiện tại."`.
+@@ -105,14 +112,21 @@
+ - PHÂN BIỆT:
+   - **Dữ liệu thực tế** (đã ghi nhận).
+   - **Dự báo** (tương lai, có giả định).
++  - **Mục tiêu** (target — do tác giả đặt, có thời hạn).
++  - **Khoảng xác suất** (probability range / scenario distribution).
+   - **Nhận định** (ý kiến tác giả).
+ - KHÔNG biến nhận định tác giả thành sự thật khách quan.
++- **MỖI số dự báo phải khai báo**: (a) loại `{actual | forecast | target | probability_range | scenario}`,
++  (b) **time horizon** `{ngày/kỳ/năm áp dụng}`.
++- Khi câu trả lời chứa ≥ 2 số dự báo với horizon khác nhau → gắn nhãn inline
++  (vd "2030 decade target", "2045 model range", "12-month probability range")
++  hoặc tóm tắt bảng horizon-type để reader không conflated.
+ - Số liệu → dẫn nguồn bảng/trang.
+ - Phân biệt bảng / biểu đồ / chú thích.
+ 
+ Keyword tài chính: "Doanh thu", "LNST", "BCTC", "VND", "%", "biên", "roe", "roa".
+ 
+-**Lỗi liên quan**: F10, F11, F12, F13 (nhận định thành sự thật).
++**Lỗi liên quan**: F10, F11, F12, F13 (nhận định thành sự thật), **F-FORECAST-001** (không khai báo horizon dự báo).
+ 
+ ## 9. Multi-PDF policy
+ 
+--- training_sessions/2026-07-06_110300/backup_pre_patch/parsers.md.bak	2026-07-06 11:08:02
++++ references/parsers.md	2026-07-06 11:09:10
+@@ -62,6 +62,11 @@
+ }
+ ```
+ 
++**Bắt buộc** (F-TABLE-001): khi extract.py detect bảng/chart trên page, `table_id`
++(t1, t2...) phải được **truyền vào citation candidate** để `AnswerWithCitation` dùng
++format bảng `[file, page, table_id, row/col]`. extract.py không được "bỏ quên"
++`table_id` khi claim bắt nguồn từ bảng/chart.
++
+ ## Khi nào warning
+ 
+ | Tình huống | Warning |

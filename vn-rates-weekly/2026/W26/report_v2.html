@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VN Rates Weekly · 2026-06-26</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-0:#0a0a14;--card:rgba(28,28,48,0.55);--border:rgba(139,92,246,0.18);--border-hot:rgba(236,72,153,0.35);--text:#f0f0ff;--text-dim:#8b8ba7;--text-faint:#5a5a72;--purple:#a855f7;--pink:#ec4899;--cyan:#06b6d4;--green:#10d98a;--red:#ff4d6d;--amber:#fbbf24;--grad-main:linear-gradient(135deg,#a855f7,#ec4899);--radius-card:18px;--radius-pill:999px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;line-height:1.6;min-height:100vh}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--amber)}
+.container{max-width:1280px;margin:0 auto;padding:32px 24px 80px}
+.hero{background:var(--grad-main);border-radius:var(--radius-card);overflow:hidden;margin-bottom:24px}
+.hero-inner{background:rgba(10,10,20,0.78);padding:32px 36px;backdrop-filter:blur(8px)}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;background:var(--grad-main);color:#fff;padding:6px 14px;border-radius:var(--radius-pill);font-size:12px;font-weight:700}
+.update-badge{display:inline-flex;background:rgba(168,85,247,0.2);color:var(--purple);border:1px solid rgba(168,85,247,0.3);padding:6px 12px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;margin-left:8px}
+.report-title{font-size:34px;font-weight:800;margin-top:14px;background:var(--grad-main);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.report-sub{color:var(--text-dim);margin-top:6px;font-size:13px}
+.verdict-block{text-align:right;min-width:280px}
+.verdict-badge{display:inline-block;padding:10px 22px;border-radius:var(--radius-pill);font-weight:800;font-size:15px;color:#0a0a14}
+.verdict-badge.THUẬN{background:var(--green)}.verdict-badge.LƯỢNG{background:var(--cyan)}.verdict-badge.TRUNG{background:var(--amber)}.verdict-badge.THẮN{background:var(--red)}
+.verdict-reason{margin-top:10px;color:var(--text-dim);font-size:13px;max-width:340px}
+.stance-gauge{display:flex;align-items:center;gap:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 24px;margin-top:20px}
+.gauge-track{flex:1;height:12px;border-radius:var(--radius-pill);background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);position:relative}
+.gauge-needle{position:absolute;top:-6px;width:4px;height:24px;background:var(--text);border-radius:2px;transform:translateX(-50%);box-shadow:0 0 10px rgba(255,255,255,0.6)}
+.gauge-label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;min-width:80px;font-weight:700}
+.gauge-label.left{text-align:right;color:var(--red)}.gauge-label.right{color:var(--green)}
+.nav-tabs{position:sticky;top:0;z-index:50;display:flex;gap:6px;background:rgba(10,10,20,0.9);backdrop-filter:blur(12px);padding:12px 0;border-radius:12px;margin:24px 0;border:1px solid var(--border)}
+.nav-tab{background:transparent;border:1px solid transparent;color:var(--text-dim);padding:9px 16px;border-radius:var(--radius-pill);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.nav-tab:hover{color:var(--text);border-color:var(--border)}
+.nav-tab.active{background:var(--grad-main);color:#fff}
+.group-section{display:none;animation:fadeIn 0.3s}
+.group-section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.group-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.tag{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+.g1{background:var(--purple)}.g2{background:var(--pink)}.g3{background:var(--cyan)}.g4{background:var(--amber)}.g5{background:var(--grad-main)}
+.group-header h2{font-size:20px;font-weight:700}
+.group-header .src{font-size:11px;color:var(--text-faint);margin-left:auto}
+.prose-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);padding:24px;margin-bottom:18px;border-left:3px solid var(--purple)}
+.prose-overview{font-size:15px;color:var(--text);line-height:1.7;margin-bottom:14px;font-weight:500}
+.prose-detail{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:10px;padding-top:10px;border-top:1px solid rgba(139,92,246,0.1)}
+.prose-note{font-size:12px;color:var(--text-faint);line-height:1.6;font-style:italic}
+.chart-card,.table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);padding:22px;margin-bottom:18px}
+.chart-card h3,.table-card h3{font-size:15px;font-weight:700;margin-bottom:4px}
+.chart-sub{font-size:12px;color:var(--text-faint);margin-bottom:14px}
+.chart-canvas-wrap{position:relative;height:240px}
+.chart-canvas-wrap.tall{height:300px}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th,.data-table td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--border)}
+.data-table th{color:var(--text-faint);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.04em}
+.data-table td:first-child,.data-table th:first-child{text-align:left;color:var(--text-dim)}
+.data-table .num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.data-table tr:hover td{background:rgba(168,85,247,0.04)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.takeaways{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin:18px 0}
+.takeaways h3{font-size:15px;font-weight:700;margin-bottom:14px}
+.takeaways ol{list-style:none;counter-reset:tk}
+.takeaways li{counter-increment:tk;padding:10px 0 10px 40px;position:relative;font-size:13px;color:var(--text-dim);line-height:1.7;border-bottom:1px solid rgba(139,92,246,0.08)}
+.takeaways li:last-child{border-bottom:none}
+.takeaways li::before{content:counter(tk);position:absolute;left:0;top:8px;width:28px;height:28px;border-radius:50%;background:var(--grad-main);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:'JetBrains Mono',monospace}
+.takeaways li:first-child::before{background:var(--amber);color:#0a0a14}
+.disclaimer{margin-top:32px;padding:16px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:12px;font-size:11px;color:var(--text-faint);line-height:1.6}
+@media(max-width:768px){.grid-2{grid-template-columns:1fr}.hero-top{flex-direction:column}.verdict-block{text-align:left}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="hero"><div class="hero-inner"><div class="hero-top">
+    <div><div><span class="ticker-badge">📊 VN RATES WEEKLY</span><span class="update-badge">✦ Tuần 26/2026</span></div>
+    <div class="report-title">Thị trường Lãi suất & Tiền tệ</div>
+    <div class="report-sub">Kỳ: 2026-06-26 · 4 tuần: 2026-W23, 2026-W24, 2026-W25, 2026-W26 · 3 nguồn: SBV · VBMA · VNBA</div></div>
+    <div class="verdict-block"><div class="verdict-badge LƯỢN">⚖️ LƯỢNG</div>
+    <div class="verdict-reason">LNH ON -2.55pp (dovish), LSTP 10Y +0.07pp (hawkish). Stance score: 1/6.</div></div>
+  </div>
+  <div class="stance-gauge"><span class="gauge-label left">HAWKISH</span><div class="gauge-track"><div class="gauge-needle" style="left:58%"></div></div><span class="gauge-label right">DOVISH</span></div>
+  </div></div>
+
+  <nav class="nav-tabs">
+    <button class="nav-tab active" data-target="lnh">💰 Liên ngân hàng</button>
+    <button class="nav-tab" data-target="lstp">📜 Trái phiếu</button>
+    <button class="nav-tab" data-target="fx">💱 Ngoại hối</button>
+    <button class="nav-tab" data-target="global">🌍 Toàn cầu</button>
+    <button class="nav-tab" data-target="vn">🇻🇳 Việt Nam</button>
+    <button class="nav-tab" data-target="summary">📊 Tổng hợp</button>
+  </nav>
+
+  
+    <section class="group-section active" id="lnh">
+      <div class="group-header">
+        <span class="tag g1">01</span>
+        <h2>Thị trường Liên ngân hàng (VND)</h2>
+        <span class="src">Nguồn: SBV + VBMA</span>
+      </div>
+      <div class="prose-card">
+        <div class="prose-overview">Trong 4 tuần (W23–W26), lãi suất liên ngân hàng (LNH) qua đêm (VND) giảm từ 6.81% xuống 4.26% — biến động -255bp trong kỳ. Đây là tín hiệu dovish — NHNN duy trì thanh khoản dồi dào.</div>
+        <div class="prose-detail">Theo VBMA, LNH ON ngày 26/6 đóng cửa ở mức 2.91% (bình quân 5 ngày 4.25%), -150bp so với tuần trước và -477bp so với tháng trước. Lãi suất kỳ hạn 1 tuần dao động mạnh: W26 đạt 7.34%, tăng vọt so với W25 (5.14%).</div>
+        <div class="prose-note">Thanh khoản thị trường: OMO lưu hành 230.0 nghìn tỷ.</div>
+      </div>
+      <div class="chart-card">
+        <h3>📉 Lãi suất Liên ngân hàng VND 4 tuần</h3>
+        <div class="chart-sub">ON · 1 tuần · 1 tháng (bình quân tuần theo SBV)</div>
+        <div class="chart-canvas-wrap tall"><canvas id="chartLNH"></canvas></div>
+      </div>
+      <script class="chart-data" id="chartLNH_data" type="application/json">
+      {"labels": ["W23", "W24", "W25", "W26"], "datasets": [{"label": "ON", "data": [6.81, 5.58, 3.9, 4.26], "color": "#a855f7", "fill": true}, {"label": "1 tu\u1ea7n", "data": [6.59, 5.68, 5.14, 7.34], "color": "#ec4899", "fill": false}, {"label": "1 th\u00e1ng", "data": [7.01, 7.37, 7.93, 7.32], "color": "#06b6d4", "fill": false}]}
+      </script>
+    </section>
+    
+  
+    <section class="group-section" id="lstp">
+      <div class="group-header">
+        <span class="tag g2">02</span>
+        <h2>Thị trường Trái phiếu Chính phủ</h2>
+        <span class="src">Nguồn: VBMA</span>
+      </div>
+      <div class="prose-card">
+        <div class="prose-overview">Đường cong lợi suất trái phiếu Chính phủ (TPCP) dịch lên đều toàn kỳ hạn trong 4 tuần. LSTP 10 năm tăng từ 4.33% (W23) lên 4.4% (W26) — +7bp trong kỳ. Slope 10Y-2Y ở mức 92bp (mở rộng từ 91bp), cho thấy curve vẫn bình thường — không inversion.</div>
+        <div class="prose-detail">W26 curve: 1N=3.38%, 2N=3.48%, 3N=3.56%, 5N=4.19%, 7N=4.25%, 10N=4.4%, 15N=4.57%, 20N=4.62%, 30N=4.69%. WoW (bp): 1N +1bp, 2N +1bp, 3N +1bp, 5N +2bp, 7N +3bp...</div>
+        <div class="prose-note">Phiên đấu thầu 24/6: tỷ lệ trúng thầu — 3Y 25% (125/500 tỷ, LSTT 3.52%), 5Y 26% (2/6 tỷ, LSTT 4.18%), 10Y 27% (2/9 tỷ, LSTT 4.35%), 30Y 48% (240/500 tỷ, LSTT 4.58%).</div>
+        <div class="prose-note"></div>
+      </div>
+      <div class="chart-card">
+        <h3>📈 Lợi suất TPCP 4 tuần (2Y · 5Y · 10Y)</h3>
+        <div class="chart-sub">Curve dịch lên đều toàn kỳ hạn</div>
+        <div class="chart-canvas-wrap tall"><canvas id="chartYields"></canvas></div>
+      </div>
+      <script class="chart-data" id="chartYields_data" type="application/json">
+      {"labels": ["W23", "W24", "W25", "W26"], "datasets": [{"label": "2 n\u0103m", "data": [3.42, 3.45, 3.46, 3.48], "color": "#10d98a", "fill": false}, {"label": "5 n\u0103m", "data": [4.13, 4.14, 4.17, 4.19], "color": "#fbbf24", "fill": false}, {"label": "10 n\u0103m", "data": [4.33, 4.34, 4.37, 4.4], "color": "#ff4d6d", "fill": false}]}
+      </script>
+      <div class="grid-2">
+        <div class="table-card">
+          <h3>📋 Đường cong LSTP W26 (VBMA)</h3>
+          <table class="data-table">
+            <thead><tr><th>Kỳ hạn</th><th>W26</th><th>WoW</th></tr></thead>
+            <tbody><tr><td>1N</td><td class='num'>3.38%</td><td class='num neg'>+1bp</td></tr><tr><td>2N</td><td class='num'>3.48%</td><td class='num neg'>+1bp</td></tr><tr><td>3N</td><td class='num'>3.56%</td><td class='num neg'>+1bp</td></tr><tr><td>5N</td><td class='num'>4.19%</td><td class='num neg'>+2bp</td></tr><tr><td>7N</td><td class='num'>4.25%</td><td class='num neg'>+3bp</td></tr><tr><td>10N</td><td class='num'>4.4%</td><td class='num neg'>+3bp</td></tr><tr><td>15N</td><td class='num'>4.57%</td><td class='num neg'>+2bp</td></tr><tr><td>20N</td><td class='num'>4.62%</td><td class='num neg'>+1bp</td></tr><tr><td>30N</td><td class='num'>4.69%</td><td class='num neg'>+1bp</td></tr></tbody>
+          </table>
+        </div>
+        <div class="table-card">
+          <h3>🔨 Kết quả đấu thầu 24/6</h3>
+          <table class="data-table">
+            <thead><tr><th>Kỳ hạn</th><th>GTGT</th><th>GTĐT</th><th>GTTT</th><th>%</th><th>LSTT</th><th>Δ</th></tr></thead>
+            <tbody><tr><td>10Y</td><td class='num'>9</td><td class='num'>10</td><td class='num'>2</td><td class='num'>27%</td><td class='num'>4.35%</td><td class='num'>+0bp</td></tr><tr><td>30Y</td><td class='num'>500</td><td class='num'>240</td><td class='num'>240</td><td class='num'>48%</td><td class='num'>4.58%</td><td class='num'>+1bp</td></tr><tr><td>3Y</td><td class='num'>500</td><td class='num'>625</td><td class='num'>125</td><td class='num'>25%</td><td class='num'>3.52%</td><td class='num'>+0bp</td></tr><tr><td>5Y</td><td class='num'>6</td><td class='num'>6</td><td class='num'>2</td><td class='num'>26%</td><td class='num'>4.18%</td><td class='num'>+3bp</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    
+  
+    <section class="group-section" id="fx">
+      <div class="group-header">
+        <span class="tag g3">03</span>
+        <h2>Thị trường Ngoại hối</h2>
+        <span class="src">Nguồn: SBV + VBMA</span>
+      </div>
+      <div class="prose-card">
+        <div class="prose-overview">Tỷ giá USD/VND (TM, mid) dao động trong range hẹp: 26,264 (W23) → 26,284 (W26), biến động +0.08% trong 4 tuần — NHNN kiểm soát tốt, không áp lực ngoại hạng. DXY đóng W26 ở 101.357, USD suy yếu trên toàn cầu.</div>
+        <div class="prose-detail">Các cặp tiền chính: USD/VND 26,300.000 (-0.08% WoW), EUR/USD 1.138 (-0.74% WoW), USD/CNY 6.798 (+0.43% WoW), USD/JPY 161.760 (+0.28% WoW).</div>
+      </div>
+      <div class="chart-card">
+        <h3>💱 Tỷ giá TM USD/VND 4 tuần (mid)</h3>
+        <div class="chart-canvas-wrap"><canvas id="chartFX"></canvas></div>
+      </div>
+      <script class="chart-data" id="chartFX_data" type="application/json">
+      {"labels": ["W23", "W24", "W25", "W26"], "datasets": [{"label": "USD/VND mid", "data": [26264.0, 26267.0, 26280.0, 26284.0], "color": "#06b6d4", "fill": true}]}
+      </script>
+      <div class="table-card">
+        <h3>💱 Cặp tiền chính W26 (VBMA)</h3>
+        <table class="data-table">
+          <thead><tr><th>Cặp</th><th>Giá</th><th>WoW</th><th>YTD</th></tr></thead>
+          <tbody><tr><td>USD/VND</td><td class='num'>26,300.0000</td><td class='num pos'>-0.08%</td><td class='num'>+8.12%</td></tr><tr><td>EUR/USD</td><td class='num'>1.1380</td><td class='num pos'>-0.74%</td><td class='num'>+3.99%</td></tr><tr><td>USD/CNY</td><td class='num'>6.7980</td><td class='num neg'>+0.43%</td><td class='num'>-4.82%</td></tr><tr><td>USD/JPY</td><td class='num'>161.7600</td><td class='num neg'>+0.28%</td><td class='num'>+13.93%</td></tr><tr><td>GBP/USD</td><td class='num'>1.3200</td><td class='num pos'>-0.23%</td><td class='num'>+4.67%</td></tr><tr><td>USD index</td><td class='num'>101.3600</td><td class='num neg'>+0.51%</td><td class='num'>-0.82%</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    
+  
+    <section class="group-section" id="global">
+      <div class="group-header">
+        <span class="tag g4">04</span>
+        <h2>Bối cảnh Toàn cầu</h2>
+        <span class="src">Nguồn: VNBA</span>
+      </div>
+      <div class="prose-card">
+        <div class="prose-overview">Tuần W26 thị trường toàn cầu hồi phục nhẹ. Lãi suất chính sách: FED 3.50%-3.75%, ECB 2.25%, BOJ 0.75%, PBoC 3.00%, RBA 4.35%, BoE 3.75%. Lợi suất TPCP 10 năm: US 4.37%, JP 2.60%, AU 4.73%, DE 2.85%, CN 1.79%, SG 2.01%, VN 4.52%, ID 7.18%. Chỉ số CK toàn cầu (WoW): Dow +0.60%, S&amp;P500 -1.95%, Nasdaq -4.60%, DAX -1.26%, FTSE +1.40%. Hàng hóa: gold 4,087.01.</div>
+      </div>
+      <div class="grid-2">
+        <div class="table-card">
+          <h3>🏦 Lãi suất chính sách (CB rates)</h3>
+          <table class="data-table">
+            <thead><tr><th>CB</th><th>Hiện tại</th><th>Trước</th></tr></thead>
+            <tbody><tr><td>FED</td><td class='num'>3.50%-3.75%</td><td class='num'>3.75%-4.00%</td></tr><tr><td>ECB</td><td class='num'>2.25%</td><td class='num'>2.00%</td></tr><tr><td>BOJ</td><td class='num'>0.75%</td><td class='num'>0.50%</td></tr><tr><td>PBoC</td><td class='num'>3.00%</td><td class='num'>3.10%</td></tr><tr><td>RBA</td><td class='num'>4.35%</td><td class='num'>4.10%</td></tr><tr><td>BoE</td><td class='num'>3.75%</td><td class='num'>4.00%</td></tr></tbody>
+          </table>
+        </div>
+        <div class="table-card">
+          <h3>📊 Lợi suất TPCP 10Y (quốc gia)</h3>
+          <table class="data-table">
+            <thead><tr><th>QT</th><th>10Y</th><th>WoW</th></tr></thead>
+            <tbody><tr><td>ID</td><td class='num'>7.18%</td><td class='num neg'>+0.11%</td></tr><tr><td>AU</td><td class='num'>4.73%</td><td class='num pos'>-0.08%</td></tr><tr><td>VN</td><td class='num'>4.52%</td><td class='num pos'>-0.01%</td></tr><tr><td>US</td><td class='num'>4.37%</td><td class='num pos'>-0.15%</td></tr><tr><td>DE</td><td class='num'>2.85%</td><td class='num pos'>-0.14%</td></tr><tr><td>JP</td><td class='num'>2.60%</td><td class='num pos'>-0.04%</td></tr><tr><td>SG</td><td class='num'>2.01%</td><td class='num pos'>-0.05%</td></tr><tr><td>CN</td><td class='num'>1.79%</td><td class='num neg'>+0.06%</td></tr></tbody>
+          </table>
+        </div>
+        <div class="table-card">
+          <h3>📈 Chỉ số CK toàn cầu (WoW)</h3>
+          <table class="data-table">
+            <thead><tr><th>Chỉ số</th><th>WoW</th><th>YTD</th></tr></thead>
+            <tbody><tr><td>Dow</td><td class='num pos'>+0.60%</td><td class='num'>+7.93%</td></tr><tr><td>S&amp;P500</td><td class='num neg'>-1.95%</td><td class='num'>+7.43%</td></tr><tr><td>Nasdaq</td><td class='num neg'>-4.60%</td><td class='num'>+8.84%</td></tr><tr><td>DAX</td><td class='num neg'>-1.26%</td><td class='num'>+0.74%</td></tr><tr><td>FTSE</td><td class='num pos'>+1.40%</td><td class='num'>+5.81%</td></tr><tr><td>CAC</td><td class='num neg'>-0.43%</td><td class='num'>+2.89%</td></tr><tr><td>Nikkei</td><td class='num neg'>-2.65%</td><td class='num'>+37.79%</td></tr><tr><td>Shanghai</td><td class='num neg'>-1.55%</td><td class='num'>+1.47%</td></tr><tr><td>HangSeng</td><td class='num neg'>-5.24%</td><td class='num'>-11.54%</td></tr></tbody>
+          </table>
+        </div>
+        <div class="table-card">
+          <h3>🛢️ Hàng hóa</h3>
+          <table class="data-table">
+            <thead><tr><th>Mặt hàng</th><th>Giá</th></tr></thead>
+            <tbody><tr><td>gold</td><td class='num'>4,087.01</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    
+  
+    <section class="group-section" id="vn">
+      <div class="group-header">
+        <span class="tag g5">05</span>
+        <h2>Bối cảnh Việt Nam</h2>
+        <span class="src">Nguồn: VNBA</span>
+      </div>
+      <div class="prose-card">
+        <div class="prose-overview">Lợi nhuận ngân hàng Q2/2026 (dự báo): Top tăng trưởng — VPB +51.90%, HDB +46.40%, VIB +25.10%. Yếu nhất — LPB -6.30%, EIB -39.00%, STB -42.40%.</div>
+        <div class="prose-detail">Lợi nhuận ngân hàng Q2/2026 (dự báo): Top tăng trưởng — VPB +51.90%, HDB +46.40%, VIB +25.10%. Yếu nhất — LPB -6.30%, EIB -39.00%, STB -42.40%.</div>
+        <div class="prose-note"> </div>
+      </div>
+      <div class="table-card">
+        <h3>🏦 Lợi nhuận ngân hàng Q2/2026 (dự báo)</h3>
+        <table class="data-table">
+          <thead><tr><th>Mã</th><th>LNST (tỷ)</th><th>YoY</th></tr></thead>
+          <tbody><tr><td>VPB</td><td class='num'>7,499</td><td class='num pos'>+51.9%</td></tr><tr><td>HDB</td><td class='num'>5,381</td><td class='num pos'>+46.4%</td></tr><tr><td>VIB</td><td class='num'>2,597</td><td class='num pos'>+25.1%</td></tr><tr><td>OCB</td><td class='num'>953</td><td class='num pos'>+20.2%</td></tr><tr><td>TCB</td><td class='num'>7,468</td><td class='num pos'>+17.7%</td></tr><tr><td>VCB</td><td class='num'>10,262</td><td class='num pos'>+16.1%</td></tr><tr><td>BIDV</td><td class='num'>7,937</td><td class='num pos'>+15.1%</td></tr><tr><td>CTG</td><td class='num'>11,022</td><td class='num pos'>+13.0%</td></tr><tr><td>TPB</td><td class='num'>1,824</td><td class='num pos'>+11.9%</td></tr><tr><td>ACB</td><td class='num'>4,899</td><td class='num pos'>+0.4%</td></tr><tr><td>LPB</td><td class='num'>2,244</td><td class='num neg'>-6.3%</td></tr><tr><td>EIB</td><td class='num'>309</td><td class='num neg'>-39.0%</td></tr><tr><td>STB</td><td class='num'>1,666</td><td class='num neg'>-42.4%</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    
+  
+    <section class="group-section" id="summary">
+      <div class="group-header">
+        <span class="tag g5">📊</span>
+        <h2>Tổng hợp tuần W26/2026</h2>
+      </div>
+      <div class="takeaways">
+        <h3>⭐ Điểm chính</h3>
+        <ol>
+          <li><strong>⭐ Stance: LƯỢNG.</strong> LNH ON -2.55pp (dovish), LSTP 10Y +0.07pp (hawkish). Stance score: 1/6.</li>
+          <li><strong>LNH ON giảm mạnh</strong> 4 tuần (6.81%→4.26%, -255bp) nhưng <strong>LSTP 10Y tăng</strong> (+7bp) — 2 đầu tiền tệ đi ngược chiều.</li>
+          <li><strong>Đấu thầu 24/6</strong> tỷ lệ trúng thấp (25-48%), NHNN gọi 17k tỷ nhưng chỉ trúng ~4.4k tỷ — nhu cầu mua TPCP yếu.</li>
+          <li><strong>Global:</strong> Fed 3.50-3.75%, US 10Y 4.37%, DXY 101.4 — USD suy yếu nhẹ, giảm áp lực tỷ giá VND.</li>
+        </ol>
+      </div>
+    </section>
+    
+
+  <div class="disclaimer">⚠️ <strong>Miễn trừ trách nhiệm:</strong> Báo cáo lãi suất & tiền tệ tham khảo. Số liệu từ 3 nguồn (SBV, VBMA, VNBA). Đã verify 34 điểm dữ liệu khớp source gốc. <strong>Không phải lời khuyên đầu tư.</strong></div>
+</div>
+
+<script>
+// Tab switching + lazy chart render
+const chartsRendered = {};
+function renderChart(canvasId, config) {
+  if (chartsRendered[canvasId]) return;
+  const el = document.getElementById(canvasId);
+  if (!el || el.clientWidth === 0) return;
+  Chart.defaults.color = '#8b8ba7';
+  Chart.defaults.borderColor = 'rgba(139,92,246,0.1)';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  const dataEl = document.getElementById(canvasId + '_data');
+  if (!dataEl) return;
+  const data = JSON.parse(dataEl.textContent);
+  new Chart(el, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: data.datasets.map(ds => ({
+        label: ds.label, data: ds.data, borderColor: ds.color,
+        backgroundColor: ds.fill ? ds.color + '20' : 'transparent',
+        tension: 0.3, fill: ds.fill || false, borderWidth: 2.5, pointRadius: 5,
+        pointBackgroundColor: ds.color
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { usePointStyle: true, boxWidth: 8, padding: 14, font: { size: 11 } } } },
+      scales: { y: { grid: { color: 'rgba(139,92,246,0.06)' } } }
+    }
+  });
+  chartsRendered[canvasId] = true;
+}
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.group-section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    const target = document.getElementById(tab.dataset.target);
+    if (target) {
+      target.classList.add('active');
+      setTimeout(() => target.querySelectorAll('canvas').forEach(c => renderChart(c.id)), 50);
+    }
+  });
+});
+// Render chart tab active initially
+renderChart('chartLNH');
+</script>
+</body></html>

@@ -1,0 +1,94 @@
+protocol_version: 0.1.0
+frozen_before_execution: true
+frozen_at: '2026-07-12T12:59:58.428912'
+weights:
+  prs:
+    sds: 0.25
+    scs: 0.35
+    hrs: 0.4
+  sds:
+    trigger_scope: 10
+    input_contract: 15
+    workflow: 20
+    tool_policy: 10
+    failure: 15
+    validation: 15
+    output: 10
+    maintainability: 5
+  hrs:
+    spec_adherence: 0.3
+    workflow_adherence: 0.2
+    validation_discipline: 0.2
+    output_conformity: 0.1
+    recovery_robustness: 0.1
+    run_consistency: 0.1
+  scs:
+    factual_accuracy: 20
+    requirement_coverage: 20
+    domain_correctness: 20
+    numerical_or_structural_accuracy: 15
+    evidence_quality: 15
+    abstention_discipline: 10
+hrs_publishable_coverage_pct: 70
+maturity_thresholds:
+  stable:
+    mean_hrs_min: 90
+    minimum_hrs_min: 80
+    pass_rate_min: 0.95
+    std_dev_max: 5
+    critical_failures: 0
+  robust:
+    golden_edge_pass_rate_min: 0.9
+    autonomous_recovery_rate_min: 0.7
+    critical_failures: 0
+  functional:
+    golden_pass_rate_min: 0.8
+    critical_failures: 0
+  production_ready:
+    stable_status: true
+    autonomous_completion_rate_min: 0.95
+    critical_intervention_rate_max: 0.0
+    critical_failures: 0
+    reproducibility: true
+    monitoring_ready: true
+na_policy: excluded_from_denominator
+mutation_oracles:
+  MUT-CAPEX-001:
+    expected_requirement:
+    - REQ-024
+    expected_validator: capex_accuracy_check
+  MUT-SECTION-001:
+    expected_requirement:
+    - REQ-009
+    expected_validator: section_map_check
+  MUT-ORACLE-001:
+    expected_requirement:
+    - REQ-004
+    expected_validator: artifact_check
+  MUT-VALUATION-001:
+    expected_requirement:
+    - REQ-025
+    expected_validator: valuation_recompute_check
+  MUT-DEPLOY-001:
+    expected_requirement:
+    - REQ-021
+    expected_validator: all_requirements_pass
+hard_gates:
+- fabricated_evidence
+- claim_complete_on_fail
+- skipped_mandatory_validation
+- overwrite_source_data
+- edit_out_of_scope
+- unreported_incomplete
+- swallowed_tool_error
+- schema_violation_marked_pass
+- non_reproducible
+- insufficient_evidence
+- critical_test_failed_despite_high_score
+- evaluator_self_inflate
+- run_isolation
+- validator_false_positive
+- validator_missed_critical
+- target_snapshot_drift
+- protocol_immutability
+protocol_sha256: 67a869e781259444359a4ef1eac9046b6307c8e92a04e91b09a3eefea609aea5

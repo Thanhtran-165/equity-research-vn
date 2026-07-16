@@ -1,0 +1,28 @@
+{
+  "requirement_id": "REQ-027",
+  "text": "Số liệuexternal (WCM LN, MCH DT, store count) phải flag 'ước tính' nếu không có data file.",
+  "priority": "medium",
+  "method": "external_claim_flag_check",
+  "status": "fail",
+  "evidence": {
+    "external_claims_found": 4,
+    "unflagged": [
+      {
+        "pattern": "WCM.*LN.*\\d",
+        "match": "WCM LN 15.2 tỷ — MCH DT 8.4 tỷ — 240"
+      },
+      {
+        "pattern": "MCH.*DT.*\\d",
+        "match": "MCH DT 8.4 tỷ — 240"
+      },
+      {
+        "pattern": "\\d+\\s*điểm bán",
+        "match": "240 điểm bán"
+      }
+    ],
+    "adjacent_window": 200,
+    "patch_note": "P1-2: inverted + adjacency — flag must be near each claim"
+  },
+  "verified_at": "2026-07-12T15:51:12.244473",
+  "artifact": "/Users/bobo/ZCodeProject/skill-harness-evaluator-work/post-merge-0.1.1/MUT-EXTCLAIM-001-work/MUT-EXTCLAIM-001.html"
+}

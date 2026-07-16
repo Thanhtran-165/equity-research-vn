@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lợi suất trái phiếu và cổ phiếu Việt Nam</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a; --bg2:#1e293b; --card:#1e293b; --card2:#273449;
+    --txt:#e2e8f0; --muted:#94a3b8; --line:#334155;
+    --red:#ef4444; --amber:#f59e0b; --green:#22c55e; --blue:#3b82f6; --violet:#8b5cf6; --cyan:#06b6d4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.8;font-size:17px;overflow-wrap:break-word;word-wrap:break-word}
+
+  /* HERO */
+  .hero{background:linear-gradient(135deg,#1e3a5f 0%,#1e293b 50%,#0f172a 100%);padding:70px 24px 56px;text-align:center;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.06),transparent 40%);pointer-events:none}
+  .hero .badge{display:inline-block;background:rgba(255,255,255,.1);padding:6px 16px;border-radius:999px;font-size:.8rem;letter-spacing:.06em;color:#fde68a;margin-bottom:18px;border:1px solid rgba(255,255,255,.18)}
+  .hero h1{font-size:clamp(1.6rem,3.8vw,2.6rem);font-weight:800;line-height:1.22;max-width:820px;margin:0 auto 14px}
+  .hero p.sub{color:#cbd5e1;font-size:1.05rem;max-width:700px;margin:0 auto}
+  .hero .meta{margin-top:22px;color:#64748b;font-size:.85rem}
+
+  /* LAYOUT */
+  .container{max-width:800px;margin:0 auto;padding:0 24px;width:100%;min-width:0}
+  main{padding:44px 0 70px;width:100%;min-width:0}
+  section{margin-bottom:52px;scroll-margin-top:20px;width:100%;min-width:0}
+
+  /* SECTION TITLE */
+  h2.section-title{font-size:1.35rem;font-weight:700;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,var(--amber),rgba(245,158,11,.15),transparent) 1;display:flex;align-items:center;gap:12px;overflow-wrap:break-word;min-width:0}
+  h2.section-title .num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.88rem;font-weight:800;flex-shrink:0;box-shadow:0 3px 10px rgba(245,158,11,.25)}
+  h3{font-size:1.12rem;margin:24px 0 8px;color:#fbbf24;overflow-wrap:break-word}
+  h4{overflow-wrap:break-word}
+  p{margin-bottom:14px;color:#cbd5e1}
+  strong{color:#fff}
+  em{color:#fcd34d;font-style:normal}
+  ul.bul{margin:10px 0 16px;padding-left:22px}
+  ul.bul li{margin-bottom:6px;color:#cbd5e1}
+  ul.bul li::marker{color:var(--amber)}
+  ol.steps{margin:10px 0 16px;padding-left:22px}
+  ol.steps li{margin-bottom:10px;color:#cbd5e1}
+  ol.steps li::marker{color:var(--amber);font-weight:700}
+
+  /* KPI GRID */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:20px 0}
+  .kpi{background:linear-gradient(180deg,rgba(245,158,11,.06),rgba(30,41,59,.5));border:1px solid rgba(245,158,11,.22);border-radius:12px;padding:16px 14px;transition:.2s;position:relative;overflow:hidden;min-width:0}
+  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),transparent)}
+  .kpi .val{font-size:1.6rem;font-weight:800;color:#fbbf24;line-height:1}
+  .kpi .lab{font-size:.8rem;color:var(--muted);margin-top:8px;line-height:1.35}
+  .kpi.red{border-color:rgba(239,68,68,.25);background:linear-gradient(180deg,rgba(239,68,68,.06),rgba(30,41,59,.5))}.kpi.red::before{background:linear-gradient(90deg,var(--red),transparent)}.kpi.red .val{color:var(--red)}
+  .kpi.green{border-color:rgba(34,197,94,.25);background:linear-gradient(180deg,rgba(34,197,94,.06),rgba(30,41,59,.5))}.kpi.green::before{background:linear-gradient(90deg,var(--green),transparent)}.kpi.green .val{color:var(--green)}
+  .kpi.cyan{border-color:rgba(6,182,212,.25);background:linear-gradient(180deg,rgba(6,182,212,.06),rgba(30,41,59,.5))}.kpi.cyan::before{background:linear-gradient(90deg,var(--cyan),transparent)}.kpi.cyan .val{color:var(--cyan)}
+  .kpi.blue{border-color:rgba(59,130,246,.25);background:linear-gradient(180deg,rgba(59,130,246,.06),rgba(30,41,59,.5))}.kpi.blue::before{background:linear-gradient(90deg,var(--blue),transparent)}.kpi.blue .val{color:var(--blue)}
+
+  /* CHAP BANNER */
+  .chap-banner{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin:24px 0 20px;text-align:center;width:100%;min-width:0}
+  .chap-banner .chap-tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);background:rgba(245,158,11,.1);padding:4px 12px;border-radius:999px;border:1px solid rgba(245,158,11,.22);margin-bottom:10px}
+  .chap-banner h3{font-size:1.1rem;color:#fff;font-weight:700;margin-bottom:6px}
+  .chap-banner p{font-size:.86rem;color:var(--muted);margin:0}
+  .chap-banner .verdict{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:.9rem;color:#cbd5e1}
+  .chap-banner .verdict strong{color:var(--amber)}
+
+  /* CARDS */
+  .cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0;overflow-wrap:break-word}
+  .card .icon{font-size:1.5rem;margin-bottom:6px}
+  .card h4{font-size:.98rem;margin-bottom:5px;color:#fff}
+  .card p{font-size:.88rem;color:var(--muted);margin:0}
+
+  /* CALLOUT */
+  .callout{border-radius:10px;padding:14px 18px;margin:16px 0;border-left:4px solid}
+  .callout.warn{background:rgba(245,158,11,.07);border-color:var(--amber)}
+  .callout.good{background:rgba(34,197,94,.07);border-color:var(--green)}
+  .callout.info{background:rgba(59,130,246,.07);border-color:var(--blue)}
+  .callout.limit{background:rgba(239,68,68,.07);border-color:var(--red)}
+  .callout.dont{background:rgba(239,68,68,.07);border-color:var(--red)}
+  .callout.do{background:rgba(34,197,94,.07);border-color:var(--green)}
+  .callout h4{font-size:.93rem;margin-bottom:5px}
+  .callout p{font-size:.9rem;margin-bottom:3px}
+  .callout p:last-child{margin-bottom:0}
+
+  /* TABLE */
+  table.tbl{width:100%;max-width:100%;border-collapse:collapse;margin:16px 0;font-size:.86rem;table-layout:fixed;background:var(--card);border-radius:12px;overflow:hidden}
+  table.tbl th{background:linear-gradient(180deg,rgba(245,158,11,.14),rgba(245,158,11,.04));color:#fbbf24;padding:10px 12px;text-align:left;border-bottom:2px solid rgba(245,158,11,.25);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+  table.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);color:#cbd5e1}
+  table.tbl td strong{color:#fcd34d}
+  table.tbl tr:last-child td{border-bottom:none}
+
+  /* CHART BOX */
+  .chart-box{background:linear-gradient(180deg,var(--card),rgba(15,23,42,.5));border:1px solid var(--line);border-radius:14px;padding:18px;margin:18px 0;position:relative;overflow:hidden;width:100%;min-width:0}
+  .chart-box::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),var(--blue),transparent)}
+  .chart-box h4{font-size:.92rem;margin-bottom:3px;color:#fbbf24}
+  .chart-box .desc{font-size:.82rem;color:var(--muted);margin-bottom:12px;font-style:italic}
+  .chart-wrap{position:relative;height:300px;width:100%;min-width:0}
+  .chart-wrap.tall{height:360px}
+  .chart-wrap canvas{max-width:100%!important;min-width:0;display:block}
+
+  /* DETAILS */
+  details{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0;margin:12px 0}
+  details summary{cursor:pointer;padding:12px 16px;font-size:.88rem;color:var(--muted);font-weight:600;list-style:none}
+  details summary::after{content:" ▸";color:var(--amber)}
+  details[open] summary::after{content:" ▾"}
+  details .body{padding:0 16px 14px}
+
+  /* COMPARE */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+  .compare .col{border-radius:12px;padding:0;border:1px solid var(--line);overflow:hidden}
+  .compare .col h4{margin:0;padding:12px 18px;font-size:.95rem;border-bottom:1px solid rgba(255,255,255,.06)}
+  .compare .col ul.bul{padding:12px 18px 16px;margin:0}
+  .compare .before{background:linear-gradient(180deg,rgba(6,182,212,.08),rgba(6,182,212,.02));border-color:rgba(6,182,212,.3)}
+  .compare .before h4{background:linear-gradient(180deg,rgba(6,182,212,.1),transparent)}
+  .compare .after{background:linear-gradient(180deg,rgba(245,158,11,.08),rgba(245,158,11,.02));border-color:rgba(245,158,11,.3)}
+  .compare .after h4{background:linear-gradient(180deg,rgba(245,158,11,.1),transparent)}
+  @media(max-width:600px){.compare{grid-template-columns:1fr}}
+
+  footer{text-align:center;padding:28px 24px;color:#475569;font-size:.8rem;border-top:1px solid var(--line);margin-top:40px}
+
+  /* PROGRESS BAR */
+  .progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#fbbf24,#f59e0b,#ef4444);z-index:1000;transition:width .12s ease-out}
+
+  /* MINIMAP */
+  .minimap{position:fixed;top:20px;right:20px;width:260px;max-height:calc(100vh - 40px);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 12px;overflow-y:auto;z-index:50;opacity:0;transform:translateX(15px);pointer-events:none;transition:opacity .3s,transform .3s;box-shadow:0 10px 36px rgba(0,0,0,.3);display:none}
+  @media(min-width:1024px) and (max-width:1379px){body.nav-active .minimap{display:none}}
+  @media(min-width:1380px){body.nav-active .minimap{display:block;opacity:1;transform:translateX(0);pointer-events:auto}}
+  .minimap::-webkit-scrollbar{width:5px}.minimap::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .minimap .mm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 4px}
+  .minimap .mm-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700}
+  .minimap .mm-pct{font-size:.7rem;color:#fbbf24;font-weight:700}
+  .mm-search{position:relative;margin-bottom:10px}
+  .mm-search input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:7px 10px 7px 28px;font-size:.8rem;outline:none}
+  .mm-search input:focus{border-color:var(--blue)}
+  .mm-search::before{content:"🔍";position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:.7rem;opacity:.6}
+  .mm-group{margin-bottom:3px;border-radius:8px;overflow:hidden}
+  .mm-group-head{display:flex;align-items:center;gap:6px;width:100%;background:transparent;border:none;color:#cbd5e1;cursor:pointer;padding:7px 7px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;text-align:left;border-radius:7px}
+  .mm-group-head:hover{background:rgba(255,255,255,.04)}
+  .mm-group-head .chev{font-size:.6rem;transition:transform .2s;color:var(--muted)}
+  .mm-group.open .mm-group-head .chev{transform:rotate(90deg)}
+  .mm-group-head .gcount{margin-left:auto;font-size:.62rem;color:var(--muted);background:var(--bg2);padding:1px 6px;border-radius:999px}
+  .mm-items{list-style:none;padding:2px 0 4px 12px;margin:0;max-height:0;overflow:hidden;transition:max-height .3s;border-left:1px solid var(--line);margin-left:6px}
+  .mm-group.open .mm-items{max-height:600px}
+  .mm-items a{display:flex;align-items:center;gap:6px;text-decoration:none;color:var(--muted);font-size:.78rem;padding:4px 7px;border-radius:5px;transition:.15s;line-height:1.3}
+  .mm-items a:hover{color:#fbbf24;background:rgba(255,255,255,.03)}
+  .mm-items a .dot{width:5px;height:5px;border-radius:50%;background:var(--line);flex-shrink:0}
+  .mm-items a.active{color:#fbbf24;font-weight:600;background:rgba(251,191,36,.08)}
+  .mm-items a.active .dot{background:#fbbf24}
+  .mm-no-result{display:none;font-size:.76rem;color:var(--muted);font-style:italic;padding:12px 8px;text-align:center}
+  .minimap.searching .mm-no-result.show{display:block}
+
+  /* FLOATING BUTTONS */
+  .mm-fab{display:none;position:fixed;bottom:20px;right:20px;z-index:200;width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:1.2rem;box-shadow:0 6px 20px rgba(239,68,68,.35);align-items:center;justify-content:center}
+  @media(max-width:1023px){.mm-fab{display:flex}.minimap{display:none;top:0;right:0;left:0;bottom:0;width:auto;max-height:none;border-radius:0;border:none;transform:translateY(15px)}body.nav-mobile-open .minimap{display:block;opacity:1;transform:translateY(0);pointer-events:auto}body.nav-mobile-open .mm-fab{display:none}}
+  .mm-overlay-close{display:none;position:absolute;top:12px;right:14px;font-size:1.5rem;background:none;border:none;color:var(--muted);cursor:pointer}
+  @media(max-width:1023px){.mm-overlay-close{display:block}}
+  .to-top{position:fixed;bottom:20px;left:20px;z-index:200;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(8px);pointer-events:none;transition:.25s}
+  body.nav-active .to-top.show,body.loaded .to-top.show{opacity:1;transform:translateY(0);pointer-events:auto}
+  .to-top:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+  @media(max-width:600px){.hero{padding:44px 16px 34px}.hero h1{font-size:1.35rem}.container{padding:0 16px}body{font-size:15px}.chart-wrap{height:240px}.chart-wrap.tall{height:280px}.cards3{grid-template-columns:1fr}.kpi-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <span class="badge">Tự nghiên cứu · 2014–2026 · 4 chương đã hoàn thành</span>
+  <h1>Lợi suất trái phiếu và cổ phiếu Việt Nam</h1>
+  <p class="sub">Giúp hiểu trạng thái thị trường, nhưng không phải cỗ máy dự báo.</p>
+  <div class="meta">Trái phiếu Chính phủ Việt Nam · Cổ phiếu HOSE · Cập nhật 26/06/2026</div>
+</header>
+
+<main class="container">
+
+<!-- ===== CARDS ===== -->
+<div class="cards3">
+  <div class="card">
+    <div class="icon">📊</div>
+    <h4>Đồng chuyển giới hạn</h4>
+    <p>Chương 2: 2 quan hệ (Δ2Y daily, Δ10Y monthly). Chương 4: breadth tháng, hiệu ứng -0,0007/25bps.</p>
+  </div>
+  <div class="card">
+    <div class="icon">🚫</div>
+    <h4>Không dẫn trước, không dự báo</h4>
+    <p>Granger 0/157 (Ch2+Ch4), OOS 0/193 (Ch2+Ch3+Ch4). Lợi suất trái phiếu không đi trước.</p>
+  </div>
+  <div class="card">
+    <div class="icon">💡</div>
+    <h4>Đèn vàng, không quyết định thay</h4>
+    <p>Dùng lợi suất trái phiếu để đọc môi trường, không dùng làm lệnh mua/bán.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 1: TỔNG QUAN ===== -->
+<section id="open">
+  <h2 class="section-title"><span class="num">1</span>Tổng quan</h2>
+  <p>Nghiên cứu này đặt câu hỏi: biến động lợi suất trái phiếu Chính phủ Việt Nam có liên quan gì đến cổ phiếu? Câu trả lời qua bốn chương:</p>
+  <ul class="bul">
+    <li><strong>Chương 1:</strong> Lợi suất trái phiếu <em>không</em> dự báo được cổ phiếu. Không có phép thử dự báo nào vượt hiệu chỉnh đa phép thử.</li>
+    <li><strong>Chương 2:</strong> Trái phiếu <em>có đi cùng</em> cổ phiếu trong cùng thời kỳ — nhưng không đi trước. Quan hệ đồng thời, không phải dự báo.</li>
+    <li><strong>Chương 3:</strong> Biến động lợi suất trái phiếu <em>chưa cho thấy</em> quan hệ ổn định với khối lượng giao dịch.</li>
+    <li><strong>Chương 4:</strong> Bên trong VN-INDEX, lợi suất trái phiếu <em>đi cùng</em> độ rộng thị trường theo tháng — nhưng hiệu ứng nhỏ và vẫn không đi trước.</li>
+  </ul>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="val">4</div><div class="lab">Chương nghiên cứu</div></div>
+    <div class="kpi cyan"><div class="val">3.000+</div><div class="lab">Phép thử thống kê</div></div>
+    <div class="kpi green"><div class="val">4</div><div class="lab">Quan hệ đồng thời xác nhận</div></div>
+    <div class="kpi red"><div class="val">0</div><div class="lab">Quan hệ dự báo ngoài mẫu</div></div>
+  </div>
+  <div class="callout info">
+    <h4>💡 Phân biệt quan trọng</h4>
+    <p>"Đi cùng" (đồng thời) nghĩa là hai thứ biến động trong cùng khoảng thời gian. "Đi trước" (dẫn trước) nghĩa là một thứ biến động trước, thứ kia theo sau. Bốn chương đều nhất quán: lợi suất trái phiếu có thể phản ánh môi trường chung, nhưng chưa chứng minh được khả năng dự báo.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 2: CHƯƠNG 1 ===== -->
+<section id="ch1">
+  <h2 class="section-title"><span class="num">2</span>Chương 1 — Kiểm tra khả năng dự báo</h2>
+  <p>Chương 1 hỏi thẳng: biết lợi suất trái phiếu thay đổi hôm nay, có đoán được cổ phiếu 5–20 phiên tới không?</p>
+  <p>Kết quả: <strong>không có phép thử dự báo nào</strong> vượt hiệu chỉnh đa phép thử — trên cả biến lợi suất thông thường lẫn chỉ số căng thẳng. Dù thử nhiều cấu hình khác nhau, kết quả đều âm tính.</p>
+  <p>Nói dân dã: các dấu hiệu có vẻ hợp lý khi nhìn lại quá khứ, nhưng khi ép mô hình dự báo trên dữ liệu chưa từng thấy, thêm lợi suất trái phiếu <strong>không cải thiện</strong> so với mô hình nền.</p>
+  <div class="callout warn">
+    <h4>⚠️ Điều không được suy ra</h4>
+    <p>"Không có bằng chứng dự báo" <strong>không</strong> đồng nghĩa "không có quan hệ". Chương 2 sẽ cho thấy quan hệ tồn tại — chỉ là không theo chiều dự báo.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 3: CHƯƠNG 2 ===== -->
+<section id="ch2">
+  <h2 class="section-title"><span class="num">3</span>Chương 2 — Quan hệ đồng thời</h2>
+  <p>Chương 2 mở rộng sang 15 chỉ số HOSE và kiểm tra ba câu hỏi:</p>
+  <ol class="steps">
+    <li><strong>Quan hệ đồng thời:</strong> lợi suất trái phiếu và cổ phiếu có biến động cùng lúc không?</li>
+    <li><strong>Quan hệ dẫn trước:</strong> lợi suất trái phiếu có biến động trước cổ phiếu không?</li>
+    <li><strong>Giá trị dự báo ngoài mẫu:</strong> thêm lợi suất trái phiếu có giúp dự đoán tốt hơn không?</li>
+  </ol>
+  <p>Kết quả: <strong>hai quan hệ đồng thời</strong> được xác nhận, nhưng không có quan hệ dẫn trước và không có giá trị dự báo ngoài mẫu.</p>
+
+  <div class="chart-box">
+    <h4>Tổng quan kết quả bốn chương</h4>
+    <div class="desc">Quan hệ đồng thời có ở Chương 2 và Chương 4. Dẫn trước và dự báo ngoài mẫu: không chương nào tìm thấy.</div>
+    <div class="chart-wrap tall"><canvas id="chartOverview"></canvas></div>
+  </div>
+</section>
+
+<!-- ===== SECTION 4: QUAN HỆ THEO NGÀY ===== -->
+<section id="daily">
+  <h2 class="section-title"><span class="num">4</span>Quan hệ theo ngày</h2>
+  <p>Khi lợi suất trái phiếu 2 năm tăng mạnh trong 5 phiên, lợi suất của các chỉ số cổ phiếu trong cùng 5 phiên thường <strong>yếu hơn</strong>.</p>
+  <p>Đây là quan hệ <strong>biến động cùng thời kỳ</strong> — trái phiếu và cổ phiếu phản ứng trong cùng cửa sổ 5 phiên, không phải lợi suất trái phiếu đi trước.</p>
+
+  <div class="chart-box">
+    <h4>Hiệu ứng đồng thời theo từng chỉ số (daily)</h4>
+    <div class="desc">Mỗi 10 bps tăng lợi suất 2Y → lợi suất cổ phiếu 5 phiên giảm. Hiệu ứng mạnh nhất ở VNCOND (-0,33%/10bps), nhẹ nhất ở VNHEAL.</div>
+    <div class="chart-wrap"><canvas id="chartDailyBeta"></canvas></div>
+  </div>
+
+  <p>Quan hệ này ổn định qua 8 chỉ số và vượt được hiệu chỉnh đa phép thử ở cấp panel. Nhưng cần lưu ý: đây vẫn là quan hệ <em>cùng kỳ</em>.</p>
+  <div class="callout warn">
+    <h4>⚠️ Đây không phải dự báo</h4>
+    <p>Biết Δ2Y tăng trong 5 phiên qua <strong>không</strong> giúp đoán lợi suất 5 phiên tới. Kiểm tra dẫn trước (Granger) cho 0/150 bond→equity — không có bằng chứng lợi suất trái phiếu đi trước.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 5: QUAN HỆ THEO THÁNG ===== -->
+<section id="monthly">
+  <h2 class="section-title"><span class="num">5</span>Quan hệ theo tháng</h2>
+  <p>Ở tần suất tháng, quan hệ chuyển sang lợi suất 10 năm: khi Δ10Y trong tháng tăng, lợi suất index cùng tháng thường <strong>yếu hơn</strong>.</p>
+  <p>Tương tự như daily, đây là quan hệ đồng thời. Không thể dùng Δ10Y tháng này để đoán lợi suất tháng tới.</p>
+
+  <div class="chart-box">
+    <h4>Hiệu ứng đồng thời theo tháng</h4>
+    <div class="desc">Mỗi 10 bps tăng Δ10Y tháng → lợi suất cổ phiếu tháng giảm. VNMAT mạnh nhất (-1,29%/10bps).</div>
+    <div class="chart-wrap"><canvas id="chartMonthlyBeta"></canvas></div>
+  </div>
+
+  <div class="chart-box">
+    <h4>Phân bổ kết quả ngoài mẫu</h4>
+    <div class="desc">Thêm lợi suất trái phiếu không tạo ra dự báo ổn định. Chương 2: 0/175 mô hình ổn định. Chương 3: 0/15 mô hình khối lượng ổn định.</div>
+    <div class="chart-wrap tall"><canvas id="chartOOS"></canvas></div>
+  </div>
+</section>
+
+<!-- ===== SECTION 6: KIỂM TRA CHIỀU THỜI GIAN ===== -->
+<section id="timing">
+  <h2 class="section-title"><span class="num">6</span>Kiểm tra chiều thời gian</h2>
+  <p>Để phân biệt "đi cùng" và "đi trước", nghiên cứu dùng hai công cụ:</p>
+  <ul class="bul">
+    <li><strong>Granger (VAR):</strong> kiểm tra xem biến động lợi suất trái phiếu có thêm thông tin dự báo ngoài những gì cổ phiếu đã tự nói hay không. Kết quả: <strong>0/150</strong> bond→equity — không có bằng chứng dẫn trước.</li>
+    <li><strong>Kiểm tra ngoài mẫu:</strong> so sánh mô hình "chỉ cổ phiếu" với "cổ phiếu + trái phiếu" trên dữ liệu chưa từng thấy. Kết quả: <strong>0/175</strong> mô hình ổn định — trái phiếu không cải thiện dự báo nhất quán.</li>
+  </ul>
+
+  <div class="chart-box">
+    <h4>Granger: ai đi trước ai?</h4>
+    <div class="desc">Tín hiệu borderline (p&lt;0,10) tập trung ở chiều equity→bond (7 cận ngưỡng), gần như vắng ở bond→equity. Nhưng không chiều nào vượt hiệu chỉnh đa phép thử.</div>
+    <div class="chart-wrap"><canvas id="chartGrangerDir"></canvas></div>
+  </div>
+
+  <div class="callout info">
+    <h4>💡 Điều này nghĩa là gì?</h4>
+    <p>Lợi suất trái phiếu và cổ phiếu có thể cùng phản ánh một môi trường chung (quan hệ đồng thời), nhưng nghiên cứu chưa cho thấy lợi suất trái phiếu mang thông tin tương lai ổn định vượt qua những gì cổ phiếu đã tự phản ánh.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 7: CHƯƠNG 3 ===== -->
+<section id="ch3">
+  <h2 class="section-title"><span class="num">7</span>Chương 3 — Trái phiếu và khối lượng giao dịch</h2>
+
+  <h3>Câu hỏi</h3>
+  <p>Khi lợi suất, đường cong và chênh lệch lãi suất Việt Nam–Mỹ thay đổi, <strong>khối lượng giao dịch</strong> của các chỉ số cổ phiếu có thay đổi cùng lúc hay sau đó không?</p>
+
+  <h3>Kết quả chính</h3>
+  <table class="tbl">
+    <tr><th>Kiểm tra</th><th>Kết quả</th></tr>
+    <tr><td>Quan hệ đồng thời ở cấp panel</td><td>0/15 vượt hiệu chỉnh</td></tr>
+    <tr><td>Quan hệ ngắn hạn (khối lượng sau vài phiên)</td><td>0/15 vượt hiệu chỉnh</td></tr>
+    <tr><td>Trái phiếu dẫn trước khối lượng (Granger)</td><td>0/150 vượt hiệu chỉnh</td></tr>
+    <tr><td>Mô hình dự báo khối lượng ổn định ngoài mẫu</td><td>0/15 ổn định</td></tr>
+  </table>
+
+  <h3>Tín hiệu thăm dò: bất đối xứng theo tháng</h3>
+  <p>Ở tần suất tháng, bốn tương tác bất đối xứng vượt ngưỡng thăm dò BH — nghĩa là khối lượng phản ứng khác nhau khi lợi suất trái phiếu tăng so với giảm. Đây chỉ là tín hiệu thăm dò, <strong>không nâng</strong> kết luận.</p>
+
+  <div class="chart-box">
+    <h4>Tương tác bất đối xứng theo tháng (thăm dò)</h4>
+    <div class="desc">Beta tương tác dương = phản ứng khối lượng mạnh hơn ở một chế độ. Tất cả 4 vượt BH FDR 10% nhưng không vượt ngưỡng xác nhận.</div>
+    <div class="chart-wrap"><canvas id="chartAsymmetry"></canvas></div>
+  </div>
+
+  <div class="callout info">
+    <h4>Phạm vi của Chương 3</h4>
+    <p>Chương 3 nghiên cứu <strong>khối lượng giao dịch của chỉ số</strong>. Câu hỏi về cấu trúc bên trong thị trường — độ rộng, độ sâu, cơ hội — thuộc về Chương 4.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 8: CHƯƠNG 4 ===== -->
+<section id="ch4">
+  <h2 class="section-title"><span class="num">8</span>Chương 4 — Bên trong VN-INDEX</h2>
+
+  <h3>"Bên trong" nghĩa là gì</h3>
+  <p>Thay vì dùng một con số chỉ số, Chương 4 sử dụng 403 cổ phiếu phổ thông current-active trên HOSE, dùng như một proxy survivorship-limited để quan sát cấu trúc bên trong thị trường. Đây <strong>không phải</strong> danh sách thành viên VN-INDEX theo lịch sử.</p>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="val">403</div><div class="lab">Cổ phiếu HOSE</div></div>
+    <div class="kpi cyan"><div class="val">1,07M</div><div class="lab">Phiên giao dịch</div></div>
+    <div class="kpi blue"><div class="val">38</div><div class="lab">Đặc trưng (breadth+depth+opp)</div></div>
+    <div class="kpi green"><div class="val">36,5%</div><div class="lab">Tỷ lệ cơ hội +10/-5/60</div></div>
+  </div>
+
+  <h3>Kết quả chính</h3>
+  <p>Ở tần suất <strong>tháng</strong>, có hai liên hệ đồng thời sống sót: khi lợi suất trái phiếu 2 năm hoặc chênh lệch lãi suất Việt Nam–Mỹ thay đổi trong một tháng, độ rộng thị trường trong <em>cùng tháng đó</em> có xu hướng yếu hơn.</p>
+  <div class="callout warn">
+    <h4>⚠️ Hiệu ứng rất nhỏ</h4>
+    <p>Mỗi 25 bps thay đổi lợi suất chỉ đi kèm độ rộng giảm khoảng <strong>0,07%</strong>. Liên hệ có ý nghĩa thống kê, nhưng kích thước quá nhỏ để coi là tín hiệu thực tế đáng chú ý.</p>
+  </div>
+
+  <div class="chart-box">
+    <h4>19 phép thử xác nhận: bức tường null</h4>
+    <div class="desc">-log10(p) cho toàn bộ 19 phép thử. Chỉ 2 (F1, F5 monthly) vượt ngưỡng Holm. 17 phép thử còn lại nằm sát sàn — không có bằng chứng dự báo.</div>
+    <div class="chart-wrap tall"><canvas id="chartCh4Confirm"></canvas></div>
+  </div>
+
+  <h3>Kích thước hiệu ứng</h3>
+  <div class="chart-box">
+    <h4>Hai survivor: beta chuẩn hóa + khoảng tin cậy 95%</h4>
+    <div class="desc">Beta chuẩn hóa ~-0,225 cho cả hai. Khoảng tin cậy không chứa 0 (có ý nghĩa thống kê), nhưng biên độ nhỏ hơn 0,15 điểm %.</div>
+    <div class="chart-wrap"><canvas id="chartCh4Effect"></canvas></div>
+  </div>
+
+  <h3>Không dự báo ngoài mẫu</h3>
+  <div class="chart-box">
+    <h4>Cải thiện OOS vs ngưỡng vật chất 2%</h4>
+    <div class="desc">Cả 3 mô hình OOS cải thiện dưới 0,4% — nhỏ hơn ngưỡng vật chất 2% rất xa. Không mô hình nào ổn định.</div>
+    <div class="chart-wrap"><canvas id="chartCh4OOS"></canvas></div>
+  </div>
+
+  <p>Không có quan hệ dẫn trước (Granger 0/7), không có liên hệ đáng tin với cơ hội +10/-5 sau khi xử lý 591 trường hợp cùng phiên đạt mục tiêu lẫn chặn.</p>
+</section>
+
+<!-- ===== SECTION 9: CƠ HỘI +10/-5 THEO THỜI GIAN ===== -->
+<section id="opp-timeline">
+  <h2 class="section-title"><span class="num">9</span>Cơ hội +10/-5 theo thời gian</h2>
+  <p>Một câu hỏi tự nhiên: tỷ lệ cổ phiếu đạt +10% trước khi giảm -5% trong 60 phiên — chỉ số "môi trường thuận lợi" — có thay đổi theo thời gian không?</p>
+
+  <div class="chart-box">
+    <h4>Tỷ lệ cơ hội +10/-5/60 phiên theo tháng (2014–2026)</h4>
+    <div class="desc">Trung bình ~37%. Spike rõ ở 2020–2021 (thị trường bùng nổ). Sụt mạnh gần đây — 2026 tháng 6 chỉ 6,6%.</div>
+    <div class="chart-wrap tall"><canvas id="chartOppTimeline"></canvas></div>
+  </div>
+
+  <div class="callout info">
+    <h4>💡 Cơ hội thay đổi, nhưng lợi suất trái phiếu không giải thích</h4>
+    <p>Tỷ lệ cơ hội biến động đáng kể theo thời gian, nhưng Chương 4 cho thấy biến động lợi suất trái phiếu <strong>không đi trước</strong> sự thay đổi này. Môi trường thuận lợi đến và đi do nhiều yếu tố, không phải do trái phiếu.</p>
+  </div>
+</section>
+
+<!-- ===== SECTION 10: KẾT LUẬN ===== -->
+<section id="conclusion">
+  <h2 class="section-title"><span class="num">10</span>Kết luận — Trái phiếu như chỉ báo bối cảnh</h2>
+
+  <h3>Bốn chương đã tìm thấy gì</h3>
+  <table class="tbl">
+    <tr><th>Chương</th><th>Câu hỏi</th><th>Kết quả</th></tr>
+    <tr><td>1</td><td>Bond có dự báo độc lập không?</td><td>Không được xác nhận</td></tr>
+    <tr><td>2</td><td>Bond có liên hệ lợi suất chỉ số không?</td><td>Có đồng chuyển giới hạn</td></tr>
+    <tr><td>3</td><td>Bond có liên hệ khối lượng không?</td><td>Không được xác nhận</td></tr>
+    <tr><td>4</td><td>Bond có liên hệ cấu trúc bên trong không?</td><td>Có liên hệ breadth cùng kỳ theo tháng, hiệu ứng nhỏ</td></tr>
+  </table>
+
+  <div class="callout info">
+    <h4>Thông điệp cốt lõi</h4>
+    <p>Bằng chứng đồng chuyển chỉ xuất hiện giới hạn ở lợi suất chỉ số (Chương 2) và độ rộng theo tháng (Chương 4); không được xác nhận với khối lượng, thanh khoản hoặc cơ hội +10/-5. Nghiên cứu chưa cho thấy lợi suất trái phiếu mang thông tin tương lai ổn định vượt qua những gì cổ phiếu đã tự phản ánh.</p>
+  </div>
+
+  <div class="compare">
+    <div class="col before">
+      <h4>✅ Nên làm</h4>
+      <ul class="bul">
+        <li>Dùng lợi suất trái phiếu để đánh giá môi trường tài chính chung.</li>
+        <li>Khi Δ2Y tăng mạnh, kiểm tra thêm độ rộng giá và thanh khoản.</li>
+        <li>Tăng thận trọng khi nhiều lớp tín hiệu cùng báo hiệu xấu.</li>
+      </ul>
+    </div>
+    <div class="col after">
+      <h4>🚫 Không nên làm</h4>
+      <ul class="bul">
+        <li>Không bán chỉ vì lợi suất tăng — đây không phải dự báo sụt giảm.</li>
+        <li>Không mua chỉ vì lợi suất giảm — quan hệ đồng thời không có chiều dự báo.</li>
+        <li>Không dùng lợi suất trái phiếu để định thời điểm thị trường.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Vì sao dừng tại Chương 4</h3>
+  <p>Kế hoạch ban đầu hình dung thêm Chương 5 về đường cong ảnh hưởng theo thời gian và Chương 6 về hệ thống cảnh báo. Nhưng mở hai chương đó chỉ có ý nghĩa khi có quan hệ đủ mạnh và ổn định để xây dựng — và bốn chương đã cho thấy điều kiện đó không đạt.</p>
+  <p>Dừng lại ở đây là quyết định <strong>dựa trên bằng chứng</strong>, không phải nghiên cứu thất bại. Một câu trả lời "chưa đủ bằng chứng" trung thực hơn một tín hiệu giả.</p>
+</section>
+
+<!-- ===== SECTION 11: GIỚI HẠN ===== -->
+<section id="limits">
+  <h2 class="section-title"><span class="num">11</span>Giới hạn nghiên cứu</h2>
+  <p>Mọi kết luận trên chỉ đúng trong phạm vi dữ liệu và thiết kế hiện có:</p>
+  <ul class="bul">
+    <li>Dữ liệu chủ yếu từ 2014–2026 — chưa trải qua nhiều chu kỳ lãi suất hoàn chỉnh.</li>
+    <li>Universe Chương 4 là current-active HOSE, nghiêng survivorship — không phải tập điểm-trong-thời-gian.</li>
+    <li>Không có dữ liệu thành viên chỉ số lịch sử đầy đủ.</li>
+    <li>Không có dữ liệu thanh khoản trái phiếu và sổ lệnh sâu.</li>
+    <li>Số quan sát ở tần suất tháng tương đối nhỏ (119 tháng hiệu dụng).</li>
+    <li>Quan hệ thống kê không chứng minh nhân quả.</li>
+    <li>Kết quả âm tính nghĩa là "chưa đủ bằng chứng", không phải "chắc chắn không có quan hệ".</li>
+  </ul>
+  <div class="callout limit">
+    <h4>⚠️ Lời cuối</h4>
+    <p>Nghiên cứu này không chứng minh lợi suất trái phiếu <em>không</em> liên quan đến cổ phiếu. Nó chỉ cho rằng, với dữ liệu và phương pháp hiện có, lợi suất trái phiếu chưa đóng vai trò dự báo được. Đó là một câu trả lời khiêm tốn — nhưng trung thực.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- MINIMAP -->
+<aside class="minimap" id="minimap" aria-label="Mục lục">
+  <div class="mm-head">
+    <span class="mm-title">Mục lục</span>
+    <span class="mm-pct" id="mmPct">0%</span>
+  </div>
+  <div class="mm-search">
+    <input type="text" id="mmSearch" placeholder="Lọc mục lục..." autocomplete="off">
+  </div>
+  <button class="mm-overlay-close" id="mmClose" aria-label="Đóng">✕</button>
+  <div class="mm-group open" data-group="a">
+    <button class="mm-group-head"><span class="chev">▶</span> Mở đầu <span class="gcount">1</span></button>
+    <ul class="mm-items">
+      <li><a href="#open"><span class="dot"></span>1 — Tổng quan</a></li>
+    </ul>
+  </div>
+  <div class="mm-group open" data-group="b">
+    <button class="mm-group-head"><span class="chev">▶</span> Chương 1–3 <span class="gcount">6</span></button>
+    <ul class="mm-items">
+      <li><a href="#ch1"><span class="dot"></span>2 — Chương 1: Dự báo</a></li>
+      <li><a href="#ch2"><span class="dot"></span>3 — Chương 2: Đồng thời</a></li>
+      <li><a href="#daily"><span class="dot"></span>4 — Quan hệ theo ngày</a></li>
+      <li><a href="#monthly"><span class="dot"></span>5 — Quan hệ theo tháng</a></li>
+      <li><a href="#timing"><span class="dot"></span>6 — Chiều thời gian</a></li>
+      <li><a href="#ch3"><span class="dot"></span>7 — Chương 3: Khối lượng</a></li>
+    </ul>
+  </div>
+  <div class="mm-group open" data-group="c">
+    <button class="mm-group-head"><span class="chev">▶</span> Chương 4 <span class="gcount">2</span></button>
+    <ul class="mm-items">
+      <li><a href="#ch4"><span class="dot"></span>8 — Bên trong VN-INDEX</a></li>
+      <li><a href="#opp-timeline"><span class="dot"></span>9 — Cơ hội theo thời gian</a></li>
+    </ul>
+  </div>
+  <div class="mm-group open" data-group="d">
+    <button class="mm-group-head"><span class="chev">▶</span> Kết luận <span class="gcount">2</span></button>
+    <ul class="mm-items">
+      <li><a href="#conclusion"><span class="dot"></span>10 — Kết luận</a></li>
+      <li><a href="#limits"><span class="dot"></span>11 — Giới hạn</a></li>
+    </ul>
+  </div>
+  <div class="mm-no-result" id="mmNoResult">Không tìm thấy mục nào.</div>
+</aside>
+
+<button class="mm-fab" id="mmFab" aria-label="Mở mục lục">☰</button>
+<button class="to-top" id="toTop" aria-label="Lên đầu trang">↑</button>
+<div class="progress-bar" id="progressBar"></div>
+
+<footer>
+  <p>Nghiên cứu độc lập · Trái phiếu Chính phủ Việt Nam · Cổ phiếu HOSE</p>
+  <p>Chương 1: không có phép thử dự báo nào vượt hiệu chỉnh. Chương 2: hai quan hệ đồng thời xác nhận, 0/150 Granger bond→equity, 0/175 OOS. Chương 3: chưa tìm thấy quan hệ khối lượng xác nhận. Chương 4: liên hệ breadth đồng thời theo tháng (hiệu ứng nhỏ), 0/7 Granger, 0/3 OOS.</p>
+  <p>Kết quả âm tính = "chưa đủ bằng chứng", không phải "không có quan hệ".</p>
+</footer>
+
+<!-- SCRIPT: CHARTS -->
+<script>
+Chart.defaults.color='#94a3b8';
+Chart.defaults.font.family='-apple-system,Segoe UI,Roboto,sans-serif';
+Chart.defaults.borderColor='#334155';
+
+var GRID='#334155',TXT='#e2e8f0';
+
+// 1. Overview
+new Chart(document.getElementById('chartOverview'),{type:'bar',
+  data:{labels:['Ch1\nDự báo','Ch2\nĐồng thời','Ch2\nDẫn trước','Ch2\nNgoài mẫu','Ch3\nKL','Ch3\nBond→KL','Ch3\nNgoài mẫu','Ch4\nBreadth','Ch4\nDẫn trước','Ch4\nNgoài mẫu'],
+  datasets:[{label:'Vượt kiểm định',data:[0,2,0,0,0,0,0,2,0,0],
+    backgroundColor:['rgba(148,163,184,.5)','rgba(59,130,246,.7)','rgba(148,163,184,.5)','rgba(148,163,184,.5)','rgba(148,163,184,.5)','rgba(148,163,184,.5)','rgba(148,163,184,.5)','rgba(6,182,212,.7)','rgba(148,163,184,.5)','rgba(148,163,184,.5)'],
+    borderRadius:4,maxBarThickness:48}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,max:4,ticks:{stepSize:1},grid:{color:GRID}},x:{grid:{display:false},ticks:{font:{size:8},maxRotation:0}}}}});
+
+// 2. OOS
+new Chart(document.getElementById('chartOOS'),{type:'bar',
+  data:{labels:['Ổn định','Trung tính','Không ổn định','Thiếu DL'],
+  datasets:[
+    {label:'Chương 2 (175)',data:[0,56,84,35],backgroundColor:'rgba(59,130,246,.6)',borderRadius:5,maxBarThickness:54},
+    {label:'Chương 3 (15)',data:[0,0,15,0],backgroundColor:'rgba(6,182,212,.6)',borderRadius:5,maxBarThickness:54}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{boxWidth:14,font:{size:11}}}},
+    scales:{y:{beginAtZero:true,grid:{color:GRID}},x:{grid:{display:false}}}}});
+
+// 3. Daily beta
+new Chart(document.getElementById('chartDailyBeta'),{type:'bar',
+  data:{labels:['PANEL','VNINDEX','VN30','VNCOND','VNCONS','VNFIN','VNHEAL','VNIT'],
+  datasets:[{label:'β/10bps',data:[-0.248,-0.243,-0.231,-0.331,-0.280,-0.275,-0.170,-0.249],
+    backgroundColor:'rgba(59,130,246,.6)',borderRadius:5,maxBarThickness:40}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{title:{display:true,text:'Hiệu ứng / 10bps (%)',color:TXT},grid:{color:GRID}},x:{grid:{display:false},ticks:{font:{size:9}}}}}});
+
+// 4. Monthly beta
+new Chart(document.getElementById('chartMonthlyBeta'),{type:'bar',
+  data:{labels:['PANEL_CORE','VNMAT','VNINDEX'],
+  datasets:[{label:'β/10bps',data:[-0.884,-1.288,-0.707],
+    backgroundColor:'rgba(139,92,246,.6)',borderRadius:6,maxBarThickness:50}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{title:{display:true,text:'Hiệu ứng / 10bps (%)',color:TXT},grid:{color:GRID}},x:{grid:{display:false}}}}});
+
+// 5. Granger direction
+new Chart(document.getElementById('chartGrangerDir'),{type:'bar',
+  data:{labels:['Bond→Equity','Equity→Bond'],
+  datasets:[
+    {label:'Cận ngưỡng (p_adj<0,10)',data:[0,7],backgroundColor:['rgba(148,163,184,.5)','rgba(245,158,11,.6)'],borderRadius:6,maxBarThickness:60},
+    {label:'Vượt Holm FWER',data:[0,0],backgroundColor:'rgba(34,197,94,.6)',borderRadius:6,maxBarThickness:60}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:12}}},
+    scales:{y:{beginAtZero:true,max:8,ticks:{stepSize:1},grid:{color:GRID}},x:{grid:{display:false}}}}});
+
+// 6. Asymmetry
+new Chart(document.getElementById('chartAsymmetry'),{type:'bar',
+  data:{labels:['VN-US 10Y','VN-US 2Y','Δ10Y','Δ2Y'],
+  datasets:[{label:'Beta tương tác',data:[0.0034,0.0026,0.0023,0.0018],
+    backgroundColor:'rgba(139,92,246,.55)',borderRadius:5,maxBarThickness:44}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{title:{display:true,text:'Beta tương tác',color:TXT},grid:{color:GRID}},x:{grid:{display:false},ticks:{font:{size:9}}}}}});
+
+// 7. Ch4 confirmatory -log10(p)
+new Chart(document.getElementById('chartCh4Confirm'),{type:'bar',
+  data:{labels:['F1m y2→netadv','F5m spread→netadv','F2d y10→abnvol','F3m y2→opp','F1d y2→ma200','F5d spread','F1d y2→netadv','F4d slope','F3d y2→opp','F2m y2→partic','F1B y2→netadv','F4d slope→opp','F1d y10','F4m slope','F2B y2→partic','F2d y2→partic','F3d y10→opp','F5d sp10→opp','F3B y2→opp'],
+  datasets:[{label:'-log10(p)',
+    data:[2.08,2.03,1.19,0.95,0.74,0.71,0.59,0.49,0.36,0.35,0.32,0.28,0.18,0.15,0.10,0.074,0.064,0.041,0.028],
+    backgroundColor:function(c){var v=c.parsed.x;return v>1.3?'rgba(34,197,94,.7)':'rgba(148,163,184,.4)';},
+    borderRadius:3,maxBarThickness:22}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return 'p='+Math.pow(10,-c.parsed.x).toFixed(4);}}}},
+    scales:{x:{beginAtZero:true,title:{display:true,text:'-log10(p)',color:TXT},grid:{color:GRID}},y:{grid:{display:false},ticks:{font:{size:8}}}}}});
+
+// 8. Ch4 effect size
+// 8. Ch4 effect size with CI error bars
+new Chart(document.getElementById('chartCh4Effect'),{type:'bar',
+  data:{labels:['F1: Δ2Y→breadth','F5: spread→breadth'],
+  datasets:[{label:'Beta chuẩn hóa',data:[-0.2268,-0.2241],
+    backgroundColor:['rgba(59,130,246,.6)','rgba(6,182,212,.6)'],borderRadius:6,maxBarThickness:50}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{y:{title:{display:true,text:'Beta chuẩn hóa (CI 95%)',color:TXT},grid:{color:GRID},suggestedMin:-0.45,suggestedMax:0.05},x:{grid:{display:false}}}},
+  plugins:[{id:'ciBars',afterDatasetsDraw:function(chart){
+    var ctx=chart.ctx,meta=chart.getDatasetMeta(0),ci=[[-0.3802,-0.0734],[-0.3767,-0.0716]];
+    var yScale=chart.scales.y;
+    ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=2;
+    meta.data.forEach(function(bar,i){
+      var x=bar.x;
+      var yLo=yScale.getPixelForValue(ci[i][0]),yHi=yScale.getPixelForValue(ci[i][1]);
+      ctx.beginPath();ctx.moveTo(x,yLo);ctx.lineTo(x,yHi);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-6,yLo);ctx.lineTo(x+6,yLo);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-6,yHi);ctx.lineTo(x+6,yHi);ctx.stroke();
+    });
+  }}]});
+
+// 9. Ch4 OOS
+new Chart(document.getElementById('chartCh4OOS'),{type:'bar',
+  data:{labels:['netadv (Δ2Y)','opp +10/-5','partic (slope)'],
+  datasets:[
+    {label:'Cải thiện thực tế (%)',data:[0.33,0.02,0.087],backgroundColor:'rgba(59,130,246,.6)',borderRadius:5,maxBarThickness:40},
+    {label:'Ngưỡng 2%',data:[2,2,2],backgroundColor:'rgba(239,68,68,.3)',borderRadius:5,maxBarThickness:40}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:12}}},
+    scales:{y:{beginAtZero:true,title:{display:true,text:'Cải thiện MAE (%)',color:TXT},grid:{color:GRID}},x:{grid:{display:false},ticks:{font:{size:9}}}}}});
+
+// 10. Opportunity timeline (full 150 months 2014-01 to 2026-06)
+new Chart(document.getElementById('chartOppTimeline'),{type:'line',
+  data:{labels:['1/14','2/14','3/14','4/14','5/14','6/14','7/14','8/14','9/14','10/14','11/14','12/14','1/15','2/15','3/15','4/15','5/15','6/15','7/15','8/15','9/15','10/15','11/15','12/15','1/16','2/16','3/16','4/16','5/16','6/16','7/16','8/16','9/16','10/16','11/16','12/16','1/17','2/17','3/17','4/17','5/17','6/17','7/17','8/17','9/17','10/17','11/17','12/17','1/18','2/18','3/18','4/18','5/18','6/18','7/18','8/18','9/18','10/18','11/18','12/18','1/19','2/19','3/19','4/19','5/19','6/19','7/19','8/19','9/19','10/19','11/19','12/19','1/20','2/20','3/20','4/20','5/20','6/20','7/20','8/20','9/20','10/20','11/20','12/20','1/21','2/21','3/21','4/21','5/21','6/21','7/21','8/21','9/21','10/21','11/21','12/21','1/22','2/22','3/22','4/22','5/22','6/22','7/22','8/22','9/22','10/22','11/22','12/22','1/23','2/23','3/23','4/23','5/23','6/23','7/23','8/23','9/23','10/23','11/23','12/23','1/24','2/24','3/24','4/24','5/24','6/24','7/24','8/24','9/24','10/24','11/24','12/24','1/25','2/25','3/25','4/25','5/25','6/25','7/25','8/25','9/25','10/25','11/25','12/25','1/26','2/26','3/26','4/26','5/26','6/26'],
+  datasets:[
+    {label:'Tỷ lệ cơ hội',data:[0.6523,0.5013,0.4039,0.1686,0.3924,0.5886,0.4553,0.612,0.4577,0.3549,0.3255,0.2629,0.3259,0.4085,0.2904,0.289,0.4354,0.3926,0.2981,0.274,0.4969,0.4137,0.3097,0.3037,0.3358,0.4934,0.4126,0.4386,0.5152,0.4435,0.294,0.4065,0.3437,0.2717,0.2775,0.411,0.4777,0.4457,0.4081,0.4278,0.4942,0.4356,0.318,0.3173,0.3384,0.3033,0.5107,0.4193,0.2993,0.335,0.332,0.2343,0.2667,0.2136,0.4282,0.4371,0.4058,0.2355,0.3226,0.2808,0.4909,0.4772,0.3444,0.2834,0.3325,0.3593,0.3322,0.2915,0.2877,0.2578,0.2611,0.2833,0.2315,0.2433,0.2166,0.5298,0.5308,0.319,0.3322,0.641,0.4693,0.4014,0.683,0.6389,0.3001,0.5762,0.3774,0.2944,0.4636,0.3575,0.4861,0.6054,0.517,0.6664,0.3679,0.3822,0.3684,0.5014,0.3533,0.1426,0.28,0.2367,0.5197,0.2411,0.1119,0.1581,0.3358,0.3406,0.3958,0.2731,0.5101,0.5217,0.6675,0.5061,0.4561,0.3122,0.1775,0.1973,0.4557,0.4709,0.4972,0.4717,0.2955,0.3757,0.5275,0.2893,0.1802,0.2756,0.2434,0.2801,0.3921,0.3394,0.4647,0.3348,0.1175,0.3812,0.5346,0.5575,0.5068,0.3128,0.201,0.2178,0.2719,0.2924,0.2662,0.1911,0.1969,0.1802,0.0999,0.0657],
+      borderColor:'rgba(6,182,212,.7)',backgroundColor:'rgba(6,182,212,.1)',borderWidth:2,fill:true,pointRadius:0,tension:0.3},
+    {label:'TB 37%',data:Array(150).fill(0.3685),borderColor:'rgba(245,158,11,.5)',borderWidth:1.5,borderDash:[5,5],pointRadius:0,fill:false}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:12}}},
+    scales:{y:{beginAtZero:true,max:0.8,title:{display:true,text:'Tỷ lệ cơ hội',color:TXT},grid:{color:GRID},ticks:{callback:function(v){return(v*100).toFixed(0)+'%';}}},x:{grid:{display:false},ticks:{font:{size:8},maxRotation:0,maxTicksLimit:12}}}}});
+</script>
+
+<!-- SCRIPT: NAVIGATION -->
+<script>
+(function(){
+  var body=document.body;
+  var minimap=document.getElementById('minimap');
+  var fab=document.getElementById('mmFab');
+  var closeBtn=document.getElementById('mmClose');
+  var toTop=document.getElementById('toTop');
+  var progressBar=document.getElementById('progressBar');
+  var mmPct=document.getElementById('mmPct');
+  var search=document.getElementById('mmSearch');
+  var noResult=document.getElementById('mmNoResult');
+  var groups=Array.from(document.querySelectorAll('.mm-group'));
+  var allLinks=Array.from(document.querySelectorAll('.mm-items a'));
+  var sections=allLinks.map(function(a){
+    var id=a.getAttribute('href').slice(1);
+    return{link:a,section:document.getElementById(id),id:id};
+  }).filter(function(x){return x.section;});
+
+  setTimeout(function(){document.body.classList.add('loaded');},600);
+
+  function openGroupContaining(link){
+    var grp=link.closest('.mm-group');
+    if(grp&&!grp.classList.contains('open'))grp.classList.add('open');
+  }
+
+  var observer=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        var id=entry.target.id;
+        var found=sections.find(function(s){return s.id===id;});
+        if(found){
+          sections.forEach(function(s){s.link.classList.remove('active');});
+          found.link.classList.add('active');
+          openGroupContaining(found.link);
+        }
+      }
+    });
+  },{rootMargin:'-90px 0px -70% 0px'});
+  sections.forEach(function(s){observer.observe(s.section);});
+
+  function onScroll(){
+    var h=document.documentElement.scrollHeight-window.innerHeight;
+    var pct=Math.min(100,Math.max(0,(window.scrollY/h)*100));
+    progressBar.style.width=pct+'%';
+    mmPct.textContent=Math.round(pct)+'%';
+    if(window.scrollY>300){body.classList.add('nav-active');toTop.classList.add('show');}
+    else{body.classList.remove('nav-active');toTop.classList.remove('show');}
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+
+  toTop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+
+  groups.forEach(function(g){
+    var head=g.querySelector('.mm-group-head');
+    head.addEventListener('click',function(){g.classList.toggle('open');});
+  });
+
+  search.addEventListener('input',function(){
+    var q=search.value.trim().toLowerCase();
+    minimap.classList.toggle('searching',!!q);
+    var anyVisible=false;
+    allLinks.forEach(function(a){
+      var text=a.textContent.toLowerCase();
+      var match=!q||text.includes(q);
+      a.style.display=match?'':'none';
+      if(match)anyVisible=true;
+      if(match&&q)openGroupContaining(a);
+    });
+    noResult.classList.toggle('show',!anyVisible);
+  });
+
+  fab.addEventListener('click',function(){body.classList.add('nav-mobile-open');});
+  closeBtn.addEventListener('click',function(){body.classList.remove('nav-mobile-open');});
+
+  allLinks.forEach(function(a){
+    a.addEventListener('click',function(){
+      if(window.innerWidth<1024)body.classList.remove('nav-mobile-open');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

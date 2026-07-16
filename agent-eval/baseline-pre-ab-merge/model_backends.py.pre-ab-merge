@@ -1,0 +1,146 @@
+"""
+model_backends.py — Adapter architecture for model invocation (agent-eval §3 of owner directive).
+
+Base interface:
+    class ModelBackend:
+        def is_available(self) -> bool
+        def invoke(self, prompt: str, context: dict) -> dict   # {output, metadata, tool_calls, error, inference_occurred}
+        def metadata(self) -> dict
+
+Backends:
+    ZAIBackend         — GLM-native via api.z.ai/api/anthropic (kind:anthropic), key from ~/.zcode/cli/config.json
+    OpenAIBackend      — OpenAI API (env OPENAI_API_KEY)
+    OllamaBackend      — local Ollama runner (http://localhost:11434)
+    ZCodeNativeBackend — placeholder; no public subprocess/CLI invocation interface found
+
+HONESTY: no backend ever fabricates an inference. is_available()==False → invoke returns NO_MODEL_BOUND.
+No API key is ever written to source; ZAIBackend reads it from the ZCode config at runtime.
+"""
+import os, json, time
+
+CONFIG_PATH = os.path.expanduser("~/.zcode/cli/config.json")
+
+class ModelBackend:
+    name = "base"
+    def is_available(self) -> bool: return False
+    def metadata(self) -> dict: return {"backend": self.name, "available": self.is_available()}
+    def invoke(self, prompt: str, context: dict) -> dict:
+        return {"output": None, "metadata": self.metadata(), "tool_calls": [],
+                "error": "NO_MODEL_BOUND", "inference_occurred": False}
+
+class ZAIBackend(ModelBackend):
+    """GLM-native backend — the model actually running the skill in production.
+    Interface is kind:anthropic (api.z.ai/api/anthropic). Key sourced from ZCode config."""
+    name = "zai-glm-native"
+    def __init__(self, model_id="GLM-5.2", config_path=CONFIG_PATH):
+        self.model_id = model_id
+        self.config_path = config_path
+        self._opts = None
+    def _load_opts(self):
+        if self._opts is not None: return self._opts
+        try:
+            c = json.load(open(self.config_path))
+            self._opts = c["provider"]["builtin:zai-coding-plan"]["options"]
+        except Exception:
+            self._opts = {}
+        return self._opts
+    def is_available(self) -> bool:
+        opts = self._load_opts()
+        return bool(opts.get("apiKey") and opts.get("baseURL"))
+    def metadata(self) -> dict:
+        opts = self._load_opts()
+        return {"backend": self.name, "model": self.model_id, "available": self.is_available(),
+                "base_url": opts.get("baseURL"), "interface": "anthropic",
+                "key_source": "ZCode config (not source code)"}
+    def invoke(self, prompt: str, context: dict) -> dict:
+        if not self.is_available():
+            return {"output": None, "metadata": self.metadata(), "tool_calls": [],
+                    "error": "NO_MODEL_BOUND", "inference_occurred": False}
+        t0 = time.time()
+        try:
+            import anthropic
+            opts = self._load_opts()
+            client = anthropic.Anthropic(api_key=opts["apiKey"], base_url=opts["baseURL"])
+            ctx_str = json.dumps(context, ensure_ascii=False)[:4000]
+            # STREAMING: required by the Anthropic SDK for max_tokens that may exceed 10-min non-streaming ceiling.
+            # Accumulate chunks; capture stop_reason + usage from the final stream message.
+            out_parts = []
+            stop_reason = None; usage_in = None; usage_out = None; resp_model = None
+            with client.messages.stream(
+                model=self.model_id, max_tokens=32768, temperature=0.2,
+                system=f"You are a subagent for equity-research-vn. Context-isolated. Do ONLY the assigned phase.",
+                messages=[{"role":"user","content": f"CONTEXT:\n{ctx_str}\n\nPHASE PROMPT:\n{prompt}"}]) as stream:
+                for text in stream.text_stream:
+                    out_parts.append(text)
+                final = stream.get_final_message()
+                stop_reason = final.stop_reason
+                usage_in = getattr(final.usage, 'input_tokens', None)
+                usage_out = getattr(final.usage, 'output_tokens', None)
+                resp_model = final.model
+            out = "".join(out_parts)
+            return {"output": out, "metadata": {**self.metadata(),
+                    "latency_s": round(time.time()-t0,2),
+                    "usage": {"in": usage_in, "out": usage_out},
+                    "stop_reason": stop_reason, "resp_model": resp_model},
+                    "tool_calls": [], "error": None, "inference_occurred": True}
+        except Exception as e:
+            return {"output": None, "metadata": self.metadata(), "tool_calls": [],
+                    "error": f"INFERENCE_FAILED: {type(e).__name__}: {str(e)[:200]}",
+                    "inference_occurred": False}
+
+class OpenAIBackend(ModelBackend):
+    name = "openai"
+    def __init__(self, model_id="gpt-4o-mini"): self.model_id = model_id
+    def is_available(self) -> bool: return bool(os.environ.get("OPENAI_API_KEY"))
+    def metadata(self) -> dict:
+        return {"backend": self.name, "model": self.model_id, "available": self.is_available()}
+    def invoke(self, prompt: str, context: dict) -> dict:
+        if not self.is_available():
+            return {"output": None, "metadata": self.metadata(), "tool_calls": [],
+                    "error": "NO_MODEL_BOUND", "inference_occurred": False}
+        t0 = time.time()
+        try:
+            import openai
+            client = openai.OpenAI()
+            resp = client.chat.completions.create(model=self.model_id, temperature=0.2,
+                messages=[{"role":"system","content":"subagent for equity-research-vn"},
+                          {"role":"user","content": f"CONTEXT:\n{json.dumps(context,ensure_ascii=False)[:4000]}\n\nPHASE PROMPT:\n{prompt}"}])
+            return {"output": resp.choices[0].message.content, "metadata": {**self.metadata(),
+                    "latency_s": round(time.time()-t0,2)}, "tool_calls": [],
+                    "error": None, "inference_occurred": True}
+        except Exception as e:
+            return {"output": None, "metadata": self.metadata(), "tool_calls": [],
+                    "error": f"INFERENCE_FAILED: {type(e).__name__}", "inference_occurred": False}
+
+class OllamaBackend(ModelBackend):
+    name = "ollama"
+    def __init__(self, model_id="llama3"): self.model_id = model_id
+    def is_available(self) -> bool:
+        try:
+            import urllib.request
+            urllib.request.urlopen("http://localhost:11434/api/tags", timeout=1)
+            return True
+        except Exception: return False
+    def metadata(self) -> dict:
+        return {"backend": self.name, "model": self.model_id, "available": self.is_available(),
+                "base_url": "http://localhost:11434"}
+
+class ZCodeNativeBackend(ModelBackend):
+    """Placeholder — inspected the ZCode app for a CLI/subprocess/session-API invocation
+    surface and found NONE that exposes a programmatic agent call from outside the interactive
+    app. The ZAI HTTP API (ZAIBackend) IS the native GLM path. This backend stays UNSUPPORTED."""
+    name = "zcode-native"
+    status = "UNSUPPORTED_NO_INVOCATION_INTERFACE_FOUND"
+    def is_available(self) -> bool: return False
+    def metadata(self) -> dict:
+        return {"backend": self.name, "available": False, "status": self.status,
+                "note": "ZCode ships an interactive macOS app; no headless CLI/subprocess agent-invocation interface found. Use ZAIBackend (same GLM model via api.z.ai)."}
+
+def get_backend(name: str, model_id: str = None) -> ModelBackend:
+    """Factory. Default = zai-glm-native (the actual model running the skill)."""
+    name = (name or "").lower()
+    if name in ("zai", "glm", "zai-glm-native"): return ZAIBackend(model_id or "GLM-5.2")
+    if name == "openai": return OpenAIBackend(model_id or "gpt-4o-mini")
+    if name == "ollama": return OllamaBackend(model_id or "llama3")
+    if name in ("zcode-native","zcode"): return ZCodeNativeBackend()
+    return ModelBackend()

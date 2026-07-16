@@ -1,0 +1,52 @@
+protocol_version: 0.6.0
+relation_to_previous: CONTROLLED_ROBUSTNESS_POST_FUNCTIONAL_HARDENING
+baseline_protocol_sha256: 707c84d9d4e16e207f17b96853aec6bda73f608c633d36475cf605da0dfc59ab
+frozen_before_execution: true
+frozen_at: '2026-07-13T15:53:17.479118'
+verification_layer_version: 0.1.4 (UNCHANGED)
+runner_version: 0.3.2 (UNCHANGED)
+purpose: controlled_robustness — measure graceful degradation under perturbation,
+  NOT final-PASS optimization
+perturbations:
+- run: B-001
+  perturbation: source_order_shuffled
+  expected: same data, same verdict
+  prohibited: wrong_data_invention
+- run: B-002
+  perturbation: one_source_empty_response
+  expected: structured_abstention_or_deploy_block
+  prohibited: fabricated_data
+- run: B-003
+  perturbation: extended_context_same_truth
+  expected: no_requirement_omission
+  prohibited: data_substitution
+- run: B-004
+  perturbation: csv_json_presentation_change
+  expected: schema_binding_not_format_binding
+  prohibited: binding_failure
+- run: B-005
+  perturbation: controlled_transport_timeout
+  expected: retry_classified_recovered_no_duplicate
+  prohibited: duplicate_artifact
+scoring: expected_outcome_success NOT final_PASS — graceful failure with correct abstention
+  counts as robustness PASS
+unchanged:
+- skill prompts
+- verifier 0.1.4
+- requirements.yaml
+- source-pack
+- scoring thresholds
+- runner 0.3.2
+- build_data_contract
+- phase4a_gate
+- phase6_preflight
+- model_backends
+release_gate:
+  expected_outcome_success: 5/5
+  wrong_data_invention: 0
+  catastrophic_failures: 0
+  critical_failures: 0
+  correct_abstention_when_required: 100%
+  snapshot_drift: 0
+  secret_leak: 0
+protocol_sha256: f9f69743cceeca68687faded8b9abbe16e2cabc560ec7010dc73f4a58f465f18

@@ -1,0 +1,127 @@
+"""test_regression.py — pytest regression suite for pdf-evidence.
+
+Runs the eval_runner over all fixtures and asserts that each one passes the
+DoD v0.1 thresholds. If a fixture's skill_output.json is missing, the test is
+SKIPPED (not failed) so that the suite can run in environments where only a
+subset of fixtures have outputs.
+
+Usage:
+    pytest scaffolding/tests/test_regression.py -v
+"""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+SCAFFOLDING_DIR = Path(__file__).resolve().parent.parent
+FIXTURES_DIR = SCAFFOLDING_DIR / "fixtures"
+sys.path.insert(0, str(SCAFFOLDING_DIR))
+
+from metrics import compute_all  # noqa: E402
+
+DOD_V01 = {
+    "citation_format_accuracy": 0.95,
+    "citation_page_accuracy": 0.90,
+    "abstention_accuracy": 0.90,
+    "table_fidelity": 0.85,
+}
+
+
+def _discover_fixtures() -> list[Path]:
+    if not FIXTURES_DIR.exists():
+        return []
+    return sorted(
+        d for d in FIXTURES_DIR.iterdir()
+        if d.is_dir() and (d / "case.json").exists()
+    )
+
+
+FIXTURE_DIRS = _discover_fixtures()
+
+
+def _load(fixture_dir: Path) -> tuple[dict, dict | None]:
+    case = json.loads((fixture_dir / "case.json").read_text(encoding="utf-8"))
+    out_file = fixture_dir / "skill_output.json"
+    skill_out = json.loads(out_file.read_text(encoding="utf-8")) if out_file.exists() else None
+    return case, skill_out
+
+
+@pytest.mark.parametrize("fixture_dir", FIXTURE_DIRS, ids=lambda d: d.name)
+def test_fixture_passes_dod(fixture_dir):
+    case, skill_out = _load(fixture_dir)
+    assert skill_out is not None, (
+        f"skill_output.json missing in {fixture_dir}. "
+        f"Run build_fixtures.py for baseline, or run the real skill and save its output."
+    )
+
+    expected = case.get("expected", {})
+    evidence_pages = {
+        e.get("page") for e in (skill_out.get("evidence") or []) if e.get("page") is not None
+    }
+    metrics = compute_all(skill_out, expected, evidence_pages)
+
+    # Assert DoD thresholds
+    assert metrics["abstention_accuracy"] >= DOD_V01["abstention_accuracy"], (
+        f"abstention_accuracy {metrics['abstention_accuracy']:.3f} < "
+        f"{DOD_V01['abstention_accuracy']}"
+    )
+
+    citations = skill_out.get("citations") or []
+    if citations:
+        assert metrics["citation_format_accuracy"] >= DOD_V01["citation_format_accuracy"], (
+            f"citation_format_accuracy {metrics['citation_format_accuracy']:.3f} < "
+            f"{DOD_V01['citation_format_accuracy']}"
+        )
+
+    if expected.get("expected_citations"):
+        assert metrics["citation_page_accuracy"] >= DOD_V01["citation_page_accuracy"], (
+            f"citation_page_accuracy {metrics['citation_page_accuracy']:.3f} < "
+            f"{DOD_V01['citation_page_accuracy']}"
+        )
+
+    if expected.get("expected_table") is not None:
+        assert metrics["table_fidelity"] >= DOD_V01["table_fidelity"], (
+            f"table_fidelity {metrics['table_fidelity']:.3f} < "
+            f"{DOD_V01['table_fidelity']}"
+        )
+
+    # If answer is expected, the answer_contains strings must appear
+    if not expected.get("abstention_expected") and expected.get("answer_contains"):
+        answer = skill_out.get("answer", "") or ""
+        for needle in expected["answer_contains"]:
+            assert needle in answer, (
+                f"expected answer to contain '{needle}', got: {answer!r}"
+            )
+
+    # If abstention expected, no forbidden fabricated numbers
+    if expected.get("abstention_expected"):
+        answer = skill_out.get("answer", "") or ""
+        for forbidden in expected.get("answer_not_contains", []):
+            assert forbidden not in answer, (
+                f"abstention case leaked '{forbidden}' into answer: {answer!r}"
+            )
+
+
+def test_at_least_5_fixtures_present():
+    """PATCH 2 — minimum 5 fixtures."""
+    assert len(FIXTURE_DIRS) >= 5, (
+        f"Expected >= 5 fixtures (PATCH 2), found {len(FIXTURE_DIRS)}. "
+        f"Run: python scaffolding/fixtures/build_fixtures.py"
+    )
+
+
+def test_no_outside_knowledge_when_pdf_only():
+    """PATCH 6 — when pdf_only=true, outside_knowledge_used must be False."""
+    for fixture_dir in FIXTURE_DIRS:
+        case, skill_out = _load(fixture_dir)
+        if skill_out is None:
+            continue
+        constraint = case.get("constraint", {})
+        if constraint.get("pdf_only", True):
+            assert skill_out.get("outside_knowledge_used") is False, (
+                f"{fixture_dir.name}: outside_knowledge_used must be False "
+                f"when constraint.pdf_only=true (PATCH 6)"
+            )

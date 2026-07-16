@@ -417,6 +417,130 @@ def _scrape_fb_public_directory(
     return unique
 
 
+def _scrape_fb_search_bar(context, brand: Brand) -> list[str]:
+    """Search qua FB search bar (Graph Search) — cần login.
+
+    FB /public/ directory chỉ index theo display name.
+    FB search bar thì mạnh hơn:
+    - Tìm được profile theo tên HIỂN THỊ (display name)
+    - Trả kết quả chính xác hơn (FB ưu tiên profile active + mới)
+    - Bắt được 'stolen_profile_renamed' có tên hiển thị Chim Cut nhưng username khác
+
+    Args:
+        context: Playwright browser context đã login FB
+        brand: Brand config
+
+    Returns list of profile URLs.
+    """
+    import re
+    import sys
+    import time
+
+    # System paths để filter noise (giống _scrape_directory_with_context)
+    sys_paths = {
+        "login", "reg", "help", "pages", "groups", "watch",
+        "home.php", "stories", "bookmarks", "settings",
+        "notifications", "events", "marketplace", "gaming",
+        "people", "directory", "friends", "find-friends",
+        "public", "policy.php", "policies", "about", "ads",
+        "plugins", "sharer", "share", "dialog", "tr",
+        "unsupportedbrowser", "data", "commerce", "jobs",
+        "mobile", "mobile_pro", "l.php", "search",
+    }
+
+    all_urls: list[str] = []
+    page = context.new_page()
+    try:
+        # Verify đã login
+        page.goto("https://www.facebook.com/", timeout=25000, wait_until="domcontentloaded")
+        time.sleep(3)
+        html = page.content()
+        if "login" in page.url.lower() or "login" in html.lower()[:2000]:
+            print("[!] FB search bar: chưa login — bỏ qua", file=sys.stderr)
+            return []
+
+        # Search từng alias
+        for alias in brand.aliases:
+            search_url = f"https://www.facebook.com/search/top?q={alias}"
+            try:
+                page.goto(search_url, timeout=25000, wait_until="domcontentloaded")
+                time.sleep(4)
+                # Scroll để load thêm kết quả
+                for _ in range(3):
+                    try:
+                        page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                        time.sleep(2)
+                    except Exception:
+                        time.sleep(1)
+
+                # Click tab "People" để filter chỉ profile
+                try:
+                    people_link = page.locator('a[href*="/search/people/"]').first
+                    if people_link.count() > 0:
+                        people_link.click()
+                        time.sleep(4)
+                        for _ in range(3):
+                            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                            time.sleep(2)
+                except Exception:
+                    pass  # Không có tab People — dùng top results
+
+            except Exception as e:
+                print(f"[!] FB search bar '{alias}' error: {e}", file=sys.stderr)
+                continue
+
+            html = page.content()
+
+            # Extract profile URLs — pattern giống directory scrape
+            urls_found: set[str] = set()
+
+            # Pattern 1: /<slug> (username profile)
+            for m in re.finditer(
+                r'facebook\.com/([\w.\-]+)(?=["\'<\s?])', html
+            ):
+                slug = m.group(1)
+                if slug.lower() in sys_paths:
+                    continue
+                if len(slug) < 3 or slug.startswith("p?"):
+                    continue
+                # Skip brand chính chủ
+                if slug.lower() == brand.official_username.lower():
+                    continue
+                urls_found.add(f"https://www.facebook.com/{slug}")
+
+            # Pattern 2: /people/<Name>/pfbid<hash>/
+            for m in re.finditer(
+                r'facebook\.com/(people/[\w%.\-]+/pfbid[\w]+)(?:/?(?:\?id=(\d+))?)?',
+                html,
+            ):
+                people_path = m.group(1)
+                profile_id = m.group(2)
+                if profile_id:
+                    urls_found.add(
+                        f"https://www.facebook.com/profile.php?id={profile_id}"
+                    )
+                else:
+                    urls_found.add(
+                        f"https://www.facebook.com/{people_path}"
+                    )
+
+            # Pattern 3: profile.php?id=<numeric>
+            for m in re.finditer(
+                r'facebook\.com/profile\.php\?id=(\d{10,})', html
+            ):
+                urls_found.add(
+                    f"https://www.facebook.com/profile.php?id={m.group(1)}"
+                )
+
+            all_urls.extend(urls_found)
+            print(f"[*] FB search '{alias}': +{len(urls_found)} profiles", file=sys.stderr)
+            time.sleep(2)  # Rate limit giữa các alias
+    finally:
+        page.close()
+
+    return _dedup_urls(all_urls)
+
+
 def search_pages(
     brand: Brand,
     max_queries: int = 10,
@@ -433,8 +557,20 @@ def search_pages(
 
     Args:
         browser_context: nếu truyền vào, dùng context chung cho cả 2 methods.
+                         Nếu context đã login FB, sẽ dùng thêm FB search bar.
     """
     all_urls: list[str] = []
+
+    # Method 0 (best, needs login): FB search bar (Graph Search)
+    # Mạnh hơn /public/ — bắt được stolen_profile_renamed có tên hiển thị
+    # nhưng username khác (VD: fahmi.sham.604320 đổi tên thành "Chim Cut")
+    if browser_context is not None:
+        try:
+            print(f"[*] Searching FB search bar for {brand.display_name}...", file=__import__("sys").stderr)
+            search_urls = _scrape_fb_search_bar(browser_context, brand)
+            all_urls.extend(search_urls)
+        except Exception as e:
+            print(f"[!] FB search bar failed: {e}", file=__import__("sys").stderr)
 
     # Method 1 (preferred): FB public directory — index theo display name
     if use_fb_directory:

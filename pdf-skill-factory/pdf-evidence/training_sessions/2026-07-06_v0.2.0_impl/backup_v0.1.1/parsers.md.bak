@@ -1,0 +1,102 @@
+# parsers.md — pdf-evidence routing
+
+> Decision tree chọn parser theo loại PDF. v0.1 chỉ cài pdfplumber + pypdf.
+> Tool nâng cao (Camelot, PaddleOCR, Surya, Docling, DeepDoc, MinerU) chỉ **mô tả** — chưa cài.
+
+## Decision tree
+
+```
+PDF input
+    │
+    ▼
+[scripts/classify.py]
+    │
+    ├── digital_text ────────► pdfplumber.extract_text (fast path)
+    │                            + pdfplumber.extract_tables nếu có bảng
+    │
+    ├── scanned ─────────────► v0.1: ABSTAIN + warning
+    │                            "Scan PDF cần OCR — cài PaddleOCR/Surya (v0.5+) hoặc cung cấp text"
+    │                            v0.5+: PaddleOCR (đa ngữ) hoặc Surya (layout + reading order)
+    │
+    ├── mixed ───────────────► per-page:
+    │                            page có text → pdfplumber
+    │                            page không text → warning (có thể scan)
+    │
+    ├── table_heavy ─────────► pdfplumber.extract_tables
+    │                            + GIỮ headers/units/period
+    │                            + warning nếu merged/rotated cell
+    │                            v0.2+: Camelot (lattice → stream fallback)
+    │                            v0.4+: DeepDoc TSR (auto-correct rotation)
+    │
+    ├── legal ───────────────► pdfplumber + detect "Điều/Khoản/Điểm/Nghị định/Thông tư"
+    │                            GIỮ cấu trúc điều khoản
+    │
+    ├── financial ───────────► pdfplumber.extract_tables
+    │                            GIỮ units/period/sign
+    │                            phân biệt thực tế/dự báo/nhận định
+    │
+    ├── academic ────────────► pdfplumber
+    │                            warning nếu multi-column (reading order có thể sai)
+    │                            v0.5+: Surya (reading order)
+    │
+    ├── policy ──────────────► pdfplumber + structure detect
+    │
+    ├── slide_export ────────► pdfplumber
+    │                            warning layout phi text
+    │
+    └── low_quality_ocr ─────► warning + verify thủ công
+                                 không kết luận chắc
+```
+
+## Quy ước extract
+
+Mọi extraction phải trả **page anchor** để citation có page:
+
+```python
+# scripts/extract.py output
+{
+  "pages": [
+    {"page": 1, "text": "...", "tables": []},
+    {"page": 7, "text": "...", "tables": [{"page": 7, "headers": [...], "rows": [...], "units": "tỷ VNĐ", "period": "Q1/2026"}]}
+  ]
+}
+```
+
+**Bắt buộc** (F-TABLE-001): khi extract.py detect bảng/chart trên page, `table_id`
+(t1, t2...) phải được **truyền vào citation candidate** để `AnswerWithCitation` dùng
+format bảng `[file, page, table_id, row/col]`. extract.py không được "bỏ quên"
+`table_id` khi claim bắt nguồn từ bảng/chart.
+
+## Khi nào warning
+
+| Tình huống | Warning |
+|------------|---------|
+| Page không có text layer | `"Page N có thể là scan — cần OCR"` |
+| Bảng merged cell | `"Bảng p.N có merged cell — verify thủ công"` |
+| Bảng rotated | `"Bảng p.N bị xoay — verify hoặc dùng DeepDoc (v0.4+)"` |
+| Multi-column | `"PDF multi-column — reading order có thể sai"` |
+| Parse confidence thấp | `"Parser uncertainty on p.N — verify"` |
+| Đơn vị mất header | `"Bảng p.N mất header đơn vị — verify"` |
+
+## Tool reference (chưa cài v0.1)
+
+| Tool | Khi nào dùng | Lý do chưa cài |
+|------|--------------|----------------|
+| `pypdf` | fallback đọc PDF cơ bản | ✅ cài |
+| `pdfplumber` | text + tables + char-level | ✅ cài |
+| `PyMuPDF4LLM` | Markdown nhanh born-digital | v0.2+ |
+| `Camelot` | bảng lattice/stream | v0.2+ |
+| `DeepDoc` (RAGFlow) | layout + TSR + rotation fix | phức tạp, v0.4+ |
+| `Docling` | structured output born-digital | v0.2+ |
+| `Marker` | PDF→Markdown text-heavy | v0.3+ |
+| `MinerU` | formula/table-heavy + OCR | v0.4+ |
+| `PaddleOCR` | scan OCR đa ngữ (VN+80) | v0.5+ |
+| `Surya` | layout + reading order + table 90+ ngôn ngữ | v0.5+ |
+| `Unstructured` | unified pipeline | v0.6+ |
+
+## Nguyên tắc cấm
+
+- KHÔNG chạy text-only extraction trên page không có text layer (F15).
+- KHÔNG tóm tắt bảng mà không đọc header (F04).
+- KHÔNG cite bảng parse không chắc (F16).
+- KHÔNG bỏ qua warning parser — phải forward tới user.

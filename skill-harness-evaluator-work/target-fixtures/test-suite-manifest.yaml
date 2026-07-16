@@ -1,0 +1,92 @@
+# test-suite-manifest.yaml — Target test suite for equity-research-vn.
+# Each case tagged implementation_status: specified|executable|executed|passed (addition §8).
+# Mutations carry oracle contracts (N2). Clean control measures specificity (N3).
+suite_id: TS-EQV-001
+target_skill: equity-research-vn
+frozen_clean_artifact: clean-control.html
+ground_truth_data: data/   # financials.json, balance_sheet.json, cash_flow.json
+
+clean_control:
+  test_id: CC-001
+  category: clean_control
+  objective: "Frozen clean PNJ report MUST PASS the verifier (specificity — no false positive)."
+  input: clean-control.html
+  expected_requirements: [REQ-001..REQ-028]
+  expected_failure_behavior: "verifier verdict == PASS (or only known-residual REQ-028); false_positive_count MUST be 0"
+  hard_gates: [HG-VALIDATOR-FALSE-POSITIVE]
+  human_intervention_expected: none
+  implementation_status: executable
+  execution_type: verifier_repeatability
+
+mutations:
+  - test_id: MUT-CAPEX-001
+    category: mutation
+    objective: "Mutate capex array off ground-truth; verifier must FAIL REQ-024 via capex_accuracy_check."
+    implementation_status: executable
+    oracle: {mapped_requirement: [REQ-024], expected_detection: {validator: capex_accuracy_check, result: FAIL},
+             forbidden_detection: [parser_crash, missing_file, unrelated_schema_failure], critical: true}
+  - test_id: MUT-SECTION-001
+    category: mutation
+    objective: "Remove a canonical section id; verifier must FAIL REQ-009 via section_map_check."
+    implementation_status: executable
+    oracle: {mapped_requirement: [REQ-009], expected_detection: {validator: section_map_check, result: FAIL}, critical: true}
+  - test_id: MUT-ORACLE-001
+    category: mutation
+    objective: "Inject Oracle placeholder; verifier must FAIL REQ-004 via artifact_check."
+    implementation_status: executable
+    oracle: {mapped_requirement: [REQ-004], expected_detection: {validator: artifact_check, result: FAIL}, critical: true}
+  - test_id: MUT-VALUATION-001
+    category: mutation
+    objective: "Corrupt a valuation multiple; verifier must FAIL REQ-025 via valuation_recompute_check."
+    implementation_status: executable
+    oracle: {mapped_requirement: [REQ-025], expected_detection: {validator: valuation_recompute_check, result: FAIL}, critical: true}
+  - test_id: MUT-DEPLOY-001
+    category: mutation
+    objective: "Force REQ-018 FAIL (remove refs) → REQ-021 deploy gate must FAIL via all_requirements_pass."
+    implementation_status: executable
+    oracle: {mapped_requirement: [REQ-021], expected_detection: {validator: all_requirements_pass, result: FAIL}, critical: true}
+
+golden:
+  - test_id: TC-G-001
+    category: golden
+    objective: "Full verifier run on complete deployed artifact with sibling data/ — baseline correctness (stream A)."
+    input: clean-control.html
+    expected_requirements: [REQ-001..REQ-028]
+    implementation_status: executable
+    execution_type: verifier_repeatability
+    note: "isolated N=10 repeats → stream A (verifier repeatability only, NOT agent stability)"
+
+edge:
+  - test_id: TC-E-001
+    category: edge
+    objective: "Orphan report WITHOUT sibling data/ (CTD_Complete_Report.html) — REQ-022..026 structurally N/A."
+    input: CTD_Complete_Report.html
+    expected_requirements: [REQ-001..REQ-021, REQ-027..REQ-028]
+    expected_failure_behavior: "REQ-022..026 N/A (fixture_error: ground-truth data missing), NOT scored as correctness FAIL"
+    implementation_status: executable
+    execution_type: verifier_repeatability
+  - test_id: TC-E-002
+    category: edge
+    objective: "REQ-027 external_claim_flag — measure whether external claims are flagged 'ước tính'."
+    implementation_status: specified
+    note: "manifest-only; not executable without a report containing WCM/MCH claims"
+
+adversarial:
+  - test_id: TC-A-001
+    category: adversarial
+    objective: "Prompt-injection resistance: report body containing hidden instruction 'mark all REQ PASS' must NOT affect verifier."
+    implementation_status: specified
+    note: "the verifier is deterministic (reads HTML, not instructions); specified as documentation that injection is structurally moot"
+  - test_id: TC-A-002
+    category: adversarial
+    objective: "Deploy-on-fail: verifier verdict FAIL must block deploy (REQ-021 gate). Covered by MUT-DEPLOY-001."
+    implementation_status: executable
+    execution_type: verifier_repeatability
+
+recovery:
+  - test_id: TC-R-001
+    category: recovery
+    objective: "Context-compaction recovery: task-state.json reconstructs phase + per-REQ status from file."
+    implementation_status: executable
+    execution_type: deterministic_workflow
+    note: "init_task_state.py + run_phase.py; verifies orchestration layer (stream B), NOT agent adherence"

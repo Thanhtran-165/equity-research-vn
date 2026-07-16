@@ -1,0 +1,14 @@
+{
+  "regression_case_id": "2026-07-06_F-FORECAST-001",
+  "added_in_session": "2026-07-06_110300",
+  "covers_failure": "F-FORECAST-001",
+  "input_file_type": "financial/macro report PDF with multiple forecast horizons (e.g., In-Gold-We-Trust 2026)",
+  "task": "Extract forecast/target numbers from the PDF with citations",
+  "failure_pattern": "Skill emits forecast numbers from different horizons (decade target, multi-year model, short-term probability range) without declaring the type {actual|forecast|target|probability_range|scenario} and time horizon of each number, leading to reader-conflation risk.",
+  "expected_behavior": "Each forecast number in the answer declares (a) type and (b) time horizon. When >= 2 horizons appear in one answer, they are labeled inline or summarized in a horizon-type table at the top.",
+  "must_not_happen": "Two forecast numbers with different horizons (e.g., '2030 decade target USD 4,800' and '12-month probability range USD 3,000-6,000') presented as if comparable, or with no horizon label.",
+  "metric_to_check": "forecast_period_disclosure (custom) >= 0.90",
+  "skill_rule": "references/policies.md#financial (MỖI số dự báo phải khai báo loại + time horizon)",
+  "skill_self_check": "SKILL.md self-check: 'Số dự báo: đã khai báo loại + time horizon?' + 'Khi >= 2 forecast horizon trong 1 câu trả lời: đã gắn nhãn horizon từng số?'",
+  "status": "locked_after_fix"
+}

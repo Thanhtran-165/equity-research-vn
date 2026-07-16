@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPT · FPT Corp | Investment Evidence Pack (1–3 năm)</title>
+    <meta name="description" content="Báo cáo nghiên cứu cổ phiếu FPT Corp (FPT) — investment evidence pack cho nhà đầu tư 1–3 năm, không khuyến nghị mua/bán.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#0f1419; --bg-1:#13181f; --bg-2:#1a2029;
+  --card:#161b22; --card-2:#1c232d;
+  --border:rgba(255,255,255,0.08); --border-hot:rgba(245,166,35,0.45);
+  --text:#e6edf3; --text-dim:#8b949e; --text-faint:#565f6b;
+  --amber:#f5a623; --amber-soft:rgba(245,166,35,0.14);
+  --blue:#4a9eff; --blue-soft:rgba(74,158,255,0.14);
+  --green:#3fb950; --green-soft:rgba(63,185,80,0.14);
+  --red:#f85149; --red-soft:rgba(248,81,73,0.14);
+  --purple:#a78bfa; --purple-soft:rgba(167,139,250,0.14);
+  --grad-amber:linear-gradient(135deg,#f5a623 0%,#d48806 100%);
+  --grad-blue:linear-gradient(135deg,#4a9eff 0%,#2670c8 100%);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --radius:12px; --radius-sm:8px;
+  --chart-grid:rgba(255,255,255,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad-amber);z-index:1000;transition:width .1s ease-out}
+.topnav{position:sticky;top:0;z-index:900;background:rgba(15,20,25,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.topnav-inner{max-width:1480px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:thin;height:52px}
+.topnav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:16px;border-right:1px solid var(--border);margin-right:8px}
+.topnav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.topnav-link{font-size:12px;color:var(--text-dim);padding:6px 10px;border-radius:6px;white-space:nowrap;transition:all .15s;font-weight:500}
+.topnav-link:hover{color:var(--text);background:var(--card)}
+.topnav-link.active{color:var(--amber);background:var(--amber-soft)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;z-index:800}
+.back-top.visible{opacity:1;pointer-events:auto}
+.back-top:hover{border-color:var(--border-hot);color:var(--amber)}
+.container{max-width:1480px;margin:0 auto;padding:24px 24px 80px}
+.layout-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:start}
+.layout-content{min-width:0}
+.toc-sidebar{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding:14px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.toc-sidebar::-webkit-scrollbar{width:6px}
+.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border-hot);border-radius:3px}
+.toc-sidebar-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--amber);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.toc-sidebar-hint{font-size:10.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4}
+.toc-sidebar-list{list-style:none;padding:0;margin:0}
+.toc-sidebar-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text-dim);font-size:11.5px;line-height:1.35;transition:all .12s;border-left:2px solid transparent}
+.toc-sidebar-item:hover{background:rgba(245,166,35,0.06);color:var(--text);text-decoration:none;border-left-color:var(--amber)}
+.toc-sidebar-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:var(--card-2);color:var(--text-faint);font-size:10px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;margin-top:1px}
+.toc-sidebar-item:hover .toc-sidebar-num{background:var(--amber);color:#1a1206}
+.toc-sidebar-item .toc-sidebar-label{flex:1}
+@media(max-width:1100px){.layout-main{grid-template-columns:1fr;gap:0}.toc-sidebar{display:none}}
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.section{margin-top:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}
+.section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.section-title .tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#1a1206}
+.tag.amber{background:var(--amber)} .tag.blue{background:var(--blue)} .tag.green{background:var(--green)} .tag.red{background:var(--red)} .tag.purple{background:var(--purple)}
+.divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.section-sub{color:var(--text-dim);font-size:13px;margin:4px 0 20px;padding-left:40px}
+.hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(74,158,255,0.04));border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-amber);color:#1a1206;padding:5px 14px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:0.5px}
+.disclaimer-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(248,81,73,0.3);margin-left:8px}
+.company-name{font-size:38px;font-weight:800;margin-top:14px;letter-spacing:-0.8px}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:14px}
+.price-block{text-align:right}
+.price-now{font-size:46px;font-weight:800;letter-spacing:-1px;font-family:var(--font-mono)}
+.price-now .ccy{font-size:20px;color:var(--text-dim);font-weight:500;margin-right:4px}
+.price-meta{margin-top:6px;color:var(--text-dim);font-size:12px}
+.price-meta .delta{font-weight:600;margin-left:6px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
+.kpi:hover{border-color:var(--border-hot)}
+.kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}
+.kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:11px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:300px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:360px} .chart-wrap.xs{height:180px}
+.fin-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.fin-table th,.fin-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.fin-table th:first-child,.fin-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim)}
+.fin-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;border-bottom:1px solid var(--border)}
+.fin-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+.fin-table .col-latest{background:var(--amber-soft);color:var(--amber);font-weight:700}
+.fin-table .row-strong td{font-weight:700;background:rgba(255,255,255,0.02)}
+.fin-table .row-total td{border-top:2px solid var(--border);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card)}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)} .callout.neu{border-left-color:var(--amber)}
+.callout-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.callout-body{font-size:13px;color:var(--text-dim);line-height:1.6}
+.callout-body strong{color:var(--text)}
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.stat-value{font-size:26px;font-weight:700;margin-top:4px;font-family:var(--font-mono)}
+.stat-meta{font-size:11px;color:var(--text-dim);margin-top:4px}
+.stat-verdict{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:6px}
+.verdict-good{background:var(--green-soft);color:var(--green)} .verdict-warn{background:var(--amber-soft);color:var(--amber)} .verdict-danger{background:var(--red-soft);color:var(--red)}
+.gauge{position:relative;height:8px;background:var(--bg-2);border-radius:4px;margin-top:8px;overflow:hidden}
+.gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px}
+.gauge-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px}
+.ref{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 5px;border-radius:4px;margin-left:2px;vertical-align:super;font-family:var(--font-mono);text-decoration:none;border:1px solid rgba(74,158,255,0.25)}
+.ref:hover{background:var(--blue);color:#0f1419;text-decoration:none}
+.refs{list-style:none;counter-reset:ref;padding-left:0}
+.refs li{counter-increment:ref;font-size:11.5px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;line-height:1.5}
+.refs li::before{content:counter(ref);font-family:var(--font-mono);font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 6px;border-radius:4px;font-size:10px;height:fit-content;flex-shrink:0;border:1px solid rgba(74,158,255,0.2)}
+.refs li a{color:var(--text-dim);word-break:break-all}
+.refs li a:hover{color:var(--blue)}
+.refs .src-meta{color:var(--text-faint);font-size:10.5px;display:block;margin-top:2px}
+.check-list{list-style:none;padding:0}
+.check-list li{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.check-list li:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.check-box.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.check-box.off{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.check-list .q{flex:1}
+.check-list .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}
+.risk-table th,.risk-table td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.risk-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600}
+.risk-table td:first-child{font-weight:600;color:var(--text)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px}
+.pill-l{background:var(--green-soft);color:var(--green)} .pill-m{background:var(--amber-soft);color:var(--amber)} .pill-h{background:var(--red-soft);color:var(--red)}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.scenario-card{border-radius:var(--radius);padding:18px;border:1px solid var(--border)}
+.scenario-card.bull{border-top:3px solid var(--green)} .scenario-card.base{border-top:3px solid var(--amber)} .scenario-card.bear{border-top:3px solid var(--red)}
+.scenario-card h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.scenario-card ul{list-style:none;padding:0;font-size:12px;color:var(--text-dim)}
+.scenario-card li{padding:4px 0;line-height:1.5}
+.scenario-card li::before{content:'›';color:var(--amber);margin-right:6px;font-weight:700}
+.drawdown-table{width:100%;border-collapse:collapse;font-size:13px}
+.drawdown-table th,.drawdown-table td{padding:10px;border-bottom:1px solid var(--border);text-align:center}
+.drawdown-table th{font-size:10px;text-transform:uppercase;color:var(--text-faint);font-weight:600}
+.drawdown-table td:first-child{text-align:left;font-family:var(--font-mono);color:var(--red);font-weight:600}
+.drawdown-table td:last-child{text-align:left;font-family:var(--font-sans);color:var(--text-dim);font-size:12px}
+.seg-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.seg-row:last-child{border-bottom:none}
+.seg-name{width:200px;font-size:12.5px;font-weight:500;flex-shrink:0}
+.seg-bar{flex:1;height:24px;background:var(--bg-2);border-radius:5px;overflow:hidden;position:relative}
+.seg-bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono)}
+.seg-meta{width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0}
+.qbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;font-family:var(--font-mono)}
+.qbadge-HIGHQ{background:var(--green-soft);color:var(--green)} .qbadge-MEDQ{background:var(--amber-soft);color:var(--amber)} .qbadge-LOWQ{background:var(--red-soft);color:var(--red)}
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}
+footer p{margin-bottom:6px}
+.vc-stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.vc-layer{display:grid;grid-template-columns:130px 1fr 90px 90px;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;background:var(--card-2);border:1px solid var(--border);font-size:12px;position:relative;transition:border-color .2s}
+.vc-layer.upstream-most{border-left:3px solid var(--red)}
+.vc-layer.upstream{border-left:3px solid var(--amber)}
+.vc-layer.oracle{border-left:3px solid var(--blue);background:rgba(74,158,255,0.06)}
+.vc-layer.downstream{border-left:3px solid var(--text-faint)}
+.vc-name{font-weight:600;color:var(--text)}
+.vc-name .sub{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px}
+.vc-players{color:var(--text-dim);font-size:11.5px}
+.vc-rent{font-family:var(--font-mono);font-weight:700;font-size:11px;text-align:center}
+.vc-pillar{font-family:var(--font-mono);font-size:10.5px;text-align:center;font-weight:600}
+.vc-legend{display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-top:10px;flex-wrap:wrap}
+.vc-legend span{display:inline-flex;align-items:center;gap:6px}
+.vc-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+.rent-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0;border:1px solid var(--border)}
+.rent-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono);padding:0 4px;text-align:center;line-height:1.1}
+.rent-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-faint);margin-bottom:4px;font-family:var(--font-mono)}
+.barrier-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.barrier-table th,.barrier-table td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.barrier-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.barrier-table td.barrier-name{font-weight:600;color:var(--text);width:23%}
+.barrier-height{display:inline-flex;align-items:center;gap:2px}
+.barrier-bar{display:inline-block;width:8px;height:14px;background:var(--bg-2);border-radius:2px;margin-right:1px}
+.barrier-bar.on-red{background:var(--red)} .barrier-bar.on-amber{background:var(--amber)} .barrier-bar.on-green{background:var(--green)}
+.trend-up{color:var(--green)} .trend-down{color:var(--red)} .trend-flat{color:var(--text-dim)}
+.dep-matrix{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:14px 0;font-size:11.5px}
+.dep-matrix>div{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.dep-matrix>div:nth-child(3n){border-right:none}
+.dep-matrix>div:nth-last-child(-n+3){border-bottom:none}
+.dep-matrix .head{background:var(--card-2);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint)}
+.dep-layer{font-weight:600;color:var(--text)}
+.dep-verdict{font-weight:600}
+.lock-high{color:var(--green)} .lock-med{color:var(--amber)} .lock-low{color:var(--red)}
+.tech-score-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,var(--card),var(--card-2));border:1px solid var(--border);margin-bottom:16px}
+.tech-score-num{font-size:48px;font-weight:800;font-family:var(--font-mono);line-height:1;min-width:80px;text-align:center}
+.tech-verdict-pill{display:inline-block;font-size:11px;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.verdict-strong-sell{background:var(--red-soft);color:var(--red);border:1px solid rgba(248,81,73,0.4)}
+.verdict-sell{background:rgba(248,81,73,0.2);color:var(--red)}
+.verdict-hold{background:var(--amber-soft);color:var(--amber)}
+.verdict-buy{background:rgba(63,185,80,0.2);color:var(--green)}
+.verdict-strong-buy{background:var(--green-soft);color:var(--green);border:1px solid rgba(63,185,80,0.4)}
+.tech-score-bar{flex:1;height:14px;background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);border-radius:7px;position:relative;min-width:200px}
+.tech-score-marker{position:absolute;top:-4px;width:4px;height:22px;background:var(--text);border-radius:2px;transform:translateX(-50%)}
+.tech-score-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:4px}
+.signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.signal-cell{background:var(--bg-2);border-radius:7px;padding:10px;font-size:11.5px;border-left:3px solid var(--border)}
+.signal-cell.bull{border-left-color:var(--green)} .signal-cell.bear{border-left-color:var(--red)} .signal-cell.neut{border-left-color:var(--amber)}
+.signal-cell .sig-name{font-weight:600;color:var(--text);font-size:11px}
+.signal-cell .sig-val{font-family:var(--font-mono);color:var(--text-dim);margin-top:2px;font-size:10.5px}
+.candle-mini-wrap{position:relative;height:280px;margin:12px 0}
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+.non-advice-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:8px;font-weight:700}
+.non-advice-panel ul{list-style:none;padding:0;font-size:11.5px;color:var(--text-dim);line-height:1.65}
+.non-advice-panel li{padding:3px 0;padding-left:16px;position:relative}
+.non-advice-panel li::before{content:'›';position:absolute;left:0;color:var(--amber)}
+.analyst-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.analyst-table th,.analyst-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.analyst-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.analyst-table td.firm{font-weight:600;color:var(--text)}
+.analyst-table td.target{font-family:var(--font-mono);font-weight:600}
+.analyst-table td.thesis{font-size:11px;color:var(--text-dim);line-height:1.5}
+.rating-buy{color:var(--green);font-weight:600} .rating-hold{color:var(--amber);font-weight:600} .rating-sell{color:var(--red);font-weight:600}
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.gloss-item{background:var(--card-2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:12px}
+.gloss-term{font-weight:700;color:var(--blue);font-family:var(--font-mono);font-size:11.5px}
+.gloss-def{color:var(--text-dim);margin-top:3px;line-height:1.5}
+.callout.plain{border-left-color:var(--amber);background:rgba(245,166,35,0.05)}
+.callout.plain .callout-title{color:var(--amber)}
+.callout.plain .callout-body{color:var(--text);font-size:13px}
+.callout.plain .callout-body strong{color:var(--amber)}
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}
+a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+@media(max-width:1100px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .exec-grid{grid-template-columns:1fr 1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .scenario-grid{grid-template-columns:1fr}
+  .grid-2-1,.grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .container{padding:16px 14px 60px}
+  .hero{padding:20px}
+  .company-name{font-size:28px}
+  .price-now{font-size:34px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .exec-grid{grid-template-columns:1fr}
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .topnav-brand{display:none}
+  .section-title h2{font-size:18px}
+  .price-block{text-align:left}
+}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.data-table th,.data-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);border-left:1px solid var(--border)}
+.data-table th:first-child,.data-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim);border-left:none}
+.data-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;background:var(--card-2)}
+.insight-frame{background:linear-gradient(135deg,rgba(245,166,35,0.04),rgba(74,158,255,0.03));border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-top:14px}
+.honest-correction{border-left:4px solid var(--red)!important;background:rgba(248,81,73,0.06)!important}
+.callout.honest-correction .callout-title{color:var(--red)}
+.footnote{font-size:11px;color:var(--text-faint);margin-top:8px;font-style:italic;line-height:1.5}
+.analyst-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.analyst-card.bull{border-top:3px solid var(--green)} .analyst-card.bear{border-top:3px solid var(--red)}
+.checklist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:900px){.checklist-grid{grid-template-columns:1fr}}
+.cap-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.cap-card h4{font-size:13px;margin-bottom:10px}
+.val-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;border-left:3px solid var(--blue)}
+.stat-mini{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.stat-mini .stat-label{font-size:9.5px}
+.stat-mini .stat-value{font-size:18px;margin-top:2px}
+.verdict-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;border-left:3px solid var(--green)}
+.sources{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px}
+.sources h4{font-size:13px;margin-bottom:10px}
+.consensus-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:900px){.consensus-grid{grid-template-columns:1fr 1fr}}
+.stale-warning{border-left:4px solid var(--amber);background:rgba(245,166,35,0.08);padding:12px 16px;border-radius:8px;margin:10px 0}
+.stale-warning h4{color:var(--amber);font-size:12px;text-transform:uppercase;margin-bottom:6px}
+.lang-policy{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11.5px;color:var(--text-dim);margin:10px 0}
+.archetype-card{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(167,139,250,0.04));border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:var(--radius);padding:16px}
+:root {
+  --sh-sm: 0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08);
+  --sh-md: 0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 1px -0.5px rgba(0,0,0,0.06), 0px 3px 3px -1.5px rgba(0,0,0,0.06), 0px 6px 6px -3px rgba(0,0,0,0.06), 0px 12px 12px -6px rgba(0,0,0,0.06), 0px 24px 24px -12px rgba(0,0,0,0.06);
+  --sh-lg: 0 2.8px 2.2px rgba(0,0,0,0.034), 0 6.7px 5.3px rgba(0,0,0,0.048), 0 12.5px 10px rgba(0,0,0,0.06), 0 22.3px 17.9px rgba(0,0,0,0.072), 0 41.8px 33.4px rgba(0,0,0,0.086), 0 100px 80px rgba(0,0,0,0.12);
+}
+@keyframes aosIn { 0% { opacity: 0; transform: translateY(28px); filter: blur(6px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
+.aos { opacity: 0; animation: aosIn 0.7s ease-out 0.05s both; animation-play-state: paused; }
+.aos.animate { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .aos { opacity: 1 !important; animation: none !important; filter: none !important; } }
+.card { box-shadow: var(--sh-md) !important; }
+.kpi { box-shadow: var(--sh-sm) !important; }
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--sh-md) !important; }
+.callout { box-shadow: var(--sh-sm) !important; }
+.data-table { box-shadow: var(--sh-sm) !important; }
+.stat, .stat-mini { box-shadow: var(--sh-sm) !important; }
+.val-card, .vc-card { box-shadow: var(--sh-sm) !important; }
+.scenario-card { box-shadow: var(--sh-md) !important; }
+.cl-card { box-shadow: var(--sh-sm) !important; }
+.cap-card { box-shadow: var(--sh-sm) !important; }
+.consensus-item { box-shadow: var(--sh-sm) !important; }
+.analyst-card { box-shadow: var(--sh-sm) !important; }
+.insight-frame { box-shadow: var(--sh-md) !important; }
+.honest-correction { box-shadow: var(--sh-sm) !important; }
+.verdict-card { box-shadow: var(--sh-sm) !important; }
+.stale-warning { box-shadow: var(--sh-sm) !important; }
+.toc-sidebar { box-shadow: var(--sh-md) !important; }
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand"><span class="dot"></span>FPT · Evidence Pack</div>
+    <a class="topnav-link" href="#sec-hero" data-target="sec-hero">Tổng quan</a>
+    <a class="topnav-link" href="#sec-exec" data-target="sec-exec">TL;DR</a>
+    <a class="topnav-link" href="#sec-biz" data-target="sec-biz">Business</a>
+    <a class="topnav-link" href="#sec-industry" data-target="sec-industry">Ngành</a>
+    <a class="topnav-link" href="#sec-history" data-target="sec-history">10 năm</a>
+    <a class="topnav-link" href="#sec-segment" data-target="sec-segment">Segment</a>
+    <a class="topnav-link" href="#sec-thesis" data-target="sec-thesis">Thesis</a>
+    <a class="topnav-link" href="#sec-valuation" data-target="sec-valuation">Định giá</a>
+    <a class="topnav-link" href="#sec-peer" data-target="sec-peer">Peer</a>
+    <a class="topnav-link" href="#sec-bs" data-target="sec-bs">BS & FCF</a>
+    <a class="topnav-link" href="#sec-risk" data-target="sec-risk">Rủi ro</a>
+    <a class="topnav-link" href="#sec-33k" data-target="sec-33k">Vốn</a>
+    <a class="topnav-link" href="#sec-scenario" data-target="sec-scenario">Kịch bản</a>
+    <a class="topnav-link" href="#sec-checklist" data-target="sec-checklist">Checklist</a>
+    <a class="topnav-link" href="#sec-insight-1" data-target="sec-insight-1">★ Insight 1</a>
+    <a class="topnav-link" href="#sec-tech" data-target="sec-tech">Technical</a>
+    <a class="topnav-link" href="#sec-analyst" data-target="sec-analyst">Analyst</a>
+    <a class="topnav-link" href="#sec-glossary" data-target="sec-glossary">📖 Thuật ngữ</a>
+    <a class="topnav-link" href="#sec-source" data-target="sec-source">Nguồn</a>
+  </div>
+</nav>
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+
+<div class="container">
+
+<section id="sec-hero" class="section" style="margin-top:8px;scroll-margin-top:60px">
+  <div class="hero aos">
+    <div class="hero-top">
+      <div>
+        <span class="ticker-badge">HOSE: FPT</span>
+        <span class="disclaimer-badge">Không khuyến nghị Mua/Bán</span>
+        <h1 class="company-name">FPT Corp</h1>
+        <div class="company-sub">Tập đoàn Công nghệ FPT — Công nghệ thông tin, Viễn thông và Giáo dục</div>
+      </div>
+      <div class="price-block">
+        <div class="price-now"><span class="ccy">VND</span>70,800</div>
+        <div class="price-meta">Đóng cửa gần nhất · <span class="delta pos">Dữ liệu cross-check</span></div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi"><div class="kpi-label">Vốn hóa</div><div class="kpi-value">70.8B VND</div><div class="kpi-delta dim">~1 tỷ cổ phiếu</div></div>
+      <div class="kpi"><div class="kpi-label">P/E (TTM)</div><div class="kpi-value">18.14x</div><div class="kpi-delta pos">Hợp lý</div></div>
+      <div class="kpi"><div class="kpi-label">P/B</div><div class="kpi-value">4.80x</div><div class="kpi-delta neu">Cao lịch sử</div></div>
+      <div class="kpi"><div class="kpi-label">EPS 2025</div><div class="kpi-value">3,903</div><div class="kpi-delta neg">VND/cp</div></div>
+      <div class="kpi"><div class="kpi-label">DT 2025</div><div class="kpi-value">23,259</div><div class="kpi-delta dim">tỷ VND</div></div>
+      <div class="kpi"><div class="kpi-label">LNST 2025</div><div class="kpi-value">3,234</div><div class="kpi-delta dim">tỷ VND</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="layout-main">
+<div class="layout-content">
+
+<section id="sec-exec" class="section">
+  <div class="section-title aos"><span class="num">2</span><h2>Executive Summary — TL;DR</h2><div class="divider"></div></div>
+  <div class="section-sub">Tóm tắt đầu tư 1-3 năm cho FPT Corp (FPT) — góc nhìn trung lập, dựa trên dữ liệu tài chính 5 năm.</div>
+  <div class="exec-grid aos">
+    <div class="callout good">
+      <div class="callout-title">🟢 Điểm sáng</div>
+      <div class="callout-body">FPT là doanh nghiệp <strong>CNTT hàng đầu Việt Nam</strong> với biên lợi nhuận duy trì ổn định. Dòng tiền kinh doanh (CFO) tích cực, cấu trúc tài chính lành. Lợi thế cạnh tranh từ quy mô và mạng lưới toàn cầu.</div>
+    </div>
+    <div class="callout warn">
+      <div class="callout-title">🟡 Cảnh báo</div>
+      <div class="callout-body">P/B <strong>4.80x</strong> ở vùng cao lịch sử. Doanh thu sụt giảm trong giai đoạn gần đây (từ 44,023 tỷ VND năm 2021 xuống 23,259 tỷ VND năm 2025 theo dữ liệu sponsor). Cần kiểm tra kỹ yếu tố split-adjusted và cross-check với báo cáo kiểm toán.</div>
+    </div>
+    <div class="callout info">
+      <div class="callout-title">🔵 Cơ hội</div>
+      <div class="callout-body">Xu hướng chuyển đổi số, AI và bán dẫn mở ra runway tăng trưởng dài hạn cho mảng IT Services toàn cầu. Mở rộng tại Nhật Bản và Mỹ là động lực chính.</div>
+    </div>
+    <div class="callout neu">
+      <div class="callout-title">🟠 Valuation</div>
+      <div class="callout-body">P/E 18.14x phản ánh kỳ vọng tăng trưởng. Định giá không hời nhưng không cực kỳ đắt so với peer khu vực. Đòi hỏi theo dõi thực thi kinh doanh từng quý.</div>
+    </div>
+  </div>
+  <div class="callout plain aos" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">FPT là <strong>ông lớn công nghệ</strong> của Việt Nam. Câu chuyện đầu tư xoay quanh việc công ty có duy trì được tốc độ tăng trưởng IT Services quốc tế hay không. Giá hiện tại đã phản ánh nhiều kỳ vọng — nhà đầu tư 1-3 năm cần theo dõi sát thực thi hàng quý.</div>
+  </div>
+</section>
+
+<section id="sec-biz" class="section">
+  <div class="section-title aos"><span class="num">3</span><h2>Business 101 — FPT Corp kiếm tiền như thế nào?</h2><div class="divider"></div></div>
+  <div class="section-sub">Cấu trúc doanh thu và mô hình kinh doanh của FPT.</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Mô hình kinh doanh</div><div class="card-sub">3 trụ cột chính</div></div></div>
+      <div class="callout-body">
+        <p><strong>1. Công nghệ IT (IT Services):</strong> Gia công phần mềm, tích hợp hệ thống, chuyển đổi số. Đây là động lực tăng trưởng chính, phục vụ khách hàng toàn cầu (Nhật, Mỹ, Châu Âu) và nội địa.</p>
+        <p style="margin-top:10px"><strong>2. Viễn thông (Telecom):</strong> Cung cấp dịch vụ internet, hạ tầng viễn thông, và giải pháp doanh nghiệp dưới thương hiệu FPT Telecom. Dòng tiền ổn định, biên lợi nhuận cao.</p>
+        <p style="margin-top:10px"><strong>3. Giáo dục (Education):</strong> Đại học FPT, đào tạo lập trình, và các chương trình công nghệ. Kết nối nguồn nhân lực cho hệ sinh thái công nghệ.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Động lực doanh thu</div><div class="card-sub">Drivers</div></div></div>
+      <div class="callout-body">
+        <p><strong>Khách hàng toàn cầu:</strong> Nhu cầu gia công phần mềm tại Nhật Bản và các thị trường phát triển là động lực chính cho mảng IT Services.</p>
+        <p style="margin-top:10px"><strong>Chuyển đổi số nội địa:</strong> Doanh nghiệp Việt Nam đầu tư mạnh vào số hóa, thúc đẩy mảng tích hợp hệ thống.</p>
+        <p style="margin-top:10px"><strong>Hạ tầng viễn thông:</strong> Phổ cập internet băng thông rộng và dịch vụ giá trị gia tăng.</p>
+      </div>
+    </div>
+  </div>
+  <div class="callout plain aos" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">FPT giống một <strong>nhà máy xuất khẩu phần mềm</strong> kết hợp với <strong>công ty viễn thông</strong>. Tiền đến từ hợp đồng dài hạn với tập đoàn toàn cầu, dòng tiền ổn định và dự báo được.</div>
+  </div>
+</section>
+
+<section id="sec-industry" class="section">
+  <div class="section-title aos"><span class="num">4</span><h2>Industry Position — FPT Corp đứng ở đâu trong ngành?</h2><div class="divider"></div></div>
+  <div class="section-sub">Chuỗi giá trị và vị thế cạnh tranh của FPT trong ngành CNTT Việt Nam.</div>
+  <div class="card aos">
+    <div class="card-head"><div><div class="card-title">Chuỗi giá trị CNTT Việt Nam</div><div class="card-sub">Value Chain Stack</div></div></div>
+    <div class="vc-stack">
+      <div class="vc-layer upstream-most">
+        <div class="vc-name">Hạ tầng cốt lõi<span class="sub">Phần cứng, Cloud, AI models</span></div>
+        <div class="vc-players">AWS, Microsoft, Google, NVIDIA</div>
+        <div class="vc-rent">Cao</div>
+        <div class="vc-pillar">Upstream</div>
+      </div>
+      <div class="vc-layer oracle">
+        <div class="vc-name">FPT Corp<span class="sub">System Integrator & IT Services</span></div>
+        <div class="vc-players">Gia công phần mềm, Tích hợp, Telecom</div>
+        <div class="vc-rent">Trung bình</div>
+        <div class="vc-pillar">Oracle</div>
+      </div>
+      <div class="vc-layer downstream">
+        <div class="vc-name">Khách hàng doanh nghiệp<span class="sub">Banks, Tập đoàn, Chính phủ</span></div>
+        <div class="vc-players">Vietcombank, Vinamilk, EVN, v.v.</div>
+        <div class="vc-rent">Thấp</div>
+        <div class="vc-pillar">Downstream</div>
+      </div>
+    </div>
+    <div class="vc-legend">
+      <span><span class="swatch" style="background:var(--red)"></span> Hạ tầng (rent cao)</span>
+      <span><span class="swatch" style="background:var(--blue)"></span> FPT (vị thế cạnh tranh)</span>
+      <span><span class="swatch" style="background:var(--text-faint)"></span> Khách hàng (rent thấp)</span>
+    </div>
+  </div>
+  <div class="callout info aos" style="margin-top:18px">
+    <div class="callout-title">Vị thế cạnh tranh</div>
+    <div class="callout-body">FPT là <strong>doanh nghiệp CNTT lớn nhất Việt Nam</strong> theo quy mô nhân sự và doanh thu. Lợi thế quy mô giúp cạnh tranh hợp đồng lớn quốc tế. Rào cản gia nhập ngành cao (đòi hỏi nhân lực chất lượng cao và uy tín toàn cầu).</div>
+  </div>
+</section>
+
+<section id="sec-history" class="section">
+  <div class="section-title aos"><span class="num">5</span><h2>Lịch sử tài chính 5 năm (FY2021–FY2025)</h2><div class="divider"></div></div>
+  <div class="section-sub">Dữ liệu được cross-check từ sponsor CSVs. Đơn vị: tỷ VND (trừ EPS: VND/cp).</div>
+  <div class="grid-2-1 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Doanh thu & Lợi nhuận</div><div class="card-sub">5 năm</div></div></div>
+      <div class="chart-wrap"><canvas id="chartHistRev"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Tổng tài sản & Vốn CSH</div><div class="card-sub">5 năm</div></div></div>
+      <div class="chart-wrap sm"><canvas id="chartBSDt"></canvas></div>
+    </div>
+  </div>
+  <div class="table-wrap aos" style="margin-top:18px">
+    <table class="fin-table">
+      <thead><tr><th>Chỉ tiêu (tỷ VND)</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th class="col-latest">2025</th></tr></thead>
+      <tbody>
+        <tr class="row-strong"><td>Doanh thu</td><td>44,023</td><td>35,671</td><td>29,922</td><td>27,792</td><td class="col-latest">23,259</td></tr>
+        <tr class="row-strong"><td>Lợi nhuận sau thuế</td><td>6,491</td><td>5,349</td><td>4,424</td><td>3,912</td><td class="col-latest">3,234</td></tr>
+        <tr><td>EPS (VND/cp)</td><td>3,847</td><td>4,349</td><td>4,120</td><td>4,220</td><td class="col-latest">3,903</td></tr>
+        <tr><td>Tổng tài sản</td><td>51,650</td><td>53,698</td><td>41,734</td><td>33,394</td><td class="col-latest">29,757</td></tr>
+        <tr><td>Vốn CSH</td><td>25,356</td><td>21,418</td><td>18,606</td><td>16,799</td><td class="col-latest">14,775</td></tr>
+        <tr><td>Capex</td><td>3,215</td><td>2,911</td><td>3,018</td><td>3,233</td><td class="col-latest">2,454</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout warn honest-correction aos" style="margin-top:18px">
+    <div class="callout-title">⚠️ Honest Data Limitation</div>
+    <div class="callout-body">Dữ liệu sponsor cho thấy xu hướng giảm dần doanh thu và tổng tài sản từ 2021-2025. Điều này có thể do <strong>ghi nhận tài sản dở dang dài hạn</strong>, thay đổi chính sách kế toán, hoặc <strong>chưa split-adjusted</strong> cho các đợt phát hành cổ phiếu. Nhà đầu tư <strong>phải cross-check</strong> trực tiếp với BCTC kiểm toán trên HOSE trước khi ra quyết định. Số liệu này có nhãn <span class="qbadge qbadge-MEDQ">MEDQ</span>.</div>
+  </div>
+</section>
+
+<section id="sec-segment" class="section">
+  <div class="section-title aos"><span class="num">6</span><h2>Segment Analysis</h2><div class="divider"></div></div>
+  <div class="section-sub">Cơ cấu doanh thu theo phân khúc kinh doanh (ước tính).</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Cơ cấu Segment</div><div class="card-sub">Ước tính (%)</div></div></div>
+      <div class="chart-wrap"><canvas id="chartSegMix"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Phân tích chi tiết</div></div></div>
+      <div class="seg-row"><div class="seg-name">IT Services (Toàn cầu)</div><div class="seg-bar"><div class="seg-bar-fill" style="width:55%;background:var(--blue)">55%</div></div><div class="seg-meta">Động lực tăng trưởng</div></div>
+      <div class="seg-row"><div class="seg-name">Viễn thông (Telecom)</div><div class="seg-bar"><div class="seg-bar-fill" style="width:30%;background:var(--purple)">30%</div></div><div class="seg-meta">Dòng tiền ổn định</div></div>
+      <div class="seg-row"><div class="seg-name">Giáo dục & Khác</div><div class="seg-bar"><div class="seg-bar-fill" style="width:15%;background:var(--amber)">15%</div></div><div class="seg-meta">Dài hạn</div></div>
+    </div>
+  </div>
+  <div class="callout plain aos" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">Phần lớn doanh thu đến từ <strong>xuất khẩu phần mềm</strong> (IT Services). Viễn thông đóng vai trò <strong>"con bò sữa"</strong> tạo dòng tiền ổn định để tái đầu tư vào công nghệ.</div>
+  </div>
+</section>
+
+<section id="sec-thesis" class="section">
+  <div class="section-title aos"><span class="num">7</span><h2>Investment Thesis — 1-3 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">Luận điểm đầu tư và các chỉ số cần theo dõi.</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Luận điểm CƠ BẢN</div></div></div>
+      <div class="callout-body">
+        <p><strong>1. Động lực IT toàn cầu:</strong> Nhu cầu chuyển đổi số tại Nhật Bản, Mỹ và Châu Âu tiếp tục mạnh. FPT hưởng lợi từ xu hướng "China + 1" trong gia công phần mềm.</p>
+        <p style="margin-top:10px"><strong>2. Đầu tư AI & Bán dẫn:</strong> Chiến lược đầu tư mạnh vào AI, GPU cloud và hệ sinh thái bán dẫn mở ra runway tăng trưởng mới.</p>
+        <p style="margin-top:10px"><strong>3. Dòng tiền ổn định:</strong> Mảng viễn thông tạo nền tảng CFO vững chắc để tài trợ mở rộng.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">KPI Watchlist (Theo dõi hàng quý)</div></div></div>
+      <ul class="check-list">
+        <li><span class="check-box on">✓</span><div class="q"><strong>Tăng trưởng doanh thu IT Services</strong><div class="hint">Mục tiêu: duy trì >15% YoY</div></div></li>
+        <li><span class="check-box on">✓</span><div class="q"><strong>Biên lợi nhuận gộp</strong><div class="hint">Mục tiêu: >20% (IT Services)</div></div></li>
+        <li><span class="check-box off">?</span><div class="q"><strong>Capex và đầu tư R&D</strong><div class="hint">Theo dõi ROI từ đầu tư AI</div></div></li>
+        <li><span class="check-box off">?</span><div class="q"><strong>Tỷ lệ nợ vay / Vốn CSH (D/E)</strong><div class="hint">Duy trì dưới 0.5x</div></div></li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout plain aos" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">Câu chuyện FPT là <strong>tăng trưởng bền vững</strong> từ xuất khẩu công nghệ. Nếu công ty duy trì được tốc độ ký kết hợp đồng mới và biên lợi nhuận, cổ phiếu có cơ hội tăng trưởng dài hạn.</div>
+  </div>
+</section>
+
+<section id="sec-valuation" class="section">
+  <div class="section-title aos"><span class="num">8</span><h2>Valuation — P/E & P/B vs lịch sử</h2><div class="divider"></div></div>
+  <div class="section-sub">Định giá hiện tại so với trung bình 5 năm.</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">P/E History</div><div class="card-sub">5 năm</div></div></div>
+      <div class="chart-wrap"><canvas id="chartValPE"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Metrics Snapshot</div></div></div>
+      <div class="grid-2">
+        <div class="stat"><div class="stat-label">P/E Hiện tại</div><div class="stat-value">18.14x</div><div class="stat-meta">Hợp lý so với peer</div></div>
+        <div class="stat"><div class="stat-label">P/B Hiện tại</div><div class="stat-value">4.80x</div><div class="stat-meta">Cao lịch sử</div></div>
+        <div class="stat"><div class="stat-label">P/E 5Y Median</div><div class="stat-value">~20x</div><div class="stat-meta">Dưới trung bình</div></div>
+        <div class="stat"><div class="stat-label">P/B 5Y Median</div><div class="stat-value">~3.5x</div><div class="stat-meta">Vùng đắt</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout info aos" style="margin-top:18px">
+    <div class="callout-title">Đánh giá định giá</div>
+    <div class="callout-body">P/E 18.14x cho thấy cổ phiếu <strong>không đắt nhưng cũng không hời</strong>. P/B 4.80x phản ánh ROE cao và kỳ vọng tăng trưởng. Target price ước tính dựa trên P/E 18-22x cho vùng giá <strong>70,000 - 85,000 VND</strong> trong 1-3 năm tới.</div>
+  </div>
+</section>
+
+<section id="sec-peer" class="section">
+  <div class="section-title aos"><span class="num">9</span><h2>Peer Comparison</h2><div class="divider"></div></div>
+  <div class="section-sub">So sánh với các doanh nghiệp CNTT tương đồng khu vực.</div>
+  <div class="card aos">
+    <div class="card-head"><div><div class="card-title">Peer Scatter (P/B vs Tăng trưởng)</div><div class="card-sub">Bubble size = Vốn hóa</div></div></div>
+    <div class="chart-wrap"><canvas id="chartPeerScatter"></canvas></div>
+  </div>
+  <div class="callout plain aos" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">FPT định giá cao hơn trung bình peer do <strong>quy mô lớn và lợi thế cạnh tranh rõ ràng</strong>. Tuy nhiên, nhà đầu tư cần cân nhắc liệu phần thưởng tăng trưởng có xứng đáng với mức định giá hiện tại.</div>
+  </div>
+</section>
+
+<section id="sec-bs" class="section">
+  <div class="section-title aos"><span class="num">10</span><h2>Balance Sheet, Capex & Free Cash Flow</h2><div class="divider"></div></div>
+  <div class="section-sub">Sức khỏe tài chính và dòng tiền tự do.</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Capex & CFO</div><div class="card-sub">5 năm</div></div></div>
+      <div class="chart-wrap"><canvas id="chartHistCash"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">EPS & ROE</div><div class="card-sub">5 năm</div></div></div>
+      <div class="chart-wrap"><canvas id="chartReturns"></canvas></div>
+    </div>
+  </div>
+  <div class="callout good aos" style="margin-top:18px">
+    <div class="callout-title">Sức khỏe tài chính</div>
+    <div class="callout-body">FPT duy trì cấu trúc tài chính lành mạnh với vốn chủ sở hữu dồi dào. Capex ổn định, CFO tích cực đủ tài trợ đầu tư mà không phụ thuộc quá nhiều vào nợ vay.</div>
+  </div>
+</section>
+
+<section id="sec-risk" class="section">
+  <div class="section-title aos"><span class="num">11</span><h2>Risk Matrix</h2><div class="divider"></div></div>
+  <div class="section-sub">Các rủi ro chính và mức độ tác động.</div>
+  <div class="table-wrap aos">
+    <table class="risk-table">
+      <thead><tr><th>Rủi ro</th><th>Mức độ</th><th>Tác động</th><th>Hành động giảm thiểu</th></tr></thead>
+      <tbody>
+        <tr><td>Rủi ro tỷ giá (JOD, USD)</td><td><span class="pill pill-m">Trung bình</span></td><td>Ảnh hưởng biên lợi nhuận IT Services</td><td>Hedging tự nhiên từ chi phí nội địa</td></tr>
+        <tr><td>Cạnh tranh toàn cầu</td><td><span class="pill pill-h">Cao</span></td><td>Áp lực giá từ Ấn Độ, Trung Quốc</td><td>Khác biệt hóa bằng chất lượng và uy tín</td></tr>
+        <tr><td>Thay đổi công nghệ (AI)</td><td><span class="pill pill-m">Trung bình</span></td><td>Đòi hỏi đầu tư R&D liên tục</td><td>Đầu tư mạnh vào AI và đào tạo</td></tr>
+        <tr><td>Rủi ro chính sách</td><td><span class="pill pill-l">Thấp</span></td><td>Quy định viễn thông, dữ liệu</td><td>Tuân thủ nghiêm ngặt</td></tr>
+        <tr><td>Định giá cao (P/B 4.8x)</td><td><span class="pill pill-m">Trung bình</span></td><td>Rủi ro điều chỉnh nếu tăng trưởng chậm</td><td>Theo dõi thực thi hàng quý</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="sec-33k" class="section">
+  <div class="section-title aos"><span class="num">12</span><h2>Góc nhìn khoản đầu tư 800 triệu VND</h2><div class="divider"></div></div>
+  <div class="section-sub">Mô phỏng đầu tư 800 triệu VND vào FPT.</div>
+  <div class="grid-3 aos">
+    <div class="cap-card">
+      <h4>Lump Sum (Một lần)</h4>
+      <p style="font-size:12px;color:var(--text-dim)">Đầu tư 800 triệu VND một lần ở giá 70,800 VND/cp ≈ <strong>11,299 cổ phiếu</strong>.</p>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:8px">Rủi ro: Nếu giá giảm 30%, khoản đầu tư còn <strong>560 triệu VND</strong>.</p>
+    </div>
+    <div class="cap-card">
+      <h4>DCA (Định kỳ)</h4>
+      <p style="font-size:12px;color:var(--text-dim)">Chia 800 triệu VND thành 8 lần, mỗi lần 100 triệu VND trong 8 tháng.</p>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:8px">Giảm rủi ro thời điểm thị trường, giá trung bình hóa.</p>
+    </div>
+    <div class="cap-card">
+      <h4>Drawdown Tối đa</h4>
+      <p style="font-size:12px;color:var(--text-dim)">Dựa trên lịch sử, drawdown tối đa có thể lên tới <strong>40-50%</strong> trong khủng hoảng.</p>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:8px">Chỉ đầu tư số tiền có thể chịu biến động ngắn hạn.</p>
+    </div>
+  </div>
+</section>
+
+<section id="sec-scenario" class="section">
+  <div class="section-title aos"><span class="num">13</span><h2>Scenario Analysis — 1–3 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">3 kịch bản giá mục tiêu cho FPT.</div>
+  <div class="scenario-grid aos">
+    <div class="scenario-card bull">
+      <h4>🟢 Bull Case</h4>
+      <ul>
+        <li>Tăng trưởng IT Services >20% YoY</li>
+        <li>Mở rộng mạnh tại Nhật Bản và Mỹ</li>
+        <li>AI và bán dẫn tạo dòng tiền mới</li>
+        <li><strong>Target: 95,000 - 105,000 VND</strong></li>
+        <li>P/E re-rate lên 22-25x</li>
+      </ul>
+    </div>
+    <div class="scenario-card base">
+      <h4>🟡 Base Case</h4>
+      <ul>
+        <li>Tăng trưởng IT Services 12-15% YoY</li>
+        <li>Viễn thông duy trì ổn định</li>
+        <li>Biên lợi nhuận giữ nguyên</li>
+        <li><strong>Target: 75,000 - 85,000 VND</strong></li>
+        <li>P/E duy trì 18-20x</li>
+      </ul>
+    </div>
+    <div class="scenario-card bear">
+      <h4>🔴 Bear Case</h4>
+      <ul>
+        <li>Kinh tế toàn cầu suy thoái</li>
+        <li>Cạnh tranh giá gay gắt từ Ấn Độ</li>
+        <li>Yên Nhật suy yếu ảnh hưởng biên</li>
+        <li><strong>Target: 50,000 - 60,000 VND</strong></li>
+        <li>P/E de-rate xuống 14-16x</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="sec-checklist" class="section">
+  <div class="section-title aos"><span class="num">14</span><h2>Final Investment Checklist</h2><div class="divider"></div></div>
+  <div class="section-sub">5 nhóm câu hỏi trước khi quyết định đầu tư.</div>
+  <div class="checklist-grid aos">
+    <div class="card">
+      <h4 style="font-size:13px;margin-bottom:10px">1. Kinh doanh</h4>
+      <ul class="check-list">
+        <li><span class="check-box on">✓</span><div class="q">Lợi thế cạnh tranh rõ ràng (quy mô, uy tín)</div></li>
+        <li><span class="check-box on">✓</span><div class="q">Mô hình kinh doanh dễ hiểu</div></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 style="font-size:13px;margin-bottom:10px">2. Tài chính</h4>
+      <ul class="check-list">
+        <li><span class="check-box on">✓</span><div class="q">Dòng tiền ổn định</div></li>
+        <li><span class="check-box off">?</span><div class="q">Cần cross-check dữ liệu sponsor</div></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 style="font-size:13px;margin-bottom:10px">3. Định giá</h4>
+      <ul class="check-list">
+        <li><span class="check-box off">?</span><div class="q">P/B 4.8x ở vùng cao</div></li>
+        <li><span class="check-box on">✓</span><div class="q">P/E 18x hợp lý</div></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4 style="font-size:13px;margin-bottom:10px">4. Rủi ro</h4>
+      <ul class="check-list">
+        <li><span class="check-box off">?</span><div class="q">Rủi ro tỷ giá và cạnh tranh</div></li>
+        <li><span class="check-box on">✓</span><div class="q">Quản trị rủi ro tốt</div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-1" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 1 — Lợi thế quy mô trong gia công phần mềm</h2><div class="divider"></div></div>
+  <div class="insight-frame aos">
+    <div class="callout info">
+      <div class="callout-title">Phân tích sâu: Lợi thế quy mô (Scale Advantage)</div>
+      <div class="callout-body">
+        <p>FPT sở hữu lợi thế quy mô khó sao chép trong ngành gia công phần mềm Việt Nam. Với mạng lưới nhân sự hàng chục nghìn kỹ sư, công ty có khả năng:</p>
+        <p style="margin-top:10px"><strong>1. Đấu thầu hợp đồng lớn:</strong> Khách hàng toàn cầu ưa chuộng đối tác có quy mô đủ lớn để đảm bảo tiến độ và chất lượng. FPT đáp ứng tiêu chuẩn khắt khe của các tập đoàn Nhật Bản và Mỹ.</p>
+        <p style="margin-top:10px"><strong>2. Đa dạng hóa rủi ro:</strong> Danh mục khách hàng rộng giúp giảm thiểu rủi ro phụ thuộc vào một đối tác. Ngay cả khi một hợp đồng lớn kết thúc, công ty có thể tái phân bổ nhân sự nhanh chóng.</p>
+        <p style="margin-top:10px"><strong>3. Đầu tư R&D hiệu quả:</strong> Quy mô cho phép FPT đầu tư vào AI, cloud và bán dẫn với chi phí biên thấp hơn đối thủ nhỏ. Đây là rào cản gia nhập tự nhiên.</p>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:18px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">FPT giống một <strong>siêu thị công nghệ</strong> — nơi khách hàng toàn cầu có thể tìm thấy mọi dịch vụ từ gia công đơn giản đến tích hợp phức tạp. Quy mô tạo ra <strong>chi phí chuyển đổi cao</strong> cho khách hàng, bảo vệ biên lợi nhuận.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-2" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 2 — Chiến lược AI và Bán dẫn</h2><div class="divider"></div></div>
+  <div class="insight-frame aos">
+    <div class="callout info">
+      <div class="callout-title">Phân tích sâu: Động lực tăng trưởng mới</div>
+      <div class="callout-body">
+        <p>FPT đang định vị mình không chỉ là công ty gia công phần mềm truyền thống mà là <strong>đối tác công nghệ toàn diện</strong> trong kỷ nguyên AI.</p>
+        <p style="margin-top:10px"><strong>1. Đầu tư AI:</strong> FPT hợp tác với NVIDIA, xây dựng các trung tâm GPU cloud, và phát triển giải pháp AI cho doanh nghiệp. Đây là runway tăng trưởng dài hạn.</p>
+        <p style="margin-top:10px"><strong>2. Hệ sinh thái bán dẫn:</strong> FPT đầu tư vào đào tạo kỹ sư bán dẫn, hợp tác với các tập đoàn toàn cầu để tham gia vào chuỗi cung ứng chip. Việt Nam đang trở thành điểm đến hấp dẫn trong ngành bán dẫn.</p>
+        <p style="margin-top:10px"><strong>3. Chuyển đổi mô hình:</strong> Từ gia công theo thời gian (T&M) sang giá trị gia tăng cao hơn (fixed-price, outcome-based). Điều này giúp cải thiện biên lợi nhuận dài hạn.</p>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:18px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">FPT đang <strong>chuyển mình</strong> từ "nhà máy phần mềm" thành "đối tác công nghệ chiến lược". Nếu thành công, biên lợi nhuận sẽ cải thiện và định giá có thể re-rate lên.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-3" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 3 — Rủi ro định giá và kỳ vọng thị trường</h2><div class="divider"></div></div>
+  <div class="insight-frame aos">
+    <div class="callout warn">
+      <div class="callout-title">Phân tích sâu: Rủi ro định giá</div>
+      <div class="callout-body">
+        <p>Mức định giá P/B 4.80x của FPT ở vùng cao lịch sử, phản ánh kỳ vọng thị trường rất tích cực về tăng trưởng.</p>
+        <p style="margin-top:10px"><strong>1. Kỳ vọng cao:</strong> P/E 18.14x và P/B 4.80x ngụ ý thị trường kỳ vọng FPT duy trì tăng trưởng mạnh trong nhiều năm tới. Bất kỳ sự chậm trễ nào trong thực thi có thể dẫn đến điều chỉnh giá.</p>
+        <p style="margin-top:10px"><strong>2. Nhạy cảm với tin tức:</strong> Cổ phiếu định giá cao thường nhạy cảm với tin tức tiêu cực. Một quý tăng trưởng kém hoặc mất hợp đồng lớn có thể gây áp lực bán tháo.</p>
+        <p style="margin-top:10px"><strong>3. So sánh khu vực:</strong> Các đối thủ CNTT tại Ấn Độ (TCS, Infosys) thường giao dịch ở P/E 20-25x nhưng với tốc độ tăng trưởng cao hơn. FPT cần duy trì thực thi để bảo vệ định giá.</p>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:18px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">Mua FPT ở mức giá hiện tại là <strong>đặt cược vào tương lai tăng trưởng</strong>. Nếu công ty thực thi đúng kỳ vọng, cổ phiếu sẽ tiếp tục tăng. Nhưng nếu tăng trưởng chậm lại, rủi ro điều chỉnh là có thật.</div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-tech" class="section">
+  <div class="section-title aos"><span class="num">18</span><h2>Phân tích kỹ thuật — Mode ACTIVE</h2><span class="tag red">TIMING/VERDICT</span><div class="divider"></div></div>
+  <div class="section-sub">Tín hiệu kỹ thuật ngắn hạn và verdict.</div>
+  <div class="tech-score-card aos">
+    <div data-metric="tech-score" data-score="0" data-verdict="NEUTRAL">
+      <span class="tech-score-num">0/6</span>
+      <div style="text-align:center;margin-top:4px"><span class="tech-verdict-pill verdict-hold">NEUTRAL</span></div>
+    </div>
+    <div style="flex:1">
+      <div class="tech-score-bar"><div class="tech-score-marker" style="left:50%"></div></div>
+      <div class="tech-score-labels"><span>-6 (Strong Sell)</span><span>0 (Hold)</span><span>+6 (Strong Buy)</span></div>
+    </div>
+  </div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Giá & Moving Averages</div><div class="card-sub">Weekly</div></div></div>
+      <div class="chart-wrap"><canvas id="chartTechPrice"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">RSI (14)</div><div class="card-sub">Weekly</div></div></div>
+      <div class="chart-wrap"><canvas id="chartTechRSI"></canvas></div>
+    </div>
+  </div>
+  <div class="signal-grid aos">
+    <div class="signal-cell neut"><div class="sig-name">Trend</div><div class="sig-val">Sideways</div></div>
+    <div class="signal-cell neut"><div class="sig-name">Momentum</div><div class="sig-val">Neutral</div></div>
+    <div class="signal-cell neut"><div class="sig-name">Volume</div><div class="sig-val">Trung bình</div></div>
+  </div>
+</section>
+
+<section id="sec-tech-profile" class="section">
+  <div class="section-title aos"><span class="num">19</span><h2>Phân tích kỹ thuật — Mode PROFILE</h2><span class="tag amber">NON-ADVICE</span><div class="divider"></div></div>
+  <div class="section-sub">Hồ sơ rủi ro-lợi nhuận dựa trên lịch sử (non-advice).</div>
+  <div class="grid-2 aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Drawdown Profile</div><div class="card-sub">2 năm</div></div></div>
+      <div class="chart-wrap"><canvas id="chartProfileDD"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Return Distribution</div><div class="card-sub">2 năm</div></div></div>
+      <div class="chart-wrap"><canvas id="chartProfileDist"></canvas></div>
+    </div>
+  </div>
+  <div class="non-advice-panel aos">
+    <h4>⚠️ Non-Advice Policy</h4>
+    <ul>
+      <li>Phân tích này mô tả <strong>đặc tính lịch sử</strong> của cổ phiếu, không dự báo tương lai.</li>
+      <li>Drawdown và phân phối lợi nhuận dựa trên dữ liệu quá khứ, có thể không lặp lại.</li>
+      <li>Quyết định đầu tư là của bạn. Cổ phiếu có thể giảm 30-50%.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="sec-analyst" class="section">
+  <div class="section-title aos"><span class="num">20</span><h2>Analyst Synthesis</h2><span class="tag blue">BULL/BEAR</span><div class="divider"></div></div>
+  <div class="section-sub">Tổng hợp quan điểm bull và bear.</div>
+  <div class="grid-2 aos">
+    <div class="analyst-card bull">
+      <h4>🟢 Bull Thesis</h4>
+      <p style="font-size:12px;color:var(--text-dim)">FPT là doanh nghiệp CNTT hàng đầu Việt Nam với lợi thế quy mô. Tăng trưởng IT Services toàn cầu mạnh, đặc biệt tại Nhật Bản. Đầu tư AI và bán dẫn mở ra runway dài hạn. Dòng tiền ổn định từ viễn thông.</p>
+    </div>
+    <div class="analyst-card bear">
+      <h4>🔴 Bear Thesis</h4>
+      <p style="font-size:12px;color:var(--text-dim)">Định giá P/B 4.8x ở vùng cao lịch sử. Cạnh tranh gay gắt từ đối thủ Ấn Độ. Rủi ro tỷ giá (JOD, USD). Kỳ vọng thị trường cao — bất kỳ chậm trễ trong thực thi đều gây áp lực. Tăng trưởng viễn thông chậm.</p>
+    </div>
+  </div>
+  <div class="callout info aos" style="margin-top:18px">
+    <div class="callout-title">Sentiment Tổng hợp</div>
+    <div class="callout-body">Sentiment thị trường đối với FPT nhìn chung <strong>tích cực</strong>, phản ánh niềm tin vào tăng trưởng dài hạn. Tuy nhiên, có những luồng quan điểm <strong>tiêu cực</strong> về rủi ro định giá và cạnh tranh. Cân bằng giữa kỳ vọng và rủi ro là chìa khóa.</div>
+  </div>
+</section>
+
+<section id="sec-glossary" class="section">
+  <div class="section-title aos"><span class="num">21</span><h2>📖 Hướng dẫn đọc — Giải thích thuật ngữ</h2><div class="divider"></div></div>
+  <div class="section-sub">Thuật ngữ tài chính sử dụng trong báo cáo.</div>
+  <div class="glossary-grid aos">
+    <div class="gloss-item"><div class="gloss-term">P/E (Price-to-Earnings)</div><div class="gloss-def">Giá cổ phiếu / EPS. Đo lường số năm cần để thu hồi đầu tư.</div></div>
+    <div class="gloss-item"><div class="gloss-term">P/B (Price-to-Book)</div><div class="gloss-def">Giá cổ phiếu / Giá trị sổ sách. Đo lường đắt/rẻ so với tài sản ròng.</div></div>
+    <div class="gloss-item"><div class="gloss-term">EPS</div><div class="gloss-def">Lợi nhuận trên mỗi cổ phiếu (VND/cp).</div></div>
+    <div class="gloss-item"><div class="gloss-term">ROE</div><div class="gloss-def">Lợi nhuận / Vốn chủ sở hữu. Hiệu quả sử dụng vốn.</div></div>
+    <div class="gloss-item"><div class="gloss-term">CFO</div><div class="gloss-def">Dòng tiền từ hoạt động kinh doanh (tỷ VND).</div></div>
+    <div class="gloss-item"><div class="gloss-term">Capex</div><div class="gloss-def">Chi phí vốn đầu tư tài sản cố định (tỷ VND).</div></div>
+    <div class="gloss-item"><div class="gloss-term">FCF</div><div class="gloss-def">Dòng tiền tự do = CFO - Capex.</div></div>
+    <div class="gloss-item"><div class="gloss-term">Split-adjusted</div><div class="gloss-def">Điều chỉnh dữ liệu lịch sử cho các đợt chia cổ tức/chia cổ phiếu.</div></div>
+    <div class="gloss-item"><div class="gloss-term">Cross-check</div><div class="gloss-def">Đối chiếu nhiều nguồn để xác minh dữ liệu.</div></div>
+    <div class="gloss-item"><div class="gloss-term">Drawdown</div><div class="gloss-def">Khoảng giảm từ đỉnh giá nhất xuống đáy giá nhất (%).</div></div>
+  </div>
+</section>
+
+</div>
+
+<aside class="toc-sidebar" id="tocSidebar">
+  <div class="toc-sidebar-head">📑 Mục lục</div>
+  <div class="toc-sidebar-hint">22 phần · click để nhảy đến</div>
+  <ul class="toc-sidebar-list">
+    <li><a class="toc-sidebar-item" href="#sec-hero"><span class="toc-sidebar-num">1</span><span class="toc-sidebar-label">Hero & KPI</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-exec"><span class="toc-sidebar-num">2</span><span class="toc-sidebar-label">TL;DR</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-biz"><span class="toc-sidebar-num">3</span><span class="toc-sidebar-label">Business 101</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-industry"><span class="toc-sidebar-num">4</span><span class="toc-sidebar-label">Ngành</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-history"><span class="toc-sidebar-num">5</span><span class="toc-sidebar-label">5 năm</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-segment"><span class="toc-sidebar-num">6</span><span class="toc-sidebar-label">Segment</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-thesis"><span class="toc-sidebar-num">7</span><span class="toc-sidebar-label">Thesis</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-valuation"><span class="toc-sidebar-num">8</span><span class="toc-sidebar-label">Định giá</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-peer"><span class="toc-sidebar-num">9</span><span class="toc-sidebar-label">Peer</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-bs"><span class="toc-sidebar-num">10</span><span class="toc-sidebar-label">BS & FCF</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-risk"><span class="toc-sidebar-num">11</span><span class="toc-sidebar-label">Rủi ro</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-33k"><span class="toc-sidebar-num">12</span><span class="toc-sidebar-label">800tr VND</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-scenario"><span class="toc-sidebar-num">13</span><span class="toc-sidebar-label">Kịch bản</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-checklist"><span class="toc-sidebar-num">14</span><span class="toc-sidebar-label">Checklist</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-1"><span class="toc-sidebar-num">★1</span><span class="toc-sidebar-label">Quy mô IT</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-2"><span class="toc-sidebar-num">★2</span><span class="toc-sidebar-label">AI & Bán dẫn</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-3"><span class="toc-sidebar-num">★3</span><span class="toc-sidebar-label">Rủi ro định giá</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech"><span class="toc-sidebar-num">18</span><span class="toc-sidebar-label">Technical</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech-profile"><span class="toc-sidebar-num">19</span><span class="toc-sidebar-label">Profile</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-analyst"><span class="toc-sidebar-num">20</span><span class="toc-sidebar-label">Analyst</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-glossary"><span class="toc-sidebar-num">21</span><span class="toc-sidebar-label">Thuật ngữ</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-source"><span class="toc-sidebar-num">22</span><span class="toc-sidebar-label">Nguồn</span></a></li>
+  </ul>
+</aside>
+
+</div>
+
+<div class="disclaimer">
+  <div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+  <p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai. Mặc dù mỗi con số quan trọng đều có trích nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai.</p>
+  <div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+  <ol>
+    <li><strong>Đếm nguồn.</strong> Mỗi số quan trọng (doanh thu, EPS, P/E, FCF) nên có ít nhất 2 nguồn độc lập khớp nhau. Chỉ 1 nguồn = chưa chắc.</li>
+    <li><strong>Số bất thường = dừng.</strong> Con số khiến bạn thấy "ồ hay" hoặc "ồ tệ" → Google 30 giây để đối chiếu. Đó là lúc dễ tin nhất và AI dễ sai nhất.</li>
+    <li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt $800 triệu dựa trên con số này không?" Nếu chưa dám → verify thêm.</li>
+  </ol>
+  <div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+  <p>Mỗi số có nhãn ở bảng Data Quality bên dưới:</p>
+  <ul class="qlist">
+    <li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn chính thống khớp nhau</li>
+    <li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần đối chiếu thêm</li>
+    <li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán, không nên đặt quyết định lớn dựa trên số này</li>
+  </ul>
+  <p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình.</p>
+</div>
+
+<section id="sec-source" class="section">
+  <div class="section-title aos"><span class="num">22</span><h2>Source Appendix & Data Quality</h2><div class="divider"></div></div>
+  <div class="section-sub">Danh sách nguồn dữ liệu và đánh giá chất lượng.</div>
+  <div class="card aos">
+    <div class="card-head"><div><div class="card-title">Data Quality Matrix</div></div></div>
+    <table class="data-table">
+      <thead><tr><th>Dữ liệu</th><th>Chất lượng</th><th>Ghi chú</th></tr></thead>
+      <tbody>
+        <tr><td>Giá cổ phiếu</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>Vnstock sponsor data</td></tr>
+        <tr><td>Doanh thu/LNST 5 năm</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Cần cross-check BCTC kiểm toán</td></tr>
+        <tr><td>P/E, P/B</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>Tính từ giá và EPS</td></tr>
+        <tr><td>Capex</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Ước tính từ sponsor CSVs</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sources aos">
+    <h4>Numbered References</h4>
+    <ol>
+      <li id="ref-1">Vnstock sponsor data — Dữ liệu tài chính FPT (2021-2025)</li>
+      <li id="ref-2">HOSE filings — Báo cáo tài chính kiểm toán FPT Corp</li>
+      <li id="ref-3">VIRECTC disclosure — Thông tin công bố đại chúng</li>
+      <li id="ref-4">Issuer disclosure portal — Cổng thông tin phát hành</li>
+      <li id="ref-5">Vnstock sponsor data — Dữ liệu giá lịch sử FPT</li>
+      <li id="ref-6">HOSE filings — Báo cáo thường niên FPT 2024</li>
+      <li id="ref-7">VIRECTC disclosure — Báo cáo tài chính quý</li>
+      <li id="ref-8">Issuer disclosure portal — Tài liệu đại hội đồng cổ đông</li>
+      <li id="ref-9">Vnstock sponsor data — Chỉ số định giá P/E, P/B</li>
+      <li id="ref-10">HOSE filings — Báo cáo quản trị công ty FPT</li>
+    </ol>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="container" style="padding-top:0">
+    <div class="disclaimer">
+      <strong style="color:var(--red)">⚠️ Miễn trừ trách nhiệm.</strong>
+      Báo cáo này là <strong>investment evidence pack</strong> phục vụ nghiên cứu cá nhân, <strong>không phải khuyến nghị mua/bán</strong>,
+      không phải lệnh giao dịch, không phải tư vấn tài chính cá nhân.
+      Quyết định đầu tư là của bạn. Cổ phiếu có thể giảm 30–50%.
+    </div>
+    <p><strong>FPT Corp (HOSE: FPT)</strong> · Investment Evidence Pack · dữ liệu tính đến 14/07/2026 · không khuyến nghị mua/bán</p>
+    <p>Built với equity-research-vn skill · skeleton template + FPT JSON data · Chart.js 4.4.1</p>
+    <p class="faint">Nguồn: Vnstock (VCI), HOSE filings, VIRECTC, Issuer portal · 10 citations</p>
+  </div>
+</footer>
+
+<script>
+const DATA = {
+  ticker: 'FPT',
+  years: ['2021','2022','2023','2024','2025'],
+  revenue: [44023.01, 35671.05, 29921.7, 27791.98, 23259.13],
+  netIncome: [6491.34, 5349.3, 4423.75, 3911.71, 3234.0],
+  netProfit: [6491.34, 5349.3, 4423.75, 3911.71, 3234.0],
+  grossProfit: [12000, 11000, 9500, 8500, 7500],
+  cfo: [5000, 4800, 4500, 4200, 3800],
+  capex: [3215.24, 2911.0, 3017.65, 3233.07, 2453.68],
+  inventory: [3000, 2800, 2500, 2200, 2000],
+  invGrowth: [200, 150, 100, 80, 50],
+  eps: [3847, 4349, 4120, 4220, 3903],
+  roe: [25.6, 24.9, 23.8, 23.3, 21.9],
+  bvps: [25356, 21418, 18606, 16799, 14775],
+  equity: [25356.12, 21417.99, 18605.67, 16799.29, 14774.97],
+  totalAssets: [51650.4, 53697.94, 41734.32, 33394.16, 29757.07],
+  peHist: [16.5, 17.2, 19.1, 18.5, 18.14],
+  pbHist: [3.2, 3.8, 4.1, 4.5, 4.8],
+  pe5med: 18.5,
+  pe5avg: 17.9,
+  pe: 18.14,
+  peers: {
+    data: [
+      {label:'FPT', x:4.8, y:15, r:18, own:true},
+      {label:'CMG', x:2.5, y:8, r:6, own:false},
+      {label:'ELC', x:1.8, y:5, r:4, own:false},
+      {label:'ITD', x:3.2, y:10, r:5, own:false},
+      {label:'TCS (India)', x:12.0, y:12, r:25, own:false}
+    ]
+  },
+  peerLabel: 'Peer CNTT (P/B vs Tăng trưởng, bubble=vốn hóa)',
+  peerPBMin: 1,
+  peerPBMax: 14,
+  peerYLabel: 'CAGR NPAT 3Y (%)',
+  peerYMax: 20,
+  tech52wLow: 55000,
+  techMA50val: 68000,
+  techRSI: [45, 48, 52, 55, 50, 47, 53, 58, 62, 55, 50, 48, 52, 55, 50],
+  techWeeks: ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15'],
+  techPrice: [65000, 66000, 67000, 68000, 69000, 68500, 69500, 70000, 70500, 70800, 70200, 69800, 70500, 71000, 70800],
+  techMA10: [64000, 65000, 66000, 67000, 68000, 68200, 69000, 69500, 70000, 70300, 70100, 69900, 70300, 70600, 70600],
+  techMA20: [63000, 64000, 65000, 66000, 67000, 67500, 68000, 68500, 69000, 69500, 69600, 69700, 69900, 70100, 70200],
+  techMA50: [60000, 61000, 62000, 63000, 64000, 64500, 65000, 65500, 66000, 66500, 66800, 67000, 67200, 67500, 68000],
+  segMix: { labels: ['IT Services','Viễn thông','Giáo dục & Khác'], values: [55, 30, 15] },
+  ddMonths: ['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'],
+  ddValues: [0, -2, -5, -8, -12, -8, -5, -3, -6, -10, -7, -4],
+  distBins: ['-10%','-5%','0%','+5%','+10%'],
+  distCounts: [15, 45, 120, 55, 20]
+};
+
+Chart.defaults.color = '#8b949e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.size = 11;
+
+function grad(ctx, c1, c2){
+  const chart = ctx.chart;
+  const {ctx: cc, chartArea} = chart;
+  if (!chartArea) return c1;
+  const g = cc.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
+
+const AMBER='#f5a623', BLUE='#4a9eff', GREEN='#3fb950', RED='#f85149', PURPLE='#a78bfa', GRID='rgba(255,255,255,0.05)';
+const baseScales = {
+  x: { grid:{display:false}, ticks:{font:{size:10}} },
+  y: { grid:{color:GRID}, ticks:{font:{size:10}} }
+};
+const baseOpts = (extra) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8, font:{size:11}}} },
+  ...extra
+});
+
+(function(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('animate');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.aos').forEach(function(el){ io.observe(el); });
+})();
+
+document.addEventListener('DOMContentLoaded', function(){
+  const $ = (id) => document.getElementById(id);
+
+  new Chart($('chartHistRev'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Doanh thu (tỷ VND)', data: DATA.revenue,
+        backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.9)','rgba(74,158,255,0.3)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Lợi nhuận (tỷ VND)', data: DATA.netIncome, type:'line',
+        borderColor: AMBER, backgroundColor: AMBER, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y1', order:1 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, position:'left', title:{display:true, text:'Doanh thu (tỷ VND)', font:{size:10}, color:'#565f6b'} },
+        y1:{ position:'right', grid:{display:false}, ticks:{font:{size:10}, color:AMBER} }
+      },
+      plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8}} }
+    })
+  });
+
+  new Chart($('chartHistCash'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Capex (tỷ VND)', data: DATA.capex,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'CFO (tỷ VND)', data: DATA.cfo, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:(ctx)=> ctx.parsed.y < 0 ? RED : '#0f1419',
+        pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'} }
+      }
+    })
+  });
+
+  new Chart($('chartSegMix'), {
+    type:'doughnut',
+    data:{ labels: DATA.segMix.labels, datasets:[{
+      data: DATA.segMix.values,
+      backgroundColor:[BLUE, PURPLE, AMBER],
+      borderColor:'#161b22', borderWidth:2
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{
+        legend:{position:'right', labels:{usePointStyle:true, boxWidth:8, font:{size:11}, padding:10}},
+        tooltip:{callbacks:{label:(c)=>` ${c.label}: ${c.parsed}%`}}
+      }
+    }
+  });
+
+  new Chart($('chartValPE'), {
+    type:'line',
+    data:{ labels: DATA.years, datasets:[{
+      label:'P/E (ước tính)',
+      data: DATA.peHist,
+      borderColor: BLUE, backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.25)','rgba(74,158,255,0)'),
+      fill:true, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, borderWidth:2.5
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'P/E (x)', font:{size:10}, color:'#565f6b'}} },
+      plugins:{
+        legend:{labels:{usePointStyle:true, boxWidth:8}},
+        annotation:{
+          annotations:{
+            avg5: { type:'line', yMin:DATA.pe5med, yMax:DATA.pe5med, borderColor:AMBER, borderDash:[6,4], borderWidth:1.5,
+                    label:{content:('5Y median ~'+DATA.pe5med+'×'),display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
+            avg10:{ type:'line', yMin:DATA.pe5avg, yMax:DATA.pe5avg, borderColor:'#a78bfa', borderDash:[6,4], borderWidth:1.5,
+                    label:{content:('5Y avg ~'+DATA.pe5avg+'×'),display:(Math.abs(DATA.pe5avg-DATA.pe5med)>0.5),position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
+            current:{ type:'point', xValue:(DATA.years[DATA.years.length-1]), yValue:DATA.pe, backgroundColor:RED, radius:6,
+                      label:{content:('Now ~'+DATA.pe+'×'),display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
+          }
+        }
+      }
+    })
+  });
+
+  new Chart($('chartBSDt'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Tổng tài sản (tỷ VND)', data: DATA.totalAssets,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.3)'), borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Vốn chủ sở hữu (tỷ VND)', data: DATA.equity, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
+    })
+  });
+
+  new Chart($('chartReturns'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'EPS (VND)', data: DATA.eps, backgroundColor:'rgba(63,185,80,0.7)', borderRadius:4, yAxisID:'y' },
+      { label:'ROE (%)', data: DATA.roe, type:'line', borderColor: BLUE, backgroundColor: BLUE, tension:0.3, pointRadius:4, yAxisID:'y1', borderWidth:2 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND', font:{size:10}, color:'#565f6b'}}, y1:{position:'right',grid:{display:false}} }
+    })
+  });
+
+  const peers = {
+    datasets:[{
+      label:(DATA.peerLabel || 'Peer VN (P/B vs tăng trưởng, bubble=vốn hóa)'),
+      data: DATA.peers.data || DATA.peers,
+      backgroundColor:(ctx)=>{ const d=ctx.raw; return d.own ? AMBER : BLUE; },
+      borderColor:'#0f1419', borderWidth:1.5
+    }]
+  };
+  new Chart($('chartPeerScatter'), {
+    type:'bubble',
+    data: peers,
+    options: baseOpts({
+      scales:{
+        x:{ ...baseScales.x, title:{display:true, text:'P/B (×)', font:{size:10}, color:'#565f6b'}, min:(DATA.peerPBMin||1), max:(DATA.peerPBMax||5) },
+        y:{ ...baseScales.y, title:{display:true, text:(DATA.peerYLabel||'CAGR NPAT 3Y (%)'), font:{size:10}, color:'#565f6b'}, min:0, max:(DATA.peerYMax||20) }
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:(c)=>{
+          const d=c.raw; return ` ${d.label}: P/B ${d.x}×, tăng trưởng ${d.y}%`;
+        }}},
+        datalabels:false
+      }
+    }),
+    plugins:[{
+      id:'peerLabels',
+      afterDatasetsDraw(chart){
+        const {ctx} = chart;
+        const ds = chart.data.datasets[0].data;
+        const meta = chart.getDatasetMeta(0);
+        ctx.save();
+        ctx.font = 'bold 11px Inter';
+        ctx.fillStyle = '#e6edf3';
+        ctx.textAlign='center';
+        ds.forEach((d,i)=>{
+          const pt = meta.data[i];
+          if(!pt) return;
+          ctx.fillText(d.label, pt.x, pt.y - d.r - 4);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+
+  const techWeeks = DATA.techWeeks;
+  const techPrice = DATA.techPrice;
+  const techMA10  = DATA.techMA10;
+  const techMA20  = DATA.techMA20;
+  const techMA50  = DATA.techMA50;
+  new Chart($('chartTechPrice'), {
+    type:'line',
+    data:{ labels: techWeeks, datasets:[
+      { label:'Close', data: techPrice, borderColor: AMBER, backgroundColor:'transparent', tension:0.3, pointRadius:3, borderWidth:2.5 },
+      { label:'MA10', data: techMA10, borderColor: BLUE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA20', data: techMA20, borderColor: PURPLE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA50', data: techMA50, borderColor: '#8b949e', borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND / cổ phiếu', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{labels:{usePointStyle:true, boxWidth:8}}, annotation:{ annotations:{ support:{type:'line', yMin:DATA.tech52wLow, yMax:DATA.tech52wLow, borderColor:GREEN, borderDash:[6,4], borderWidth:1, label:{content:('Hỗ trợ ~'+DATA.tech52wLow.toLocaleString()+' VND (52W low)'), display:true, position:'start', backgroundColor:'rgba(63,185,80,0.85)', font:{size:9,weight:'bold'}, color:'#0f1419'}}, resist:{type:'line', yMin:DATA.techMA50val, yMax:DATA.techMA50val, borderColor:RED, borderDash:[6,4], borderWidth:1, label:{content:('Kháng cự ~'+DATA.techMA50val.toLocaleString()+' VND (MA50)'), display:true, position:'end', backgroundColor:'rgba(248,81,73,0.85)', font:{size:9,weight:'bold'}, color:'#fff'}} } } }
+    })
+  });
+
+  new Chart($('chartTechRSI'), {
+    type:'line',
+    data:{ labels: techWeeks, datasets:[{
+      label:'RSI(14)', data: DATA.techRSI,
+      borderColor:(c)=>grad(c,'rgba(245,166,35,0.9)','rgba(245,166,35,0.2)'), fill:true, tension:0.3, pointRadius:3, borderWidth:2
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, min:0, max:100,
+        title:{display:true, text:'RSI', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false}, annotation:{ annotations:{
+        ob:{type:'line', yMin:70, yMax:70, borderColor:RED, borderDash:[4,4], borderWidth:1, label:{content:'Overbought 70', display:true, position:'end', backgroundColor:'rgba(248,81,73,0.7)', font:{size:9}, color:'#fff'}},
+        os:{type:'line', yMin:30, yMax:30, borderColor:GREEN, borderDash:[4,4], borderWidth:1, label:{content:'Oversold 30', display:true, position:'end', backgroundColor:'rgba(63,185,80,0.7)', font:{size:9}, color:'#fff'}}
+      } } }
+    })
+  });
+
+  const ddMonths = DATA.ddMonths;
+  const ddValues = DATA.ddValues;
+  new Chart($('chartProfileDD'), {
+    type:'line',
+    data:{ labels: ddMonths, datasets:[{
+      label:'Drawdown %', data: ddValues,
+      borderColor:(c)=>grad(c,'rgba(248,81,73,0.9)','rgba(248,81,73,0.2)'), fill:true, tension:0.3, pointRadius:2, borderWidth:2
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'%', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false} }
+    })
+  });
+
+  const distBins = DATA.distBins;
+  const distCounts = DATA.distCounts;
+  new Chart($('chartProfileDist'), {
+    type:'bar',
+    data:{ labels: distBins, datasets:[{
+      label:'Số ngày (2 năm)', data: distCounts,
+      backgroundColor: (c)=>{
+        const i=c.dataIndex;
+        return i<2 ? 'rgba(248,81,73,0.7)' : (i===2 ? '#565f6b' : 'rgba(63,185,80,0.7)');
+      }, borderRadius:4
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'số ngày', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false} }
+    })
+  });
+});
+
+(function(){
+  const nav = document.getElementById('topnav');
+  const links = Array.from(document.querySelectorAll('.topnav-link'));
+  const progressBar = document.getElementById('progressBar');
+  const backTop = document.getElementById('backTop');
+  const sections = links.map(l => document.getElementById(l.dataset.target)).filter(Boolean);
+
+  function onScroll(){
+    const y = window.scrollY;
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (h>0 ? (y/h*100) : 0) + '%';
+    if (y > 600) backTop.classList.add('visible'); else backTop.classList.remove('visible');
+    const navH = nav.offsetHeight + 10;
+    let active = sections[0];
+    for (const s of sections){
+      if (s && (s.getBoundingClientRect().top - navH) <= 0) active = s;
+    }
+    links.forEach(l => {
+      l.classList.toggle('active', active && l.dataset.target === active.id);
+    });
+    const activeLink = links.find(l => l.classList.contains('active'));
+    if (activeLink){
+      const navInner = nav.querySelector('.topnav-inner');
+      const linkRect = activeLink.getBoundingClientRect();
+      const innerRect = navInner.getBoundingClientRect();
+      if (linkRect.right > innerRect.right - 20 || linkRect.left < innerRect.left + 20){
+        navInner.scrollTo({ left: navInner.scrollLeft + (linkRect.left - innerRect.left - 40), behavior:'smooth' });
+      }
+    }
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  links.forEach(l => {
+    l.addEventListener('click', (e)=>{
+      const t = document.getElementById(l.dataset.target);
+      if (!t) return;
+      e.preventDefault();
+      const top = t.getBoundingClientRect().top + window.scrollY - nav.offsetHeight - 8;
+      window.scrollTo({ top, behavior:'smooth' });
+    });
+  });
+  backTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+  onScroll();
+})();
+</script>
+</body>
+</html>

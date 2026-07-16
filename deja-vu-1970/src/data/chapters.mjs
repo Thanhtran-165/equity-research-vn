@@ -1,0 +1,21 @@
+// src/data/chapters.mjs — bilingual chapter metadata
+export const CHAPTERS = [
+  { slug: "01", title: { vi: "Cách đọc nghiên cứu này", en: "How to read this research" }, short: { vi: "Phương pháp", en: "Method" }, hypotheses: [], section: { vi: "Mở đầu", en: "Front" } },
+  { slug: "02", title: { vi: "Timeline song song", en: "Parallel timeline" }, short: { vi: "Timeline", en: "Timeline" }, hypotheses: [], section: { vi: "Mở đầu", en: "Front" }, redirect: "/timeline" },
+  { slug: "03", title: { vi: "Trung Đông, dầu và địa chính trị năng lượng", en: "Middle East, oil, and energy geopolitics" }, short: { vi: "Dầu & địa chính trị", en: "Oil & geopolitics" }, hypotheses: ["H2"], section: { vi: "Vĩ mô", en: "Macro" } },
+  { slug: "04", title: { vi: "Great Inflation vs cú sốc hậu-COVID", en: "Great Inflation vs the post-COVID surge" }, short: { vi: "Lạm phát", en: "Inflation" }, hypotheses: ["H3"], section: { vi: "Vĩ mô", en: "Macro" } },
+  { slug: "05", title: { vi: "Fed, Volcker và chính sách stop–go", en: "Fed, Volcker, and stop–go policy" }, short: { vi: "Fed & Volcker", en: "Fed & Volcker" }, hypotheses: ["H4", "H5"], section: { vi: "Vĩ mô", en: "Macro" } },
+  { slug: "06", title: { vi: "Nợ Mỹ, Treasury và fiscal dominance", en: "US debt, Treasury, and fiscal dominance" }, short: { vi: "Nợ & tài khóa", en: "Debt & fiscal" }, hypotheses: ["H6"], section: { vi: "Vĩ mô", en: "Macro" } },
+  { slug: "07", title: { vi: "Nhật Bản, yen và carry trade", en: "Japan, yen, and the carry trade" }, short: { vi: "Nhật & yen", en: "Japan & yen" }, hypotheses: ["H7"], section: { vi: "Vĩ mô", en: "Macro" } },
+  { slug: "08", title: { vi: "AI và cách mạng năng suất", en: "AI and the productivity revolution" }, short: { vi: "AI & năng suất", en: "AI & productivity" }, hypotheses: ["H9", "H10"], section: { vi: "Công nghệ", en: "Tech" } },
+  { slug: "09", title: { vi: "Điện, data center và điểm nghẽn vật lý mới", en: "Electricity, data centers, and the new physical bottleneck" }, short: { vi: "Điện", en: "Electricity" }, hypotheses: ["H11"], section: { vi: "Công nghệ", en: "Tech" } },
+  { slug: "10", title: { vi: "Commodity Déjà Vu", en: "Commodity Déjà Vu" }, short: { vi: "Hàng hóa", en: "Commodities" }, hypotheses: ["H21","H22","H23","H24","H25","H26","H27","H28","H29","H30","H31","H32","H33"], section: { vi: "Hàng hóa", en: "Commodities" }, redirect: "/commodities" },
+  { slug: "11", title: { vi: "Toàn cầu hóa, Trung Quốc và trật tự công nghiệp mới", en: "Globalization, China, and the new industrial order" }, short: { vi: "Toàn cầu hóa & TQ", en: "Globalization & China" }, hypotheses: ["H12","H13"], section: { vi: "Vĩ mô", en: "Macro" } },
+  { slug: "12", title: { vi: "Thị trường lao động và nhân khẩu học", en: "Labor markets and demographics" }, short: { vi: "Lao động", en: "Labor" }, hypotheses: ["H14"], section: { vi: "Vĩ mô", en: "Macro" } },
+  { slug: "13", title: { vi: "Hệ thống tài chính và rủi ro thanh khoản", en: "Financial system and liquidity risk" }, short: { vi: "Rủi ro thanh khoản", en: "Liquidity risk" }, hypotheses: ["H18"], section: { vi: "Tài chính", en: "Financial" } },
+  { slug: "14", title: { vi: "Thị trường tài sản", en: "Asset markets" }, short: { vi: "Tài sản", en: "Assets" }, hypotheses: ["H15","H16","H17","H19"], section: { vi: "Tài chính", en: "Financial" } },
+  { slug: "15", title: { vi: "Những tương đồng giả", en: "False similarities" }, short: { vi: "Phép so sánh giả", en: "False analogies" }, hypotheses: [], section: { vi: "Phản biện", en: "Rebuttal" } },
+  { slug: "16", title: { vi: "Điều gì phá vỡ phép so sánh", en: "What breaks the comparison" }, short: { vi: "Phá vỡ tương đồng", en: "Breaks the analogy" }, hypotheses: [], section: { vi: "Phản biện", en: "Rebuttal" } },
+  { slug: "17", title: { vi: "Chế độ và kịch bản đầu tư", en: "Regimes and investment scenarios" }, short: { vi: "Chế độ", en: "Regimes" }, hypotheses: ["H20"], section: { vi: "Chế độ", en: "Regime" }, redirect: "/scorecard" },
+  { slug: "18", title: { vi: "Kết luận", en: "Conclusion" }, short: { vi: "Kết luận", en: "Conclusion" }, hypotheses: [], section: { vi: "Kết luận", en: "Conclusion" } },
+];

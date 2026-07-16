@@ -1,66 +1,121 @@
 from __future__ import annotations
 
 import argparse
+import json as _json
 import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-from src.config_loader import AppConfig, load_config
+from src import logging_util
+from src.config_loader import AppConfig, ConfigError, load_config
 from src.models import RiskBand, ScoredPage, ScanReport
-from src.page_meta import fetch_page_meta
+from src.page_meta import fetch_page_meta, list_cached_urls, inspect_cache
 from src.report import render_markdown
-from src.scoring import score_page
+from src.scoring import score_page, preflight_brand_assets
 from src.search import search_pages
 from src.takedown_template import render_meta_ip, render_shtt, render_alert_post
 
 
 _IST = timezone(timedelta(hours=7))
 
+# Exit codes
+EXIT_OK = 0
+EXIT_CONFIG_ERROR = 2
+EXIT_BROWSER_ERROR = 3
+EXIT_PARTIAL_FAILURE = 4
 
-def _scan_brand(brand, cfg: dict, no_network: bool = False, urls: list[str] | None = None) -> ScanReport:
-    run_at = datetime.now(_IST).strftime("%Y-%m-%dT%H:%M%z")
+
 def _scan_brand(
     brand, cfg: dict,
     no_network: bool = False,
     urls: list[str] | None = None,
     browser_context=None,
     sleep_between: float = 2.0,
-) -> ScanReport:
+) -> tuple[ScanReport, dict]:
+    """Scan 1 brand. Returns (report, stats_dict)."""
     run_at = datetime.now(_IST).strftime("%Y-%m-%dT%H:%M%z")
     report = ScanReport(brand_id=brand.id, run_at=run_at, pages=[])
+    stats = {"discovered": 0, "cached": 0, "fetched": 0, "failed": 0, "stale": 0, "skipped_nocache": 0}
 
+    # --no-network mode: đọc URLs từ cache nếu không có urls-file
     if no_network and urls is None:
-        print(f"[*] --no-network: skipping search for {brand.display_name}", file=sys.stderr)
-        return report
+        urls = list_cached_urls(brand=brand)
+        logging_util.info(f"--no-network: loaded {len(urls)} URLs from cache for {brand.display_name}")
+        if not urls:
+            logging_util.info(f"Cache trống — chạy không --no-network để fetch trước.")
+            return report, stats
 
     if urls is not None:
-        print(f"[*] Using {len(urls)} provided URLs for {brand.display_name}", file=sys.stderr)
+        stats["discovered"] = len(urls)
+        logging_util.info(f"Using {len(urls)} provided URLs for {brand.display_name}")
     else:
-        print(f"[*] Searching pages for brand: {brand.display_name}", file=sys.stderr)
-        # Pass context to search nếu có (scrape directory dùng context chung)
+        logging_util.info(f"Searching pages for brand: {brand.display_name}")
         urls = search_pages(brand, browser_context=browser_context)
-        print(f"[*] Found {len(urls)} candidate URLs", file=sys.stderr)
+        stats["discovered"] = len(urls)
+        logging_util.info(f"Found {len(urls)} candidate URLs")
 
     scoring_cfg = {**cfg, **brand.scoring_overrides}
 
     for i, url in enumerate(urls, 1):
-        print(f"[*] ({i}/{len(urls)}) Fetching {url}", file=sys.stderr)
+        # Check cache trước để skip network (trừ khi cache stale)
+        from src.page_meta import _read_cache, _cache_path
+        cached_meta = _read_cache(url)
+        if cached_meta is not None:
+            stats["cached"] += 1
+            score = score_page(cached_meta, brand, scoring_cfg)
+            report.pages.append(ScoredPage(page=cached_meta, score=score))
+            continue
+
+        # Check if cache file exists but is stale
+        if _cache_path(url).exists():
+            stats["stale"] += 1
+
+        # --no-network: skip fetch cho cache miss (chỉ dùng cached data)
+        if no_network:
+            stats["skipped_nocache"] += 1
+            logging_util.debug(f"--no-network: skipped (no cache): {url}")
+            continue
+
+        logging_util.info(f"({i}/{len(urls)}) Fetching {url}")
         try:
             if browser_context is not None:
                 from src.page_meta import fetch_page_meta_with_context
                 meta = fetch_page_meta_with_context(url, browser_context)
             else:
                 meta = fetch_page_meta(url)
+            stats["fetched"] += 1
         except Exception as e:
-            print(f"[!] Failed to fetch {url}: {e}", file=sys.stderr)
+            stats["failed"] += 1
+            logging_util.warn(f"Failed to fetch {url}: {e}")
             continue
+
+        # Tag cache entry with brand_id + source (fixes _write_cache not receiving these)
+        from src.page_meta import _write_cache
+        _write_cache(url, meta, brand_id=brand.id,
+                     source="search_bar" if browser_context is not None else "public")
+
         score = score_page(meta, brand, scoring_cfg)
         report.pages.append(ScoredPage(page=meta, score=score))
         if browser_context is not None and i < len(urls):
             import time
             time.sleep(sleep_between)
 
-    return report
+    logging_util.info(
+        f"Scan done: {stats['cached']} cached + {stats['fetched']} fetched "
+        f"+ {stats['skipped_nocache']} skipped = {len(report.pages)} scored"
+    )
+    return report, stats
+
+
+def _add_report_counts(stats: dict, report: ScanReport) -> dict:
+    """Attach risk-band and semantic-check counts to a scan stats dict."""
+    stats["high"] = len(report.iter_by_band(band=RiskBand.HIGH))
+    stats["mid"] = len(report.iter_by_band(band=RiskBand.MID))
+    stats["low"] = len(report.iter_by_band(band=RiskBand.LOW))
+    stats["semantic_check"] = sum(
+        1 for scored_page in report.pages if scored_page.score.needs_semantic_check
+    )
+    return stats
 
 
 def _load_urls_per_brand(urls_file: str, brands: list) -> dict:
@@ -140,7 +195,7 @@ def _learn_fake(url: str, brand, scoring_cfg: dict, known_fakes_path: str) -> in
     known = _load_known_fakes(known_fakes_path)
     existing_urls = {f.get("url") for f in known.get("fakes", [])}
     if url in existing_urls:
-        print(f"[!] URL đã có trong known_fakes.yaml — skip", file=sys.stderr)
+        logging_util.warn(f"URL đã có trong known_fakes.yaml — skip")
         return 0
 
     # Tạo entry mới
@@ -200,216 +255,229 @@ def _learn_fake(url: str, brand, scoring_cfg: dict, known_fakes_path: str) -> in
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="brand-guard-fb")
-    parser.add_argument(
-        "--config",
-        default=str(Path(__file__).parent.parent / "config" / "brands.yaml"),
-        help="Path to brands.yaml",
-    )
-    parser.add_argument(
-        "--brand",
-        help="Brand ID to scan (default: scan all brands in config)",
-    )
-    parser.add_argument(
-        "--urls-file",
-        help="File chứa list URL Facebook (1 URL/dòng) để scan thay vì search engine. Dùng '# brand_id' để gắn URL cho brand cụ thể.",
-    )
-    parser.add_argument(
-        "--no-network",
-        action="store_true",
-        help="Skip network calls, only use cached page metadata",
-    )
-    parser.add_argument(
-        "--use-chrome-profile",
-        action="store_true",
-        help="Dùng Chrome profile có sẵn session login FB. Yêu cầu Chrome đã đóng. "
-             "Cho phép fetch đầy đủ metadata (cover, activity) + tránh login wall.",
-    )
-    parser.add_argument(
-        "--chrome-profile-dir",
-        default="Default",
-        help="Chrome profile dir name (Default, Profile 1, ...). Mặc định: Default",
-    )
-    parser.add_argument(
-        "--sleep-between",
-        type=float,
-        default=2.0,
-        help="Sleep giữa các fetch khi dùng --use-chrome-profile (giảm rate limit). Mặc định: 2.0s",
-    )
-    parser.add_argument(
-        "--generate-complaints",
-        action="store_true",
-        help="Generate takedown complaint templates for high-risk pages",
-    )
-    parser.add_argument(
-        "--alert",
-        action="store_true",
-        help="Sinh bài post cảnh báo giả mạo (tiếng Việt) để đăng lên fanpage chính chủ",
-    )
-    parser.add_argument(
-        "--alert-include-medium",
-        action="store_true",
-        help="Bao gồm cả trang MID (tên giống nhưng avatar khác) trong bài cảnh báo",
-    )
-    parser.add_argument(
-        "--reverse",
-        action="store_true",
-        help="Sinh link reverse image search (Google Lens/TinEye/Yandex) cho avatar brand và avatar các trang HIGH. Dùng để phát hiện profile 'có sẵn đổi tên+avatar'.",
-    )
-    parser.add_argument(
-        "--learn",
-        help="Thêm URL profile giả mạo mới vào known_fakes.yaml (pattern DB). VD: --learn https://facebook.com/some.profile",
-    )
-    parser.add_argument(
-        "--known-fakes",
-        default=str(Path(__file__).parent.parent / "config" / "known_fakes.yaml"),
-        help="Path tới file pattern DB known_fakes.yaml",
-    )
-    parser.add_argument(
-        "--signatory-name", default="[YOUR NAME]",
-    )
-    parser.add_argument(
-        "--signatory-title", default="[YOUR TITLE]",
-    )
-    parser.add_argument(
-        "--signatory-email", default="[YOUR EMAIL]",
-    )
+    parser.add_argument("--config", default=str(Path(__file__).parent.parent / "config" / "brands.yaml"))
+    parser.add_argument("--brand", help="Brand ID to scan (default: scan all)")
+    parser.add_argument("--urls-file", help="File URL list (1/dòng). '# brand_id' để gắn brand.")
+    parser.add_argument("--no-network", action="store_true", help="Chỉ dùng cache, không network.")
+    parser.add_argument("--clear-cache", action="store_true", help="Xóa cache trước scan.")
+    parser.add_argument("--use-chrome-profile", action="store_true",
+                        help="Dùng Chrome profile login FB. Yêu cầu Chrome đóng.")
+    parser.add_argument("--chrome-profile-dir", default="Default")
+    parser.add_argument("--sleep-between", type=float, default=2.0)
+    parser.add_argument("--generate-complaints", action="store_true")
+    parser.add_argument("--alert", action="store_true", help="Sinh bài post cảnh báo tiếng Việt.")
+    parser.add_argument("--alert-include-medium", action="store_true")
+    parser.add_argument("--reverse", action="store_true", help="Sinh link reverse image search.")
+    parser.add_argument("--learn", help="Thêm URL fake vào known_fakes.yaml.")
+    parser.add_argument("--known-fakes", default=str(Path(__file__).parent.parent / "config" / "known_fakes.yaml"))
+    parser.add_argument("--signatory-name", default="[YOUR NAME]")
+    parser.add_argument("--signatory-title", default="[YOUR TITLE]")
+    parser.add_argument("--signatory-email", default="[YOUR EMAIL]")
+    parser.add_argument("--verbose", action="store_true", help="Debug-level logging.")
+    parser.add_argument("--output-dir", default=".cache/complaints",
+                        help="Output dir cho complaints/alert files. Mặc định: .cache/complaints")
+    parser.add_argument("--report-json", action="store_true",
+                        help="Output JSON report ra stdout (machine-readable).")
+    parser.add_argument("--inspect-cache", action="store_true",
+                        help="Inspect cache: count, stale, by brand. Không scan.")
     args = parser.parse_args(argv)
 
-    config: AppConfig = load_config(Path(args.config))
+    logging_util.set_verbose(args.verbose)
+
+    # === --inspect-cache mode ===
+    if args.inspect_cache:
+        stats = inspect_cache(brand_id=args.brand)
+        print(_json.dumps(stats, indent=2, ensure_ascii=False))
+        return EXIT_OK
+
+    # === Config validation (fail-closed) ===
+    try:
+        config: AppConfig = load_config(Path(args.config))
+    except ConfigError as e:
+        logging_util.error(f"Config error: {e}")
+        return EXIT_CONFIG_ERROR
+
     brands = [b for b in config.brands if not args.brand or b.id == args.brand]
     if not brands:
-        print(f"[!] No brand matching '{args.brand}'", file=sys.stderr)
-        return 2
+        logging_util.error(f"No brand matching '{args.brand}'")
+        return EXIT_CONFIG_ERROR
 
-    # Mode --learn: thêm profile giả mạo mới vào pattern DB
+    # === Preflight: check brand assets (fail-closed) ===
+    if not args.no_network:
+        for brand in brands:
+            errors = preflight_brand_assets(brand)
+            if errors:
+                for err in errors:
+                    logging_util.error(f"Preflight [{brand.id}]: {err}")
+                logging_util.error(
+                    f"Brand assets check failed. Fix above errors or copy avatar/cover "
+                    f"to config/avatars/ before scanning."
+                )
+                return EXIT_CONFIG_ERROR
+
+    # Mode --learn
     if args.learn:
         return _learn_fake(
-            url=args.learn,
-            brand=brands[0],
-            scoring_cfg=config.scoring,
-            known_fakes_path=args.known_fakes,
+            url=args.learn, brand=brands[0],
+            scoring_cfg=config.scoring, known_fakes_path=args.known_fakes,
         )
 
     # Load URLs từ file nếu có
     urls_per_brand: dict = {}
     if args.urls_file:
         urls_per_brand = _load_urls_per_brand(args.urls_file, brands)
-        print(f"[*] Loaded URLs from {args.urls_file}: "
-              f"{', '.join(f'{k}={len(v)}' for k, v in urls_per_brand.items())}",
-              file=sys.stderr)
+        logging_util.info(f"Loaded URLs: {', '.join(f'{k}={len(v)}' for k, v in urls_per_brand.items())}")
 
-    # Load known_fakes.yaml để skip URLs đã biết + học pattern
-    known_fakes = _load_known_fakes(args.known_fakes)
+    # Clear cache nếu --clear-cache
+    if args.clear_cache:
+        import shutil
+        cache_dir = Path(".cache/page_meta")
+        if cache_dir.exists():
+            count = len(list(cache_dir.glob("*.json")))
+            shutil.rmtree(cache_dir)
+            logging_util.info(f"Cleared cache: {count} profiles removed")
+    else:
+        cache_dir = Path(".cache/page_meta")
+        if cache_dir.exists():
+            stats = inspect_cache()
+            logging_util.info(
+                f"Cache: {stats['valid']} valid + {stats['stale']} stale "
+                f"({stats['total']} total, TTL 7 ngày)"
+            )
 
     # Mở browser context nếu --use-chrome-profile
     browser_context = None
-    browser_to_close = None
+    playwright = None
     if args.use_chrome_profile:
         from src.browser import launch_logged_in_context
         from playwright.sync_api import sync_playwright
-        pw = sync_playwright().start()
+        logging_util.warn("--use-chrome-profile: Chrome phải đóng hoàn toàn (Cmd+Q).")
+        logging_util.warn("  Profile sẽ được copy sang .cache/chrome_profile/ (không làm hỏng profile thật).")
+        playwright = sync_playwright().start()
         try:
             browser_context, _ = launch_logged_in_context(
-                pw,
-                headless=False,
-                profile_dir=args.chrome_profile_dir,
+                playwright, headless=False, profile_dir=args.chrome_profile_dir,
             )
-            print(f"[*] Using Chrome profile: {args.chrome_profile_dir}", file=sys.stderr)
-            print(f"[*] Đã đăng nhập FB? Vào https://facebook.com để verify.", file=sys.stderr)
+            logging_util.info(f"Using Chrome profile: {args.chrome_profile_dir}")
         except RuntimeError as e:
-            print(f"[!] {e}", file=sys.stderr)
-            pw.stop()
-            return 3
+            logging_util.error(f"Browser/profile error: {e}")
+            playwright.stop()
+            return EXIT_BROWSER_ERROR
 
+    # === Scan ===
+    all_stats: dict = {}
+    json_reports: list[dict] = []
     outputs: list[str] = []
+    total_failed = 0
+
     try:
         for brand in brands:
             brand_urls = urls_per_brand.get(brand.id)
-            report = _scan_brand(
+            report, brand_stats = _scan_brand(
                 brand, config.scoring,
-                no_network=args.no_network,
-                urls=brand_urls,
-                browser_context=browser_context,
-                sleep_between=args.sleep_between,
+                no_network=args.no_network, urls=brand_urls,
+                browser_context=browser_context, sleep_between=args.sleep_between,
             )
-        outputs.append(render_markdown(report, brand))
+            _add_report_counts(brand_stats, report)
+            all_stats[brand.id] = brand_stats
+            total_failed += brand_stats["failed"]
 
-        if args.generate_complaints:
-            high_pages = report.iter_by_band(band=RiskBand.HIGH)
-            if high_pages:
-                out_dir = Path(".cache/complaints")
-                out_dir.mkdir(parents=True, exist_ok=True)
-                today = datetime.now(_IST).strftime("%Y-%m-%d")
-                meta_md = render_meta_ip(
-                    brand=brand,
-                    pages=high_pages,
-                    signatory_name=args.signatory_name,
-                    signatory_title=args.signatory_title,
-                    signatory_email=args.signatory_email,
-                    today_date=today,
-                )
-                shtt_md = render_shtt(
-                    brand=brand,
-                    pages=high_pages,
-                    signatory_name=args.signatory_name,
-                    signatory_title=args.signatory_title,
-                    signatory_email=args.signatory_email,
-                    today_date=today,
-                )
-                meta_path = out_dir / f"{today}-{brand.id}-meta.md"
-                shtt_path = out_dir / f"{today}-{brand.id}-shtt.md"
-                meta_path.write_text(meta_md, encoding="utf-8")
-                shtt_path.write_text(shtt_md, encoding="utf-8")
-                outputs.append(
-                    f"\n👉 Mẫu đơn khiếu nại: `{meta_path}` và `{shtt_path}`"
-                )
+            outputs.append(render_markdown(report, brand))
 
-        if args.alert:
-            alert_pages = report.iter_by_band(band=RiskBand.HIGH)
-            if args.alert_include_medium:
-                alert_pages = alert_pages + report.iter_by_band(band=RiskBand.MID)
-                # Re-sort by score desc
-                alert_pages = sorted(alert_pages, key=lambda p: p.score.total, reverse=True)
-            if alert_pages:
-                out_dir = Path(".cache/complaints")
-                out_dir.mkdir(parents=True, exist_ok=True)
-                today = datetime.now(_IST).strftime("%Y-%m-%d")
-                alert_md = render_alert_post(
-                    brand=brand,
-                    pages=alert_pages,
-                    include_medium=args.alert_include_medium,
-                )
-                alert_path = out_dir / f"{today}-{brand.id}-alert.md"
-                alert_path.write_text(alert_md, encoding="utf-8")
-                # In ngay ra stdout để user copy paste
-                outputs.append(f"\n\n---\n\n📝 **BÀI POST CẢNH BÁO (copy đăng lên fanpage):**\n\n{alert_md}")
-                outputs.append(f"\n👉 File đã lưu: `{alert_path}`")
+            # JSON report
+            if args.report_json:
+                json_reports.append({
+                    "brand_id": brand.id,
+                    "run_at": report.run_at,
+                    "stats": brand_stats,
+                    "pages": [
+                        {
+                            "url": sp.page.url,
+                            "title": sp.page.title,
+                            "score": sp.score.total,
+                            "band": sp.score.band.name,
+                            "avatar": sp.score.avatar,
+                            "cover": sp.score.cover,
+                            "name": sp.score.name,
+                            "needs_semantic_check": sp.score.needs_semantic_check,
+                        }
+                        for sp in report.pages
+                    ],
+                })
 
-        if args.reverse:
-            from src.reverse_search import render_reverse_search_section
-            high_pages = report.iter_by_band(band=RiskBand.HIGH)
-            # Dùng avatar của trang HIGH đầu tiên (nếu có)
-            page_avatar = None
-            for sp in high_pages:
-                if sp.page.avatar_url and sp.page.avatar_url.startswith("http"):
-                    page_avatar = sp.page.avatar_url
-                    break
-            outputs.append("\n\n---\n\n" + render_reverse_search_section(
-                brand_avatar_path=brand.avatar_path,
-                page_avatar_url=page_avatar,
-            ))
+            # Generate complaints
+            if args.generate_complaints:
+                high_pages = report.iter_by_band(band=RiskBand.HIGH)
+                if high_pages:
+                    out_dir = Path(args.output_dir)
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    today = datetime.now(_IST).strftime("%Y-%m-%d")
+                    meta_md = render_meta_ip(brand=brand, pages=high_pages,
+                                             signatory_name=args.signatory_name,
+                                             signatory_title=args.signatory_title,
+                                             signatory_email=args.signatory_email, today_date=today)
+                    shtt_md = render_shtt(brand=brand, pages=high_pages,
+                                          signatory_name=args.signatory_name,
+                                          signatory_title=args.signatory_title,
+                                          signatory_email=args.signatory_email, today_date=today)
+                    meta_path = out_dir / f"{today}-{brand.id}-meta.md"
+                    shtt_path = out_dir / f"{today}-{brand.id}-shtt.md"
+                    meta_path.write_text(meta_md, encoding="utf-8")
+                    shtt_path.write_text(shtt_md, encoding="utf-8")
+                    outputs.append(f"\n👉 Mẫu đơn khiếu nại: `{meta_path}` và `{shtt_path}`")
+
+            # Alert post
+            if args.alert:
+                alert_pages = report.iter_by_band(band=RiskBand.HIGH)
+                if args.alert_include_medium:
+                    alert_pages = alert_pages + report.iter_by_band(band=RiskBand.MID)
+                    alert_pages = sorted(alert_pages, key=lambda p: p.score.total, reverse=True)
+                if alert_pages:
+                    out_dir = Path(args.output_dir)
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    today = datetime.now(_IST).strftime("%Y-%m-%d")
+                    alert_md = render_alert_post(brand=brand, pages=alert_pages,
+                                                 include_medium=args.alert_include_medium)
+                    alert_path = out_dir / f"{today}-{brand.id}-alert.md"
+                    alert_path.write_text(alert_md, encoding="utf-8")
+                    outputs.append(f"\n\n---\n\n📝 **BÀI POST CẢNH BÁO:**\n\n{alert_md}")
+                    outputs.append(f"\n👉 File đã lưu: `{alert_path}`")
+
+            # Reverse search
+            if args.reverse:
+                from src.reverse_search import render_reverse_search_section
+                high_pages = report.iter_by_band(band=RiskBand.HIGH)
+                page_avatar = None
+                for sp in high_pages:
+                    if sp.page.avatar_url and sp.page.avatar_url.startswith("http"):
+                        page_avatar = sp.page.avatar_url
+                        break
+                outputs.append("\n\n---\n\n" + render_reverse_search_section(
+                    brand_avatar_path=brand.avatar_path, page_avatar_url=page_avatar,
+                ))
     finally:
-        # Đóng browser context nếu có
         if browser_context is not None:
             try:
                 browser_context.close()
             except Exception:
                 pass
-        if browser_to_close is not None:
-            browser_to_close.close()
+        if playwright is not None:
+            playwright.stop()
 
-    print("\n\n".join(outputs))
-    return 0
+    # === Output ===
+    if args.report_json:
+        print(_json.dumps(json_reports, indent=2, ensure_ascii=False))
+    else:
+        print("\n\n".join(outputs))
+
+    # === Summary ===
+    logging_util.summary(all_stats)
+
+    # Exit code: partial failure if too many fetches failed
+    if total_failed > 0 and total_failed > sum(s.get("fetched", 0) for s in all_stats.values()):
+        return EXIT_PARTIAL_FAILURE
+
+    return EXIT_OK
 
 
 if __name__ == "__main__":

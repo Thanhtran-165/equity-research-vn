@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  LONGFORM REPORT — Article Template (CORE components only)
+  ============================================================================
+  Skill: longform-report
+  Source pattern: bdong-tien / ttck-trung-quoc / bao-cao-bds-trung-quoc
+
+  CÁCH DÙNG:
+  1. Copy file này vào {project}/{slug}/index.html
+  2. Replace mọi placeholder TOKEN (viết hoa UPPER_SNAKE, bọc trong 2 ngoặc nhọn)
+     bằng nội dung thật — xem references/components.md cho danh sách TOKEN đầy đủ
+     + recipe component nâng cao.
+  3. Duplicate <section> block cho mỗi chương. Cập nhật minimap groups.
+  4. Verify: grep "{{[A-Z_]*}}" phải trả 0; node scripts/qa_article.js.
+
+  THEME FAMILY (chọn 1):
+  - AMBER (mặc định): num badge gradient + kpi glow — bài tự nghiên cứu/nhân quả.
+  - BLUE: đổi `.num` background → var(--blue) phẳng, `.kpi` nền phẳng (xem references/themes.md).
+
+  HERO GRADIENT MOOD: đổi 1 dòng `.hero{background:linear-gradient(...)}` theo chủ đề
+  (xem references/themes.md cho bảng mood: BĐS-nóng, TQ-cyan, giáo dục-rêu, tài chính-nâu đất).
+  ============================================================================
+-->
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vàng Việt Nam 2009-2026: 17 năm tự sự</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a; --bg2:#1e293b; --card:#1e293b; --card2:#273449;
+    --txt:#e2e8f0; --muted:#94a3b8; --line:#334155;
+    --red:#ef4444; --amber:#f59e0b; --green:#22c55e; --blue:#3b82f6; --violet:#8b5cf6; --cyan:#06b6d4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.8;font-size:17px}
+
+  /* ===== HERO (mood gradient — đổi dòng này theo chủ đề, xem references/themes.md) ===== */
+  .hero{background:linear-gradient(135deg,#422006 0%,#1e3a8a 50%,#312e81 100%);padding:90px 24px 70px;text-align:center;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.08),transparent 40%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.06),transparent 40%);pointer-events:none}
+  .hero .badge{display:inline-block;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:999px;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:#fde68a;margin-bottom:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2)}
+  .hero h1{font-size:clamp(1.9rem,4.5vw,3.2rem);font-weight:800;line-height:1.2;max-width:960px;margin:0 auto 18px}
+  .hero p.sub{color:#e2e8f0;font-size:1.12rem;max-width:800px;margin:0 auto;opacity:.92}
+  .hero .meta{margin-top:28px;color:#cbd5e1;font-size:.9rem}
+  .hero .meta span{display:inline-block;margin:0 10px}
+
+  /* ===== LAYOUT ===== */
+  .container{max-width:800px;margin:0 auto;padding:0 24px}
+  main{padding:50px 0 80px}
+  section{margin-bottom:56px;scroll-margin-top:90px}
+
+  /* ===== TYPOGRAPHY & SECTION TITLE ===== */
+  h2.section-title{font-size:1.5rem;font-weight:700;margin-bottom:14px;padding-bottom:16px;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,var(--amber),rgba(245,158,11,.2),transparent) 1;display:flex;align-items:center;gap:14px}
+  h2.section-title .num{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.95rem;font-weight:800;flex-shrink:0;box-shadow:0 4px 12px rgba(245,158,11,.3),inset 0 1px 0 rgba(255,255,255,.2)}
+  h3{font-size:1.18rem;margin:28px 0 10px;color:#fbbf24;display:flex;align-items:center;gap:8px}
+  h4{font-size:1.05rem;margin:18px 0 8px;color:#fff}
+  p{margin-bottom:16px;color:#cbd5e1}
+  strong{color:#fff}
+  em{color:#fcd34d;font-style:normal}
+  ul.bul{margin:12px 0 18px 4px;padding-left:22px}
+  ul.bul li{margin-bottom:8px;color:#cbd5e1;position:relative;padding-left:4px}
+  ul.bul li::marker{color:var(--amber)}
+  ol.numlist{margin:12px 0 18px 4px;padding-left:22px}
+  ol.numlist li{margin-bottom:8px;color:#cbd5e1}
+  a.src{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue)}
+
+  /* ===== INLINE CITATION + REFS LIST (chế độ numerated) ===== */
+  .ref{display:inline-block;font-size:.65rem;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:0 4px;margin:0 1px;line-height:1.4;vertical-align:super;text-decoration:none;transition:.15s;min-width:16px;text-align:center}
+  .ref:hover{background:rgba(251,191,36,.3);color:#fde68a;transform:translateY(-1px)}
+  ol.refs{list-style:none;counter-reset:ref;padding-left:0;margin:18px 0}
+  ol.refs li{counter-increment:ref;display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:.86rem;line-height:1.55;align-items:flex-start}
+  ol.refs li:last-child{border-bottom:none}
+  ol.refs li::before{content:counter(ref);display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:1px}
+  ol.refs li a{color:#93c5fd;text-decoration:none;border-bottom:1px dotted #93c5fd;word-break:break-all}
+  ol.refs li a:hover{color:#fbbf24;border-bottom-color:#fbbf24}
+  ol.refs li .src-meta{color:var(--muted);font-size:.78rem;display:block;margin-top:3px}
+
+  /* ===== KPI / STAT CARDS ===== */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:22px 0}
+  .kpi{background:linear-gradient(180deg,rgba(245,158,11,.06),rgba(30,41,59,.6));border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:20px 18px;transition:.22s;position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),transparent)}
+  .kpi:hover{transform:translateY(-3px);border-color:var(--amber);box-shadow:0 8px 24px rgba(245,158,11,.15)}
+  .kpi .val{font-size:1.85rem;font-weight:800;color:#fbbf24;line-height:1;text-shadow:0 0 24px rgba(245,158,11,.3)}
+  .kpi .lab{font-size:.82rem;color:var(--muted);margin-top:10px;line-height:1.4}
+  .kpi.red{border-color:rgba(239,68,68,.3);background:linear-gradient(180deg,rgba(239,68,68,.06),rgba(30,41,59,.6))}.kpi.red::before{background:linear-gradient(90deg,var(--red),transparent)}.kpi.red:hover{border-color:var(--red);box-shadow:0 8px 24px rgba(239,68,68,.15)}
+  .kpi.green{border-color:rgba(34,197,94,.3);background:linear-gradient(180deg,rgba(34,197,94,.06),rgba(30,41,59,.6))}.kpi.green::before{background:linear-gradient(90deg,var(--green),transparent)}.kpi.green:hover{border-color:var(--green);box-shadow:0 8px 24px rgba(34,197,94,.15)}
+  .kpi.cyan{border-color:rgba(6,182,212,.3);background:linear-gradient(180deg,rgba(6,182,212,.06),rgba(30,41,59,.6))}.kpi.cyan::before{background:linear-gradient(90deg,var(--cyan),transparent)}.kpi.cyan:hover{border-color:var(--cyan);box-shadow:0 8px 24px rgba(6,182,212,.15)}
+  .kpi.violet{border-color:rgba(139,92,246,.3);background:linear-gradient(180deg,rgba(139,92,246,.06),rgba(30,41,59,.6))}.kpi.violet::before{background:linear-gradient(90deg,var(--violet),transparent)}.kpi.violet:hover{border-color:var(--violet);box-shadow:0 8px 24px rgba(139,92,246,.15)}
+  .kpi.red .val{color:var(--red);text-shadow:0 0 24px rgba(239,68,68,.3)} .kpi.green .val{color:var(--green);text-shadow:0 0 24px rgba(34,197,94,.3)} .kpi.cyan .val{color:var(--cyan);text-shadow:0 0 24px rgba(6,182,212,.3)} .kpi.violet .val{color:var(--violet);text-shadow:0 0 24px rgba(139,92,246,.3)}
+
+  /* ===== COMPARE (before/after 2 cột) ===== */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:24px 0}
+  .compare .col{border-radius:14px;padding:0;border:1px solid var(--line);overflow:hidden;transition:.22s}
+  .compare .col:hover{transform:translateY(-2px)}
+  .compare .col h4{margin:0;padding:16px 22px 12px;font-size:1.05rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .compare .col ul.bul{padding:14px 22px 20px;margin:0}
+  .compare .before{background:linear-gradient(180deg,rgba(6,182,212,.10),rgba(6,182,212,.02));border-color:rgba(6,182,212,.35)}
+  .compare .before h4{background:linear-gradient(180deg,rgba(6,182,212,.12),transparent)}
+  .compare .after{background:linear-gradient(180deg,rgba(245,158,11,.10),rgba(245,158,11,.02));border-color:rgba(245,158,212,.35)}
+  .compare .after h4{background:linear-gradient(180deg,rgba(245,158,11,.12),transparent)}
+  .compare .tag{display:inline-block;font-size:.7rem;padding:3px 12px;border-radius:999px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-left:auto}
+  .compare .before .tag{background:linear-gradient(135deg,var(--cyan),#0891b2);color:#062b33;box-shadow:0 2px 8px rgba(6,182,212,.3)}
+  .compare .after .tag{background:linear-gradient(135deg,var(--amber),#d97706);color:#3a2400;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+  @media(max-width:720px){.compare{grid-template-columns:1fr}}
+
+  /* ===== TABLE ===== */
+  table.tbl{width:100%;border-collapse:collapse;margin:20px 0;font-size:.92rem;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  table.tbl th,table.tbl td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  table.tbl thead th{background:linear-gradient(180deg,rgba(245,158,11,.16),rgba(245,158,11,.06));color:#fbbf24;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid rgba(245,158,11,.3);position:relative}
+  table.tbl thead th::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber);opacity:0;transition:.2s}
+  table.tbl thead th:first-child::before{opacity:1}
+  table.tbl tbody tr{transition:.15s}
+  table.tbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  table.tbl tbody tr:hover td{background:rgba(245,158,11,.06)}
+  table.tbl tr:last-child td{border-bottom:none}
+  table.tbl td strong{color:#fcd34d}
+
+  /* ===== CALLOUT (info box) ===== */
+  .callout{position:relative;background:linear-gradient(135deg,rgba(139,92,246,.10),rgba(59,130,246,.05));border:1px solid rgba(139,92,246,.25);border-left:4px solid var(--violet);padding:18px 22px 18px 24px;border-radius:0 14px 14px 0;margin:22px 0;transition:.2s}
+  .callout:hover{box-shadow:0 4px 18px rgba(139,92,246,.12);transform:translateX(2px)}
+  .callout.warn{border-color:rgba(239,68,68,.25);border-left-color:var(--red);background:linear-gradient(135deg,rgba(239,68,68,.10),rgba(239,68,68,.03))}
+  .callout.warn:hover{box-shadow:0 4px 18px rgba(239,68,68,.12)}
+  .callout.good{border-color:rgba(34,197,94,.25);border-left-color:var(--green);background:linear-gradient(135deg,rgba(34,197,94,.10),rgba(34,197,94,.03))}
+  .callout.good:hover{box-shadow:0 4px 18px rgba(34,197,94,.12)}
+  .callout.info{border-color:rgba(59,130,246,.25);border-left-color:var(--blue);background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(59,130,246,.03))}
+  .callout.info:hover{box-shadow:0 4px 18px rgba(59,130,246,.12)}
+  .callout h4{color:#fff;margin-bottom:6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .callout p{margin:0;color:#e2e8f0}
+
+  /* ===== CHART CONTAINER ===== */
+  .chart-box{background:linear-gradient(180deg,var(--card),rgba(15,23,42,.6));border:1px solid var(--line);border-radius:16px;padding:22px;margin:24px 0;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .chart-box::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),var(--blue),transparent)}
+  .chart-box h4{color:#fbbf24;margin-bottom:6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .chart-box .desc{color:var(--muted);font-size:.85rem;margin-bottom:16px;padding-left:10px;border-left:2px solid rgba(245,158,11,.3);font-style:italic}
+  .chart-wrap{position:relative;height:320px}
+  .chart-wrap.tall{height:380px}
+
+  /* ===== TIMELINE ===== */
+  .timeline{position:relative;margin:26px 0;padding-left:32px;border-left:2px solid transparent;border-image:linear-gradient(180deg,var(--amber),var(--line)) 1}
+  .tl-item{position:relative;margin-bottom:28px}
+  .tl-item::before{content:"";position:absolute;left:-41px;top:4px;width:16px;height:16px;border-radius:50%;background:var(--amber);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--amber),0 0 14px rgba(245,158,11,.5)}
+  .tl-item.red::before{background:var(--red);box-shadow:0 0 0 2px var(--red),0 0 14px rgba(239,68,68,.5)}
+  .tl-item.green::before{background:var(--green);box-shadow:0 0 0 2px var(--green),0 0 14px rgba(34,197,94,.5)}
+  .tl-year{font-weight:800;color:#fbbf24;font-size:.95rem;letter-spacing:.02em}
+  .tl-body{color:#cbd5e1;margin-top:4px}
+
+  /* ===== LAYOUT HELPERS ===== */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+  @media(max-width:720px){.two-col{grid-template-columns:1fr}}
+
+  footer{text-align:center;padding:30px 24px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+
+  /* ===== PROGRESS BAR (top) ===== */
+  .progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#fbbf24,#f59e0b,#ef4444);z-index:1000;transition:width .12s ease-out}
+
+  /* ===== MINIMAP (floating TOC) ===== */
+  .minimap{position:fixed;top:24px;right:24px;width:272px;max-height:calc(100vh - 48px);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;overflow-y:auto;z-index:50;opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .35s ease, transform .35s ease;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none}
+  @media(min-width:1024px){body.nav-active .minimap{display:block;opacity:1;transform:translateX(0);pointer-events:auto}}
+  .minimap::-webkit-scrollbar{width:6px}.minimap::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .minimap .mm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
+  .minimap .mm-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+  .minimap .mm-pct{font-size:.72rem;color:#fbbf24;font-weight:700}
+  .mm-search{position:relative;margin-bottom:12px}
+  .mm-search input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 10px 8px 30px;font-size:.82rem;outline:none;transition:.2s}
+  .mm-search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+  .mm-search input::placeholder{color:var(--muted)}
+  .mm-search::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.75rem;opacity:.7}
+  .mm-group{margin-bottom:4px;border-radius:9px;overflow:hidden}
+  .mm-group-head{display:flex;align-items:center;gap:7px;width:100%;background:transparent;border:none;color:#cbd5e1;cursor:pointer;padding:8px 8px;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:left;border-radius:8px;transition:.15s}
+  .mm-group-head:hover{background:rgba(255,255,255,.04);color:#fff}
+  .mm-group-head .chev{font-size:.65rem;transition:transform .2s;color:var(--muted);width:10px}
+  .mm-group.open .mm-group-head .chev{transform:rotate(90deg)}
+  .mm-group-head .gcount{margin-left:auto;font-size:.66rem;color:var(--muted);font-weight:600;background:var(--bg2);padding:1px 7px;border-radius:999px}
+  .mm-items{list-style:none;padding:2px 0 6px 14px;margin:0;max-height:0;overflow:hidden;transition:max-height .3s ease;border-left:1px solid var(--line);margin-left:8px}
+  .mm-group.open .mm-items{max-height:500px}
+  .mm-items li{margin:0}
+  .mm-items a{display:flex;align-items:center;gap:7px;text-decoration:none;color:var(--muted);font-size:.8rem;padding:5px 8px;border-radius:6px;transition:.15s;line-height:1.3}
+  .mm-items a:hover{color:#fbbf24;background:rgba(255,255,255,.03)}
+  .mm-items a .dot{width:6px;height:6px;border-radius:50%;background:var(--line);flex-shrink:0;transition:.2s}
+  .mm-items a.active{color:#fbbf24;font-weight:600;background:rgba(251,191,36,.08)}
+  .mm-items a.active .dot{background:#fbbf24;box-shadow:0 0 0 3px rgba(251,191,36,.2)}
+  .mm-no-result{display:none;font-size:.78rem;color:var(--muted);font-style:italic;padding:14px 8px;text-align:center}
+  .minimap.searching .mm-no-result.show{display:block}
+
+  /* ===== FLOATING BUTTONS ===== */
+  .mm-fab{display:none;position:fixed;bottom:24px;right:24px;z-index:200;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:1.3rem;box-shadow:0 8px 24px rgba(239,68,68,.4);align-items:center;justify-content:center}
+  @media(max-width:1023px){.mm-fab{display:flex}.minimap{display:none;top:0;right:0;left:0;bottom:0;width:auto;max-height:none;border-radius:0;border:none;transform:translateY(20px)}body.nav-mobile-open .minimap{display:block;opacity:1;transform:translateY(0);pointer-events:auto}body.nav-mobile-open .mm-fab{display:none}}
+  .mm-overlay-close{display:none;position:absolute;top:14px;right:16px;font-size:1.6rem;background:none;border:none;color:var(--muted);cursor:pointer;line-height:1}
+  @media(max-width:1023px){.mm-overlay-close{display:block}}
+  .to-top{position:fixed;bottom:24px;left:24px;z-index:200;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}
+  body.nav-active .to-top.show,body.loaded .to-top.show{opacity:1;transform:translateY(0);pointer-events:auto}
+  .to-top:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+  @media(max-width:1023px){.to-top{bottom:88px}}
+  .pres-btn{position:fixed;top:24px;left:24px;z-index:300;width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(59,130,246,.4);opacity:0;transform:translateY(-10px);pointer-events:none;transition:.3s}
+  body.nav-active .pres-btn,body.loaded .pres-btn{opacity:1;transform:translateY(0);pointer-events:auto}
+  .pres-btn:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 10px 28px rgba(139,92,246,.5)}
+
+  /* ===== PRESENTATION MODE OVERLAY ===== */
+  .pres-overlay{position:fixed;inset:0;z-index:9999;background:#0a0f1d;display:flex;flex-direction:column;height:100vh;height:100dvh;opacity:0;pointer-events:none;transition:opacity .4s ease}
+  .pres-overlay.active{opacity:1;pointer-events:auto}
+  .pres-top{display:flex;align-items:center;gap:16px;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .pres-progress-bg{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+  .pres-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#fbbf24,#ef4444);border-radius:2px;transition:width .4s ease}
+  .pres-counter{font-size:.85rem;color:#94a3b8;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pres-counter b{color:#fbbf24;font-size:1.05rem}
+  .pres-exit{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:.82rem;transition:.2s}
+  .pres-exit:hover{background:rgba(239,68,68,.3);color:#fff}
+  .pres-stage{flex:1 1 auto;position:relative;overflow:hidden;min-height:0;width:100%}
+  .pres-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 7%;text-align:center;opacity:0;transform:translateX(60px) scale(.97);transition:opacity .5s ease, transform .5s cubic-bezier(.22,1,.36,1);pointer-events:none}
+  .pres-slide.active{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
+  .pres-slide.prev{transform:translateX(-60px) scale(.97)}
+  .pres-slide .slide-inner{width:100%;max-width:1100px;margin:auto}
+  .slide-title .badge{display:inline-block;background:rgba(255,255,255,.1);padding:6px 18px;border-radius:999px;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:#fde68a;margin-bottom:22px;border:1px solid rgba(255,255,255,.18)}
+  .slide-title h1{font-size:clamp(2rem,5.5vw,4rem);font-weight:800;line-height:1.1;margin:0 0 18px;background:linear-gradient(135deg,#fff,#fde68a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .slide-title .sub{font-size:clamp(1rem,2vw,1.35rem);color:#cbd5e1;max-width:760px;margin:0 auto 24px}
+  .slide-section{background:radial-gradient(circle at 50% 40%,rgba(245,158,11,.12),transparent 60%)}
+  .slide-section .sec-num{font-size:clamp(4rem,12vw,8rem);font-weight:800;line-height:1;color:rgba(255,255,255,.08);margin-bottom:0}
+  .slide-section .sec-label{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:#fbbf24;margin-bottom:8px}
+  .slide-section h2{font-size:clamp(1.8rem,4.5vw,3.2rem);font-weight:800;color:#fff;margin:8px 0 0;line-height:1.15}
+  .slide-content h2{font-size:clamp(1.5rem,3.2vw,2.3rem);font-weight:800;color:#fff;margin:0 0 6px;line-height:1.2}
+  .slide-content .kicker{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24;font-weight:700;margin-bottom:10px}
+  .slide-list ul{list-style:none;text-align:left;max-width:760px;margin:20px auto 0}
+  .slide-list li{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:clamp(1rem,1.8vw,1.18rem);color:#e2e8f0}
+  .slide-list li:last-child{border-bottom:none}
+  .slide-list li .num{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700}
+  .slide-list li .txt strong{color:#fbbf24}
+  .slide-quote{background:radial-gradient(circle at 50% 40%,rgba(245,158,11,.12),transparent 60%)}
+  .slide-quote .qmark{font-size:5rem;color:rgba(245,158,11,.3);line-height:.5;margin-bottom:10px}
+  .slide-quote .qtext{font-size:clamp(1.4rem,3vw,2.1rem);font-weight:700;color:#fff;line-height:1.35;max-width:880px;margin:0 auto 16px}
+  .slide-quote .qsource{font-size:.9rem;color:#94a3b8;margin-top:10px}
+  .pres-bottom{display:flex;align-items:center;justify-content:center;gap:18px;padding:14px 28px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .pres-nav{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.15rem;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .pres-nav:hover:not(:disabled){background:var(--blue);border-color:var(--blue);transform:scale(1.1)}
+  .pres-nav:disabled{opacity:.3;cursor:not-allowed}
+  .pres-dots{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:65%}
+  .pres-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.25s;border:none;padding:0}
+  .pres-dot:hover{background:rgba(255,255,255,.4)}
+  .pres-dot.active{background:#fbbf24;width:22px;border-radius:4px}
+  .pres-hint{font-size:.72rem;color:#64748b;text-align:center;padding:2px 0 6px;flex-shrink:0}
+</style>
+</head>
+<body>
+<header class="hero">
+  <span class="badge">Tự nghiên cứu · Số liệu 17 năm</span>
+  <h1>Vàng Việt Nam 2009&ndash;2026: 17 năm tự sự</h1>
+  <p class="sub">Giá vàng SJC từ 21 triệu (2009) đến đỉnh 191 triệu (2026) &mdash; và câu chuyện vì sao vàng Việt Nam luôn đắt hơn vàng thế giới.</p>
+  <div class="meta">
+    <span>🗓️ Cập nhật: 08/07/2026</span>
+    <span>📐 Phạm vi: 22/07/2009 &ndash; 08/07/2026</span>
+    <span>📚 18 chương · 10 biểu đồ</span>
+  </div>
+</header>
+
+<style>
+details.appendix{background:rgba(30,41,59,.4);border:1px solid rgba(148,163,184,.15);border-radius:8px;padding:0 16px;margin:16px 0}
+details.appendix>summary{cursor:pointer;padding:14px 0;font-size:1.02rem;color:#fbbf24;list-style:none;display:flex;align-items:center;gap:8px}
+details.appendix>summary::before{content:'▶';font-size:.7rem;transition:transform .2s;color:#94a3b8}
+details.appendix[open]>summary::before{transform:rotate(90deg)}
+details.appendix>summary::-webkit-details-marker{display:none}
+details.appendix[open]{background:rgba(30,41,59,.6)}
+details.appendix .tbl{margin:8px 0 16px}
+details.appendix p{color:#cbd5e1;font-size:.92rem}
+</style>
+
+<!-- ============================ MAIN ============================ -->
+<main class="container">
+
+  <section id="chuong-1">
+    <h2 class="section-title"><span class="num">I</span>Vàng Việt Nam &ldquo;đắt nhất thế giới&rdquo; &mdash; mythology hay số liệu?</h2>
+    <p>Một câu nói phổ biến trong giới đầu tư Việt Nam: <em>&ldquo;Vàng SJC luôn đắt nhất thế giới.&rdquo;</em> Câu nói này đúng &mdash; nhưng đến mức nào, và trong suốt 17 năm qua thì <strong>pattern đó có ổn định không</strong>? Bài này dùng <strong>27.921 điểm dữ liệu giá SJC</strong> từ chính chủ sjc.com.vn, ghép với giá vàng thế giới (COMEX GC=F) và tỷ giá USD/VND, để đo chính xác khoảng cách đó trong từng ngày từ 22/07/2009 đến 08/07/2026.</p>
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">+31,2%</div><div class="lab">Premium SJC vs QT, đỉnh 2022</div></div>
+      <div class="kpi green"><div class="val">+0,5%</div><div class="lab">Premium 2019 — gần hòa QT</div></div>
+      <div class="kpi amber"><div class="val">191,3M</div><div class="lab">Đỉnh giá SJC 29/01/2026 (triệu/lượng)</div></div>
+      <div class="kpi violet"><div class="val">~7×</div><div class="lab">Vàng SJC tăng 2009→2026</div></div>
+    </div>
+    <p>Câu trả lời ngắn: <strong>SJC đắt hơn vàng thế giới trong gần như toàn bộ 17 năm</strong>, nhưng mức độ chênh lệch biến động dữ dội &mdash; từ <em>gần như hòa hoàn toàn</em> (2019, premium chỉ +0,5%) đến <em>đỉnh +31,2%</em> (2022, hậu COVID).<sup class="ref">1</sup> Đây không phải một con số cố định mà là một <strong>biến số thị trường</strong> &mdash; và bài này sẽ cho thấy nó phản ánh điều gì về tâm lý, chính sách, và cấu trúc thị trường vàng Việt Nam.</p>
+    <p>Bài viết không khuyên mua hay bán vàng. Mục tiêu duy nhất: <strong>minh bạch hóa cơ chế</strong> bằng số liệu thật, để người đọc tự đánh giá.</p>
+  </section>
+  <section id="chuong-2">
+    <h2 class="section-title"><span class="num">II</span>Dữ liệu &amp; phương pháp &mdash; tóm tắt</h2>
+    <p>Bài này dùng <strong>27.921 điểm giá SJC</strong> từ chính chủ sjc.com.vn (22/07/2009 → nay), ghép với giá vàng thế giới (COMEX GC=F) và tỷ giá USD/VND, để đo khoảng cách SJC vs QT từng ngày trong 17 năm. Công thức quy đổi: <em>1 lượng = 1,20565 troy oz</em>, nên <strong>vàng QT (VND/lượng) = GC_F × USDVND × 1,20565</strong>.<sup class="ref">2</sup></p>
+    <p>Cross-check với nguồn độc lập giavang.org (30 ngày sample): <strong>19/30 khớp exact, 11/30 lệch ≤0,4%</strong>.<sup class="ref">3</sup></p>
+    <p>Chi tiết nguồn, công thức, giới hạn và caveats &mdash; xem <a href="#phu-luc" class="src"><strong>Phụ lục: Phương pháp &amp; Giới hạn</strong></a> ở cuối bài.</p>
+  </section>
+  <section id="chuong-3">
+    <h2 class="section-title"><span class="num">III</span>2009&ndash;2012: Vàng &ldquo;bình thường&rdquo; (21 → 44 triệu)</h2>
+    <p>Ba năm đầu của chuỗi là giai đoạn <strong>premium thấp và ổn định nhất</strong>. Giá SJC đi từ 21 triệu (07/2009) lên 44 triệu (cuối 2012), nhưng khoảng cách với vàng QT chỉ dao động quanh <em>5&ndash;7%</em>. Thị trường vàng VN lúc này <strong>di chuyển sát với giá thế giới</strong>.</p>
+    <table class="tbl"><thead><tr><th>Năm</th><th>Premium TB</th><th>Premium min-max</th><th>Giá SJC TB (triệu)</th></tr></thead><tbody>
+<tr><td>2009</td><td>+7,9%</td><td>+2,5% / +14,9%</td><td>25,4</td></tr>
+<tr><td>2010</td><td>+4,7%</td><td>−1,9% / +25,9%</td><td>29,5</td></tr>
+<tr><td>2011</td><td>+4,8%</td><td>−1,5% / +15,7%</td><td>40,7</td></tr>
+<tr><td>2012</td><td>+6,7%</td><td>+0,5% / +13,4%</td><td>44,3</td></tr>
+    </tbody></table>
+    <p>Đáng chú ý: năm 2010 và 2011 từng có <strong>ngày premium âm</strong> &mdash; tức SJC <em>rẻ hơn</em> vàng QT quy đổi. Đây là điều rất hiếm về sau. Giai đoạn này thị trường vàng VN còn <em>thanh khoản quốc tế hóa</em> tốt hơn, nhà đầu tư có thể arb qua vàng miếng nhập khẩu.</p>
+    <div class="callout info"><h4>📚 Bối cảnh</h4><p>2009-2012 là giai đoạn vàng QT tăng mạnh (sâu khủng hoảng tài chính toàn cầu + nợ EU). SJC theo sát, chênh lệch hẹp.</p></div>
+  </section>
+  <section id="chuong-4">
+    <h2 class="section-title"><span class="num">IV</span>2013&ndash;2015: Lần tách biệt đầu tiên</h2>
+    <p>Sau 2012, pattern đổi. Premium <strong>nhảy vọt từ +6,7% (2012) lên +13,0% (2013) và +14,1% (2015)</strong> &mdash; gần gấp đôi giai đoạn trước. Đây là <strong>lần đầu tiên SJC tách rời rõ rệt</strong> khỏi quỹ đạo vàng QT.</p>
+    <div class="chart-box"><h4>📊 Premium SJC vs QT theo năm (TB / min / max)</h4><div class="desc">Bar = premium trung bình năm; line = biên độ min/max. Chú ý 2013-2015 nhảy vọt.</div><div class="chart-wrap"><canvas id="c2_premium_yearly"></canvas></div></div>
+    <p>Giải thích: 2013 là năm <em>vàng QT sập</em> (từ ~$1.700 xuống ~$1.200/oz, &minus;28%), nhưng <strong>SJC giảm ít hơn</strong> &mdash; hệ quả là premium phình ra. Tâm lý &ldquo;giữ giá&rdquo; của thị trường VN khiến giá nội địa <em>dính xuống</em> (sticky) khi QT giảm, nhưng <em>theo sát</em> khi QT tăng. Đây là <strong>bất đối xứng</strong> có lợi cho người bán SJC.</p>
+    <div class="callout warn"><h4>🧠 Góc nhìn hành vi</h4><p>Hiện tượng &ldquo;giá dính xuống khi giảm&rdquo; gọi là <em>price stickiness</em> &mdash; nhà bán chậm giảm giá vì kỳ vọng giá hồi, trong khi nhà mua sẵn sàng trả giá cao vì sợ &lsquo;hết cơ hội&rsquo;. Bất đối xứng này là một nguồn cấu thành premium SJC.</p></div>
+  </section>
+  <section id="chuong-5">
+    <h2 class="section-title"><span class="num">V</span>2016&ndash;2020: Trở về cân bằng &mdash; 2019 gần hòa QT</h2>
+    <p>Giai đoạn 5 năm này là <strong>nền tảng ổn định</strong> nhất của premium. Đặc biệt <strong>2019, premium trung bình chỉ +0,5%</strong> &mdash; SJC gần như <em>hòa hoàn toàn</em> với vàng QT quy đổi. Đây là năm tham chiếu quan trọng: chứng tỏ VN <em>có thể</em> có giá vàng sát QT khi điều kiện thị trường lý tưởng.</p>
+    <div class="chart-box"><h4>📊 SJC vs Vàng QT (VND/lượng) — trung bình quý</h4><div class="desc">Hai đường gần chồng nhau trong 2016-2020, đặc biệt 2019.</div><div class="chart-wrap"><canvas id="c3_sjc_vs_world"></canvas></div></div>
+    <p>Điều kiện lý tưởng đó gồm: (1) vàng QT đi ngang (~$1.200-1.500/oz), (2) USD/VND ổn định, (3) không cú sốc chính sách nhập khẩu vàng VN. Khi cả 3 yếu tố &ldquo;im&rdquo;, premium co về gần 0.</p>
+    <table class="tbl"><thead><tr><th>Năm</th><th>Premium TB</th><th>Premium min-max</th><th>Đặc điểm</th></tr></thead><tbody>
+<tr><td>2016</td><td>+5,9%</td><td>+0,1% / +19,8%</td><td>Hồi về sau cú sốc 2015</td></tr>
+<tr><td>2017</td><td>+8,1%</td><td>+1,7% / +17,1%</td><td>Ổn định</td></tr>
+<tr><td>2018</td><td>+4,7%</td><td>−0,8% / +10,6%</td><td>Thu hẹp</td></tr>
+<tr><td>2019</td><td>+0,5%</td><td>−2,6% / +3,5%</td><td>Gần hòa QT &mdash; tham chiếu</td></tr>
+<tr><td>2020</td><td>+3,6%</td><td>−2,8% / +12,6%</td><td>COVID xuất hiện Q4</td></tr>
+    </tbody></table>
+  </section>
+  <section id="chuong-6">
+    <h2 class="section-title"><span class="num">VI</span>2020: Cú sốc COVID &mdash; bid-ask spread bùng nổ</h2>
+    <p>Năm 2020 đáng chú ý không vì premium (vẫn thấp +3,6%) mà vì <strong>bid-ask spread &mdash; chênh lệch mua/bán &mdash; nổ lên</strong>. Đây là <em>barometer căng thẳng thị trường</em> chính xác hơn cả premium.</p>
+    <div class="chart-box"><h4>📊 Bid-ask spread SJC theo năm (TB / max)</h4><div class="desc">Bar = spread TB năm, line = spread max. 2020 vọt lên 6,92% max &mdash; dấu hiệu thị trường đóng băng.</div><div class="chart-wrap"><canvas id="c5_bidask_yearly"></canvas></div></div>
+    <p>Nền bình thường, spread SJC ~0,4&ndash;0,9% (vài trăm nghìn/lượng). Nhưng trong đỉnh hoảng loạn COVID (tháng 3/2020), spread <strong>vọt lên 6,92%</strong> &mdash; tức chênh lệch mua/bán tới <em>3,5 triệu/lượng</em>. Ý nghĩa: SJC <strong>mua vào giá cao, bán ra giá thấp</strong> nhiều bất thường &mdash; nhà đầu tư nếu cần thanh khoản ngay sẽ lỗ nặng.</p>
+    <div class="callout red"><h4>⚠️ Bài học thanh khoản</h4><p>Premium nói về <em>khoảng cách với QT</em>, nhưng bid-ask spread nói về <em>chi phí giao dịch thực</em>. Năm hoảng loạn, spread mới là thứ ăn mòn lợi nhuận nhà đầu tư &mdash; không phải premium.</p></div>
+    <p>2020 cũng là năm volatility SJC nhảy lên <strong>14,4% annualized</strong> (so với 3-8% các năm 2014-2019) &mdash; thị trường VN bắt đầu &ldquo;sống động&rdquo; trở lại.</p>
+  </section>
+  <section id="chuong-7">
+    <h2 class="section-title"><span class="num">VII</span>2021&ndash;2022: Đỉnh premium lịch sử +31%</h2>
+    <p>Đây là <strong>2 năm định hình</strong> toàn bộ câu chuyện vàng VN. Premium từ +3,6% (2020) nhảy lên <strong>+15,9% (2021) rồi +31,2% (2022)</strong> &mdash; đỉnh điểm SJC đắt hơn vàng QT tới <em>43%</em> trong những ngày cao trào.</p>
+    <div class="chart-box"><h4>📊 SJC vs Vàng QT 2020-2026 (trung bình tháng)</h4><div class="desc">Hai đường tách nhau rõ từ 2021, khoảng cách lớn nhất 2022-2023.</div><div class="chart-wrap"><canvas id="c9_zoom_2020"></canvas></div></div>
+    <p>Sự tách biệt này <strong>không do vàng QT giảm</strong> &mdash; vàng QT cũng tăng mạnh (COVID → lạm phát → chiến tranh Nga-Ukraine). Nguyên nhân chính: <em>cầu vàng VN bùng nổ</em> hậu COVID, trong khi <em>cung nhập khẩu bị kìm</em> (quota, thủ tục). Kết quả: giá nội địa &ldquo;bay&rdquo; xa giá QT.</p>
+    <table class="tbl"><thead><tr><th>Năm</th><th>Premium TB</th><th>Premium max</th><th>Spread mua-bán TB</th><th>Giải thích</th></tr></thead><tbody>
+<tr><td>2021</td><td>+15,9%</td><td>+25,9%</td><td>0,59M</td><td>Sốt vàng bắt đầu</td></tr>
+<tr><td>2022</td><td>+31,2%</td><td><strong>+43,1%</strong></td><td>0,87M</td><td><strong>Đỉnh premium lịch sử</strong></td></tr>
+<tr><td>2023</td><td>+23,3%</td><td>+31,7%</td><td>0,78M</td><td>Vẫn cao nhưng hạ nhiệt</td></tr>
+    </tbody></table>
+    <p>Spread mua-bán cũng tăng theo (0,87M/lượng 2022 vs 0,2M 2010) &mdash; thị trường căng thẳng <em>kéo dài</em>, không chỉ cú sốc ngắn.</p>
+  </section>
+  <section id="chuong-8">
+    <h2 class="section-title"><span class="num">VIII</span>2023&ndash;2026: Vàng 150-191 triệu &amp; &ldquo;bình thường mới&rdquo;</h2>
+    <p>Giai đoạn hiện tại đánh dấu <strong>đỉnh giá tuyệt đối</strong> nhưng premium &ldquo;bình thường hóa&rdquo; trở lại. SJC chạm <strong>191,3 triệu/lượng (29/01/2026)</strong> &mdash; gấp 9 lần đầu chuỗi.</p>
+    <div class="chart-box"><h4>📊 Giá SJC 2009-2026 (trung bình tháng, triệu/lượng)</h4><div class="desc">Tăng từ 21M (2009) lên 191M (đỉnh 01/2026), ~7× trong 17 năm.</div><div class="chart-wrap"><canvas id="c1_sjc_full"></canvas></div></div>
+    <p>Quan trọng: <strong>premium ổn định quanh +11&ndash;14%</strong> (2024-2026), <em>không</em> lặp lại đỉnh +31% của 2022. Điều này cho thấy premium +30% là <em>hiện tượng ngoại lệ</em> (hậu COVID), còn +10-15% mới là &ldquo;bình thường mới&rdquo; sau 2020.</p>
+    <table class="tbl"><thead><tr><th>Năm</th><th>Premium TB</th><th>Giá SJC TB (triệu)</th><th>Volatility năm</th><th>Max drawdown</th></tr></thead><tbody>
+<tr><td>2024</td><td>+14,8%</td><td>81,9</td><td>14,1%</td><td>−16,7%</td></tr>
+<tr><td>2025</td><td>+11,7%</td><td>122,1</td><td>15,9%</td><td>−5,5%</td></tr>
+<tr><td>2026 (H1)</td><td>+13,8%</td><td>168,4</td><td><strong>24,5%</strong></td><td><strong>−27,6%</strong></td></tr>
+    </tbody></table>
+    <p>2026 đáng chú ý: <strong>volatility 24,5% + drawdown −27,6%</strong> &mdash; năm biến động mạnh nhất trong chuỗi. Vàng rơi từ đỉnh 191M về ~138M rồi hồi &mdash; biên độ chưa từng thấy trước 2020.</p>
+  </section>
+  <section id="chuong-9">
+    <h2 class="section-title"><span class="num">IX</span>Phân phối premium 17 năm: số liệu nói gì</h2>
+    <p>Thay vì chỉ nhìn trung bình, hãy xem <strong>toàn bộ phân phối</strong> của premium trong 3.132 ngày có dữ liệu.</p>
+    <div class="chart-box"><h4>📊 Phân phối premium SJC vs QT (3.132 ngày)</h4><div class="desc">Mỗi cột = số ngày có premium trong khoảng đó. Đỉnh phân phối ở đâu? Đuôi dài về phía nào?</div><div class="chart-wrap"><canvas id="c4_premium_hist"></canvas></div></div>
+    <p>Số liệu thực tế: premium <strong>trung bình +11,7%</strong> cả chuỗi, nhưng phân phối <em>lệch phải</em> &mdash; phần lớn ngày tập trung 0-15%, với đuôi dài kéo về +40% (2022). Ngày premium <em>âm</em> (SJC rẻ hơn QT) rất hiếm &mdash; chỉ vài % tổng số ngày.</p>
+    <table class="tbl"><thead><tr><th>Phân vị</th><th>Premium %</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td>P10 (10% ngày thấp nhất)</td><td>~0%</td><td>Ngày SJC hòa QT</td></tr>
+<tr><td>P50 (median)</td><td>+9,8%</td><td>Một nửa số ngày dưới mức này</td></tr>
+<tr><td>Trung bình</td><td>+11,7%</td><td>Bị kéo lên bởi đuôi 2022</td></tr>
+<tr><td>P90</td><td>+24%</td><td>10% ngày cao nhất</td></tr>
+<tr><td>Max</td><td>+43,1%</td><td>Đỉnh 2022</td></tr>
+    </tbody></table>
+    <p>Đọc hiểu: <strong>nếu mua SJC ngẫu nhiên một ngày trong 17 năm, 9/10 lần bạn sẽ trả premium 0-24%</strong>. Cái &ldquo;luôn đắt nhất thế giới&rdquo; đúng, nhưng biên độ dao động rất lớn.</p>
+  </section>
+  <section id="chuong-10">
+    <h2 class="section-title"><span class="num">X</span>Tại sao SJC luôn đắt hơn? 5 yếu tố</h2>
+    <p>Premium không phải ngẫu nhiên &mdash; nó là <strong>tổng của 5 yếu tố cấu trúc</strong>, mỗi yếu tố đóng góp một phần:</p>
+    <div class="compare"><div class="col before"><h4>Vàng QT (London/COMEX) <span class="tag">Tham chiếu</span></h4><ul class="bul"><li>Giá chuẩn thế giới, USD/oz</li><li>Thanh khoản khổng lồ</li><li>Không rào cản nhập khẩu</li></ul></div><div class="col after"><h4>Vàng SJC (VN) <span class="tag">Thực tế VN</span></h4><ul class="bul"><li>Quy đổi qua USD/VND</li><li>+ Thuế nhập khẩu + GST</li><li>+ Quota nhập khẩu (hạn chế)</li><li>+ Spread mua-bán thương lái</li><li>+ Premium tâm lý &lsquo;vàng SJC&rsquo;</li></ul></div></div>
+    <p>Chi tiết 5 yếu tố:</p>
+    <table class="tbl"><thead><tr><th>Yếu tố</th><th>Đóng góp ước tính</th><th>Biến động</th></tr></thead><tbody>
+<tr><td>1. Thuế &amp; phí nhập khẩu</td><td>~3-5%</td><td>Cố định theo chính sách</td></tr>
+<tr><td>2. Quota nhập khẩu (cung kìm)</td><td>~2-8%</td><td>Tăng khi cầu bùng nổ</td></tr>
+<tr><td>3. Spread mua-bán SJC</td><td>~0,5-2,7%/năm</td><td>Barometer căng thẳng</td></tr>
+<tr><td>4. Premium thương hiệu SJC</td><td>~2-4%</td><td>Tâm lý &lsquo;vàng chuẩn&rsquo;</td></tr>
+<tr><td>5. Chênh lệch thời gian chốt</td><td>~0-2%</td><td>Giờ giao dịch khác</td></tr>
+    </tbody></table>
+    <p>Tổng cộng: <strong>~8-21% premium cấu trúc</strong> trong điều kiện bình thường, có thể phình lên +30%+ khi yếu tố (2) quota và (4) tâm lý cùng bùng nổ &mdash; đúng như 2022.</p>
+    <div class="callout info"><h4>📚 Giải thích</h4><p>Yếu tố (2) quota là <em>van điều tiết</em> quan trọng nhất. Khi NHNN siết quota nhập vàng (như 2013, 2022), cung VN khô hạn → giá nội địa tách rời QT.</p></div>
+  </section>
+  <section id="chuong-11">
+    <h2 class="section-title"><span class="num">XI</span>Độ trễ: giá QT biến → SJC phản ứng sau bao lâu?</h2>
+    <p>Câu hỏi thực tế: nếu vàng QT tăng đêm qua, <strong>SJC có tăng theo vào sáng hôm sau không</strong>? Phân tích cross-correlation trên 3.132 ngày trả lời:</p>
+    <div class="chart-box"><h4>📊 Cross-correlation: returns QT hôm nay vs SJC sau k ngày</h4><div class="desc">Lag 0 = cùng ngày. Peak ở lag 0 nghĩa là SJC phản ứng ngay trong ngày.</div><div class="chart-wrap"><canvas id="c8_lag_corr"></canvas></div></div>
+    <p>Kết quả bất ngờ: <strong>peak correlation ở lag 0 (cùng ngày), r = 0,36</strong>. Nghĩa là SJC <em>phản ứng ngay trong ngày</em> khi QT biến động &mdash; không có trễ nhiều ngày như tưởng tượng. Nhưng r chỉ 0,36 (không phải 1.0) vì <strong>premium hấp thụ một phần biến động</strong>.</p>
+    <table class="tbl"><thead><tr><th>Chỉ số</th><th>Giá trị</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td>Peak lag</td><td>0 ngày</td><td>SJC phản ứng cùng ngày QT</td></tr>
+<tr><td>Peak r</td><td>0,36</td><td>Tương quan trung bình &mdash; không hoàn toàn theo</td></tr>
+<tr><td>Follow-rate 1 ngày</td><td>56,8%</td><td>Khi QT tăng, SJC tăng hôm sau 57% lần</td></tr>
+    </tbody></table>
+    <p>Đọc hiểu: <strong>57% cú lên của QT được SJC &ldquo;theo&rdquo; trong ngày hôm sau</strong>. 43% còn lại bị premium &ldquo;nuốt&rdquo; &mdash; tức khi QT tăng mạnh, premium <em>co lại</em> thay vì giá SJC tăng tương đương. Đây là cơ chế tự điều chỉnh.</p>
+  </section>
+  <section id="chuong-12">
+    <h2 class="section-title"><span class="num">XII</span>Bid-ask spread: barometer căng thẳng thị trường</h2>
+    <p>Premium nói về khoảng cách với QT, nhưng <strong>bid-ask spread (chênh lệch mua/bán) nói về sức khỏe nội tại</strong> của thị trường SJC. Khi spread nở ra, đó là tín hiệu <em>thanh khoản đang khô</em>.</p>
+    <table class="tbl"><thead><tr><th>Năm</th><th>Spread TB %</th><th>Spread TB (triệu/lượng)</th><th>Tình trạng</th></tr></thead><tbody>
+<tr><td>2010-2019</td><td>0,3-0,9%</td><td>0,06-0,25M</td><td>Bình thường</td></tr>
+<tr><td>2020</td><td>1,24%</td><td>0,65M</td><td>COVID &mdash; căng thẳng</td></tr>
+<tr><td>2022</td><td>1,30%</td><td>0,87M</td><td>Đỉnh premium &mdash; căng</td></tr>
+<tr><td>2024</td><td><strong>2,71%</strong></td><td><strong>2,21M</strong></td><td><strong>Spread nổ &mdash; bất thường</strong></td></tr>
+<tr><td>2026</td><td>1,76%</td><td>2,91M</td><td>Cao nhưng hạ</td></tr>
+    </tbody></table>
+    <p>2024 là năm đáng lo ngại: spread TB <strong>2,71%</strong> (max 5,26%) &mdash; cao gấp <em>3 lần</em> giai đoạn bình thường. Nghĩa là mỗi lượng SJC giao dịch, nhà đầu tư &ldquo;đốt&rdquo; ~2,2 triệu vào spread. Tích lũy cả năm, đây là chi phí ẩn khổng lồ.</p>
+    <div class="callout warn"><h4>⚠️ Chi phí ẩn</h4><p>Nhiều nhà đầu tư chỉ nhìn premium vs QT, nhưng <strong>spread mới là thứ thực sự ăn mòn lợi nhuận khi giao dịch nhiều</strong>. Năm spread cao (2020, 2024), mua-bán lướt sóng SJC gần như chắc lỗ.</p></div>
+  </section>
+  <section id="chuong-13">
+    <h2 class="section-title"><span class="num">XIII</span>Volatility &amp; drawdown 17 năm</h2>
+    <p>Vàng được coi là &ldquo;trú ẩn an toàn&rdquo;, nhưng số liệu cho thấy <strong>biến động SJC không hề thấp</strong> &mdash; đặc biệt từ 2020 trở đi.</p>
+    <div class="chart-box"><h4>📊 Volatility (bar) & max drawdown (line) theo năm</h4><div class="desc">2026 vol 24,5% + drawdown −27,6% &mdash; năm dữ dội nhất.</div><div class="chart-wrap"><canvas id="c6_vol_drawdown"></canvas></div></div>
+    <p>Quan sát: volatility <strong>tăng rõ rệt sau 2020</strong> &mdash; từ mức 3-8% (2014-2019) lên 12-24% (2020-2026). Vàng SJC ngày càng &ldquo;cư xử&rdquo; như tài sản rủi ro, không còn &ldquo;an toàn&rdquo; như định kiến.</p>
+    <table class="tbl"><thead><tr><th>Năm</th><th>Vol năm</th><th>Max drawdown</th><th>Lãi/giảm năm</th><th>Đặc điểm</th></tr></thead><tbody>
+<tr><td>2017</td><td>4,6%</td><td>−4,0%</td><td>+0,1%</td><td>Yên tĩnh nhất</td></tr>
+<tr><td>2020</td><td>14,4%</td><td>−13,7%</td><td>+31,6%</td><td>COVID &mdash; tăng mạnh</td></tr>
+<tr><td>2024</td><td>14,1%</td><td>−16,7%</td><td>+12,3%</td><td>Biến động cao</td></tr>
+<tr><td>2025</td><td>15,9%</td><td>−5,5%</td><td><strong>+79,8%</strong></td><td>Năm tăng mạnh nhất</td></tr>
+<tr><td>2026</td><td><strong>24,5%</strong></td><td><strong>−27,6%</strong></td><td>−4,8%</td><td>Hồi sau đỉnh</td></tr>
+    </tbody></table>
+    <p>Drawdown −27,6% năm 2026 nghĩa là: <strong>từ đỉnh 191M, SJC từng rơi về ~138M</strong> &mdash; mất 53 triệu/lượng. Nếu mua đỉnh, mất hơn 1/4 giá trị trong vài tháng.</p>
+  </section>
+  <section id="chuong-14">
+    <h2 class="section-title"><span class="num">XIV</span>Vàng nhẫn vs vàng miếng: 2 thị trường trong 1</h2>
+    <p>SJC có 2 sản phẩm chính: <em>vàng miếng</em> (1L, đầu tư) và <em>vàng nhẫn</em> 99,99% (trang sức + đầu tư). Phân tích chênh lệch giữa 2 loại cho thấy <strong>tâm lý thị trường phân hóa</strong>.</p>
+    <div class="chart-box"><h4>📊 Vàng miếng (bar) đắt hơn vàng nhẫn (ring) theo năm</h4><div class="desc">Bar = chênh lệch TB, line = min/max. 2022 nhẫn đắt hơn miếng bất thường.</div><div class="chart-wrap"><canvas id="c7_ring_vs_bar"></canvas></div></div>
+    <p>Pattern thú vị: bình thường <em>miếng đắt hơn nhẫn</em> (premium thương hiệu + thanh khoản). Nhưng <strong>2022, ngược lại &mdash; nhẫn đắt hơn miếng +24%</strong> (max +30%)!</p>
+    <table class="tbl"><thead><tr><th>Năm</th><th>Miếng vs nhẫn</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td>2019</td><td>−0,4%</td><td>Gần hòa &mdash; bình thường</td></tr>
+<tr><td>2021</td><td>+9,2%</td><td>Miếng đắt hơn &mdash; quay về</td></tr>
+<tr><td><strong>2022</strong></td><td><strong>+24% (nhẫn đắt hơn!)</strong></td><td><strong>Sốt vàng nhẫn — tâm lý</strong></td></tr>
+<tr><td>2024</td><td>+9,4%</td><td>Miếng đắt hơn bình thường</td></tr>
+<tr><td>2026</td><td>+0,4%</td><td>Gần hòa</td></tr>
+    </tbody></table>
+    <div class="callout info"><h4>🧠 Góc nhìn tâm lý</h4><p>Sốt vàng nhẫn 2022 là hiện tượng <em>herding</em> điển hình: truyền thông đồn &lsquo;vàng nhẫn tăng giá&rsquo; → người dân đổ xô mua nhẫn → push giá nhẫn vượt miếng. Đây là <strong>bong bóng tâm lý cục bộ</strong>, không liên quan tới giá vàng QT.</p></div>
+  </section>
+  <section id="insight-1">
+    <h2 class="section-title"><span class="num">★1</span>Insight: Chênh lệch các loại vàng theo thời gian</h2>
+    <p>SJC không chỉ bán vàng miếng 1L &mdash; còn có <em>vàng nhẫn 99,99%</em>, <em>nữ trang 99%</em>, <em>nữ trang 75%</em>. So sánh giá 4 loại (quy về % giá SJC 1L) cho thấy <strong>phân hóa tâm lý rõ rệt</strong>.</p>
+    <div class="chart-box"><h4>📊 Các loại vàng dưới dạng % giá SJC 1L (theo năm)</h4><div class="desc">100% = SJC miếng. Nhẫn/nữ trang thấp hơn = rẻ hơn miếng. Chú ý 2022 nhẫn tụt về 80%.</div><div class="chart-wrap"><canvas id="c11_gold_types"></canvas></div></div>
+    <p>3 pattern nổi bật:</p>
+    <table class="tbl"><thead><tr><th>Loại vàng</th><th>2022 (sốt vàng)</th><th>2025-2026</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td>SJC 1L miếng</td><td>100% (tham chiếu)</td><td>100%</td><td>Vàng đầu tư chuẩn</td></tr>
+<tr><td>Nhẫn 99,99%</td><td><strong>80,7%</strong> (tụt 19%)</td><td>99,6% (gần hòa)</td><td>Sốt miếng 2022 &mdash; nhẫn rẻ tương đối</td></tr>
+<tr><td>Nữ trang 99%</td><td>79,2%</td><td>97,8%</td><td>Theo nhẫn nhưng rẻ hơn</td></tr>
+<tr><td>Nữ trang 75%</td><td>(chưa có data)</td><td>74,1%</td><td>Vàng kém hạt &mdash; rẻ ~25%</td></tr>
+    </tbody></table>
+    <p>Đọc hiểu: <strong>2022, vàng miếng đắt hơn nhẫn tới 19%</strong> &mdash; hiện tượng &ldquo;sốt vàng miếng&rdquo; do tâm lý trú ẩn đổ vào SJC 1L (thanh khoản cao nhất). Khi tâm lượng bình thường (2025-2026), nhẫn và miếng gần hòa, chỉ chênh ~0,4%.</p>
+    <div class="callout info"><h4>🧠 Vì sao quan trọng</h4><p>Ai mua vàng nhẫn 2022 thay vì miếng <strong>tiết kiệm được 19%</strong> cùng lượng vàng 99,99%. Nhưng nhẫn thanh khoản kém hơn miếng &mdash; đánh đổi premium khi bán. Đây là <em>trade-off thanh khoản vs giá mua</em> thường bị bỏ qua.</p></div>
+  </section>
+  <section id="insight-2">
+    <h2 class="section-title"><span class="num">★2</span>Insight: Premium co giãn &mdash; tương quan với yếu tố nào?</h2>
+    <p>Premium SJC vs QT không ngẫu nhiên &mdash; nó <strong>tương quan với 3 yếu tố</strong> đo được bằng correlation (lưu ý: tương quan ≠ nhân quả, xem caveat cuối chương):</p>
+    <div class="chart-box"><h4>📊 Correlation: premium vs 3 driver</h4><div class="desc">Bar = correlation với level premium; line = correlation với thay đổi premium hàng ngày. USD/VND change có r âm mạnh nhất.</div><div class="chart-wrap"><canvas id="c12_premium_drivers"></canvas></div></div>
+    <table class="tbl"><thead><tr><th>Driver</th><th>Corr. với level</th><th>Corr. với Δpremium</th><th>Giải thích</th></tr></thead><tbody>
+<tr><td>USD/VND thay đổi</td><td>r = &minus;0,03</td><td><strong>r = &minus;0,49</strong></td><td>VND yếu ↔ vàng QT tính VND tăng ↔ premium co lại</td></tr>
+<tr><td>Volatility vàng QT 20d</td><td>r = +0,02</td><td>r = 0,00</td><td>Gần như không tương quan &mdash; QT vol không đi kèm premium</td></tr>
+<tr><td>Bid-ask spread SJC</td><td><strong>r = +0,30</strong></td><td>r = &minus;0,03</td><td>Spread cao ↔ premium cao (cùng tín hiệu căng thẳng)</td></tr>
+    </tbody></table>
+    <p>Tương quan nổi bật nhất: <strong>USD/VND thay đổi có r = &minus;0,49 với thay đổi premium (cùng ngày)</strong>. Khi VND mất giá (USD/VND tăng), <em>premium thường co lại</em> &mdash; vì vàng QT tính bằng VND đã tự tăng theo tỷ giá, thu hẹp khoảng cách với SJC. Ngược lại, khi VND ổn định, premium có xu hướng giãn ra.</p>
+    <div class="callout warn"><h4>⚠️ Tương quan ≠ nhân quả</h4><p>Phân tích lag cho thấy <strong>peak ở lag 0 (cùng ngày)</strong>, không có độ trễ rõ 1 chiều &mdash; nghĩa là USD/VND và premium <em>phản ứng đồng thời</em>, có thể cùng phản ứng với yếu tố thứ 3 (Fed, dòng vốn), hoặc 2 chiều (premium sốt → NHNN can thiệp tỷ giá). Bài này chỉ báo <strong>tương quan</strong>, không claim A gây ra B.</p></div>
+    <p>Driver thứ hai (bid-ask spread r=+0,30): <strong>khi thị trường căng thẳng, spread lẫn premium cùng tăng</strong> &mdash; cùng phản ánh thiếu thanh khoản. Volatility QT gần như không tương quan &mdash; premium VN chủ yếu là hiện tượng nội địa, không nhập từ biến động QT.</p>
+  </section>
+  <section id="insight-3">
+    <h2 class="section-title"><span class="num">★3</span>Insight: SJC vs VN-Index &mdash; 2 tài sản, 2 câu chuyện</h2>
+    <p>Câu hỏi phổ biến: <em>nên mua vàng hay mua cổ phiếu?</em> 17 năm dữ liệu cho thấy đây là <strong>2 asset class gần như hoàn toàn tách biệt</strong>.</p>
+    <div class="kpi-grid">
+      <div class="kpi amber"><div class="val">+615%</div><div class="lab">SJC 17 năm</div></div>
+      <div class="kpi cyan"><div class="val">+339,5%</div><div class="lab">VN-Index 17 năm</div></div>
+      <div class="kpi violet"><div class="val">0,028</div><div class="lab">Correlation daily</div></div>
+      <div class="kpi red"><div class="val">−45%</div><div class="lab">VN-Index max drawdown</div></div>
+    </div>
+    <div class="chart-box"><h4>📊 Lãi/giảm năm: SJC vs VN-Index</h4><div class="desc">Bar = SJC, line = VN-Index. Nhiều năm đối nghịch: 2017 VNIndex +48% SJC +0%, 2022 SJC +8% VNIndex −33%.</div><div class="chart-wrap"><canvas id="c13_sjc_vnindex"></canvas></div></div>
+    <p>3 phát hiện đắt giá:</p>
+    <table class="tbl"><thead><tr><th></th><th>SJC vàng</th><th>VN-Index cổ phiếu</th></tr></thead><tbody>
+<tr><td>Tổng return 17 năm</td><td>+615% (gấp ~1,8×)</td><td><strong>+339,5%</strong></td></tr>
+<tr><td>Max drawdown</td><td>−32,5% (nhẹ hơn)</td><td><strong>−45,0%</strong> (sâu hơn)</td></tr>
+<tr><td>Correlation daily</td><td><strong>0,028</strong> (gần 0)</td><td>dao động &minus;0,24 → +0,27 khi lăn 252 ngày</td></tr>
+    </tbody></table>
+    <p><strong>Correlation daily 0,028</strong> thấp &mdash; nhưng cần đọc kỹ: rolling 252 ngày dao động từ <strong>&minus;0,24 đến +0,27</strong>, không phải cố định 0. Tức là <em>ngắn hạn</em> vàng và cổ phiếu gần như không di chuyển cùng nhau, nhưng <em>dài hạn</em> cả 2 cùng xu hướng tăng (2009-2026). Chúng <strong>không thay thế nhau trong ngắn hạn</strong> &mdash; phục vụ mục đích khác: vàng = trú ẩn giá trị, cổ phiếu = tăng trưởng.</p>
+    <p>Pattern đối nghịch rõ nhất:</p>
+    <div class="compare"><div class="col before"><h4>Năm cổ phiếu thắng <span class="tag">CK mạnh</span></h4><ul class="bul"><li>2017: VNIndex +48% vs SJC +0,3%</li><li>2021: VNIndex +35,7% vs SJC +9,9%</li><li>2025: VNIndex +40,9% vs SJC +81,5% (cả 2 thắng)</li></ul></div><div class="col after"><h4>Năm vàng thắng <span class="tag">Vàng mạnh</span></h4><ul class="bul"><li>2011: SJC +16% vs VNIndex −27,5%</li><li><strong>2022: SJC +8% vs VNIndex −33%</strong></li><li>2020: SJC +31% vs VNIndex +15%</li></ul></div></div>
+    <div class="callout info"><h4>💡 Đọc hiểu</h4><p>Vàng SJC và VN-Index <strong>không phải đối thủ</strong> &mdash; chúng làm việc ở chu kỳ khác. Vàng thắng khi <em>tâm lý phòng thủ</em> lên (2011, 2022), cổ phiếu thắng khi <em>nguy cơ rủi ro</em> (risk-on, 2017, 2021). Đa hóa qua cả 2 có ý nghĩa &mdash; không phải chọn 1.</p></div>
+  </section>
+  <section id="insight-4">
+    <h2 class="section-title"><span class="num">★4</span>Đánh giá rủi ro: Drawdown &amp; thời gian phục hồi</h2>
+    <p>Return cao không đủ &mdash; cần biết <strong>rủi ro đi kèm</strong>. Drawdown (mức sụt từ đỉnh) và thời gian phục hồi là 2 thước đo rủi ro quan trọng. 17 năm dữ liệu cho thấy 3 tài sản có <em>chữ ký rủi ro rất khác nhau</em>.</p>
+    <div class="chart-box"><h4>📊 Drawdown theo thời gian: SJC vs Vàng QT vs VN-Index (trung bình quý)</h4><div class="desc">Mỗi đường = % sụt từ đỉnh gần nhất. Đáy càng sâu = sập càng nặng. VN-Index sâu nhất nhưng hồi nhanh; SJC nông hơn nhưng chìm lâu.</div><div class="chart-wrap"><canvas id="c14_drawdown"></canvas></div></div>
+    <p>3 chỉ số rủi ro chính (toàn bộ chuỗi 2009-2026, 3.122 ngày chung):</p>
+    <table class="tbl"><thead><tr><th>Tài sản</th><th>Max drawdown</th><th>Số ngày underwater</th><th>Thời gian phục hồi dài nhất</th></tr></thead><tbody>
+<tr><td>SJC vàng</td><td><strong>−32,5%</strong> (nông nhất)</td><td>2.909 ngày (93%)</td><td><strong>1.512 ngày (~4,1 năm)</strong></td></tr>
+<tr><td>Vàng QT</td><td>−42,3%</td><td>2.916 ngày (93%)</td><td>1.508 ngày (~4,1 năm)</td></tr>
+<tr><td>VN-Index</td><td><strong>−45,0%</strong> (sâu nhất)</td><td>2.963 ngày (95%)</td><td>902 ngày (~2,5 năm)</td></tr>
+    </tbody></table>
+    <p>Paradox quan trọng: <strong>SJC sập nông nhất nhưng phục hồi lâu nhất</strong>. VN-Index sập sâu hơn (−45% vs −32,5%) nhưng quay lại đỉnh nhanh hơn (902 vs 1.512 ngày). Nghĩa là <em>rủi ro không chỉ là biên độ sập, mà còn là thời gian chờ</em>.</p>
+    <div class="callout red"><h4>⚠️ Vì sao quan trọng với nhà đầu tư</h4><p>Nếu mua SJC ở đỉnh 2012-2013 (~46 triệu), mất <strong>4+ năm</strong> mới thấy giá vượt đỉnh cũ (giữa 2016). Trong khi ai mua VN-Index đỉnh 2007/2018 sập &minus;45% nhưng ~2,5 năm đã hồi. <strong>Vàng &lsquo;an toàn&rsquo; không phải &lsquo;an toàn về thời gian&rsquo;</strong> &mdash; nó an toàn về biên độ.</p></div>
+    <div class="callout warn"><h4>🧠 Góc nhìn tâm lý</h4><p>Loss aversion (Kahneman) giải thích vì sao drawdown thời gian dài đau hơn drawdown sâu ngắn: <em>sự đau khổ kéo dài</em> làm nhà đầu tư bán thua ở đáy. SJC với 4 năm underwater là &lsquo;bài test tâm lý&rsquo; khắc nghiệt hơn VN-Index sập nhanh hồi nhanh.</p></div>
+    <p>Đọc thêm: <strong>93-95% số ngày</strong> cả 3 tài sản đều ở trạng thái underwater (dưới đỉnh). Đây là <em>bình thường</em> &mdash; thị trường luôn ở gần đỉnh hơn đáy, nhưng phần lớn thời gian &ldquo;chưa về đỉnh mới&rdquo;. Hiểu điều này giúp không hoảng loạn khi giá &ldquo;còn xa đỉnh&rdquo;.</p>
+  </section>
+  <section id="chuong-15">
+    <h2 class="section-title"><span class="num">XV</span>Tâm lý &ldquo;trú ẩn&rdquo;: vàng VN qua lăng kính tài chính hành vi</h2>
+    <p>Tại sao người Việt giữ vàng dù premium cao? Số liệu 17 năm cho thấy đây không phải quyết định &ldquo;phi lý&rdquo; &mdash; nó phản ánh <strong>cấu trúc động lực</strong> cụ thể, giải thích được bằng tài chính hành vi.</p>
+    <div class="compare"><div class="col before"><h4>Logic cổ điển (&lsquo;phi lý&rsquo;) <span class="tag">Lý thuyết</span></h4><ul class="bul"><li>Premium +11% = đắt quá</li><li>Spread 2,7% = lỗ giao dịch</li><li>Nên mua vàng QT thay SJC</li></ul></div><div class="col after"><h4>Logic hành vi (thực tế VN) <span class="tag">Thực tế</span></h4><ul class="bul"><li>Vàng QT = không mua được ở VN</li><li>Vàng SJC = thanh khoản OTC tức thì</li><li>Trú ẩn lạm phát VND &mdash; +79% 2025</li><li>Herding: &lsquo;mọi người đều mua&rsquo;</li></ul></div></div>
+    <p>3 cơ chế chính (theo Kahneman, Shiller):</p>
+    <table class="tbl"><thead><tr><th>Cơ chế</th><th>Tác giả gốc</th><th>Biểu hiện ở VN</th></tr></thead><tbody>
+<tr><td>Loss aversion (~2:1)</td><td>Kahneman &amp; Tversky 1979</td><td>Giữ vàng dù lỗ spread vì sợ &lsquo;bán rồi giá tăng&rsquo;</td></tr>
+<tr><td>Herding / herd behavior</td><td>Shiller 2000 (Irrational Exuberance)</td><td>Sốt vàng 2022 &mdash; mua vì &lsquo;mọi người mua&rsquo;</td></tr>
+<tr><td>Mental accounting</td><td>Thaler 1985</td><td>Tách &lsquo;vàng trú ẩn&rsquo; khỏi &lsquo;vàng đầu tư&rsquo; &mdash; không tính spread</td></tr>
+    </tbody></table>
+    <p>Đặc biệt, <strong>2025 (SJC +79,8% năm)</strong> là case study herding rõ nhất: vàng QT cũng tăng nhưng <em>không</em> +80% &mdash; phần lớn đợt tăng đó là <strong>premium giãn ra</strong> do cầu VN bùng nổ, không phải vàng QT đắt lên.<sup class="ref">4</sup></p>
+  </section>
+  <section id="chuong-16">
+    <h2 class="section-title"><span class="num">XVI</span>3-tier cascade: London → Shanghai → Sài Gòn</h2>
+    <p>Vàng VN không tồn tại cô lập &mdash; nó là <strong>chốt cuối</strong> của một chuỗi premium đi từ tâm thế giới ra biên.</p>
+    <div class="timeline">
+      <div class="tl-item green"><div class="tl-year">Tier 1: London/COMEX</div><div class="tl-body">Giá vàng QT chuẩn (USD/oz). Thanh khoản lớn nhất, premium = 0.</div></div>
+      <div class="tl-item amber"><div class="tl-year">Tier 2: Shanghai</div><div class="tl-body">GC=F × USDCNY. Shanghai Gold Exchange có premium ~1-2% (quota nhập vàng TQ).</div></div>
+      <div class="tl-item red"><div class="tl-year">Tier 3: Sài Gòn (SJC)</div><div class="tl-body">Tier 2 × (USDVND/USDCNY) + premium VN ~10-15%. Chốt cuối, premium cao nhất.</div></div>
+    </div>
+    <p>Cross-rate phân tích: <strong>VND/CNY trung bình 3.360</strong> (2009-2026). Nghĩa là 1 nhân dân tệ ≈ 3.360 đồng. Qua path này, giá vàng &ldquo;ngầm&rdquo; TQ quy ra VND/lượng có thể tính &mdash; và chênh lệch với SJC chính là <strong>premium VN thuần</strong> (sau khi trừ premium TQ).</p>
+    <div class="callout info"><h4>📚 Tại sao quan trọng</h4><p>Cascade này cho thấy premium SJC = premium TQ + premium VN. TQ (với TGE lớn hơn,quota lỏng hơn) premium thấp hơn VN &mdash; VN &lsquo;thêm&rsquo; phần riêng do thị trường nhỏ + kiểm soát nhập khẩu chặt hơn.</p></div>
+    <p>Limitation: bài này dùng <em>GC=F × CNY</em> làm proxy cho Shanghai (không có data SGE trực tiếp), nên premium TQ là ước tính. Nhưng thứ bậc <strong>London &lt; Shanghai &lt; Sài Gòn</strong> về premium là pattern nhất quán.</p>
+  </section>
+  <section id="insight-5">
+    <h2 class="section-title"><span class="num">★5</span>Vậy nên &mdash; đọc trạng thái thị trường SJC</h2>
+    <p>17 chương số liệu cần một takeaway đọc-được. Chương này tổng hợp 2 chỉ số then chốt &mdash; <strong>premium</strong> (giá có đắt không) và <strong>bid-ask spread</strong> (thanh khoản có căng không) &mdash; thành framework <strong>mô tả trạng thái</strong>. <em>Quan trọng: đây không phải công cụ dự báo</em> (xem backtest bên dưới).</p>
+    <p>Ngưỡng dựa trên phân vị thực tế của phân phối premium 17 năm (P25/P50/P75), không tùy ý:</p>
+    <table class="tbl"><thead><tr><th>Trạng thái</th><th>Premium (% days)</th><th>Spread</th><th>Đặc điểm</th></tr></thead><tbody>
+<tr><td><span style='color:#10d981'>● Thấp</span></td><td>&lt; 4,2% (P25, ~25% ngày)</td><td>&lt; 1%</td><td>SJC sát QT, thanh khoản tốt</td></tr>
+<tr><td><span style='color:#fbbf24'>● Trung bình</span></td><td>4,2-9,5% (P25-P50)</td><td>&lt; 1%</td><td>Premium ở mức thường gặp</td></tr>
+<tr><td><span style='color:#f97316'>● Cao</span></td><td>9,5-15,5% (P50-P75)</td><td>1-2%</td><td>Premium giãn, spread nở</td></tr>
+<tr><td><span style='color:#ef4444'>● Rất cao</span></td><td>&gt; 15,5% (P75+, ~25% ngày)</td><td>&gt; 2%</td><td>Giai đoạn căng (2021-2023)</td></tr>
+    </tbody></table>
+    <p>Ma trận (premium × spread) thực tế &mdash; <strong>% ngày rơi vào mỗi tổ hợp</strong> (3.132 ngày):</p>
+    <table class="tbl"><thead><tr><th></th><th>spread &lt;1%</th><th>spread 1-2%</th><th>spread 2-3%</th><th>spread &gt;3%</th></tr></thead><tbody>
+<tr><td>premium &lt;8%</td><td><strong>35%</strong> (phổ biến nhất)</td><td>3,2%</td><td>4,3%</td><td>0,8%</td></tr>
+<tr><td>premium 8-15%</td><td>22,4%</td><td>6,2%</td><td>1,2%</td><td>0%</td></tr>
+<tr><td>premium 15-25%</td><td>9,1%</td><td>8,0%</td><td>1,6%</td><td>0,2%</td></tr>
+<tr><td>premium &gt;25%</td><td>0,8%</td><td>5,3%</td><td>1,3%</td><td><strong>0,7%</strong> (hiếm)</td></tr>
+    </tbody></table>
+    <p>Đa số ngày (35%) nằm ở góc &ldquo;yên&rdquo;: premium thấp + spread thấp. Góc &ldquo;hoảng loạn&rdquo; (premium&gt;25% + spread&gt;3%) chỉ <strong>0,7% thời gian</strong> &mdash; cực hiếm, chủ yếu 2022.</p>
+    <div class="callout red"><h4>⚠️ Backtest: framework KHÔNG dự báo drawdown</h4><p>Test thực tế &mdash; chia 3.132 ngày theo 4 vùng premium, đo drawdown forward 12 tháng: median <strong>&minus;9,7% đến &minus;12,9%</strong> ở MỌI vùng (gần như giống nhau). Thậm chí vùng &lsquo;thấp&rsquo; có decile xấu nhất &minus;23,7% &mdash; <strong>premium thấp không bảo vệ khỏi drawdown</strong>. Kết luận: framework này <strong>chỉ mô tả trạng thái</strong>, không dự báo rủi ro forward.</p></div>
+    <p>Ba takeaway thực tế (đã verify):</p>
+    <table class="tbl"><thead><tr><th></th><th>#</th><th>Phát hiện có data hỗ trợ</th></tr></thead><tbody>
+<tr><td>1</td><td>Spread là chi phí ẩn xác định được</td><td>Năm spread 2,7% (2024), mỗi lượng mua-bán mất ~2,2 triệu &mdash; <strong>biết trước được</strong>, không cần dự báo</td></tr>
+<tr><td>2</td><td>Premium cho biết &lsquo;đang trả phí bao nhiêu&rsquo;</td><td>Không cho biết giá sẽ lên/xuống &mdash; nhưng cho biết khoảng cách vs QT hiện tại</td></tr>
+<tr><td>3</td><td>Vàng &lsquo;an toàn&rsquo; = an toàn về biên độ, không về thời gian</td><td>Drawdown nông (&minus;32%) nhưng phục hồi 4+ năm (★4) &mdash; cần vốn kiên nhẫn</td></tr>
+    </tbody></table>
+    <div class="callout info"><h4>💡 Tóm tắt</h4><p>Framework <strong>không dự báo</strong> &mdash; nó <em>đo</em>. Nó cho biết: hôm nay bạn đang trả premium bao nhiêu, mất spread bao nhiêu. Quyết định mua/bán phụ thuộc mục tiêu (trú ẩn vs đầu tư), thời gian nắm giữ, khẩu vị rủi ro &mdash; những thứ framework không thay bạn quyết.</p></div>
+  </section>
+  <section id="insight-6">
+    <h2 class="section-title"><span class="num">★6</span>Thực hư: vàng SJC trong 17 năm</h2>
+    <p>6 nhận định phổ biến &mdash; mỗi cái <strong>verify bằng số liệu</strong>. Phán quyết: &check; đúng, &cross; sai, &asymp; nửa đúng.</p>
+    <div class="chart-box"><h4>📊 SJC nominal vs điều chỉnh lạm phát (2009=100, triệu/lượng)</h4><div class="desc">Đường trên = giá niêm yết. Đường dưới = sức mua thực (chia cho CPI). Khoảng cách = lạm phát ăn mòn.</div><div class="chart-wrap"><canvas id="c15_inflation"></canvas></div></div>
+    <p>Phát hiện quan trọng nhất: SJC nominal +608%, nhưng <strong>real (điều chỉnh lạm phát) chỉ +226%</strong> &mdash; lạm phát 17 năm ăn &minus;117% điểm phần trăm. Đặc biệt <strong>2013-2015 vàng giảm sức mua &minus;30%</strong> (từ 31M real xuống 22M real), chỉ vượt đỉnh real 2012 vào khoảng 2022.</p>
+    <table class="tbl"><thead><tr><th>Nhận định phổ biến</th><th>Số liệu verify</th><th>Phán quyết</th></tr></thead><tbody>
+<tr><td>&ldquo;Vàng luôn tăng&rdquo;</td><td>2013: &minus;25,6%, 2015: &minus;7% nominal; 2014-2015 real &minus;30%. Có giai đoạn giảm nhiều năm</td><td><span style='color:#ef4444'>&cross; Sai</span></td></tr>
+<tr><td>&ldquo;Vàng bảo vệ lạm phát&rdquo;</td><td>Real return +226% dài hạn OK, nhưng 2013-2015 mất &minus;30% sức mua, phải chờ ~10 năm hồi</td><td><span style='color:#fbbf24'>&asymp; Nửa đúng</span></td></tr>
+<tr><td>&ldquo;Vàng an toàn&rdquo;</td><td>Drawdown &minus;32%, recovery 4+ năm (★4)</td><td><span style='color:#fbbf24'>&asymp; Nửa đúng</span> (biên độ OK, thời gian không)</td></tr>
+<tr><td>&ldquo;Premium cao = sắp tăng tiếp&rdquo;</td><td>Backtest (★5): forward DD giống nhau mọi vùng premium</td><td><span style='color:#ef4444'>&cross; Sai</span></td></tr>
+<tr><td>&ldquo;Premium SJC = lừa đảo&rdquo;</td><td>5 yếu tố cấu trúc thật (chương X): quota, thuế, thanh khoản</td><td><span style='color:#ef4444'>&cross; Sai</span> (chi phí thật, không bóc lột)</td></tr>
+<tr><td>&ldquo;Spread ăn hết lời&rdquo;</td><td>Spread 2,7%/giao dịch 2024 &mdash; đúng cho trader, sai cho holder dài hạn</td><td><span style='color:#10d981'>&check; Đúng cho trader</span></td></tr>
+    </tbody></table>
+    <p>Đọc cùng: 6 nhận định trên <strong>3 sai, 2 nửa đúng, 1 đúng (có điều kiện)</strong> &mdash; cả phe lẫn phe phản đối đều có điểm đúng và sai. Sự thật nằm ở giữa: vàng SJC là <strong>công cụ có đặc tính rõ</strong> (trú ẩn dài hạn, rủi ro ngắn hạn), không phải lời hứa &lsquo;luôn tăng&rsquo; hay &lsquo;lừa đảo&rsquo;.</p>
+  </section>
+  <section id="chuong-17">
+    <h2 class="section-title"><span class="num">XVII</span>Kết luận: Vàng Việt Nam không chỉ là vàng</h2>
+    <p>17 năm dữ liệu cho thấy vàng SJC không đơn thuần là &ldquo;vàng&rdquo; &mdash; nó là <strong>vàng + một loạt premium cấu trúc</strong> phản ánh đặc thù thị trường VN: kiểm soát nhập khẩu, tâm lý trú ẩn, thanh khoản OTC, và thương hiệu SJC.</p>
+    <div class="kpi-grid">
+      <div class="kpi amber"><div class="val">+11,7%</div><div class="lab">Premium TB 17 năm</div></div>
+      <div class="kpi red"><div class="val">+43,1%</div><div class="lab">Premium max (2022)</div></div>
+      <div class="kpi green"><div class="val">+0,5%</div><div class="lab">Premium min (2019)</div></div>
+      <div class="kpi cyan"><div class="val">0 ngày</div><div class="lab">Lag QT→SJC (cùng ngày)</div></div>
+    </div>
+    <p>Ba takeaway chính:</p>
+    <table class="tbl"><thead><tr><th></th><th>#</th><th>Ý nghĩa</th></tr></thead><tbody>
+<tr><td>1</td><td>Premium không cố định &mdash; nó là biến số</td><td>Từ 0% (2019) đến 43% (2022), dao động phản ánh tâm lý + chính sách</td></tr>
+<tr><td>2</td><td>Bid-ask spread là chi phí ẩn lớn</td><td>Năm căng (2020, 2024) spread ăn mòn lợi nhuận hơn premium</td></tr>
+<tr><td>3</td><td>SJC &lsquo;an toàn&rsquo; là định kiến</td><td>Volatility 24% + drawdown −27% (2026) &mdash; rủi ro cao</td></tr>
+    </tbody></table>
+    <p>Bài không khuyên mua hay bán. Mục tiêu: <strong>người đọc hiểu cơ chế</strong> &mdash; premium từ đâu ra, khi nào cao/thấp, và chi phí thực sự khi giao dịch SJC là gì. Quyết định sau đó là của bạn.</p>
+    <div class="callout info"><h4>💡 Bản chất</h4><p>Đây là <strong>ghi chép tự nghiên cứu</strong> dựa trên 27.921 điểm dữ liệu chính chủ. Nếu có sai số, phản hồi để sửa. Số liệu đầy đủ công khai trong bộ dữ liệu kèm bài.</p></div>
+  </section>
+  <section id="phu-luc">
+    <h2 class="section-title"><span class="num">📎</span>Phụ lục: Phương pháp &amp; Giới hạn</h2>
+    <p>Phần kỹ thuật chi tiết &mdash; <strong>bấm để mở rộng</strong> khi cần đối chiếu. Mặc định đóng để không chiếm không gian nội dung chính.</p>
+
+    <details class="appendix">
+      <summary><strong>A. Nguồn dữ liệu chi tiết</strong></summary>
+    <table class="tbl"><thead><tr><th>Chuỗi</th><th>Nguồn</th><th>Coverage</th><th>Ghi chú</th></tr></thead><tbody>
+<tr><td>Vàng SJC 1L HCM</td><td>sjc.com.vn (chính chủ)</td><td>22/07/2009 → nay</td><td>27.921 pts intraday → daily close</td></tr>
+<tr><td>Vàng nhẫn SJC 99,99%</td><td>sjc.com.vn (id=49)</td><td>2016 → nay</td><td>28.515 pts (mới ra mắt)</td></tr>
+<tr><td>Nữ trang 99% / 75%</td><td>sjc.com.vn (id=97,113)</td><td>2016 → nay</td><td>Cho insight 1</td></tr>
+<tr><td>Vàng QT (XAUUSD)</td><td>Yahoo GC=F (COMEX futures)</td><td>2009 → nay</td><td>Proxy cho spot — futures != spot</td></tr>
+<tr><td>USD/VND</td><td>Yahoo USDVND=X + fawazahmed0</td><td>2009 → nay</td><td>Yahoo đến 2025, fawaz fill 2025-26</td></tr>
+<tr><td>USD/CNY</td><td>Yahoo CNY=X</td><td>2009 → nay</td><td>Cho cascade London→Shanghai→VN</td></tr>
+<tr><td>VN-Index</td><td>vnstock (source VCI)</td><td>2009 → nay</td><td>4.233 ngày, cho insight 3</td></tr>
+    </tbody></table>
+    </details>
+
+    <details class="appendix">
+      <summary><strong>B. Công thức quy đổi &amp; cross-check</strong></summary>
+      <p>Công thức cốt lõi: <em>1 lượng SJC = 37,5 g = 1,20565 troy oz</em>, nên <strong>vàng QT (VND/lượng) = GC_F × USDVND × 1,20565</strong>.<sup class="ref">2</sup></p>
+      <p>Cross-check với nguồn độc lập giavang.org (30 ngày sample): <strong>19/30 khớp exact, 11/30 lệch ≤0,4%</strong> &mdash; chênh lệch do thời điểm chốt giá khác nhau, không phải lỗi.<sup class="ref">3</sup></p>
+      <p>Premium tính bằng giá <em>bán</em> SJC vs giá QT &mdash; phản ánh giá nhà đầu tư VN thực trả.</p>
+    </details>
+
+    <details class="appendix">
+      <summary><strong>C. Giới hạn &amp; caveats (đọc trước khi dùng số liệu)</strong></summary>
+    <table class="tbl"><thead><tr><th>Giới hạn</th><th>Tác động</th><th>Mức độ</th></tr></thead><tbody>
+<tr><td>GC=F là futures, không phải spot XAUUSD</td><td><strong>Basis không cố định</strong>: bình thường ~0,5%, nhưng nén mạnh khi căng (3-5% tháng 3/2020). Premium 2020/2022 có thể bị thổi phồng</td><td>Trung bình</td></tr>
+<tr><td>Premium dùng giá BÁN SJC</td><td>Premium mua-side thấp hơn bán-side ~1-2pp (do spread 0,4-2,7%). Bài báo premium &lsquo;người mua trả&rsquo;, không phải mid market</td><td>Đã nêu</td></tr>
+<tr><td>USDVND Yahoo có 5 giá trị lỗi (~21.x)</td><td>Đã filter, không ảnh hưởng kết luận</td><td>Đã xử lý</td></tr>
+<tr><td>Gap nguồn USDVND Yahoo→fawaz (7/2025)</td><td>Đã verify overlap 30 ngày: chênh mean 0,07% (&lt;0,5%), không systematic bias</td><td>Đã xử lý</td></tr>
+<tr><td>Vàng nhẫn (id=49) chỉ có data 2016+</td><td>Không phân tích ring trước 2016</td><td>Trung bình</td></tr>
+<tr><td>Premium Shanghai = proxy (GC=F×CNY)</td><td>Không có SGE trực tiếp</td><td>Trung bình</td></tr>
+<tr><td>SJC = giá bán lẻ HCM</td><td>Không bao gồm spread vàng QT thực tế</td><td>Đã nêu</td></tr>
+<tr><td>Drawdown tính trên close daily</td><td>Đã verify: intraday chỉ sâu hơn 0,6pp (−33,1% vs −32,5%) &mdash; không có flash-crash đáng kể</td><td>Đã xử lý</td></tr>
+<tr><td>Cross-check giavang.org: 10/30 ngày lệch</td><td>Đã verify sign: 3 cao / 7 thấp = <strong>mixed direction</strong>, không systematic bias</td><td>Đã xử lý</td></tr>
+<tr><td>Không có dữ liệu vàng miếng nhỏ (1 chỉ, 5 chỉ)</td><td>Chỉ SJC 1L &mdash; loại nhỏ có thể khác</td><td>Thấp</td></tr>
+    </tbody></table>
+      <p>Mọi con số premium trong bài có sai số ±1-2% do proxy GC=F (lớn hơn khi thị trường căng). Nhưng <strong>xu hướng và thứ bậc</strong> (2022 cao nhất, 2019 thấp nhất, post-2020 &lsquo;bình thường mới&rsquo; +10-15%) là vững.</p>
+      <p><strong>Tương quan ≠ nhân quả</strong>: các phân tích correlation trong bài (premium vs driver, SJC vs VN-Index) báo độ liên quan, không claim A gây ra B. Nhiều quan hệ có thể 2 chiều hoặc do yếu tố thứ 3 (Fed, dòng vốn, tâm lý).</p>
+    </details>
+  </section>
+  <section id="tai-lieu-tham-khao">
+    <h2 class="section-title"><span class="num">📚</span>Tài liệu tham khảo</h2>
+    <p>Số liệu và phương pháp luận trong báo cáo trích từ các nguồn dưới. Tham chiếu <sup class="ref">1-4</sup> trong nội dung trỏ về đây.</p>
+    <h3>I. Số liệu thị trường</h3>
+    <ol class="refs">
+      <li><div><strong>Công ty Vàng Bạc Đá Quý Sài Gòn (SJC)</strong> &mdash; Biểu đồ giá vàng (PriceService API). <a href="https://sjc.com.vn/bieu-do-gia-vang" target="_blank" rel="noopener">sjc.com.vn</a> <span class="src-meta">27.921 điểm SJC 1L HCM, 22/07/2009 → 08/07/2026</span></div></li>
+      <li><div><strong>Yahoo Finance</strong> &mdash; GC=F (COMEX Gold Futures), USDVND=X, CNY=X. <a href="https://finance.yahoo.com" target="_blank" rel="noopener">finance.yahoo.com</a> <span class="src-meta">Daily close, 2009-2026</span></div></li>
+      <li><div><strong>giavang.org</strong> &mdash; Lịch sử giá vàng SJC. <a href="https://giavang.org/trong-nuoc/sjc/lich-su/" target="_blank" rel="noopener">giavang.org</a> <span class="src-meta">Cross-check 30 ngày: 19/30 khớp exact, 11/30 lệch ≤0,4%</span></div></li>
+      <li><div><strong>fawazahmed0 currency-api</strong> &mdash; USD/VND backup. <a href="https://github.com/fawazahmed0/exchange-api" target="_blank" rel="noopener">github.com/fawazahmed0</a> <span class="src-meta">Fill gap USDVND 2025-2026</span></div></li>
+      <li><div><strong>vnstock</strong> (source VCI) &mdash; VN-Index lịch sử. <a href="https://vnstock.site" target="_blank" rel="noopener">vnstock.site</a> <span class="src-meta">4.233 ngày VNINDEX, 2009-2026</span></div></li>
+      <li><div><strong>World Bank</strong> &mdash; CPI Việt Nam (FP.CPI.TOTL, 2010=100). <a href="https://api.worldbank.org/v2/country/VNM/indicator/FP.CPI.TOTL" target="_blank" rel="noopener">api.worldbank.org</a> <span class="src-meta">Cho tính inflation-adjusted return (★6)</span></div></li>
+    </ol>
+    <h3>II. Lý thuyết &amp; phương pháp luận</h3>
+    <ol class="refs" start="5">
+      <li><div><strong>Kahneman, D. &amp; Tversky, A.</strong> (1979) &mdash; &ldquo;Prospect Theory: An Analysis of Decision under Risk&rdquo;. <em>Econometrica</em> 47(2). <span class="src-meta">Loss aversion ~2:1</span></div></li>
+      <li><div><strong>Shiller, R.</strong> (2000) &mdash; <em>Irrational Exuberance</em>. Princeton University Press. <span class="src-meta">Herd behavior, speculative bubbles</span></div></li>
+      <li><div><strong>Thaler, R.</strong> (1985) &mdash; &ldquo;Mental Accounting and Consumer Choice&rdquo;. <em>Marketing Science</em> 4(3).</div></li>
+    </ol>
+    <div class="callout info">
+      <h4>💡 Bản chất của báo cáo</h4>
+      <p>Đây là <strong>ghi chép tự nghiên cứu</strong>, không phải tài liệu học thuật chuẩn mực hay khuyến nghị đầu tư. Mục tiêu là minh bạch hóa cơ chế để người đọc tự đánh giá. Số liệu full trong bộ dữ liệu <code>sjc-gold-history/</code> kèm bài.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================ MINIMAP ============================ -->
+<aside class="minimap" id="minimap" aria-label="Mục lục điều hướng">
+  <div class="mm-head"><span class="mm-title">Mục lục</span><span class="mm-pct" id="mmPct">0%</span></div>
+  <div class="mm-search"><input type="text" id="mmSearch" placeholder="Lọc mục lục..." autocomplete="off"></div>
+  <button class="mm-overlay-close" id="mmClose" aria-label="Đóng">✕</button>
+  <div class="mm-group open" data-group="a">
+    <button class="mm-group-head"><span class="chev">▶</span> Mở đầu <span class="gcount">2</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-1"><span class="dot"></span>I — Vàng VN đắt nhất thế giới?</a></li>
+      <li><a href="#chuong-2"><span class="dot"></span>II — 17 năm dữ liệu từ đâu</a></li>
+    </ul>
+  </div>
+  <div class="mm-group open" data-group="b">
+    <button class="mm-group-head"><span class="chev">▶</span> Lịch sử giá <span class="gcount">6</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-3"><span class="dot"></span>III — 2009-2012 bình thường</a></li>
+      <li><a href="#chuong-4"><span class="dot"></span>IV — 2013-2015 tách biệt</a></li>
+      <li><a href="#chuong-5"><span class="dot"></span>V — 2016-2020 cân bằng</a></li>
+      <li><a href="#chuong-6"><span class="dot"></span>VI — 2020 COVID</a></li>
+      <li><a href="#chuong-7"><span class="dot"></span>VII — 2021-2022 đỉnh premium</a></li>
+      <li><a href="#chuong-8"><span class="dot"></span>VIII — 2023-2026 bình thường mới</a></li>
+    </ul>
+  </div>
+  <div class="mm-group open" data-group="c">
+    <button class="mm-group-head"><span class="chev">▶</span> Phân tích sâu <span class="gcount">10</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-9"><span class="dot"></span>IX — Phân phối premium</a></li>
+      <li><a href="#chuong-10"><span class="dot"></span>X — 5 yếu tố premium</a></li>
+      <li><a href="#chuong-11"><span class="dot"></span>XI — Độ trễ QT→SJC</a></li>
+      <li><a href="#chuong-12"><span class="dot"></span>XII — Bid-ask spread</a></li>
+      <li><a href="#chuong-13"><span class="dot"></span>XIII — Volatility & drawdown</a></li>
+      <li><a href="#chuong-14"><span class="dot"></span>XIV — Nhẫn vs miếng</a></li>
+      <li><a href="#insight-1"><span class="dot"></span>★1 — Chênh lệch loại vàng</a></li>
+      <li><a href="#insight-2"><span class="dot"></span>★2 — Premium co giãn vì gì</a></li>
+      <li><a href="#insight-3"><span class="dot"></span>★3 — SJC vs VN-Index</a></li>
+      <li><a href="#insight-4"><span class="dot"></span>★4 — Rủi ro drawdown</a></li>
+    </ul>
+  </div>
+  <div class="mm-group open" data-group="d">
+    <button class="mm-group-head"><span class="chev">▶</span> Góc nhìn & kết <span class="gcount">7</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-15"><span class="dot"></span>XV — Tâm lý trú ẩn</a></li>
+      <li><a href="#chuong-16"><span class="dot"></span>XVI — 3-tier cascade</a></li>
+      <li><a href="#insight-5"><span class="dot"></span>★5 — Đọc trạng thái SJC</a></li>
+      <li><a href="#insight-6"><span class="dot"></span>★6 — Thực hư vàng SJC</a></li>
+      <li><a href="#chuong-17"><span class="dot"></span>XVII — Kết luận</a></li>
+      <li><a href="#phu-luc"><span class="dot"></span>📎 Phụ lục phương pháp</a></li>
+      <li><a href="#tai-lieu-tham-khao"><span class="dot"></span>📚 Tài liệu tham khảo</a></li>
+    </ul>
+  </div>
+  <div class="mm-no-result" id="mmNoResult">Không tìm thấy mục nào.</div>
+</aside>
+
+<button class="mm-fab" id="mmFab" aria-label="Mở mục lục">☰</button>
+<button class="to-top" id="toTop" aria-label="Lên đầu trang">↑</button>
+<button class="pres-btn" id="presBtn" aria-label="Trình chiếu" title="Trình chiếu">📽️</button>
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="pres-overlay" id="presOverlay" aria-hidden="true">
+  <div class="pres-top">
+    <div class="pres-progress-bg"><div class="pres-progress-fill" id="presProgress"></div></div>
+    <div class="pres-counter"><b id="presCurrent">1</b> / <span id="presTotal">18</span></div>
+    <button class="pres-exit" id="presExit">✕ Thoát (ESC)</button>
+  </div>
+  <div class="pres-stage" id="presStage"></div>
+  <div class="pres-hint">← → để chuyển slide · ESC để thoát</div>
+  <div class="pres-bottom">
+    <button class="pres-nav" id="presPrev" aria-label="Slide trước">←</button>
+    <div class="pres-dots" id="presDots"></div>
+    <button class="pres-nav" id="presNext" aria-label="Slide sau">→</button>
+  </div>
+</div>
+
+<footer>
+  Vàng Việt Nam 2009&ndash;2026: 17 năm tự sự<br>
+  Dựng bởi ZCode · Cập nhật 08/07/2026
+</footer>
+
+<script>
+/* =========================================================================
+   VIZ.JS — Chart component registry + Candlestick renderer + Navigation
+   Pattern cốt lõi (học từ Metabase): "chart as plugin".
+   Trước đây: mỗi template có 7+ lệnh `new Chart(...)` riêng, lặp đi lặp lại
+   các config legend/grid/dualAxis. Giờ: registry với base config merge.
+
+   API:
+     viz.chart(canvasId, { type, datasets, scales?, plugins? })
+     viz.renderCandlestick(canvasEl, { candles, volumes, ma20, ma50, high52w, low52w, months })
+     viz.setupNav({ linksSelector, sections?, progressId?, backTopId? })
+     viz.gradient(ctx, c1, c2)              // helper tiện ích
+     viz.neon(c1, c2)                        // helper gradient cho bar fill
+   ========================================================================= */
+(function (global) {
+  'use strict';
+
+  const viz = {};
+
+  /* ---------------------------------------------------------------------
+     Chart.defaults — setup một lần (trước đây lặp 5 lần trong 5 templates)
+     Lấy màu từ CSS custom properties → tự đổi theo data-theme.
+     --------------------------------------------------------------------- */
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function readChartColors() {
+    const styles = getComputedStyle(document.documentElement);
+    return {
+      primary:   cssVar('--chart-primary')   || '#a855f7',
+      secondary: cssVar('--chart-secondary') || '#ec4899',
+      tertiary:  cssVar('--chart-tertiary')  || '#06b6d4',
+      pos:       cssVar('--chart-pos')       || '#10d98a',
+      neg:       cssVar('--chart-neg')       || '#ff4d6d',
+      neutral:   cssVar('--chart-neutral')   || '#fbbf24',
+      grid:      cssVar('--chart-grid')      || 'rgba(139,92,246,0.06)',
+      text:      cssVar('--chart-text')      || '#8b8ba7',
+      fontFamily: cssVar('--font-sans')      || 'Inter, sans-serif',
+    };
+  }
+  let CHART_COLORS = readChartColors();
+  function applyChartDefaults() {
+    if (!global.Chart) return;
+    CHART_COLORS = readChartColors();
+    Chart.defaults.color = CHART_COLORS.text;
+    Chart.defaults.font.family = CHART_COLORS.fontFamily;
+    Chart.defaults.borderColor = CHART_COLORS.grid;
+  }
+  applyChartDefaults();
+  // Re-apply khi theme đổi (nếu user swap data-theme sau render)
+  viz.refreshTheme = applyChartDefaults;
+
+  /* ---------------------------------------------------------------------
+     Gradient helper (trước đây lặp ở mỗi template)
+     --------------------------------------------------------------------- */
+  viz.gradient = function (ctx, c1, c2) {
+    const chartArea = ctx.chart.chartArea;
+    const top = chartArea ? chartArea.top : 0;
+    const bottom = chartArea ? chartArea.bottom : 280;
+    const g = ctx.chart.ctx.createLinearGradient(0, top, 0, bottom);
+    g.addColorStop(0, c1);
+    g.addColorStop(1, c2);
+    return g;
+  };
+
+  /* ---------------------------------------------------------------------
+     CHART REGISTRY — "chart as plugin" pattern
+     Base options hợp nhất tự động → không còn lặp legend/grid/dualAxis.
+     --------------------------------------------------------------------- */
+  const SCALE_BASE = { grid: { color: CHART_COLORS.grid } };
+  const LEGEND_BASE = {
+    position: 'top', align: 'end',
+    labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } },
+  };
+
+  function deepMerge(base, override) {
+    // Shallow-ish merge đủ cho config Chart.js (2 cấp).
+    const out = Array.isArray(base) ? base.slice() : Object.assign({}, base);
+    if (!override) return out;
+    for (const k of Object.keys(override)) {
+      const bv = base[k], ov = override[k];
+      if (bv && typeof bv === 'object' && !Array.isArray(bv) && ov && typeof ov === 'object') {
+        out[k] = Object.assign({}, bv, ov);
+      } else {
+        out[k] = ov;
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Vẽ một chart từ registry. Base options (responsive, legend, grid) tự thêm.
+   * @param {string} canvasId - id thẻ <canvas>
+   * @param {object} spec - { type, data, options?, plugins? }
+   */
+  viz.chart = function (canvasId, spec) {
+    if (!global.Chart) { console.warn('Chart.js chưa load'); return null; }
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) { console.warn('canvas không tìm thấy:', canvasId); return null; }
+
+    const baseOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: LEGEND_BASE },
+    };
+
+    const opts = deepMerge(baseOptions, spec.options || {});
+    // Đảm bảo scales có grid color mặc định nếu user không override
+    if (opts.scales) {
+      for (const k of Object.keys(opts.scales)) {
+        opts.scales[k] = deepMerge({ grid: { color: CHART_COLORS.grid } }, opts.scales[k]);
+      }
+    }
+
+    return new Chart(canvas, {
+      type: spec.type,
+      data: spec.data,
+      options: opts,
+      plugins: spec.plugins || [],
+    });
+  };
+
+  /* ---------------------------------------------------------------------
+     CANDLESTICK RENDERER — custom Canvas 2D
+     Trước đây: ~100 dòng này lặp 2 lần (technical + profile templates).
+     Giờ: 1 hàm tái dùng. DPR-aware, resize-aware.
+     @param {HTMLCanvasElement} canvas
+     @param {object} data:
+       candles: [{o,h,l,c}]      (giá nghìn đồng)
+       volumes: number[]          (triệu CP)  — optional
+       ma20: number[]             (null cho warmup)
+       ma50: number[]
+       high52w: number
+       low52w: number
+       months: string[]           (nhãn trục X, vd ['7/25','8/25',...])
+       priceUnit?: 'K' | ''       (mặc định 'K' → chia 1000 khi hiển thị)
+     --------------------------------------------------------------------- */
+  viz.renderCandlestick = function (canvas, data) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const candles = data.candles || [];
+    if (!candles.length) return;
+    const volumes = data.volumes || [];
+    const ma20 = data.ma20 || [];
+    const ma50 = data.ma50 || [];
+    const high52w = data.high52w;
+    const low52w = data.low52w;
+    const months = data.months || [];
+    const unit = data.priceUnit || 'K'; // 'K' → giá nghìn đồng hiển thị /1000
+    const div = unit === 'K' ? 1000 : 1;
+
+    function draw() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const W = Math.max(100, rect.width);
+      const H = Math.max(100, rect.height);
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      const priceH = H * 0.65, volH = volumes.length ? H * 0.25 : 0, gap = H * 0.05;
+      const volY = priceH + gap;
+      const padLeft = 50, padRight = 20, padTop = 10, padBot = 20;
+      const chartW = W - padLeft - padRight;
+      const priceTop = padTop, priceBot = priceH - padBot;
+      const volTop = volY + 10, volBot = volY + volH;
+
+      let pMin = Infinity, pMax = -Infinity;
+      candles.forEach(c => { pMin = Math.min(pMin, c.l); pMax = Math.max(pMax, c.h); });
+      const pPad = (pMax - pMin) * 0.05;
+      pMin -= pPad; pMax += pPad;
+      const priceToY = p => priceTop + (priceBot - priceTop) * (pMax - p) / (pMax - pMin);
+
+      const n = candles.length;
+      const candleW = Math.max(3, chartW / n * 0.7);
+      const xStep = chartW / n;
+      const idxToX = i => padLeft + xStep * (i + 0.5);
+
+      // Grid + Y labels
+      ctx.strokeStyle = 'rgba(139,92,246,0.08)'; ctx.lineWidth = 1;
+      ctx.fillStyle = '#5a5a72'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
+      for (let g = 0; g <= 5; g++) {
+        const p = pMin + (pMax - pMin) * g / 5;
+        const y = priceToY(p);
+        ctx.beginPath(); ctx.moveTo(padLeft, y); ctx.lineTo(W - padRight, y); ctx.stroke();
+        ctx.fillText(unit === 'K' ? (p / 1000).toFixed(1) + 'K' : p.toFixed(1), padLeft - 5, y + 3);
+      }
+
+      // MA20 (vàng)
+      if (ma20.length) {
+        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.beginPath();
+        let started = false;
+        ma20.forEach((v, i) => {
+          if (v === null || v === undefined) return;
+          const x = idxToX(i), y = priceToY(v);
+          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+      // MA50 (cyan)
+      if (ma50.length) {
+        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); started = false;
+        ma50.forEach((v, i) => {
+          if (v === null || v === undefined) return;
+          const x = idxToX(i), y = priceToY(v);
+          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      // Resistance = đỉnh 52 tuần
+      if (high52w != null) {
+        ctx.strokeStyle = 'rgba(255,77,109,0.5)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+        const resY = priceToY(high52w);
+        ctx.beginPath(); ctx.moveTo(padLeft, resY); ctx.lineTo(W - padRight, resY); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,77,109,0.8)'; ctx.textAlign = 'left'; ctx.font = '9px Inter';
+        ctx.fillText('R ' + (high52w / div).toFixed(unit === 'K' ? 1 : 0) + (unit === 'K' ? 'K' : '') + ' (đỉnh 52W)', padLeft + 4, resY - 5);
+      }
+      // Support = đáy 52 tuần
+      if (low52w != null) {
+        ctx.strokeStyle = 'rgba(16,217,138,0.5)';
+        const supY = priceToY(low52w);
+        ctx.beginPath(); ctx.moveTo(padLeft, supY); ctx.lineTo(W - padRight, supY); ctx.stroke();
+        ctx.fillStyle = 'rgba(16,217,138,0.8)';
+        ctx.fillText('S ' + (low52w / div).toFixed(unit === 'K' ? 1 : 0) + (unit === 'K' ? 'K' : '') + ' (đáy 52W)', padLeft + 4, supY + 12);
+        ctx.setLineDash([]);
+      }
+
+      // Candles
+      candles.forEach((c, i) => {
+        const x = idxToX(i);
+        const isUp = c.c >= c.o;
+        const color = isUp ? '#10d98a' : '#ff4d6d';
+        const yHigh = priceToY(c.h), yLow = priceToY(c.l);
+        const yOpen = priceToY(c.o), yClose = priceToY(c.c);
+        const bodyTop = Math.min(yOpen, yClose);
+        const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+        ctx.strokeStyle = color; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, yHigh); ctx.lineTo(x, yLow); ctx.stroke();
+        ctx.fillStyle = color; ctx.fillRect(x - candleW / 2, bodyTop, candleW, bodyH);
+      });
+
+      // Volume sub-panel
+      if (volumes.length) {
+        const maxVol = Math.max(...volumes.filter(v => v > 0));
+        const volToY = v => volBot - (volBot - volTop) * v / maxVol;
+        ctx.fillStyle = '#5a5a72'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
+        ctx.fillText(maxVol.toFixed(1) + 'M', padLeft - 5, volTop + 3);
+        ctx.fillText('0', padLeft - 5, volBot);
+        ctx.strokeStyle = 'rgba(139,92,246,0.08)';
+        ctx.beginPath(); ctx.moveTo(padLeft, volBot); ctx.lineTo(W - padRight, volBot); ctx.stroke();
+        candles.forEach((c, i) => {
+          const x = idxToX(i);
+          const isUp = c.c >= c.o;
+          const v = volumes[i];
+          if (v <= 0) return;
+          const y = volToY(v);
+          ctx.fillStyle = isUp ? 'rgba(16,217,138,0.5)' : 'rgba(255,77,109,0.5)';
+          ctx.fillRect(x - candleW / 2, y, candleW, volBot - y);
+        });
+      }
+
+      // X labels (tháng)
+      if (months.length) {
+        ctx.fillStyle = '#5a5a72'; ctx.font = '9px Inter'; ctx.textAlign = 'center';
+        const monthStep = Math.ceil(n / months.length);
+        months.forEach((m, i) => {
+          const idx = i * monthStep + 2;
+          if (idx < n) ctx.fillText(m, idxToX(idx), H - 5);
+        });
+      }
+    }
+
+    draw();
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(draw, 100);
+    });
+  };
+
+  /* ---------------------------------------------------------------------
+     NAVIGATION — scrollspy + progress bar + back-to-top
+     Trước đây: lặp 2 lần (technical + profile). Giờ: 1 hàm.
+     Tự phát hiện links vs fallback. Tương thích cả `data-target` (dashboard)
+     và `href="#id"` (profile).
+     --------------------------------------------------------------------- */
+  viz.setupNav = function (opts) {
+    opts = opts || {};
+    const links = Array.from(document.querySelectorAll(opts.linksSelector || '.topnav-link, nav a[href^="#"]'));
+    if (!links.length) return;
+
+    const progress = opts.progressId ? document.getElementById(opts.progressId) : document.getElementById('progressBar');
+    const backTop = opts.backTopId ? document.getElementById(opts.backTopId) : document.getElementById('backTop');
+    // Giải section target cho mỗi link (data-target hoặc href)
+    const sections = links.map(link => {
+      const sel = link.dataset.target ? '#' + link.dataset.target : link.getAttribute('href');
+      return { link: link, el: sel ? document.querySelector(sel) : null };
+    }).filter(s => s.el);
+
+    function onScroll() {
+      const sc = window.scrollY + 120;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      if (progress) progress.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
+      if (backTop) backTop.classList.toggle('visible', window.scrollY > 600);
+
+      let current = sections[0];
+      for (let i = sections.length - 1; i >= 0; i--) {
+        if (sections[i].el.getBoundingClientRect().top + window.scrollY - 120 <= sc) {
+          current = sections[i]; break;
+        }
+      }
+      links.forEach(l => l.classList.remove('active'));
+      if (current) {
+        current.link.classList.add('active');
+        // Scroll nav để link active vào view
+        const navInner = current.link.closest('.topnav-inner');
+        if (navInner) {
+          const linkRect = current.link.getBoundingClientRect();
+          const navRect = navInner.getBoundingClientRect();
+          if (linkRect.left < navRect.left + 50 || linkRect.right > navRect.right - 50) {
+            navInner.scrollTo({
+              left: current.link.offsetLeft - navInner.offsetWidth / 2 + current.link.offsetWidth / 2,
+              behavior: 'smooth',
+            });
+          }
+        }
+      }
+    }
+
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const sel = link.dataset.target ? '#' + link.dataset.target : link.getAttribute('href');
+        const target = sel ? document.querySelector(sel) : null;
+        if (target) {
+          const navH = (document.querySelector('.topnav') || {}).offsetHeight || 0;
+          const top = target.getBoundingClientRect().top + window.scrollY - navH - 8;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+      });
+    });
+
+    if (backTop) {
+      backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  };
+
+  global.viz = viz;
+})(typeof window !== 'undefined' ? window : this);
+
+
+/* Slate palette overrides cho registry (registry đọc --chart-* tokens; longform dùng slate). */
+Chart.defaults.borderColor = '#334155';
+
+
+viz.chart('c1_sjc_full', {
+  type:'bar',
+  data:{labels:["07/2009", "09/2009", "10/2009", "11/2009", "12/2009", "01/2010", "02/2010", "03/2010", "04/2010", "05/2010", "06/2010", "07/2010", "08/2010", "09/2010", "10/2010", "11/2010", "12/2010", "01/2011", "02/2011", "03/2011", "04/2011", "05/2011", "06/2011", "07/2011", "08/2011", "09/2011", "10/2011", "11/2011", "12/2011", "01/2012", "02/2012", "03/2012", "04/2012", "05/2012", "06/2012", "07/2012", "08/2012", "09/2012", "10/2012", "11/2012", "12/2012", "01/2013", "02/2013", "03/2013", "04/2013", "05/2013", "06/2013", "07/2013", "08/2013", "09/2013", "10/2013", "11/2013", "12/2013", "01/2014", "02/2014", "03/2014", "04/2014", "05/2014", "06/2014", "07/2014", "08/2014", "09/2014", "10/2014", "11/2014", "12/2014", "01/2015", "02/2015", "03/2015", "04/2015", "05/2015", "06/2015", "07/2015", "08/2015", "09/2015", "10/2015", "11/2015", "12/2015", "01/2016", "02/2016", "03/2016", "04/2016", "05/2016", "06/2016", "07/2016", "08/2016", "09/2016", "10/2016", "11/2016", "12/2016", "01/2017", "02/2017", "03/2017", "04/2017", "05/2017", "06/2017", "07/2017", "08/2017", "09/2017", "10/2017", "11/2017", "12/2017", "01/2018", "02/2018", "03/2018", "04/2018", "05/2018", "06/2018", "07/2018", "08/2018", "09/2018", "10/2018", "11/2018", "12/2018", "01/2019", "02/2019", "03/2019", "04/2019", "05/2019", "06/2019", "07/2019", "08/2019", "09/2019", "10/2019", "11/2019", "12/2019", "01/2020", "02/2020", "03/2020", "04/2020", "05/2020", "06/2020", "07/2020", "08/2020", "09/2020", "10/2020", "11/2020", "12/2020", "01/2021", "02/2021", "03/2021", "04/2021", "05/2021", "06/2021", "07/2021", "08/2021", "09/2021", "10/2021", "11/2021", "12/2021", "01/2022", "02/2022", "03/2022", "04/2022", "05/2022", "06/2022", "07/2022", "08/2022", "09/2022", "10/2022", "11/2022", "12/2022", "01/2023", "02/2023", "03/2023", "04/2023", "05/2023", "06/2023", "07/2023", "08/2023", "09/2023", "10/2023", "11/2023", "12/2023", "01/2024", "02/2024", "03/2024", "04/2024", "05/2024", "06/2024", "07/2024", "08/2024", "09/2024", "10/2024", "11/2024", "12/2024", "01/2025", "02/2025", "03/2025", "04/2025", "05/2025", "06/2025", "07/2025", "08/2025", "09/2025", "10/2025", "11/2025", "12/2025", "01/2026", "02/2026", "03/2026", "04/2026", "05/2026", "06/2026", "07/2026"],datasets:[{label:"SJC bán (triệu/lượng)",type:'bar',data:[21.16, 22.19, 23.38, 26.79, 27.27, 26.75, 26.21, 26.46, 26.36, 27.61, 28.21, 28.13, 28.43, 29.86, 32.67, 35.35, 36.02, 35.55, 36.98, 37.2, 37.28, 37.57, 37.9, 38.86, 44.94, 46.7, 44.18, 45.58, 44.21, 43.79, 44.91, 44.42, 43.18, 41.7, 42.06, 41.87, 42.92, 46.64, 46.96, 46.89, 46.64, 45.78, 44.97, 43.85, 42.66, 41.23, 39.55, 37.99, 38.05, 37.88, 37.37, 36.27, 35.29, 35.12, 35.98, 36.06, 35.57, 36.28, 36.61, 36.83, 36.61, 36.1, 35.76, 35.27, 35.21, 35.41, 35.42, 35.35, 35.2, 35.02, 34.69, 33.63, 34.01, 34.15, 33.95, 33.4, 33.05, 32.93, 33.52, 33.72, 33.42, 33.87, 34.24, 36.94, 36.68, 36.3, 35.76, 36.1, 36.38, 36.7, 37.14, 36.7, 36.78, 36.56, 36.4, 36.33, 36.45, 36.81, 36.59, 36.59, 36.49, 36.8, 36.96, 36.85, 36.91, 36.72, 36.84, 36.9, 36.78, 36.66, 36.58, 36.58, 36.46, 36.75, 37.06, 36.66, 36.48, 36.4, 37.82, 39.33, 41.69, 42.18, 41.85, 41.63, 41.77, 43.57, 45.18, 47.11, 48.29, 48.72, 48.89, 52.28, 57.43, 56.32, 56.36, 56.05, 55.42, 56.58, 56.71, 55.56, 55.46, 56.3, 57.16, 57.39, 57.17, 57.15, 57.93, 60.02, 61.39, 61.85, 63.65, 69.24, 69.73, 69.88, 68.94, 67.15, 67.13, 66.53, 66.9, 67.53, 66.95, 67.21, 67.25, 67.03, 67.06, 67.18, 67.08, 67.16, 67.54, 68.76, 69.63, 71.15, 75.37, 76.05, 78.59, 81.06, 83.26, 89.18, 77.8, 78.23, 80.07, 80.98, 87.03, 85.94, 85.1, 86.62, 90.94, 95.97, 111.36, 119.8, 118.95, 121.18, 125.29, 133.87, 145.64, 150.87, 156.07, 167.62, 180.51, 179.77, 171.67, 163.43, 148.73, 149.73],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c2_premium_yearly', {
+  type:'bar',
+  data:{labels:["2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"],datasets:[{label:"Premium TB (%)",type:'bar',data:[7.92, 4.71, 4.83, 6.66, 12.96, 12.11, 14.07, 5.92, 8.1, 4.7, 0.48, 3.55, 15.87, 31.24, 23.25, 14.81, 11.74, 13.78],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},{label:"Min (%)",type:'line',data:[2.48, -1.87, -1.54, 0.53, 6.51, 3.64, 7.79, 0.09, 1.65, -0.82, -2.55, -2.76, 5.01, 21.13, 16.32, 2.19, 0.63, 4.65],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2},{label:"Max (%)",type:'line',data:[14.87, 25.87, 15.68, 13.44, 24.0, 21.46, 21.24, 19.81, 17.12, 10.58, 3.48, 12.58, 25.91, 43.06, 31.72, 33.79, 20.68, 23.42],borderColor:'rgba(167,139,250,.85)',backgroundColor:'rgba(167,139,250,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c3_sjc_vs_world', {
+  type:'bar',
+  data:{labels:["07/2009", "10/2009", "01/2010", "04/2010", "07/2010", "10/2010", "01/2011", "04/2011", "07/2011", "10/2011", "01/2012", "04/2012", "07/2012", "10/2012", "01/2013", "04/2013", "07/2013", "10/2013", "01/2014", "04/2014", "07/2014", "10/2014", "01/2015", "04/2015", "07/2015", "10/2015", "01/2016", "04/2016", "07/2016", "10/2016", "01/2017", "04/2017", "07/2017", "10/2017", "01/2018", "04/2018", "07/2018", "10/2018", "01/2019", "04/2019", "07/2019", "10/2019", "01/2020", "04/2020", "07/2020", "10/2020", "01/2021", "04/2021", "07/2021", "10/2021", "01/2022", "04/2022", "07/2022", "10/2022", "01/2023", "04/2023", "07/2023", "10/2023", "01/2024", "04/2024", "07/2024", "10/2024", "01/2025", "04/2025", "07/2025", "10/2025", "01/2026", "04/2026", "07/2026"],datasets:[{label:"SJC bán (triệu/lượng)",type:'bar',data:[21.9, 25.9, 26.5, 27.4, 28.8, 34.9, 36.6, 37.6, 43.6, 44.7, 44.5, 42.3, 43.4, 47.0, 44.8, 41.2, 38.0, 36.3, 35.7, 36.1, 36.5, 35.4, 35.4, 35.0, 33.9, 33.4, 33.4, 33.9, 36.7, 36.1, 36.8, 36.6, 36.5, 36.6, 36.9, 36.8, 36.8, 36.5, 36.8, 37.0, 41.1, 41.7, 45.5, 48.6, 55.2, 55.9, 56.2, 56.3, 57.2, 60.0, 65.2, 69.5, 66.7, 67.1, 67.1, 67.1, 67.8, 72.4, 78.5, 83.4, 79.5, 86.0, 91.6, 116.6, 126.5, 151.0, 175.9, 160.9, 148.6],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},{label:"Vàng QT quy đổi (triệu/lượng)",type:'bar',data:[20.8, 23.9, 24.9, 27.3, 28.3, 32.1, 33.3, 37.4, 42.4, 42.5, 42.4, 40.2, 40.7, 42.8, 40.4, 35.2, 33.7, 32.3, 33.0, 32.8, 32.5, 30.4, 30.9, 31.1, 29.5, 29.3, 31.3, 33.3, 35.3, 32.4, 33.0, 33.9, 34.6, 34.3, 36.2, 35.8, 33.9, 34.5, 36.4, 36.9, 41.3, 41.4, 44.3, 48.5, 53.3, 52.3, 49.7, 50.3, 49.3, 49.4, 51.7, 52.1, 48.9, 51.0, 53.5, 56.2, 55.5, 58.2, 61.5, 71.4, 74.1, 81.2, 88.2, 102.9, 109.5, 131.8, 153.4, 142.8, 130.4],backgroundColor:'rgba(34,211,238,.7)',borderRadius:3}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c4_premium_hist', {
+  type:'bar',
+  data:{labels:["-2.2", "-1.0", "0.1", "1.2", "2.4", "3.5", "4.7", "5.8", "7.0", "8.1", "9.3", "10.4", "11.6", "12.7", "13.8", "15.0", "16.1", "17.3", "18.4", "19.6", "20.7", "21.9", "23.0", "24.2", "25.3", "26.5", "27.6", "28.7", "29.9", "31.0", "32.2", "33.3", "34.5", "35.6", "36.8", "37.9", "39.1", "40.2", "41.3", "42.5"],datasets:[{label:"Số ngày",type:'bar',data:[9, 75, 174, 185, 167, 168, 158, 177, 169, 178, 143, 146, 169, 157, 143, 138, 127, 107, 63, 49, 40, 44, 50, 36, 36, 29, 43, 34, 20, 13, 12, 15, 16, 9, 11, 9, 6, 5, 1, 1],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c5_bidask_yearly', {
+  type:'bar',
+  data:{labels:["2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"],datasets:[{label:"Spread TB (%)",type:'bar',data:[0.4, 0.21, 0.36, 0.45, 0.52, 0.3, 0.51, 0.87, 0.63, 0.48, 0.61, 1.24, 1.01, 1.3, 1.12, 2.71, 1.73, 1.76],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},{label:"Spread max (%)",type:'line',data:[2.55, 0.57, 2.39, 1.3, 2.44, 0.85, 2.55, 3.05, 2.58, 0.82, 1.35, 6.92, 1.98, 3.12, 4.05, 5.26, 3.88, 3.62],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c6_vol_drawdown', {
+  type:'bar',
+  data:{labels:["2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"],datasets:[{label:"Volatility năm (%)",type:'bar',data:[20.2, 11.8, 15.7, 11.6, 14.3, 5.3, 6.5, 13.0, 4.6, 3.0, 7.9, 14.4, 5.8, 12.9, 7.0, 14.1, 15.9, 24.5],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},{label:"Max drawdown (%)",type:'line',data:[-8.6, -8.1, -13.7, -9.7, -25.6, -5.8, -8.7, -10.6, -4.0, -2.1, -3.7, -13.7, -5.0, -12.9, -6.9, -16.7, -5.5, -27.6],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c7_ring_vs_bar', {
+  type:'bar',
+  data:{labels:["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"],datasets:[{label:"Bar đắt hơn ring TB (%)",type:'bar',data:[2.31, 6.87, 2.81, -0.38, 2.53, 9.19, 23.97, 20.09, 9.37, 2.18, 0.4],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},{label:"Max (%)",type:'line',data:[9.76, 8.59, 7.37, 0.44, 9.2, 17.7, 30.31, 24.61, 22.36, 5.22, 2.75],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2},{label:"Min (%)",type:'line',data:[-0.44, 5.74, -0.86, -1.2, -1.44, 1.26, 14.46, 16.8, 0.13, 0.0, 0.0],borderColor:'rgba(167,139,250,.85)',backgroundColor:'rgba(167,139,250,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c8_lag_corr', {
+  type:'bar',
+  data:{labels:["0d", "1d", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d", "10d"],datasets:[{label:"Correlation r",type:'bar',data:[0.3606, 0.2596, -0.022, -0.0065, 0.0175, 0.0168, 0.0172, -0.0123, 0.0197, 0.0023, 0.0282],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c9_zoom_2020', {
+  type:'bar',
+  data:{labels:["01/2020", "02/2020", "03/2020", "04/2020", "05/2020", "06/2020", "07/2020", "08/2020", "09/2020", "10/2020", "11/2020", "12/2020", "01/2021", "02/2021", "03/2021", "04/2021", "05/2021", "06/2021", "07/2021", "08/2021", "09/2021", "10/2021", "11/2021", "12/2021", "01/2022", "02/2022", "03/2022", "04/2022", "05/2022", "06/2022", "07/2022", "08/2022", "09/2022", "10/2022", "11/2022", "12/2022", "01/2023", "02/2023", "03/2023", "04/2023", "05/2023", "06/2023", "07/2023", "08/2023", "09/2023", "10/2023", "11/2023", "12/2023", "01/2024", "02/2024", "03/2024", "04/2024", "05/2024", "06/2024", "07/2024", "08/2024", "09/2024", "10/2024", "11/2024", "12/2024", "01/2025", "02/2025", "03/2025", "04/2025", "05/2025", "06/2025", "07/2025", "08/2025", "09/2025", "10/2025", "11/2025", "12/2025", "01/2026", "02/2026", "03/2026", "04/2026", "05/2026", "06/2026", "07/2026"],datasets:[{label:"SJC bán (triệu/lượng)",type:'bar',data:[43.6, 45.2, 47.1, 48.3, 48.7, 48.9, 52.4, 57.1, 56.3, 56.3, 56.1, 55.4, 56.6, 56.8, 55.5, 55.4, 56.2, 57.2, 57.4, 57.2, 57.2, 58.0, 60.0, 61.4, 61.9, 63.6, 69.2, 69.8, 69.9, 68.9, 66.6, 67.1, 66.4, 66.9, 67.5, 66.9, 67.2, 67.2, 67.0, 67.1, 67.2, 67.1, 67.2, 67.6, 68.7, 69.6, 71.1, 75.2, 76.0, 78.7, 81.1, 83.2, 89.2, 77.4, 78.1, 80.1, 81.0, 87.4, 86.0, 85.1, 86.6, 91.0, 96.1, 111.1, 119.8, 118.8, 121.2, 125.2, 134.1, 145.8, 150.8, 155.8, 167.8, 180.1, 180.1, 171.6, 163.8, 149.0, 148.6],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},{label:"Vàng QT quy đổi (triệu/lượng)",type:'bar',data:[43.4, 44.7, 44.6, 48.3, 48.4, 48.7, 51.5, 55.0, 53.6, 53.1, 52.2, 51.8, 51.8, 49.9, 47.6, 48.8, 51.3, 50.9, 50.1, 49.1, 48.6, 48.8, 49.8, 49.4, 49.7, 51.3, 53.8, 53.4, 51.5, 51.2, 48.7, 49.9, 47.9, 48.7, 52.2, 51.6, 53.6, 52.8, 54.2, 56.9, 56.6, 55.2, 55.6, 55.3, 55.7, 55.3, 58.2, 59.5, 59.8, 59.9, 64.4, 70.5, 72.2, 71.4, 73.2, 74.4, 75.3, 81.8, 81.0, 81.0, 82.6, 88.8, 91.9, 100.5, 102.8, 105.3, 105.3, 106.7, 117.4, 128.4, 129.5, 136.7, 150.2, 157.2, 153.7, 149.8, 145.5, 134.3, 130.4],backgroundColor:'rgba(34,211,238,.7)',borderRadius:3}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+
+
+viz.chart('c11_gold_types', {
+  type:'bar',
+  data:{labels:["2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"],datasets:[{label:"Nhẫn SJC 99,99% (% SJC 1L)",type:'line',data:[NaN, NaN, NaN, NaN, NaN, NaN, NaN, 97.8, 93.6, 97.3, 100.4, 97.6, 91.7, 80.7, 83.3, 91.9, 97.9, 99.6],borderColor:'rgba(245,158,11,.85)',backgroundColor:'rgba(245,158,11,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2},{label:"Nữ trang 99% (% SJC 1L)",type:'line',data:[NaN, NaN, NaN, NaN, NaN, NaN, NaN, 96.9, 92.5, 96.2, 99.0, 96.2, 90.3, 79.2, 81.9, 90.4, 96.3, 97.8],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2},{label:"Nữ trang 75% (% SJC 1L)",type:'line',data:[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 62.1, 68.7, 73.1, 74.1],borderColor:'rgba(167,139,250,.85)',backgroundColor:'rgba(167,139,250,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c12_premium_drivers', {
+  type:'bar',
+  data:{labels:["USD/VND change", "Vol QT 20d", "Bid-ask spread"],datasets:[{label:"Correlation với premium (level)",type:'bar',data:[-0.033, 0.021, 0.298],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},{label:"Correlation với Δpremium (daily change)",type:'line',data:[-0.49, 0.004, -0.026],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c13_sjc_vnindex', {
+  type:'bar',
+  data:{labels:["2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"],datasets:[{label:"SJC (%)",type:'bar',data:[34.6, 16.1, 11.5, -25.4, 1.0, -6.9, 11.5, 0.3, -0.1, 17.0, 31.2, 9.9, 8.2, 13.9, 10.8, 81.5, -1.2],backgroundColor:'rgba(245,158,11,.7)',borderRadius:3},{label:"VN-Index (%)",type:'line',data:[-2.0, -27.5, 13.7, 26.2, 8.1, 6.1, 14.8, 48.0, -9.3, 7.7, 14.9, 35.7, -32.8, 12.2, 12.1, 40.9, 3.3],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c14_drawdown', {
+  type:'bar',
+  data:{labels:["07/2009", "10/2009", "01/2010", "04/2010", "07/2010", "10/2010", "01/2011", "04/2011", "07/2011", "10/2011", "01/2012", "04/2012", "07/2012", "10/2012", "01/2013", "04/2013", "07/2013", "10/2013", "01/2014", "04/2014", "07/2014", "10/2014", "01/2015", "04/2015", "07/2015", "10/2015", "01/2016", "04/2016", "07/2016", "10/2016", "01/2017", "04/2017", "07/2017", "10/2017", "01/2018", "04/2018", "07/2018", "10/2018", "01/2019", "04/2019", "07/2019", "10/2019", "01/2020", "04/2020", "07/2020", "10/2020", "01/2021", "04/2021", "07/2021", "10/2021", "01/2022", "04/2022", "07/2022", "10/2022", "01/2023", "04/2023", "07/2023", "10/2023", "01/2024", "04/2024", "07/2024", "10/2024", "01/2025", "04/2025", "07/2025", "10/2025", "01/2026", "04/2026", "07/2026"],datasets:[{label:"SJC drawdown (%)",type:'line',data:[-0.2, -2.2, -7.7, -4.5, -1.2, -1.5, -1.9, -1.0, -1.9, -7.7, -8.2, -12.8, -10.4, -3.1, -7.5, -15.0, -21.7, -25.1, -26.3, -25.4, -24.6, -26.9, -27.0, -27.9, -30.1, -31.0, -31.1, -30.1, -24.3, -25.4, -24.0, -24.5, -24.6, -24.5, -23.9, -24.0, -24.1, -24.6, -24.0, -23.7, -15.1, -13.8, -6.1, -0.7, -4.6, -8.9, -8.4, -8.3, -6.8, -2.6, -1.8, -5.4, -9.2, -8.7, -8.7, -8.7, -7.7, -2.6, -2.4, -5.4, -12.7, -5.5, -1.8, -2.9, -1.2, -1.2, -3.8, -15.7, -22.2],borderColor:'rgba(245,158,11,.85)',backgroundColor:'rgba(245,158,11,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2},{label:"Vàng QT drawdown (%)",type:'line',data:[-1.3, -3.2, -8.0, -2.0, -2.4, -2.1, -2.6, -1.2, -3.0, -10.2, -10.4, -15.1, -13.9, -9.6, -14.5, -25.5, -28.7, -31.8, -30.3, -30.7, -31.4, -35.7, -34.7, -34.3, -37.6, -38.1, -33.9, -29.6, -25.4, -31.5, -30.3, -28.4, -26.9, -27.5, -23.4, -24.3, -28.4, -27.2, -23.1, -22.1, -12.7, -12.5, -6.4, -2.2, -3.3, -8.7, -13.3, -12.2, -14.1, -13.8, -9.7, -9.0, -14.8, -11.0, -6.6, -2.5, -3.8, -2.3, -1.4, -2.4, -1.7, -3.6, -1.3, -2.0, -1.3, -3.6, -5.1, -14.5, -22.0],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2},{label:"VN-Index drawdown (%)",type:'line',data:[-0.2, -14.0, -19.1, -17.5, -24.5, -26.8, -22.5, -28.0, -32.6, -36.9, -34.4, -28.0, -34.4, -37.8, -24.6, -20.5, -22.0, -19.5, -9.2, -9.7, -3.7, -9.4, -10.1, -12.0, -7.6, -8.3, -12.7, -5.4, -2.1, -2.6, -0.5, -0.8, -1.0, -0.6, -1.3, -12.0, -19.2, -22.0, -20.5, -19.4, -18.1, -17.8, -27.2, -31.7, -27.8, -17.6, -3.6, -0.8, -6.1, -1.2, -2.7, -13.5, -20.2, -33.6, -31.1, -29.3, -21.5, -27.5, -20.6, -17.7, -17.8, -17.8, -15.8, -15.8, -2.6, -4.2, -5.8, -4.3, -3.6],borderColor:'rgba(167,139,250,.85)',backgroundColor:'rgba(167,139,250,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+
+viz.chart('c15_inflation', {
+  type:'bar',
+  data:{labels:["07/2009", "10/2009", "01/2010", "04/2010", "07/2010", "10/2010", "01/2011", "04/2011", "07/2011", "10/2011", "01/2012", "04/2012", "07/2012", "10/2012", "01/2013", "04/2013", "07/2013", "10/2013", "01/2014", "04/2014", "07/2014", "10/2014", "01/2015", "04/2015", "07/2015", "10/2015", "01/2016", "04/2016", "07/2016", "10/2016", "01/2017", "04/2017", "07/2017", "10/2017", "01/2018", "04/2018", "07/2018", "10/2018", "01/2019", "04/2019", "07/2019", "10/2019", "01/2020", "04/2020", "07/2020", "10/2020", "01/2021", "04/2021", "07/2021", "10/2021", "01/2022", "04/2022", "07/2022", "10/2022", "01/2023", "04/2023", "07/2023", "10/2023", "01/2024", "04/2024", "07/2024", "10/2024", "01/2025", "04/2025", "07/2025", "10/2025", "01/2026", "04/2026", "07/2026"],datasets:[{label:"SJC nominal (triệu/lượng)",type:'line',data:[21.9, 25.8, 26.5, 27.4, 28.8, 34.7, 36.6, 37.6, 43.5, 44.7, 44.5, 42.3, 43.5, 46.9, 44.9, 41.2, 38.0, 36.3, 35.7, 36.2, 36.5, 35.4, 35.4, 35.0, 33.9, 33.5, 33.4, 33.8, 36.6, 36.1, 36.9, 36.6, 36.5, 36.6, 36.9, 36.8, 36.8, 36.5, 36.8, 37.0, 41.1, 41.8, 45.4, 48.6, 55.3, 55.9, 56.2, 56.3, 57.2, 59.9, 65.2, 69.5, 66.9, 67.1, 67.1, 67.1, 67.8, 72.5, 78.6, 83.7, 79.4, 86.0, 91.7, 116.7, 126.5, 150.9, 175.7, 160.9, 149.7],borderColor:'rgba(245,158,11,.85)',backgroundColor:'rgba(245,158,11,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2},{label:"SJC real — điều chỉnh lạm phát 2009 (triệu/lượng)",type:'line',data:[21.9, 25.8, 24.3, 25.1, 26.4, 31.8, 28.2, 29.0, 33.6, 34.5, 31.4, 29.9, 30.8, 33.1, 29.8, 27.3, 25.2, 24.1, 22.8, 23.1, 23.3, 22.6, 22.4, 22.1, 21.5, 21.2, 20.6, 20.9, 22.6, 22.3, 22.0, 21.8, 21.8, 21.8, 21.2, 21.2, 21.2, 21.0, 20.6, 20.7, 23.0, 23.4, 24.6, 26.4, 30.0, 30.4, 30.0, 30.0, 30.5, 31.9, 33.7, 35.9, 34.6, 34.7, 33.6, 33.6, 33.9, 36.3, 37.9, 40.4, 38.4, 41.5, 42.8, 54.6, 59.1, 70.5, 80.9, 74.1, 68.9],borderColor:'rgba(34,211,238,.85)',backgroundColor:'rgba(34,211,238,.15)',tension:.3,pointRadius:2,fill:false,borderWidth:2}]},
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}}
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},maxRotation:60,autoSkip:true,maxTicksLimit:14}},
+      y:{grid:{color:'#334155'},ticks:{font:{size:10}}}
+    }
+  }
+});
+</script>
+
+/* ============ NAVIGATION LOGIC ============ */
+(function(){
+  const body = document.body;
+  const minimap = document.getElementById('minimap');
+  const fab = document.getElementById('mmFab');
+  const closeBtn = document.getElementById('mmClose');
+  const toTop = document.getElementById('toTop');
+  const progressBar = document.getElementById('progressBar');
+  const mmPct = document.getElementById('mmPct');
+  const search = document.getElementById('mmSearch');
+  const noResult = document.getElementById('mmNoResult');
+  const groups = Array.from(document.querySelectorAll('.mm-group'));
+  const allLinks = Array.from(document.querySelectorAll('.mm-items a'));
+  const sections = allLinks.map(a => {
+    const id = a.getAttribute('href').slice(1);
+    return { link: a, section: document.getElementById(id), id };
+  }).filter(x => x.section);
+
+  setTimeout(() => document.body.classList.add('loaded'), 800);
+
+  function openGroupContaining(link){
+    const grp = link.closest('.mm-group');
+    if (grp && !grp.classList.contains('open')) grp.classList.add('open');
+  }
+
+  // Scroll spy
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){
+        const id = entry.target.id;
+        const found = sections.find(s => s.id === id);
+        if (found){
+          sections.forEach(s => s.link.classList.remove('active'));
+          found.link.classList.add('active');
+          openGroupContaining(found.link);
+        }
+      }
+    });
+  }, { rootMargin:'-90px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s.section));
+
+  // Progress + show buttons
+  function onScroll(){
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = Math.min(100, Math.max(0, (window.scrollY / h) * 100));
+    progressBar.style.width = pct + '%';
+    mmPct.textContent = Math.round(pct) + '%';
+    if (window.scrollY > 400){
+      body.classList.add('nav-active');
+      toTop.classList.add('show');
+    } else {
+      body.classList.remove('nav-active');
+      toTop.classList.remove('show');
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+
+  toTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+  groups.forEach(g => {
+    const head = g.querySelector('.mm-group-head');
+    head.addEventListener('click', () => g.classList.toggle('open'));
+  });
+
+  search.addEventListener('input', () => {
+    const q = search.value.trim().toLowerCase();
+    minimap.classList.toggle('searching', !!q);
+    let anyVisible = false;
+    allLinks.forEach(a => {
+      const text = a.textContent.toLowerCase();
+      const match = !q || text.includes(q);
+      a.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+      if (match && q) openGroupContaining(a);
+    });
+    noResult.classList.toggle('show', !anyVisible);
+  });
+
+  fab.addEventListener('click', () => body.classList.add('nav-mobile-open'));
+  closeBtn.addEventListener('click', () => body.classList.remove('nav-mobile-open'));
+
+  allLinks.forEach(a => {
+    a.addEventListener('click', () => {
+      if (window.innerWidth < 1024) body.classList.remove('nav-mobile-open');
+    });
+  });
+})();
+
+/* ============ PRESENTATION MODE ============ */
+// SLIDES: định nghĩa thủ công mỗi slide. Verify SLIDES.length ≈ số section chính.
+// type: 'title' | 'section' | 'list' | 'quote'
+(function(){
+  const presBtn = document.getElementById('presBtn');
+  const overlay = document.getElementById('presOverlay');
+  const exitBtn = document.getElementById('presExit');
+  const prevBtn = document.getElementById('presPrev');
+  const nextBtn = document.getElementById('presNext');
+  const stage = document.getElementById('presStage');
+  const dotsBox = document.getElementById('presDots');
+  const progressFill = document.getElementById('presProgress');
+  const currentEl = document.getElementById('presCurrent');
+  const totalEl = document.getElementById('presTotal');
+  if (!presBtn || !overlay) return;
+
+  const SLIDES = [
+    {type:'section',id:'chuong-1'},
+    {type:'section',id:'chuong-2'},
+    {type:'section',id:'chuong-3'},
+    {type:'section',id:'chuong-4'},
+    {type:'section',id:'chuong-5'},
+    {type:'section',id:'chuong-6'},
+    {type:'section',id:'chuong-7'},
+    {type:'section',id:'chuong-8'},
+    {type:'section',id:'chuong-9'},
+    {type:'section',id:'chuong-10'},
+    {type:'section',id:'chuong-11'},
+    {type:'section',id:'chuong-12'},
+    {type:'section',id:'chuong-13'},
+    {type:'section',id:'chuong-14'},
+    {type:'section',id:'insight-1'},
+    {type:'section',id:'insight-2'},
+    {type:'section',id:'insight-3'},
+    {type:'section',id:'insight-4'},
+    {type:'section',id:'chuong-15'},
+    {type:'section',id:'chuong-16'},
+    {type:'section',id:'insight-5'},
+    {type:'section',id:'insight-6'},
+    {type:'section',id:'chuong-17'},
+    {type:'section',id:'phu-luc'},
+    {type:'section',id:'tai-lieu-tham-khao'}
+  ];
+
+  let current = 0;
+  let built = false;
+  let slideEls = [];
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  function renderSlide(sl, idx){
+    const cls = 'slide-' + sl.type;
+    let inner = '';
+    if (sl.type === 'title'){
+      inner = '<div class="slide-inner"><span class="badge">'+esc(sl.badge)+'</span><h1>'+esc(sl.title)+'</h1><p class="sub">'+esc(sl.sub)+'</p><p class="sub" style="color:#94a3b8;font-size:.9rem;margin-top:18px">'+esc(sl.meta)+'</p></div>';
+    } else if (sl.type === 'section'){
+      inner = '<div class="slide-inner"><div class="sec-num">'+esc(sl.num)+'</div><div class="sec-label">'+esc(sl.label)+'</div><h2>'+esc(sl.title)+'</h2></div>';
+    } else if (sl.type === 'list'){
+      const items = sl.items.map(function(it,i){ return '<li><span class="num">'+(i+1)+'</span><span class="txt">'+it.t+'</span></li>'; }).join('');
+      inner = '<div class="slide-inner slide-content"><div class="kicker">'+esc(sl.kicker)+'</div><h2>'+esc(sl.title)+'</h2><ul>'+items+'</ul></div>';
+    } else if (sl.type === 'quote'){
+      inner = '<div class="slide-inner"><div class="qmark">"</div><p class="qtext">'+esc(sl.q)+'</p><p class="qsource">'+esc(sl.source)+'</p></div>';
+    }
+    return '<div class="pres-slide '+cls+(idx===0?' active':'')+'" data-idx="'+idx+'">'+inner+'</div>';
+  }
+
+  function build(){
+    if (built) return;
+    built = true;
+    stage.innerHTML = SLIDES.map(function(sl,i){ return renderSlide(sl,i); }).join('');
+    slideEls = Array.from(stage.children);
+    totalEl.textContent = SLIDES.length;
+    SLIDES.forEach(function(_, i){
+      const d = document.createElement('button');
+      d.className = 'pres-dot' + (i===0?' active':'');
+      d.setAttribute('aria-label','Slide '+(i+1));
+      d.addEventListener('click', function(){ goTo(i); });
+      dotsBox.appendChild(d);
+    });
+  }
+
+  function updateUI(){
+    progressFill.style.width = ((current+1)/SLIDES.length*100)+'%';
+    currentEl.textContent = current+1;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === SLIDES.length-1;
+    Array.from(dotsBox.children).forEach(function(d,i){ d.classList.toggle('active', i===current); });
+  }
+  function goTo(idx){
+    if (idx < 0 || idx >= SLIDES.length || idx === current) return;
+    const dir = idx > current ? 'forward' : 'back';
+    const old = slideEls[current];
+    const nw = slideEls[idx];
+    old.classList.remove('active');
+    if (dir === 'forward') old.classList.add('prev'); else old.classList.remove('prev');
+    nw.classList.remove('prev');
+    void nw.offsetWidth;
+    nw.classList.add('active');
+    current = idx;
+    updateUI();
+  }
+  function open(){ build(); overlay.classList.add('active'); overlay.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; current=0; updateUI(); }
+  function close(){ overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+
+  presBtn.addEventListener('click', open);
+  exitBtn.addEventListener('click', close);
+  prevBtn.addEventListener('click', function(){ goTo(current-1); });
+  nextBtn.addEventListener('click', function(){ goTo(current+1); });
+  document.addEventListener('keydown', function(e){
+    if (!overlay.classList.contains('active')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown'){ e.preventDefault(); goTo(current+1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); goTo(current-1); }
+    else if (e.key === 'Escape'){ close(); }
+    else if (e.key === 'Home'){ goTo(0); }
+    else if (e.key === 'End'){ goTo(SLIDES.length-1); }
+  });
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+})();
+</script>
+</body>
+</html>
+
+</body>
+</html>

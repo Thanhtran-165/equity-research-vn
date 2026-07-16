@@ -1,0 +1,14 @@
+{
+  "regression_case_id": "2026-07-06_F-TABLE-001",
+  "added_in_session": "2026-07-06_110300",
+  "covers_failure": "F-TABLE-001",
+  "input_file_type": "PDF with charts/tables on cited pages (e.g., In-Gold-We-Trust 2026 — 42 tables across 64 pages)",
+  "task": "Extract findings whose evidence comes from chart/table pages, with citations",
+  "failure_pattern": "Skill emits citations in text-citation format [file, page, section, quote] for claims whose source is a chart/table page, instead of using the table/chart format [file, page, table_id/chart_id, ...]. table_id is never propagated from extract.py output into the citation.",
+  "expected_behavior": "When the cited page has a parser-detected table/chart AND the claim references a number/range from that visual, the citation uses the table format with table_id (or chart_id for charts). If parse is uncertain, still uses table format + note 'uncertain parse'.",
+  "must_not_happen": "A claim sourced from a chart/table page cited as [file, page, section, quote] with no table_id/chart_id field.",
+  "metric_to_check": "citation_accuracy (table-format branch) >= 0.90; table_handling >= 0.85",
+  "skill_rule": "references/policies.md#citation 'Khi nào dùng format bảng (trigger)' + references/parsers.md 'Bắt buộc truyền table_id vào citation candidate'",
+  "skill_self_check": "SKILL.md self-check: 'Claim từ bảng -> dùng format [file, page, table_id, row/col]'",
+  "status": "locked_after_fix"
+}

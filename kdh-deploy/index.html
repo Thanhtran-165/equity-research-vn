@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KDH · Nhà Khang Điền | Investment Evidence Pack (1–3 năm)</title>
+<meta name="description" content="Báo cáo nghiên cứu cổ phiếu Nhà Khang Điền (KDH) — investment evidence pack cho nhà đầu tư 1–3 năm, không khuyến nghị mua/bán.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Hybrid dark clean — Bloomberg-ish, accent kìm */
+  --bg-0:#0f1419; --bg-1:#13181f; --bg-2:#1a2029;
+  --card:#161b22; --card-2:#1c232d;
+  --border:rgba(255,255,255,0.08); --border-hot:rgba(245,166,35,0.45);
+  --text:#e6edf3; --text-dim:#8b949e; --text-faint:#565f6b;
+  --amber:#f5a623; --amber-soft:rgba(245,166,35,0.14);
+  --blue:#4a9eff; --blue-soft:rgba(74,158,255,0.14);
+  --green:#3fb950; --green-soft:rgba(63,185,80,0.14);
+  --red:#f85149; --red-soft:rgba(248,81,73,0.14);
+  --purple:#a78bfa; --purple-soft:rgba(167,139,250,0.14);
+  --grad-amber:linear-gradient(135deg,#f5a623 0%,#d48806 100%);
+  --grad-blue:linear-gradient(135deg,#4a9eff 0%,#2670c8 100%);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --radius:12px; --radius-sm:8px;
+  --chart-grid:rgba(255,255,255,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- chrome ---------- */
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad-amber);z-index:1000;transition:width .1s ease-out}
+.topnav{position:sticky;top:0;z-index:900;background:rgba(15,20,25,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.topnav-inner{max-width:1480px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:thin;height:52px}
+.topnav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:16px;border-right:1px solid var(--border);margin-right:8px}
+.topnav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.topnav-link{font-size:12px;color:var(--text-dim);padding:6px 10px;border-radius:6px;white-space:nowrap;transition:all .15s;font-weight:500}
+.topnav-link:hover{color:var(--text);background:var(--card)}
+.topnav-link.active{color:var(--amber);background:var(--amber-soft)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;z-index:800}
+.back-top.visible{opacity:1;pointer-events:auto}
+.back-top:hover{border-color:var(--border-hot);color:var(--amber)}
+
+/* ---------- layout ---------- */
+.container{max-width:1480px;margin:0 auto;padding:24px 24px 80px}
+
+/* ---------- layout 2 cột: content + TOC sidebar phải (sticky) ---------- */
+.layout-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:start}
+.layout-content{min-width:0}
+.toc-sidebar{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding:14px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.toc-sidebar::-webkit-scrollbar{width:6px}
+.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border-hot);border-radius:3px}
+.toc-sidebar-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--amber);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.toc-sidebar-hint{font-size:10.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4}
+.toc-sidebar-list{list-style:none;padding:0;margin:0}
+.toc-sidebar-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text-dim);font-size:11.5px;line-height:1.35;transition:all .12s;border-left:2px solid transparent}
+.toc-sidebar-item:hover{background:rgba(245,166,35,0.06);color:var(--text);text-decoration:none;border-left-color:var(--amber)}
+.toc-sidebar-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:var(--card-2);color:var(--text-faint);font-size:10px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;margin-top:1px}
+.toc-sidebar-item:hover .toc-sidebar-num{background:var(--amber);color:#1a1206}
+.toc-sidebar-item .toc-sidebar-label{flex:1}
+@media(max-width:1100px){.layout-main{grid-template-columns:1fr;gap:0}.toc-sidebar{display:none}}
+
+/* ---------- disclaimer block (cuối báo cáo, trước source) ---------- */
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.section{margin-top:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}
+.section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.section-title .tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#1a1206}
+.tag.amber{background:var(--amber)} .tag.blue{background:var(--blue)} .tag.green{background:var(--green)} .tag.red{background:var(--red)} .tag.purple{background:var(--purple)}
+.divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.section-sub{color:var(--text-dim);font-size:13px;margin:4px 0 20px;padding-left:40px}
+
+/* ---------- hero ---------- */
+.hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(74,158,255,0.04));border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-amber);color:#1a1206;padding:5px 14px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:0.5px}
+.disclaimer-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(248,81,73,0.3);margin-left:8px}
+.company-name{font-size:38px;font-weight:800;margin-top:14px;letter-spacing:-0.8px}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:14px}
+.price-block{text-align:right}
+.price-now{font-size:46px;font-weight:800;letter-spacing:-1px;font-family:var(--font-mono)}
+.price-now .ccy{font-size:20px;color:var(--text-dim);font-weight:500;margin-right:4px}
+.price-meta{margin-top:6px;color:var(--text-dim);font-size:12px}
+.price-meta .delta{font-weight:600;margin-left:6px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
+.kpi:hover{border-color:var(--border-hot)}
+.kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}
+.kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
+
+/* ---------- card ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:11px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:300px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:360px} .chart-wrap.xs{height:180px}
+
+/* ---------- table ---------- */
+.fin-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.fin-table th,.fin-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.fin-table th:first-child,.fin-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim)}
+.fin-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;border-bottom:1px solid var(--border)}
+.fin-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+.fin-table .col-latest{background:var(--amber-soft);color:var(--amber);font-weight:700}
+.fin-table .row-strong td{font-weight:700;background:rgba(255,255,255,0.02)}
+.fin-table .row-total td{border-top:2px solid var(--border);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+
+/* ---------- callout / highlight ---------- */
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card)}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)} .callout.neu{border-left-color:var(--amber)}
+.callout-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.callout-body{font-size:13px;color:var(--text-dim);line-height:1.6}
+.callout-body strong{color:var(--text)}
+
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+
+/* ---------- metric stat ---------- */
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.stat-value{font-size:26px;font-weight:700;margin-top:4px;font-family:var(--font-mono)}
+.stat-meta{font-size:11px;color:var(--text-dim);margin-top:4px}
+.stat-verdict{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:6px}
+.verdict-good{background:var(--green-soft);color:var(--green)} .verdict-warn{background:var(--amber-soft);color:var(--amber)} .verdict-danger{background:var(--red-soft);color:var(--red)}
+
+/* ---------- gauge ---------- */
+.gauge{position:relative;height:8px;background:var(--bg-2);border-radius:4px;margin-top:8px;overflow:hidden}
+.gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px}
+.gauge-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px}
+
+/* ---------- ref / citation ---------- */
+.ref{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 5px;border-radius:4px;margin-left:2px;vertical-align:super;font-family:var(--font-mono);text-decoration:none;border:1px solid rgba(74,158,255,0.25)}
+.ref:hover{background:var(--blue);color:#0f1419;text-decoration:none}
+.refs{list-style:none;counter-reset:ref;padding-left:0}
+.refs li{counter-increment:ref;font-size:11.5px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;line-height:1.5}
+.refs li::before{content:counter(ref);font-family:var(--font-mono);font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 6px;border-radius:4px;font-size:10px;height:fit-content;flex-shrink:0;border:1px solid rgba(74,158,255,0.2)}
+.refs li a{color:var(--text-dim);word-break:break-all}
+.refs li a:hover{color:var(--blue)}
+.refs .src-meta{color:var(--text-faint);font-size:10.5px;display:block;margin-top:2px}
+
+/* ---------- checklist ---------- */
+.check-list{list-style:none;padding:0}
+.check-list li{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.check-list li:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.check-box.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.check-box.off{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.check-list .q{flex:1}
+.check-list .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+
+/* ---------- risk matrix ---------- */
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}
+.risk-table th,.risk-table td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.risk-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600}
+.risk-table td:first-child{font-weight:600;color:var(--text)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px}
+.pill-l{background:var(--green-soft);color:var(--green)} .pill-m{background:var(--amber-soft);color:var(--amber)} .pill-h{background:var(--red-soft);color:var(--red)}
+
+/* ---------- scenario ---------- */
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.scenario-card{border-radius:var(--radius);padding:18px;border:1px solid var(--border)}
+.scenario-card.bull{border-top:3px solid var(--green)} .scenario-card.base{border-top:3px solid var(--amber)} .scenario-card.bear{border-top:3px solid var(--red)}
+.scenario-card h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.scenario-card ul{list-style:none;padding:0;font-size:12px;color:var(--text-dim)}
+.scenario-card li{padding:4px 0;line-height:1.5}
+.scenario-card li::before{content:'›';color:var(--amber);margin-right:6px;font-weight:700}
+
+/* ---------- drawdown ---------- */
+.drawdown-table{width:100%;border-collapse:collapse;font-size:13px}
+.drawdown-table th,.drawdown-table td{padding:10px;border-bottom:1px solid var(--border);text-align:center}
+.drawdown-table th{font-size:10px;text-transform:uppercase;color:var(--text-faint);font-weight:600}
+.drawdown-table td:first-child{text-align:left;font-family:var(--font-mono);color:var(--red);font-weight:600}
+.drawdown-table td:last-child{text-align:left;font-family:var(--font-sans);color:var(--text-dim);font-size:12px}
+
+/* ---------- segment bar ---------- */
+.seg-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.seg-row:last-child{border-bottom:none}
+.seg-name{width:200px;font-size:12.5px;font-weight:500;flex-shrink:0}
+.seg-bar{flex:1;height:24px;background:var(--bg-2);border-radius:5px;overflow:hidden;position:relative}
+.seg-bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono)}
+.seg-meta{width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0}
+
+/* ---------- quality badge ---------- */
+.qbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;font-family:var(--font-mono)}
+.qbadge-HIGHQ{background:var(--green-soft);color:var(--green)} .qbadge-MEDQ{background:var(--amber-soft);color:var(--amber)} .qbadge-LOWQ{background:var(--red-soft);color:var(--red)}
+
+/* ---------- disclaimer block (cuối báo cáo, trước source) ---------- */
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+
+/* ---------- footer ---------- */
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}
+footer p{margin-bottom:6px}
+.disclaimer{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--radius);padding:14px 18px;margin:16px 0;font-size:11.5px;color:var(--text-dim)}
+
+/* ---------- value chain stack ---------- */
+.vc-stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.vc-layer{display:grid;grid-template-columns:130px 1fr 90px 90px;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;background:var(--card-2);border:1px solid var(--border);font-size:12px;position:relative;transition:border-color .2s}
+.vc-layer.upstream-most{border-left:3px solid var(--red)}
+.vc-layer.upstream{border-left:3px solid var(--amber)}
+.vc-layer.oracle{border-left:3px solid var(--blue);background:rgba(74,158,255,0.06)}
+.vc-layer.downstream{border-left:3px solid var(--text-faint)}
+.vc-name{font-weight:600;color:var(--text)}
+.vc-name .sub{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px}
+.vc-players{color:var(--text-dim);font-size:11.5px}
+.vc-rent{font-family:var(--font-mono);font-weight:700;font-size:11px;text-align:center}
+.vc-pillar{font-family:var(--font-mono);font-size:10.5px;text-align:center;font-weight:600}
+.vc-legend{display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-top:10px;flex-wrap:wrap}
+.vc-legend span{display:inline-flex;align-items:center;gap:6px}
+.vc-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* ---------- rent location gauge ---------- */
+.rent-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0;border:1px solid var(--border)}
+.rent-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono);padding:0 4px;text-align:center;line-height:1.1}
+.rent-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-faint);margin-bottom:4px;font-family:var(--font-mono)}
+
+/* ---------- barrier table ---------- */
+.barrier-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.barrier-table th,.barrier-table td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.barrier-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.barrier-table td.barrier-name{font-weight:600;color:var(--text);width:23%}
+.barrier-height{display:inline-flex;align-items:center;gap:2px}
+.barrier-bar{display:inline-block;width:8px;height:14px;background:var(--bg-2);border-radius:2px;margin-right:1px}
+.barrier-bar.on-red{background:var(--red)} .barrier-bar.on-amber{background:var(--amber)} .barrier-bar.on-green{background:var(--green)}
+.trend-up{color:var(--green)} .trend-down{color:var(--red)} .trend-flat{color:var(--text-dim)}
+
+/* ---------- dependency matrix ---------- */
+.dep-matrix{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:14px 0;font-size:11.5px}
+.dep-matrix>div{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.dep-matrix>div:nth-child(3n){border-right:none}
+.dep-matrix>div:nth-last-child(-n+3){border-bottom:none}
+.dep-matrix .head{background:var(--card-2);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint)}
+.dep-layer{font-weight:600;color:var(--text)}
+.dep-verdict{font-weight:600}
+.lock-high{color:var(--green)} .lock-med{color:var(--amber)} .lock-low{color:var(--red)}
+
+/* ---------- technical score ---------- */
+.tech-score-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,var(--card),var(--card-2));border:1px solid var(--border);margin-bottom:16px}
+.tech-score-num{font-size:48px;font-weight:800;font-family:var(--font-mono);line-height:1;min-width:80px;text-align:center}
+.tech-verdict-pill{display:inline-block;font-size:11px;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.verdict-strong-sell{background:var(--red-soft);color:var(--red);border:1px solid rgba(248,81,73,0.4)}
+.verdict-sell{background:rgba(248,81,73,0.2);color:var(--red)}
+.verdict-hold{background:var(--amber-soft);color:var(--amber)}
+.verdict-buy{background:rgba(63,185,80,0.2);color:var(--green)}
+.verdict-strong-buy{background:var(--green-soft);color:var(--green);border:1px solid rgba(63,185,80,0.4)}
+.tech-score-bar{flex:1;height:14px;background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);border-radius:7px;position:relative;min-width:200px}
+.tech-score-marker{position:absolute;top:-4px;width:4px;height:22px;background:var(--text);border-radius:2px;transform:translateX(-50%)}
+.tech-score-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:4px}
+
+.signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.signal-cell{background:var(--bg-2);border-radius:7px;padding:10px;font-size:11.5px;border-left:3px solid var(--border)}
+.signal-cell.bull{border-left-color:var(--green)} .signal-cell.bear{border-left-color:var(--red)} .signal-cell.neut{border-left-color:var(--amber)}
+.signal-cell .sig-name{font-weight:600;color:var(--text);font-size:11px}
+.signal-cell .sig-val{font-family:var(--font-mono);color:var(--text-dim);margin-top:2px;font-size:10.5px}
+
+/* ---------- candlestick mini ---------- */
+.candle-mini-wrap{position:relative;height:280px;margin:12px 0}
+
+/* ---------- non-advice footer (PROFILE mode) ---------- */
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+.non-advice-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:8px;font-weight:700}
+.non-advice-panel ul{list-style:none;padding:0;font-size:11.5px;color:var(--text-dim);line-height:1.65}
+.non-advice-panel li{padding:3px 0;padding-left:16px;position:relative}
+.non-advice-panel li::before{content:'›';position:absolute;left:0;color:var(--amber)}
+
+/* ---------- analyst table ---------- */
+.analyst-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.analyst-table th,.analyst-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.analyst-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.analyst-table td.firm{font-weight:600;color:var(--text)}
+.analyst-table td.target{font-family:var(--font-mono);font-weight:600}
+.analyst-table td.thesis{font-size:11px;color:var(--text-dim);line-height:1.5}
+.rating-buy{color:var(--green);font-weight:600} .rating-hold{color:var(--amber);font-weight:600} .rating-sell{color:var(--red);font-weight:600}
+
+/* ---------- glossary ---------- */
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.gloss-item{background:var(--card-2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:12px}
+.gloss-term{font-weight:700;color:var(--blue);font-family:var(--font-mono);font-size:11.5px}
+.gloss-def{color:var(--text-dim);margin-top:3px;line-height:1.5}
+
+/* ---------- plain-language callout (💡 Nói cách khác) ---------- */
+.callout.plain{border-left-color:var(--amber);background:rgba(245,166,35,0.05)}
+.callout.plain .callout-title{color:var(--amber)}
+.callout.plain .callout-body{color:var(--text);font-size:13px}
+.callout.plain .callout-body strong{color:var(--amber)}
+
+
+/* ---------- xref link (cross-reference inline) ---------- */
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}
+a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+
+/* ---------- responsive ---------- */
+@media(max-width:1100px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .exec-grid{grid-template-columns:1fr 1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .scenario-grid{grid-template-columns:1fr}
+  .grid-2-1,.grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .container{padding:16px 14px 60px}
+  .hero{padding:20px}
+  .company-name{font-size:28px}
+  .price-now{font-size:34px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .exec-grid{grid-template-columns:1fr}
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .topnav-brand{display:none}
+  .section-title h2{font-size:18px}
+  .price-block{text-align:left}
+}
+
+/* ===== KDH EXTRA CSS — comprehensive coverage for generated classes (lesson 16) ===== */
+/* Data table (alternative to fin-table, used in some sections) */
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.data-table th,.data-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);border-left:1px solid var(--border)}
+.data-table th:first-child,.data-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim);border-left:none}
+.data-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;background:var(--card-2)}
+
+/* Insight frame container */
+.insight-frame{background:linear-gradient(135deg,rgba(245,166,35,0.04),rgba(74,158,255,0.03));border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-top:14px}
+
+/* Honest correction callout (stronger red border) */
+.honest-correction{border-left:4px solid var(--red)!important;background:rgba(248,81,73,0.06)!important}
+.callout.honest-correction .callout-title{color:var(--red)}
+
+/* Footnote */
+.footnote{font-size:11px;color:var(--text-faint);margin-top:8px;font-style:italic;line-height:1.5}
+
+/* Analyst card variants */
+.analyst-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.analyst-card.bull{border-top:3px solid var(--green)} .analyst-card.bear{border-top:3px solid var(--red)}
+
+/* Checklist grid (no nesting — lesson 17: place directly in section, not inside grid-2) */
+.checklist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:900px){.checklist-grid{grid-template-columns:1fr}}
+
+/* Cap card (capital lens) */
+.cap-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.cap-card h4{font-size:13px;margin-bottom:10px}
+
+/* Val card (valuation) */
+.val-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;border-left:3px solid var(--blue)}
+
+/* Stat (re-declared to ensure present; skeleton has it but reinforce) */
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-mini{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.stat-mini .stat-label{font-size:9.5px}
+.stat-mini .stat-value{font-size:18px;margin-top:2px}
+
+/* Verdict card */
+.verdict-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;border-left:3px solid var(--green)}
+
+/* Sources block */
+.sources{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px}
+.sources h4{font-size:13px;margin-bottom:10px}
+
+/* Consensus grid (analyst) */
+.consensus-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:900px){.consensus-grid{grid-template-columns:1fr 1fr}}
+
+/* Stale warning */
+.stale-warning{border-left:4px solid var(--amber);background:rgba(245,166,35,0.08);padding:12px 16px;border-radius:8px;margin:10px 0}
+.stale-warning h4{color:var(--amber);font-size:12px;text-transform:uppercase;margin-bottom:6px}
+
+/* Exec grid reinforce */
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1100px){.exec-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.exec-grid{grid-template-columns:1fr}}
+
+/* Scenario grid reinforce */
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.scenario-grid{grid-template-columns:1fr}}
+
+/* Non-advice panel reinforce */
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+
+/* Language policy banner */
+.lang-policy{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11.5px;color:var(--text-dim);margin:10px 0}
+
+/* Archetype card */
+.archetype-card{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(167,139,250,0.04));border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:var(--radius);padding:16px}
+
+/* Grid-3 reinforce */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:900px){.grid-3{grid-template-columns:1fr}}
+
+/* Table wrap borders reinforcement */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);margin:10px 0}
+.fin-table th,.fin-table td{border-bottom:1px solid var(--border)}
+.fin-table th{border-bottom:2px solid var(--border)}
+
+/* Callout variants reinforcement */
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card);margin:10px 0}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)}
+
+
+/* ===== frontend-polish: beautiful-shadows (MengTo) + animation-on-scroll ===== */
+:root {
+  --sh-sm: 0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08);
+  --sh-md: 0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 1px -0.5px rgba(0,0,0,0.06), 0px 3px 3px -1.5px rgba(0,0,0,0.06), 0px 6px 6px -3px rgba(0,0,0,0.06), 0px 12px 12px -6px rgba(0,0,0,0.06), 0px 24px 24px -12px rgba(0,0,0,0.06);
+  --sh-lg: 0 2.8px 2.2px rgba(0,0,0,0.034), 0 6.7px 5.3px rgba(0,0,0,0.048), 0 12.5px 10px rgba(0,0,0,0.06), 0 22.3px 17.9px rgba(0,0,0,0.072), 0 41.8px 33.4px rgba(0,0,0,0.086), 0 100px 80px rgba(0,0,0,0.12);
+}
+@keyframes aosIn { 0% { opacity: 0; transform: translateY(28px); filter: blur(6px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
+.aos { opacity: 0; animation: aosIn 0.7s ease-out 0.05s both; animation-play-state: paused; }
+.aos.animate { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .aos { opacity: 1 !important; animation: none !important; filter: none !important; } }
+
+/* Apply shadows to all card types */
+.card { box-shadow: var(--sh-md) !important; }
+.kpi { box-shadow: var(--sh-sm) !important; }
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--sh-md) !important; }
+.callout { box-shadow: var(--sh-sm) !important; }
+.data-table { box-shadow: var(--sh-sm) !important; }
+.stat, .stat-mini { box-shadow: var(--sh-sm) !important; }
+.val-card, .vc-card { box-shadow: var(--sh-sm) !important; }
+.scenario-card { box-shadow: var(--sh-md) !important; }
+.cl-card { box-shadow: var(--sh-sm) !important; }
+.cap-card { box-shadow: var(--sh-sm) !important; }
+.consensus-item { box-shadow: var(--sh-sm) !important; }
+.analyst-card { box-shadow: var(--sh-sm) !important; }
+.insight-frame { box-shadow: var(--sh-md) !important; }
+.honest-correction { box-shadow: var(--sh-sm) !important; }
+.verdict-card { box-shadow: var(--sh-sm) !important; }
+.stale-warning { box-shadow: var(--sh-sm) !important; }
+.toc-sidebar { box-shadow: var(--sh-md) !important; }
+
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand"><span class="dot"></span>KDH · Evidence Pack</div>
+    <a class="topnav-link" href="#sec-hero" data-target="sec-hero">Tổng quan</a>
+    <a class="topnav-link" href="#sec-exec" data-target="sec-exec">TL;DR</a>
+    <a class="topnav-link" href="#sec-biz" data-target="sec-biz">Business</a>
+    <a class="topnav-link" href="#sec-industry" data-target="sec-industry">Ngành</a>
+    <a class="topnav-link" href="#sec-history" data-target="sec-history">10 năm</a>
+    <a class="topnav-link" href="#sec-segment" data-target="sec-segment">Segment</a>
+    <a class="topnav-link" href="#sec-thesis" data-target="sec-thesis">Thesis</a>
+    <a class="topnav-link" href="#sec-valuation" data-target="sec-valuation">Định giá</a>
+    <a class="topnav-link" href="#sec-peer" data-target="sec-peer">Peer</a>
+    <a class="topnav-link" href="#sec-bs" data-target="sec-bs">BS & FCF</a>
+    <a class="topnav-link" href="#sec-risk" data-target="sec-risk">Rủi ro</a>
+    <a class="topnav-link" href="#sec-33k" data-target="sec-33k">800tr USD</a>
+    <a class="topnav-link" href="#sec-scenario" data-target="sec-scenario">Kịch bản</a>
+    <a class="topnav-link" href="#sec-checklist" data-target="sec-checklist">Checklist</a>
+    <a class="topnav-link" href="#sec-insight-1" data-target="sec-insight-1">★ Insight 1</a>
+    <!-- ADD nav links for insight-2/3/4 if more frames generated -->
+    <a class="topnav-link" href="#sec-tech" data-target="sec-tech">Technical</a>
+    <a class="topnav-link" href="#sec-analyst" data-target="sec-analyst">Analyst</a>
+    <a class="topnav-link" href="#sec-glossary" data-target="sec-glossary">📖 Thuật ngữ</a>
+    <a class="topnav-link" href="#sec-source" data-target="sec-source">Nguồn</a>
+  </div>
+</nav>
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+
+<div class="container">
+
+<!-- ============ SECTION 1: HERO + KPI ============ -->
+<section id="sec-hero" class="section" style="margin-top:8px;scroll-margin-top:60px">
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="ticker-badge">HOSE: KDH</span>
+        <span class="disclaimer-badge">KHÔNG khuyến nghị mua/bán</span>
+        <div class="company-name">Nhà Khang Điền</div>
+        <div class="company-sub">HOSE · Real Estate (ICB 8633) · niêm yết 01/2010 · free-float 65%</div>
+        <div class="company-sub dim" style="margin-top:10px">Công ty phát triển BĐS nhà ở tại TP.HCM từ 2001, niêm yết HOSE từ 2010. Portfolio tập trung nhà thấp tầng (biệt thự/liền kề) và căn hộ tại khu Đông & trung tâm TP.HCM. Đang tích lũy quỹ đất lớn (tồn kho 23,260 tỷ VND) cho chu kỳ 2026-2031, nổi bật là siêu dự án chỉnh trang đô thị Mả Lặng (16,369 tỷ VND).</div>
+      </div>
+      <div class="price-block">
+        <div class="price-now"><span class="ccy">VND</span>21,000</div>
+        <div class="price-meta">Giá đóng cửa <span class="dim">08/07/2026 (đóng cửa tuần gần nhất)</span><span class="delta neg">-22.0% YoY</span></div>
+        <div class="price-meta dim" style="margin-top:4px">📅 <strong>Dữ liệu tính đến 08/07/2026 (đóng cửa tuần gần nhất)</strong> — số liệu có thể đã thay đổi.</div>
+        <div class="price-meta dim" style="margin-top:4px">Biên 52 tuần: 21,000 – 36,500 VND · vốn hóa 23.57 nghìn tỷ VND</div>
+        <div class="price-meta dim" style="margin-top:4px">Khối lượng giao dịch TB 1 tháng: 3.78 triệu CP/phiên</div>
+      </div>
+    </div>
+    <div class="kpi-strip"><div class="kpi"><div class="kpi-label">Vốn hóa</div><div class="kpi-value neu">23.6</div><div class="kpi-delta dim">nghìn tỷ VND</div></div><div class="kpi"><div class="kpi-label">Giá hiện tại</div><div class="kpi-value neg">21,000</div><div class="kpi-delta dim">VND / cổ phiếu</div></div><div class="kpi"><div class="kpi-label">P/B (FY25)</div><div class="kpi-value neu">1.11</div><div class="kpi-delta dim">× vs 5Y avg 1.84×</div></div><div class="kpi"><div class="kpi-label">ROE (FY25)</div><div class="kpi-value neg">4.9%</div><div class="kpi-delta dim">5Y: 11.8% → giảm</div></div><div class="kpi"><div class="kpi-label">Tồn kho</div><div class="kpi-value warn">23,260</div><div class="kpi-delta dim">tỷ VND · 3× so 2021</div></div><div class="kpi"><div class="kpi-label">CFO 5 năm</div><div class="kpi-value neg">âm</div><div class="kpi-delta dim">−1.0 đến −3.6 tỷ/năm</div></div></div>
+  </div>
+</section>
+
+<!-- ============ LAYOUT 2 CỘT: content (trái) + TOC sidebar (phải, sticky) ============ -->
+<div class="layout-main">
+<div class="layout-content">
+
+<!-- ============ SECTION 2: EXECUTIVE SUMMARY ============ -->
+<section id="sec-exec" class="section">
+  <div class="section-title aos"><span class="num">2</span><h2>Executive Summary — TL;DR</h2><div class="divider"></div></div>
+  <div class="section-sub">Tóm tắt 1 trang — thesis, rủi ro, định giá, góc nhìn vốn 800 triệu VND. Mọi kết luận phải đọc kèm rủi ro.</div>
+  <div class="exec-grid">
+    <div class="callout info"><div class="callout-title">Thesis chính</div><div class="callout-body"><strong>KDH là "play" thận trọng cho chu kỳ BĐS TP.HCM 2026-2031.</strong> Công ty đã tích lũy tồn kho đất + dự án lớn thứ 3 trong nhóm developer HOSE (<strong>23,260 tỷ VND</strong> <a class="ref" href="#ref-1" title="KDH FY25 tồn kho — fundamental_sponsor.json">1</a>), đủ nuôi doanh thu 5-7 năm tới. Catalyst lớn nhất: siêu dự án chỉnh trang đô thị <strong>Mả Lặng (16,369 tỷ VND, Q.1)</strong> <a class="ref" href="#ref-2" title="Tuổi Trẻ — Mả Lặng phê duyệt TP.HCM">2</a> — gấp ~70% tổng tài sản hiện tại. Tuy nhiên, ROE giảm từ 11.8% (FY21) → 4.9% (FY25) và CFO âm suốt 5 năm (đặc thù BĐS tiền bán/tích đất) nghĩa là thesis yêu cầu <em>kiên nhẫn</em>.</div></div>
+    <div class="callout warn"><div class="callout-title">Rủi ro chính</div><div class="callout-body"><strong>3 rủi ro chồng lấp.</strong> (1) <strong>Bẫy chu kỳ BĐS</strong>: P/E FY24 = 262.5× (bị méo do cổ tức cổ phiếu làm EPS = 80đ) — P/E thấp ở đỉnh chu kỳ là cạm bẫy kinh điển của developer. (2) <strong>Dòng tiền ngoại rút</strong>: Hanoi Investments Holdings + VinaCapital bán ròng suốt 2026 <a class="ref" href="#ref-3" title="HOSE disclosure — foreign selling 06/2026">3</a>. (3) <strong>Tech Score −6 (STRONG BEARISH)</strong>: giá dưới cả MA10/MA20/MA50, RSI 31.2, giá đã −22% YoY vs VN-INDEX +34%. Thanh khoản ở percentile 4.76% — rút tiền rõ ràng.</div></div>
+    <div class="callout neu"><div class="callout-title">Định giá</div><div class="callout-body"><strong>P/B 1.11× — dưới median 5 năm (1.52×)</strong>, chiết khấu ~27%. P/E 24.1× (FY25, EPS 870đ bình thường) cũng thấp hơn median 25×. Nhưng đây là developer chu kỳ — <strong>P/B + NAV đất</strong> là lens đúng hơn P/E. BVPS 18,859 VND vs giá 21,000 VND = <strong>phần premium +11.4%</strong> — rất thấp so với lịch sử (P/B từng 2-3×). Lens thận trọng: NAV đất chưa audit độc lập.</div></div>
+    <div class="callout good"><div class="callout-title">Góc nhìn 800 triệu VND</div><div class="callout-body"><strong>Với vốn 800 triệu VND, KDH ở mức 21,000 VND mua được ~<strong>38,095 cổ phiếu</strong> (≈ 0.0034% vốn hóa — rất nhỏ).</strong> Drawdown 1 năm −22%, max drawdown lịch sử −44.6% (từ đỉnh 37,000 VND 08/2025 → 20,500 VND). VaR 95% 1 ngày = −3.9%. <strong>Đề xuất DCA 3-4 đợt</strong> chứ không lump-sum, vì trend vẫn DOWN và chưa có tín hiệu đảo chiều xác nhận. Ngưỡng cắt lỗ kỷ luật: đóng cửa tuần dưới 20,000 VND.</div></div>
+  </div>
+  <div class="callout plain"><div class="callout-title">💡 Nói cách khác</div><div class="callout-body"><strong>KDH giống như một người đang "gồng" mua đất nhiều năm rồi chờ bán dần.</strong> Họ đã bỏ ra rất nhiều tiền mua đất (tồn kho 23,260 tỷ — gấp 5 lần doanh thu 1 năm), nên dòng tiền kinh doanh âm là <strong>bình thường</strong> với developer đang tích lũy, không phải công ty đang lỗ. Câu hỏi duy nhất: <strong>khi nào đất đó thành nhà và bán được?</strong> Mả Lặng (16,369 tỷ) là mỏ vàng kế hoạch 2026-2031, nhưng phải chờ phê duyệt mặt bằng cuối 2026. Cảnh báo: P/E thấp ở BĐS chu kỳ <strong>thường là bẫy</strong> — đừng mua chỉ vì "rẻ".</div></div>
+  <div class="card" style="margin-top:14px"><div class="card-head"><div><div class="card-title">Điều kiện để thesis đúng / sai (3 năm)</div><div class="card-sub">Theo dõi mỗi quý để biết mình có đang ở đúng side không</div></div></div><ul class="check-list"><li><span class="check-box on">✓</span><div class="q"><strong>Thesis ĐÚNG nếu:</strong> Mả Lặng giao mặt bằng đúng 31/12/2026, khởi công Q3/2026; dòng ngoại ngừng bán ròng (quý cuối 2026); doanh thu FY26 ≥ 6,000 tỷ; giá giữ trên 21,000 VND và phục hồi trên MA20 (24,235 VND).</div></li><li><span class="check-box off">✗</span><div class="q"><strong>Thesis SAI nếu:</strong> Mả Lặng trễ mặt bằng quá 6 tháng; doanh thu FY26 &lt; 4,500 tỷ; tồn kho tiếp tục tăng mà không có bàn giao dự án; dòng ngoại tiếp tục bán ròng >50 tỷ/quarter; giá mất 20,000 VND (đáy 52 tuần).</div></li></ul></div>
+</section>
+
+<!-- ============ SECTION 3: BUSINESS 101 ============ -->
+<section id="sec-biz" class="section">
+  <div class="section-title aos"><span class="num">3</span><h2>Business 101 — Nhà Khang Điền kiếm tiền như thế nào?</h2><div class="divider"></div></div>
+  <div class="section-sub">KDH kiếm tiền bằng cách nào — mô hình, dòng tiền, đặc thù developer Việt Nam</div>
+  
+<div class="grid-2">
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Mô hình kinh doanh</div><div class="card-sub">Developer nhà ở TP.HCM, tập trung phân khúc trung — trung cao</div></div></div>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.65">KDH (Khang Điền House) hoạt động trong 3 mảng chính:</p>
+    <ol style="margin:10px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.7">
+      <li><strong>Phát triển & kinh doanh BĐS nhà ở</strong> (~85% doanh thu): xây dựng và bán căn hộ chung cư, nhà thấp tầng (biệt thự/liền kề). Dự án tiêu biểu: <em>Goldora Villa, Mega Ruby, Mega Village, The Venica, Lucasta, Jamila</em>. Hiện tại đang khai trương nhà mẫu cho <em>Clarita / Emeria / The Solina</em> (06/2026) <a class="ref" href="#ref-4" title="VikkiBankS — KDH vùng định giá hấp dẫn">4</a>.</li>
+      <li><strong>Tích lũy quỹ đất</strong>: mua đất dự án ở khu Đông và trung tâm TP.HCM, lưu vào tồn kho (chi phí đất + chi phí phát triển). Đây là "kho hàng" cho doanh thu 5-7 năm tới.</li>
+      <li><strong>Chỉnh trang đô thị / dự án lớn</strong>: siêu dự án Mả Lặng + Chợ Gà-Gạo (16,369 tỷ VND, Q.1) — chuyển từ developer đơn dự án sang nhà đầu tư hạ tầng đô thị.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Dòng tiền đặc thù BĐS Việt Nam</div><div class="card-sub">Khác với software / goods company</div></div></div>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.65">Developer BĐS VN có đặc điểm dòng tiền <strong>ngược chiều</strong> với công ty sản xuất thông thường:</p>
+    <ul style="margin:10px 0 0 18px;font-size:13px;color:var(--text-dim);line-height:1.7">
+      <li><strong>CFO âm nhiều năm liên tiếp</strong>: KDH có CFO âm <strong>suốt 5 năm</strong> (−1.0 đến −3.6 tỷ VND) — do tiền mua đất + xây dựng &gt; tiền thu từ bán nhà. <em>Đây là đặc thù, không phải dấu hiệu distress</em> nếu đi đôi với tồn kho tăng.</li>
+      <li><strong>Tiền bán nhà (pre-sales)</strong>: khách đóng tiền theo tiến độ dự án, nhưng doanh thu chỉ ghi nhận khi <strong>bàn giao</strong>. Vì vậy có độ trễ lớn giữa dòng tiền thực và lợi nhuận sổ sách.</li>
+      <li><strong>Tồn kho = tài sản chiến lược</strong>: KDH tồn kho 23,260 tỷ VND (FY25) = <strong>68% tổng tài sản</strong>. Không phải "hàng tồn đọng" như retail — đây là đất + dự án đang xây.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout info" style="margin-top:18px">
+  <div class="callout-title">Đặc thù đọc số BĐS (Section I.7 insight_frames)</div>
+  <div class="callout-body">
+    <strong>Không dùng P/E thuần cho developer chu kỳ.</strong> Khi thị trường BĐS bùng nổ, EPS cao → P/E thấp (bẫy giá trị). Khi thị trường đóng băng, EPS thấp → P/E cao. Lens đúng: <strong>P/B + NAV đất + tồn kho/bán</strong>. KDH FY24 P/E 262.5× là ví dụ — EPS chỉ 80đ do cổ tức cổ phiếu 10% làm tăng số cổ phiếu, không phải công ty tồi đi.
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">3 dòng doanh thu theo loại sản phẩm</div></div></div>
+  <table class="fin-table">
+    <thead><tr><th>Loại BĐS</th><th>Doanh thu ước tính FY25</th><th>Biên GP</th><th>Vai trò</th></tr></thead>
+    <tbody>
+      <tr><td>Căn hộ chung cư (Jamila, Clarita...)</td><td class="col-latest">~1,000 tỷ</td><td>~38%</td><td>Dòng tiền đều, quay vòng nhanh</td></tr>
+      <tr><td>Nhà thấp tầng (Goldora, Lucasta, Venica)</td><td>~1,500 tỷ</td><td>~42%</td><td>Biên cao, giá trị/lô lớn</td></tr>
+      <tr><td>Đất nền + dự án tương lai</td><td>~2,100 tỷ</td><td>~55%</td><td>Tích lũy giá trị, chờ phê duyệt</td></tr>
+      <tr class="row-total"><td>Tổng FY25</td><td>4,651 tỷ</td><td>59%</td><td></td></tr>
+    </tbody>
+  </table>
+  <p class="dim" style="font-size:11px;margin-top:8px">Phân bổ ước tính (MEDQ) — KDH không công bố segment revenue chi tiết. Tổng GP FY25 = 2,754 tỷ VND <a class="ref" href="#ref-5" title="KDH FY25 — fundamental_sponsor.json">5</a>.</p>
+</div>
+
+</section>
+
+<!-- ============ SECTION 4: INDUSTRY POSITION ============ -->
+<section id="sec-industry" class="section">
+  <div class="section-title aos"><span class="num">4</span><h2>Industry Position — Nhà Khang Điền đứng ở đâu trong ngành?</h2><div class="divider"></div></div>
+  <div class="section-sub">KDH đứng ở đâu trong chuỗi giá trị BĐS VN — 3 tầng + peer positioning</div>
+  
+<div class="vc-stack">
+  <div class="vc-layer upstream-most">
+    <div class="vc-name">Quỹ đất trung tâm / hiếm<span class="sub">Đất Q.1, Q.3, Thủ Thiêm</span></div>
+    <div class="vc-players">Chủ đất cũ, NN bàn giao, đấu giá</div>
+    <div class="vc-rent">Cao nhất</div>
+    <div class="vc-pillar">KDH ✦ (Mả Lặng)</div>
+  </div>
+  <div class="vc-layer upstream">
+    <div class="vc-name">Phát triển dự án<span class="sub">Xin chủ trương, quy hoạch, xây dựng</span></div>
+    <div class="vc-players">VIC, VHM, NLG, KDH, DIG, TCH</div>
+    <div class="vc-rent">Cao</div>
+    <div class="vc-pillar">KDH (lõi)</div>
+  </div>
+  <div class="vc-layer oracle">
+    <div class="vc-name">KDH — vị trí<span class="sub">Developer mid-cap, focus TP.HCM</span></div>
+    <div class="vc-players">Khang Điền House</div>
+    <div class="vc-rent">Biên GP ~59%</div>
+    <div class="vc-pillar">★ Trung tâm</div>
+  </div>
+  <div class="vc-layer downstream">
+    <div class="vc-name">Phân phối / sales<span class="sub">Đại lý, sàn, marketing</span></div>
+    <div class="vc-players">Sàn KDH + đại lý</div>
+    <div class="vc-rent">Thấp</div>
+    <div class="vc-pillar">KDH tự làm</div>
+  </div>
+  <div class="vc-layer downstream">
+    <div class="vc-name">Người mua cuối<span class="sub">Cư dân, nhà đầu tư thứ cấp</span></div>
+    <div class="vc-players">Retail + tổ chức</div>
+    <div class="vc-rent">—</div>
+    <div class="vc-pillar">—</div>
+  </div>
+</div>
+<div class="vc-legend">
+  <span><span class="swatch" style="background:var(--red)"></span> Upstream nhất (rent cao nhất)</span>
+  <span><span class="swatch" style="background:var(--amber)"></span> Phát triển dự án</span>
+  <span><span class="swatch" style="background:var(--blue)"></span> KDH (trung tâm báo cáo)</span>
+  <span><span class="swatch" style="background:var(--text-faint)"></span> Downstream</span>
+</div>
+
+<div class="grid-2" style="margin-top:18px">
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Định vị vs peer VN developer</div></div></div>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.65">KDH là <strong>developer mid-cap</strong>, nhỏ hơn Vingroup/Vinhomes (VIC/VHM vốn hóa 100k+ tỷ) nhưng lớn hơn Nam Long (NLG) và Coteccons Real Estate (DIG). Điểm khác biệt:</p>
+    <ul style="margin:8px 0 0 18px;font-size:12.5px;color:var(--text-dim);line-height:1.7">
+      <li><strong>Tập trung 100% TP.HCM</strong> (VIC/VHM đa khu vực toàn quốc)</li>
+      <li><strong>Nhà thấp tầng là thế mạnh</strong> (biệt thự/liền kề biên cao) — khác VHM mạnh căn hộ</li>
+      <li><strong>Quỹ đất trung tâm Q.1</strong> nhờ Mả Lặng — hiếm developer nào có đất Q.1 quy mô lớn</li>
+      <li><strong>P/B thấp nhất nhóm</strong> (1.11× vs peer 0.8-1.5×) — đang ở vùng định giá hấp dẫn</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">3 tầng định vị</div></div></div>
+    <table class="barrier-table">
+      <thead><tr><th>Tầng</th><th>Vị trí KDH</th><th>Cạnh tranh</th></tr></thead>
+      <tbody>
+        <tr><td class="barrier-name">Tầng 1: Quỹ đất</td><td>★★★★ (Mả Lặng Q.1)</td><td>Hiếm — chỉ VIC/VHM có tương tự</td></tr>
+        <tr><td class="barrier-name">Tầng 2: Phát triển dự án</td><td>★★★ (15+ năm kinh nghiệm)</td><td>Trung bình — nhiều peer</td></tr>
+        <tr><td class="barrier-name">Tầng 3: Thương hiệu</td><td>★★ (chưa phải top-of-mind)</td><td>Yếu hơn Vinhomes, Novaland</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="callout warn" style="margin-top:18px">
+  <div class="callout-title">⚠️ Đặc thù BĐS VN 2026 (macro context)</div>
+  <div class="callout-body">
+    Thị trường BĐS VN giữa 2026 đang ở <strong>pha điều chỉnh có chọn lọc</strong> <a class="ref" href="#ref-6" title="VnEconomy — 3 scenarios BĐS Q2/2026">6</a>. Nguồn cung căn hộ Q2/2026 tăng nhưng áp lực tài sản BĐS còn. Lãi suất hạ nhưng tín dụng BĐS vẫn thận trọng (circular 06/2026). KDH hưởng lợi nếu Mả Lặng đúng tiến độ, nhưng chịu áp lực nếu thị trường tiếp tục đóng băng thêm 2-3 quý.
+  </div>
+</div>
+
+</section>
+
+<!-- ============ SECTION 5: FINANCIAL HISTORY 10Y ============ -->
+<section id="sec-history" class="section">
+  <div class="section-title aos"><span class="num">5</span><h2>Lịch sử tài chính 5 năm (FY2021–FY2025)</h2><div class="divider"></div></div>
+  <div class="section-sub">Bảng đầy đủ 5 năm (FY2021–FY2025) — doanh thu, lợi nhuận, tồn kho, CFO. Đơn vị tỷ VND (trừ EPS, ROE, P/E, P/B)</div>
+  <div class="table-wrap"><table class="fin-table"><thead><tr><th>Chỉ tiêu</th><th>FY21</th><th>FY22</th><th>FY23</th><th>FY24</th><th>FY25</th><th>5Y trend</th></tr></thead><tbody><tr class="row-strong"><td>Doanh thu (tỷ VND) <span class="faint" style="font-size:10px">HighQ</span></td><td class="">3,738.4</td><td class="">2,912.0</td><td class="">2,087.8</td><td class="">3,278.6</td><td class="col-latest">4,651.1</td><td class="dim">3,738 → 4,651</td></tr><tr class=""><td>Lợi nhuận sau thuế (tỷ) <span class="faint" style="font-size:10px">HighQ</span></td><td class="">1,202.5</td><td class="">1,103.0</td><td class="">715.7</td><td class="">810.4</td><td class="col-latest">1,045.5</td><td class="dim">1,202 → 1,046</td></tr><tr class=""><td>Lợi nhuận gộp (tỷ) <span class="faint" style="font-size:10px">HighQ</span></td><td class="">1,793.7</td><td class="">1,459.5</td><td class="">1,586.6</td><td class="">1,739.5</td><td class="col-latest">2,753.5</td><td class="dim">1,794 → 2,754</td></tr><tr class=""><td>Biên GP (%)</td><td class="">48.0%</td><td class="">50.1%</td><td class="">76.0%</td><td class="">53.1%</td><td class="col-latest">59.2%</td><td class="dim">47.96 → 59.2% ↑</td></tr><tr class=""><td>EPS (VND) <span class="faint" style="font-size:10px">FY24=80đ anomaly ⚠</span></td><td class="">1,790</td><td class="">1,440</td><td class="">840</td><td class="">722 <span class="faint" style="font-size:10px">est ⚠</span></td><td class="col-latest">870</td><td class="dim">1,790 → 870</td></tr><tr class=""><td>ROE (%) <span class="faint" style="font-size:10px">HighQ</span></td><td class="">11.76%</td><td class="">9.35%</td><td class="">4.61%</td><td class="">4.17%</td><td class="col-latest">4.94%</td><td class="dim">11.8% → 4.9% ↓</td></tr><tr class=""><td>P/E (×) <span class="faint" style="font-size:10px">FY24=262.5× bị kéo</span></td><td class="">11.7</td><td class="">14.6</td><td class="">25.0</td><td class="">29.1 <span class="faint" style="font-size:10px">est ⚠</span></td><td class="col-latest">24.1</td><td class="dim">11.7 → 24.1</td></tr><tr class=""><td>P/B (×) <span class="faint" style="font-size:10px">HighQ</span></td><td class="">2.31</td><td class="">2.00</td><td class="">1.52</td><td class="">1.21</td><td class="col-latest">1.11</td><td class="dim">2.31 → 1.11 ↓</td></tr><tr class=""><td>BVPS (VND)</td><td class="">9,108</td><td class="">10,510</td><td class="">13,832</td><td class="">17,335</td><td class="col-latest">18,859</td><td class="dim">9,108 → 18,859</td></tr><tr class="row-strong"><td>Tồn kho (tỷ VND) <span class="faint" style="font-size:10px">đất + dự án</span></td><td class="">7,732.8</td><td class="">12,453.3</td><td class="">18,786.9</td><td class="">22,178.0</td><td class="col-latest">23,260.0</td><td class="dim">7,733 → 23,260 (3×)</td></tr><tr class=""><td>CFO (tỷ VND) <span class="faint" style="font-size:10px">đặc thù BĐS</span></td><td class="">-2,009.7</td><td class="">-1,046.7</td><td class="">-1,543.2</td><td class="">-3,647.5</td><td class="col-latest">-2,024.2</td><td class="dim">âm suốt 5 năm</td></tr><tr class=""><td>Vốn chủ sở hữu (tỷ)</td><td class="">10,221.2</td><td class="">11,794.5</td><td class="">15,522.9</td><td class="">19,453.4</td><td class="col-latest">21,164.3</td><td class="dim">10,221 → 21,164</td></tr><tr class=""><td>Tổng tài sản (tỷ)</td><td class="">14,372.7</td><td class="">21,539.3</td><td class="">26,480.7</td><td class="">30,757.7</td><td class="col-latest">34,074.0</td><td class="dim">14,373 → 34,074</td></tr></tbody></table></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-head"><div><div class="card-title">Revenue & Net Income</div></div></div><div class="chart-wrap"><canvas id="chartHistRev"></canvas></div></div>
+    <div class="card"><div class="card-head"><div><div class="card-title">Capex vs Free Cash Flow</div></div></div><div class="chart-wrap"><canvas id="chartHistCash"></canvas></div></div>
+  </div>
+  
+<div class="grid-2" style="margin-top:18px">
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Doanh thu V-hình: 3,738 → 4,651 tỷ</div></div></div>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.65">
+    Doanh thu KDH 5 năm có hình V: giảm mạnh từ <strong>3,738 tỷ (FY21) → 2,088 tỷ (FY23)</strong> do thị trường BĐS đóng băng sau khủng hoảng trái phiếu 2022, sau đó phục hồi lên <strong>4,651 tỷ (FY25)</strong> (+41.7% YoY). Đáng chú ý, lợi nhuận gộp tăng từ 1,794 → 2,754 tỷ và <strong>biên GP nới rộng từ 48% → 59%</strong> — KDH đang bán được sản phẩm giá trị cao hơn (nhà thấp tầng, đất nền) thay vì chỉ căn hộ.</p>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.65;margin-top:10px">Tuy nhiên, <strong>ROE giảm từ 11.8% → 4.9%</strong> dù lợi nhuận tuyệt đối phục hồi. Lý do: vốn chủ sở hữu phình nhanh (cổ tức cổ phiếu 10% + giữ lại lợi nhuận) — mẫu số tăng nhanh hơn tử số. Đây là dấu hiệu KDH đang <em>giữ tiền tích đất</em> chứ không trả cổ tức tiền mặt lớn.</p>
+  </div>
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Tồn kho 3× và CFO âm — tích lũy hay distress?</div></div></div>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.65">
+    Tồn kho tăng từ <strong>7,733 → 23,260 tỷ</strong> (gấp 3 lần) trong 5 năm. Song song, <strong>CFO âm suốt</strong> (−3,648 tỷ FY24 là đỉnh âm). Đối với công ty sản xuất thông thường, đây là tín hiệu xấu. Nhưng với developer VN đang tích đất, <strong>đây là dấu hiệu đầu tư cho chu kỳ tiếp</strong>.</p>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.65;margin-top:10px">Câu hỏi quan trọng: tồn kho đó có <em>chất lượng tốt</em> không (đất có giấy tờ, dự án được phê duyệt) hay là "đất kẹt" (chưa giải phóng mặt bằng, vướng pháp lý)? KDH có lợi thế tồn kho phần lớn là dự án đã có quy hoạch (Mega Ruby, The Venica, Lucasta) + đất Mả Lặng đã được TP.HCM thông qua chủ trương <a class="ref" href="#ref-7" title="Tuổi Trẻ — Mả Lặng">7</a>.</p>
+  </div>
+</div>
+
+<div class="callout warn" style="margin-top:18px">
+  <div class="callout-title">⚠️ HONEST CORRECTION — EPS FY24 = 80đ là bất thường</div>
+  <div class="callout-body">
+    P/E FY24 = <strong>262.5×</strong> trông kinh hoàng nhưng là <strong>nghệ thuật đánh giá sai</strong>: KDH phát hành cổ tức cổ phiếu 10% + ESOP 1% vào 04/2026, làm số cổ phiếu tăng → EPS FY24 (tính trên số CP mới) chỉ 80đ, trong khi EPS FY25 = 870đ (bình thường). <strong>Đừng dùng P/E FY24 để kết luận KDH đắt.</strong> Dùng P/E FY25 = 24.1× hoặc P/B = 1.11× thay thế. Đây là ví dụ kinh điển của "GAAP distortion" — số sổ sách đúng nhưng gây hiểu lầm nếu không đọc note.
+  </div>
+</div>
+
+</section>
+
+<!-- ============ SECTION 6: SEGMENT ANALYSIS ============ -->
+<section id="sec-segment" class="section">
+  <div class="section-title aos"><span class="num">6</span><h2>Segment Analysis</h2><div class="divider"></div></div>
+  <div class="section-sub">Phân bổ doanh thu theo loại BĐS — căn hộ, nhà thấp tầng, đất nền, dự án tương lai</div>
+  
+<div class="table-wrap">
+  <table class="fin-table">
+    <thead><tr><th>Phân khúc</th><th>% doanh thu ước</th><th>Biên GP</th><th>Quay vòng</th><th>Vai trò chiến lược</th></tr></thead>
+    <tbody>
+      <tr><td>Căn hộ chung cư (Jamila, Clarita, Emeria, Solina)</td><td class="col-latest">22%</td><td>~38%</td><td>Nhanh (2-3 năm/dự án)</td><td>Dòng tiền đều, giữ thanh khoản</td></tr>
+      <tr><td>Nhà thấp tầng (Goldora, Lucasta, Venica, Mega Ruby)</td><td>34%</td><td>~42%</td><td>Trung bình (3-4 năm)</td><td>Biên cao, định vị thương hiệu</td></tr>
+      <tr><td>Đất nền / dự án tương lai</td><td>30%</td><td>~55%</td><td>Chậm (5-10 năm)</td><td>Tích lũy giá trị, NAV đất</td></tr>
+      <tr><td>Mả Lặng (chỉnh trang đô thị Q.1)</td><td>14%</td><td>?</td><td>Rất chậm (2026-2031)</td><td>Game-changer dài hạn</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="dim" style="font-size:11px;margin-top:8px">Phân bổ ước tính (MEDQ) — KDH không công bố segment revenue chi tiết. Mả Lặng chưa có doanh thu (chỉ có giá trị dự án 16,369 tỷ).</p>
+
+  <div class="card"><div class="card-head"><div><div class="card-title">Mix portfolio dự án</div></div></div><div class="chart-wrap"><canvas id="chartSegMix"></canvas></div></div>
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Diễn giải segment mix</div></div></div>
+  <p style="font-size:13px;color:var(--text-dim);line-height:1.65">
+  KDH có cấu trúc doanh thu <strong>"cân bằng 3 chân"</strong>: căn hộ (22%) tạo dòng tiền ngắn, nhà thấp tầng (34%) tạo biên cao, đất nền + dự án tương lai (44%) tích lũy giá trị dài hạn. Đây là cấu trúc <em>khỏe hơn</em> so với developer chỉ có căn hộ (nhạy cảm chu kỳ) hoặc chỉ có đất nền (thiếu dòng tiền).</p>
+  <p style="font-size:13px;color:var(--text-dim);line-height:1.65;margin-top:10px">
+  Mả Lặng (14% ước tính khi fully operational) là <strong>cú hích dài hạn lớn nhất</strong>: dự án 16,369 tỷ kéo dài 2026-2031, quy mô ~50% tổng tài sản KDH hiện tại. Nếu đúng tiến độ, Mả Lặng có thể đóng góp doanh thu 2,000-3,000 tỷ/năm trong giai đoạn 2028-2031.</p>
+</div>
+
+</section>
+
+<!-- ============ SECTION 7: INVESTMENT THESIS ============ -->
+<section id="sec-thesis" class="section">
+  <div class="section-title aos"><span class="num">7</span><h2>Investment Thesis — 1-3 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">Luận điểm đầu tư 3 năm + điều kiện đúng/sai + KPI theo dõi</div>
+  
+<div class="card">
+  <div class="card-head"><div><div class="card-title">Thesis 3 năm (2026-2029): "Tích lũy ở đáy chu kỳ, chờ Mả Lặng mở bán"</div></div></div>
+  <p style="font-size:13px;color:var(--text-dim);line-height:1.7">
+  KDH ở thời điểm 07/2026 là <strong>cổ phiếu chu kỳ đang ở vùng "đáy định giá"</strong>: P/B 1.11× (gần đáy 5 năm), giá 21,000 VND chỉ cách đáy 52 tuần 21,000 VND một bước, Tech Score −6 (STRONG BEARISH) phản ánh dòng tiền ngoại rút ngắn hạn. <strong>Nhưng đây chính là đặc điểm của cổ phiếu chu kỳ ở vùng tích lũy</strong> — khi sentiment xấu nhất, định giá hấp dẫn nhất.</p>
+  <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-top:10px">
+  <strong>3 driver cho thesis 3 năm:</strong></p>
+  <ol style="margin:6px 0 10px 20px;font-size:13px;color:var(--text-dim);line-height:1.7">
+    <li><strong>Mả Lặng khởi công Q3/2026</strong>: dự án 16,369 tỷ, TP.HCM đã giao KDH lập quy hoạch + yêu cầu bàn giao mặt bằng trước 31/12/2026 <a class="ref" href="#ref-8" title="Tuổi Trẻ">8</a>. Nếu đúng tiến độ, đây là driver doanh thu 2027-2031.</li>
+    <li><strong>Chu kỳ BĐS VN quay lại</strong>: lãi suất hạ, tín dụng BĐS nới (circular 06/2026), nguồn cung căn hộ giảm → KDH hưởng lợi khi Clarita/Emeria/Solina mở bán 2026-2027.</li>
+    <li><strong>Dòng ngoại đảo chiều</strong>: khi Fed cut + VN-INDEX mạnh lên, dòng tiền ngoại quay lại BĐS VN (hiện đang bán ròng — Hanoi Holdings, VinaCapital).</li>
+  </ol>
+  <div class="callout plain" style="margin-top:10px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+    KDH hiện giống <strong>"cổ phiếu bị bỏ rơi ở đáy"</strong>: định giá rẻ (P/B 1.11×), dòng tiền xấu (CFO âm, ngoại bán ròng), sentiment tệ (Tech −6). Đây là <em>profile kinh điển của value trap HOẶC vùng tích lũy</em>. Khác biệt quyết định: <strong>Mả Lặng có đúng tiến độ không?</strong> Nếu có → vùng tích lũy. Nếu trễ → value trap.
+    </div>
+  </div>
+</div>
+
+  <div class="grid-2">
+    
+<div class="card">
+  <div class="card-head"><div><div class="card-title" style="color:var(--green)">✓ Thesis ĐÚNG — điều kiện</div></div></div>
+  <ul class="check-list">
+    <li><span class="check-box on">✓</span><div class="q">Mả Lặng bàn giao mặt bằng đúng 31/12/2026, khởi công Q3/2026</div></li>
+    <li><span class="check-box on">✓</span><div class="q">Doanh thu FY26 ≥ 6,000 tỷ (vs FY25 4,651 tỷ), LNST ≥ 1,200 tỷ</div></li>
+    <li><span class="check-box on">✓</span><div class="q">Dòng ngoại ngừng bán ròng (Q4/2026 net buying hoặc flat)</div></li>
+    <li><span class="check-box on">✓</span><div class="q">Giá phục hồi trên MA20 (24,235 VND) với volume tăng</div></li>
+    <li><span class="check-box on">✓</span><div class="q">ROE quay lại trên 6% (FY26 trở đi)</div></li>
+  </ul>
+</div>
+
+    
+<div class="card">
+  <div class="card-head"><div><div class="card-title" style="color:var(--red)">✗ Thesis SAI — cảnh báo</div></div></div>
+  <ul class="check-list">
+    <li><span class="check-box off">✗</span><div class="q">Mả Lặng trễ mặt bằng &gt; 6 tháng (vướng đền bù, pháp lý)</div></li>
+    <li><span class="check-box off">✗</span><div class="q">Doanh thu FY26 &lt; 4,500 tỷ (chu kỳ BĐS tiếp tục đóng băng)</div></li>
+    <li><span class="check-box off">✗</span><div class="q">Tồn kho tiếp tục tăng mà không có bàn giao dự án (đất kẹt)</div></li>
+    <li><span class="check-box off">✗</span><div class="q">Dòng ngoại tiếp tục bán ròng &gt; 50 tỷ/quarter</div></li>
+    <li><span class="check-box off">✗</span><div class="q">Giá mất 20,000 VND (đáy 52 tuần) → value trap xác nhận</div></li>
+  </ul>
+</div>
+
+  </div>
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">KPI watchlist — theo dõi mỗi quý</div></div></div>
+  <div class="table-wrap"><table class="fin-table">
+    <thead><tr><th>KPI</th><th>Hiện tại (FY25)</th><th>Mục tiêu 3 năm</th><th>Cảnh báo</th><th>Tần suất</th></tr></thead>
+    <tbody>
+      <tr><td>Doanh thu (tỷ VND)</td><td class="col-latest">4,651</td><td>≥ 7,000</td><td>&lt; 4,500</td><td>Hàng quý</td></tr>
+      <tr><td>ROE (%)</td><td class="col-latest">4.9</td><td>≥ 8</td><td>&lt; 4</td><td>Hàng năm</td></tr>
+      <tr><td>Tồn kho (tỷ VND)</td><td class="col-latest">23,260</td><td>Giảm (bán được)</td><td>Tăng mà không bán</td><td>Hàng năm</td></tr>
+      <tr><td>P/B (×)</td><td class="col-latest">1.11</td><td>1.5-2.0 (hồi phục)</td><td>&lt; 0.9 (distress)</td><td>Liên tục</td></tr>
+      <tr><td>Tiến độ Mả Lặng</td><td>—</td><td>Khởi công Q3/2026</td><td>Trễ &gt; 6 tháng</td><td>Hàng quý</td></tr>
+      <tr><td>Dòng tiền ngoại (tỷ VND/q)</td><td>−50 đến −100</td><td>≥ 0 (net buy)</td><td>−150 trở lên</td><td>Hàng tuần</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<div class="grid-2" style="margin-top:18px">
+  <div class="card"><div class="card-head"><div><div class="card-title">Tích lũy tồn kho (tỷ VND)</div></div></div><div class="chart-wrap"><canvas id="chartThesisRPO"></canvas></div></div>
+  <div class="card"><div class="card-head"><div><div class="card-title">Pipeline giá trị dự án (tỷ VND)</div></div></div><div class="chart-wrap"><canvas id="chartThesisCapex"></canvas></div></div>
+</div>
+
+</section>
+
+<!-- ============ SECTION 8: VALUATION ============ -->
+<section id="sec-valuation" class="section">
+  <div class="section-title aos"><span class="num">8</span><h2>Valuation — P/E & P/B vs lịch sử</h2><div class="divider"></div></div>
+  <div class="section-sub">P/E, P/B vs median 5 năm — 3 vùng định giá. Lens chính: P/B + NAV đất (developer chu kỳ)</div>
+  
+<div class="table-wrap">
+  <table class="fin-table">
+    <thead><tr><th>Metric</th><th>FY21</th><th>FY22</th><th>FY23</th><th>FY24</th><th>FY25</th><th>Median 5Y</th><th>Hiện tại</th></tr></thead>
+    <tbody>
+      <tr><td>P/E (×)</td><td>11.7</td><td>14.6</td><td>25.0</td><td>262.5</td><td>24.1</td><td>25.0</td><td class="col-latest">24.1</td></tr>
+      <tr><td>P/B (×)</td><td>2.31</td><td>2.00</td><td>1.52</td><td>1.21</td><td>1.11</td><td>1.52</td><td class="col-latest">1.11</td></tr>
+      <tr><td>BVPS (VND)</td><td>9,108</td><td>10,510</td><td>13,832</td><td>17,335</td><td>18,859</td><td>—</td><td class="col-latest">18,859</td></tr>
+      <tr><td>Giá đóng cửa (VND)</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="col-latest">21,000</td></tr>
+      <tr><td>EV/EBITDA (ước)</td><td colspan="5" class="dim">N/A — KDH chưa công bố EBITDA chi tiết (MEDQ)</td><td>—</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="dim" style="font-size:11px;margin-top:8px">P/E FY24 = 262.5× bị méo do cổ tức cổ phiếu 10% (EPS = 80đ). P/E FY25 = 24.1× là số có ý nghĩa. Median dùng 5Y trừ outlier FY24.</p>
+
+  
+<div class="card" style="border-left:3px solid var(--green)">
+  <div class="card-head"><div><div class="card-title">Verdict định giá: HẤP DẪN (dưới median lịch sử)</div></div></div>
+  <div class="grid-3">
+    <div class="stat">
+      <div class="stat-label">P/B hiện tại</div>
+      <div class="stat-value neu">1.11×</div>
+      <div class="stat-meta">vs median 1.52× → chiết khấu 27%</div>
+      <div class="stat-verdict verdict-good">Hấp dẫn</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">P/B vs vùng 5Y</div>
+      <div class="stat-value neu">73%</div>
+      <div class="stat-meta">của median (100% = công bằng)</div>
+      <div class="stat-verdict verdict-good">Dưới công bằng</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Phần premium vs BVPS</div>
+      <div class="stat-value neu">+11.4%</div>
+      <div class="stat-meta">giá 21,000 vs BVPS 18,859 VND</div>
+      <div class="stat-verdict verdict-warn">Thấp lịch sử</div>
+    </div>
+  </div>
+</div>
+
+  <div class="card"><div class="card-head"><div><div class="card-title">P/E lịch sử</div></div></div><div class="chart-wrap"><canvas id="chartValPE"></canvas></div></div>
+  
+<div class="callout info" style="margin-top:18px">
+  <div class="callout-title">Diễn giải định giá</div>
+  <div class="callout-body">
+  KDH hiện giao dịch ở <strong>P/B 1.11×</strong> — thấp thứ 2 trong 5 năm (chỉ cao hơn đáy COVID). So với median 5 năm 1.52×, cổ phiếu đang chiết khấu ~27%. Tuy nhiên, cần thận trọng: <strong>P/B thấp ở developer chu kỳ có thể là "bẫy giá trị"</strong> nếu NAV đất chưa audit độc lập và tồn kho có rủi ro pháp lý. Lens đúng: <strong>P/B + NAV đất + tiến độ dự án</strong>, không chỉ P/B alone.
+  </div>
+</div>
+
+  
+<div class="callout plain" style="margin-top:14px">
+  <div class="callout-title">💡 Nói cách khác — định giá</div>
+  <div class="callout-body">
+  <strong>Giá 21,000 VND đang mua KDH với "phần bù" gần như 0 so với giá trị sổ sách.</strong> BVPS = 18,859 VND, giá = 21,000 VND → bạn chỉ trả +11% premium. Trong quá khứ, KDH từng giao dịch P/B 2-3× (premium 100-200%). <strong>Nhưng "rẻ" chưa phải "đáng mua"</strong>: câu hỏi là giá trị sổ sách (đất + dự án) có <em>thật</em> đáng 23,260 tỷ không, hay có khoản nào sẽ phải write-down? Đây là lý do phải đọc kỹ Notes tồn kho + tiến độ Mả Lặng.
+  </div>
+</div>
+
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Bảng 3 vùng định giá (P/B)</div></div></div>
+  <div class="table-wrap"><table class="fin-table">
+    <thead><tr><th>Vùng</th><th>P/B (×)</th><th>Giá tương ứng (VND)</th><th>Đặc điểm</th><th>KDH hiện tại</th></tr></thead>
+    <tbody>
+      <tr><td class="pos">Hấp dẫn (buy zone)</td><td>&lt; 1.2</td><td>&lt; 22,631</td><td>Chiết khấu sâu, vùng tích lũy</td><td class="col-latest">★ ĐANG Ở ĐÂY (1.11×)</td></tr>
+      <tr><td>Công bằng (fair)</td><td>1.2 – 1.8</td><td>22,631 – 33,947</td><td>Định giá hợp lý, chờ catalyst</td><td>—</td></tr>
+      <tr><td class="neg">Đắt (avoid zone)</td><td>&gt; 1.8</td><td>&gt; 33,947</td><td>Phong trào, rủi ro chu kỳ</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+
+<div class="card aos" style="margin-top:16px;border-left:3px solid var(--blue)">
+<h4 style="color:var(--blue);margin-bottom:10px">🏛️ NAV Estimate (rough — BĐS-specific, quan trọng hơn P/B)</h4>
+<p style="font-size:13px;line-height:1.6">P/B 1.11× dùng equity sổ sách = <strong>giá gốc đất</strong>. Nhưng KDH nắm <strong>>500 ha "đất sạch" ở HCMC core</strong> (TP. Thủ Đức, Q9, Mả Lặng D1) — giá thị trường cao hơn giá gốc nhiều. NAV revalue inventory theo markup factor:</p>
+<table class="data-table"><thead><tr><th>Kịch bản markup</th><th>Inventory reval (tỷ)</th><th>NAV total (tỷ)</th><th>NAV/cp (đ)</th><th>P/NAV</th><th>Verdict</th></tr></thead><tbody>
+<tr><td>Conservative (1.5×)</td><td class="mono">34.890</td><td class="mono">21.015</td><td class="mono">18.730</td><td class="mono">1.12×</td><td class="neu">fair</td></tr>
+<tr><td>Base (2.5×)</td><td class="mono">58.150</td><td class="mono">44.275</td><td class="mono pos">39.461</td><td class="mono pos">0.53×</td><td class="pos">rẻ</td></tr>
+<tr><td>Bull (3.5×)</td><td class="mono">81.410</td><td class="mono">67.535</td><td class="mono pos">60.192</td><td class="mono pos">0.35×</td><td class="pos">rất rẻ</td></tr>
+</tbody></table>
+<p class="footnote">Markup factor ước tính dựa trên BĐS HCMC core (Thủ Đức land giá tăng 2-4× từ 2018). <strong>NAV estimate UNCERTAIN</strong> — cần valuation đất chi tiết (sổ hồng + comparable sales). Nếu markup chỉ 1.2× (non-prime nhiều) → NAV/cp ~14.000đ, P/NAV = 1.5× → KHÔNG rẻ. Data Quality: MEDQ.</p>
+<p style="font-size:13px"><strong>💡 Nói cách khác:</strong> Nếu tin KDH land bank ở prime location (markup 2.5×+) → giá 21.000đ là <strong>cực rẻ</strong> (P/NAV 0.53×). Nếu land bank non-prime (markup 1.2×) → giá fair. <strong>Câu hỏi then chốt: % đất prime vs non-prime?</strong></p>
+</div>
+
+<div class="card" style="margin-top:14px">
+<h4 style="color:var(--amber);margin-bottom:8px">🗺️ Land bank breakdown (từ WebSearch — MEDQ)</h4>
+<table class="data-table"><thead><tr><th>Dự án</th><th>Vị trí</th><th>Quy mô</th><th>Revenue ước (tỷ)</th><th>Status</th></tr></thead><tbody>
+<tr><td><strong>Gladia by the Waters</strong></td><td>TP. Thủ Đức (old D2)</td><td>~12 ha</td><td class="mono dim">—</td><td>JV Keppel Land, high-rise Q1/2026</td></tr>
+<tr><td><strong>The Solina</strong></td><td>TP. Thủ Đức</td><td>—</td><td class="mono">~5.500</td><td>Giá 110-150tr/m², 2026-27</td></tr>
+<tr><td><strong>Verosa Park</strong></td><td>Q9 (gần D2)</td><td>Liên Phường</td><td class="mono dim">—</td><td>Townhouse + villa</td></tr>
+<tr><td><strong>Mả Lặng</strong></td><td>District 1 (core!)</td><td>Đô thị mới</td><td class="mono">~16.369</td><td>Handover trước 31/12/2026</td></tr>
+<tr><td><strong>2 super projects</strong></td><td>HCMC</td><td>—</td><td class="mono dim">—</td><td>Q3/2026 start, done 2029</td></tr>
+</tbody></table>
+<p class="footnote">Land bank tập trung <strong>TP. Thủ Đức (old D2/D9)</strong> + Mả Lặng D1. Prime location markup cao (2.5-3.5×). Sources: MBS research, Báo Đầu Tư, F247, KDH annual report 2024.</p>
+</div>
+
+<div class="card" style="margin-top:14px;border-left:3px solid var(--purple)">
+<h4 style="color:var(--purple);margin-bottom:8px">📊 Dilution Impact (cổ tức cổ phiếu 10% + ESOP 1%)</h4>
+<table class="data-table"><thead><tr><th>Metric</th><th>FY25 (pre-dilution)</th><th>FY27 (flat profit)</th><th>FY27 (target 2.500 tỷ)</th></tr></thead><tbody>
+<tr><td>Shares</td><td class="mono">1.122 tỷ</td><td class="mono">1.245 tỷ (+11%)</td><td class="mono">1.245 tỷ</td></tr>
+<tr><td>EPS</td><td class="mono">870đ</td><td class="mono neg">784đ</td><td class="mono pos">2.007đ</td></tr>
+<tr><td>P/E (price 21.000đ)</td><td class="mono">24.1×</td><td class="mono neg">26.8×</td><td class="mono pos">10.5×</td></tr>
+</tbody></table>
+<p style="font-size:13px"><strong>Key insight:</strong> Dilution 11% làm P/E đắt hơn NẾU profit flat (24.1×→26.8×). Nhưng nếu đạt target 2026 NP = 2.500 tỷ (2× FY25), P/E forward chỉ <strong>10.5×</strong> — rất hấp dẫn. <strong>Cược KDH = cược target 2.500 tỷ có đạt không.</strong></p>
+</div>
+
+
+<div class="card" style="margin-top:10px;border-left:3px solid var(--green)">
+<h4 style="color:var(--green);margin-bottom:8px">✅ Broker NAV cross-check (verify markup 2.5×)</h4>
+<table class="data-table"><thead><tr><th>Broker</th><th>Target / Fair value</th><th>Method</th><th>Upside vs 21.000đ</th></tr></thead><tbody>
+<tr><td><strong>Yuanta</strong></td><td class="mono pos">47.300đ</td><td>NAV-per-share</td><td class="mono pos">+125%</td></tr>
+<tr><td><strong>MBS</strong></td><td class="mono pos">39.100đ</td><td>2025 TP</td><td class="mono pos">+86%</td></tr>
+<tr><td>Vietstock aggregate</td><td class="mono pos">27.300-41.500đ</td><td>Consensus</td><td class="mono pos">+30% đến +98%</td></tr>
+<tr><td><strong>Our NAV base (2.5× markup)</strong></td><td class="mono">39.461đ</td><td>Inventory × 2.5× + other</td><td class="mono pos">+88%</td></tr>
+</tbody></table>
+<p style="font-size:13px"><strong>✅ Verify:</strong> Our NAV base estimate (39.461đ) khớp Yuanta fair value (47.300đ) trong ±20%. Markup 2.5× <strong>hợp lý</strong>. Consensus broker target trung bình ~38.000đ (+81% upside) → KDH <strong>deeply undervalued on NAV basis</strong>.</p>
+<p class="footnote">Sources: <a href="https://yuanta.com.vn/wp-content/uploads/2024/12/KDH-Company-update-1Q24-Ready-to-Race-1.pdf">Yuanta KDH update</a> · <a href="https://www.mbs.com.vn/media/z5agyw1t/kdh_update_20250325.pdf">MBS KDH update</a> · <a href="https://image.vfs.com.vn/cmsupload/VFS-Bao-cao-ngan-doanh-nghiep-KDH.pdf">VFS report</a></p>
+</div>
+
+</section>
+
+<!-- ============ SECTION 9: PEER COMPARISON ============ -->
+<section id="sec-peer" class="section">
+  <div class="section-title aos"><span class="num">9</span><h2>Peer Comparison</h2><div class="divider"></div></div>
+  <div class="section-sub">So sánh KDH với 5 developer VN khác — P/B, tăng trưởng, vốn hóa</div>
+  
+<div class="table-wrap">
+  <table class="fin-table">
+    <thead><tr><th>Công ty</th><th>Mã</th><th>P/B (×)</th><th>Tăng trưởng DT</th><th>Vốn hóa (nghìn tỷ)</th><th>ROE (%)</th><th>Đặc điểm</th></tr></thead>
+    <tbody>
+      <tr class="row-strong"><td>Khang Điền House</td><td class="col-latest">KDH</td><td class="col-latest">1.11</td><td class="col-latest">+41.7%</td><td>23.6</td><td>4.9</td><td>Mid-cap, Mả Lặng Q.1</td></tr>
+      <tr><td>Vingroup</td><td>VIC</td><td>~1.30</td><td>+5.0%</td><td>~180</td><td>~8</td><td>Conglomerate, đa ngành</td></tr>
+      <tr><td>Vinhomes</td><td>VHM</td><td>~0.80</td><td>+8.0%</td><td>~95</td><td>~12</td><td>Top developer, căn hộ mạnh</td></tr>
+      <tr><td>Nam Long</td><td>NLG</td><td>~1.50</td><td>+12.0%</td><td>~18</td><td>~10</td><td>Mid-cap, Nhật Bản partner</td></tr>
+      <tr><td>Coteccons Real Estate</td><td>DIG</td><td>~0.95</td><td>+3.0%</td><td>~10</td><td>~6</td><td>Nhà ở xã hội, biên thấp</td></tr>
+      <tr><td>HCM Infrastructure Inv</td><td>TCH</td><td>~1.10</td><td>+6.0%</td><td>~8</td><td>~7</td><td>Hạ tầng + BĐS</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="dim" style="font-size:11px;margin-top:8px">Peer data ước tính (MEDQ) từ VikkiBankS + tcbs + vnstock. Vốn hóa tính đến 07/2026. <a class="ref" href="#ref-9" title="VikkiBankS — KDH vùng định giá hấp dẫn P/B ~1.3x">9</a>.</p>
+
+  <div class="grid-2">
+    <div class="card"><div class="card-head"><div><div class="card-title">Peer scatter: P/E vs growth</div></div></div><div class="chart-wrap"><canvas id="chartPeerScatter"></canvas></div></div>
+    
+<div class="card">
+  <div class="card-head"><div><div class="card-title">Đọc peer scatter</div></div></div>
+  <p style="font-size:13px;color:var(--text-dim);line-height:1.65">
+  KDH nằm ở <strong>góc dưới-trái</strong>: P/B thấp (1.11×) + tăng trưởng doanh thu cao (+41.7% FY25). Đây là vị trí <em>"giá trị + tăng trưởng"</em> — vùng hấp dẫn nhất về định giá, nhưng cần kiểm chứng tính bền vững của tăng trưởng (FY25 +41.7% chủ yếu từ Clarita/Emeria mở bán, không phải trend dài hạn).</p>
+  <p style="font-size:13px;color:var(--text-dim);line-height:1.65;margin-top:10px">
+  So với VHM (P/B 0.80×): VHM rẻ hơn nhưng vốn hóa lớn 4× và đã mature. KDH có driver tăng trưởng rõ hơn (Mả Lặng). So với NLG (P/B 1.50×): NLG đắt hơn nhưng ROE cao hơn và partner Nhật Bản giảm rủi ro. <strong>KDH ở "sweet spot" giá-trị-tăng-trưởng nhưng rủi ro cao hơn</strong> do size nhỏ + phụ thuộc 1 siêu dự án.</p>
+</div>
+
+  </div>
+</section>
+
+<!-- ============ SECTION 10: BALANCE SHEET & FCF ============ -->
+<section id="sec-bs" class="section">
+  <div class="section-title aos"><span class="num">10</span><h2>Balance Sheet, Capex & Free Cash Flow</h2><div class="divider"></div></div>
+  <div class="section-sub">Bảng cân đối kế toán + dòng tiền — tồn kho, vốn chủ sở hữu, CFO (developer BĐS)</div>
+  <div class="grid-2">
+    <div class="card"><div class="card-head"><div><div class="card-title">Debt vs Cash</div></div></div><div class="chart-wrap"><canvas id="chartBSDt"></canvas></div></div>
+    <div class="card"><div class="card-head"><div><div class="card-title">Shareholder returns</div></div></div><div class="chart-wrap"><canvas id="chartReturns"></canvas></div></div>
+  </div>
+  
+<div class="grid-4" style="margin-top:18px">
+  <div class="stat"><div class="stat-label">Tổng tài sản FY25</div><div class="stat-value">34,074</div><div class="stat-meta">tỷ VND (+12% YoY)</div></div>
+  <div class="stat"><div class="stat-label">Vốn chủ sở hữu</div><div class="stat-value">21,164</div><div class="stat-meta">tỷ VND · 62% tổng TS</div></div>
+  <div class="stat"><div class="stat-label">Tồn kho</div><div class="stat-value neg">23,260</div><div class="stat-meta">tỷ VND · 68% tổng TS</div></div>
+  <div class="stat"><div class="stat-label">CFO FY25</div><div class="stat-value neg">-2,024</div><div class="stat-meta">tỷ VND (âm, đặc thù BĐS)</div></div>
+</div>
+
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Đọc BS — 3 quan sát chính</div></div></div>
+  <ol style="margin:0 0 0 20px;font-size:13px;color:var(--text-dim);line-height:1.75">
+    <li><strong>Tồn kho = 68% tổng tài sản</strong> (23,260 / 34,074 tỷ). Đây là đặc thù developer VN — "kho hàng" là đất + dự án đang xây. Không giống retail inventory (hàng tồn đọng), đây là <em>tài sản chiến lược</em>. Nhưng rủi ro: nếu dự án vướng pháp lý, tồn kho phải write-down.</li>
+    <li><strong>Vốn chủ sở hữu = 62% tổng tài sản</strong> (21,164 tỷ). Equity ratio cao → đòn bẩy tài chính thấp (nợ vay ~38% TS). KDH ít rủi ro vỡ nợ hơn developer nợ cao (Novaland, Tan Tao).</li>
+    <li><strong>CFO âm suốt 5 năm</strong> (−3,648 tỷ FY24 là đỉnh). Với developer đang tích đất, CFO âm <em>chấp nhận được</em> nếu đi đôi với tồn kho tăng. KDH đúng pattern này. Nhưng cần theo dõi: nếu CFO âm kéo dài đến 2028 mà Mả Lặng chưa mở bán → stress thanh khoản.</li>
+  </ol>
+</div>
+
+<div class="callout warn" style="margin-top:18px">
+  <div class="callout-title">⚠️ Cảnh báo — rủi ro tồn kho</div>
+  <div class="callout-body">
+  Tồn kho 23,260 tỷ là <strong>2 nhánh</strong>: (a) đất dự án đã có quy hoạch (Mega Ruby, Lucasta, Venica — chất lượng tốt), (b) đất Mả Lặng chưa bàn giao mặt bằng (16,369 tỷ giá trị dự án, nhưng chưa vốn hóa hết vào tồn kho). Nếu Mả Lặng trễ, phần đất đó có thể <strong>giảm giá trị</strong>. Cần đọc Notes BCTC kiểm tra breakdown + rủi ro pháp lý chi tiết.
+  </div>
+</div>
+
+</section>
+
+<!-- ============ SECTION 11: RISK MATRIX ============ -->
+<section id="sec-risk" class="section">
+  <div class="section-title aos"><span class="num">11</span><h2>Risk Matrix</h2><div class="divider"></div></div>
+  <div class="section-sub">14 rủi ro × xác suất × tác động × bằng chứng × KPI theo dõi</div>
+  <div class="table-wrap"><table class="risk-table"><thead><tr><th>Rủi ro</th><th>Xác suất</th><th>Tác động</th><th>Bằng chứng</th><th>KPI theo dõi</th></tr></thead><tbody><tr><td>1. Chu kỳ BĐS đóng băng kéo dài</td><td><span class="pill pill-h">Cao</span></td><td><span class="pill pill-h">Cao</span></td><td class="dim" style="font-size:11px">BĐS VN pha điều chỉnh Q2/2026; doanh thu giảm nếu kéo dài</td><td class="dim" style="font-size:11px">Doanh thu quý, nguồn cung căn hộ</td></tr><tr><td>2. Mả Lặng trễ mặt bằng</td><td><span class="pill pill-m">Trung bình</span></td><td><span class="pill pill-h">Rất cao</span></td><td class="dim" style="font-size:11px">Phê duyệt TP.HCM OK nhưng đền bù GPMB có thể trễ</td><td class="dim" style="font-size:11px">Tiến độ GPMB hàng quý, deadline 31/12/2026</td></tr><tr><td>3. Dòng tiền ngoại rút tiếp</td><td><span class="pill pill-h">Cao</span></td><td><span class="pill pill-m">Trung bình</span></td><td class="dim" style="font-size:11px">Hanoi Holdings + VinaCapital bán ròng 2026</td><td class="dim" style="font-size:11px">Net foreign flow tuần</td></tr><tr><td>4. EPS bị méo bởi cổ tức cổ phiếu</td><td><span class="pill pill-h">Đã xảy ra</span></td><td><span class="pill pill-l">Thấp</span></td><td class="dim" style="font-size:11px">FY24 EPS = 80đ do cổ tức CP 10%</td><td class="dim" style="font-size:11px">Số CP outstanding, note BCTC</td></tr><tr><td>5. P/E thấp = bẫy giá trị chu kỳ</td><td><span class="pill pill-m">Trung bình</span></td><td><span class="pill pill-h">Cao</span></td><td class="dim" style="font-size:11px">FY24 P/E 262.5×; P/E chu kỳ không đáng tin</td><td class="dim" style="font-size:11px">P/B + NAV đất</td></tr><tr><td>6. Lãi suất tăng trở lại</td><td><span class="pill pill-l">Thấp</span></td><td><span class="pill pill-h">Cao</span></td><td class="dim" style="font-size:11px">Fed hawkish + SBV thận trọng</td><td class="dim" style="font-size:11px">Lãi suất HQ + credit growth</td></tr><tr><td>7. Cạnh tranh từ VIC/VHM/NLG</td><td><span class="pill pill-m">Trung bình</span></td><td><span class="pill pill-m">Trung bình</span></td><td class="dim" style="font-size:11px">Peer lớn hơn, vốn rẻ hơn</td><td class="dim" style="font-size:11px">Market share khu Đông</td></tr><tr><td>8. Rủi ro pháp lý quỹ đất</td><td><span class="pill pill-m">Trung bình</span></td><td><span class="pill pill-h">Cao</span></td><td class="dim" style="font-size:11px">Đất VN thường vướng quy hoạch/giấy tờ</td><td class="dim" style="font-size:11px">Notes BCTC, tiến độ phê duyệt</td></tr><tr><td>9. Thanh khoản cổ phiếu giảm</td><td><span class="pill pill-m">Trung bình</span></td><td><span class="pill pill-m">Trung bình</span></td><td class="dim" style="font-size:11px">Volume ở percentile 4.76% 1Y</td><td class="dim" style="font-size:11px">GTGD 20 ngày</td></tr><tr><td>10. Write-down tồn kho</td><td><span class="pill pill-l">Thấp</span></td><td><span class="pill pill-h">Rất cao</span></td><td class="dim" style="font-size:11px">Nếu dự án vướng, tồn kho giảm giá trị</td><td class="dim" style="font-size:11px">Notes BCTC, audit</td></tr><tr><td>11. Khủng hoảng kinh tế VN/macro</td><td><span class="pill pill-l">Thấp</span></td><td><span class="pill pill-h">Rất cao</span></td><td class="dim" style="font-size:11px">Inflation, VND mất giá, credit crunch</td><td class="dim" style="font-size:11px">CPI, lãi suất, VN-INDEX</td></tr><tr><td>12. Quản trị — concentrated bet Mả Lặng</td><td><span class="pill pill-h">Cao</span></td><td><span class="pill pill-h">Cao</span></td><td class="dim" style="font-size:11px">16,369 tỷ = 50% tổng TS ở 1 dự án</td><td class="dim" style="font-size:11px">Đa dạng hóa dự án</td></tr><tr><td>13. Thay đổi chính sách BĐS</td><td><span class="pill pill-l">Thấp</span></td><td><span class="pill pill-h">Cao</span></td><td class="dim" style="font-size:11px">Circular 06/2026 nới tín dụng nhưng có thể siết lại</td><td class="dim" style="font-size:11px">SBV circulars</td></tr><tr><td>14. ESOP pha loãng tiếp</td><td><span class="pill pill-m">Trung bình</span></td><td><span class="pill pill-l">Thấp</span></td><td class="dim" style="font-size:11px">ESOP 1% 04/2026; có thể tiếp</td><td class="dim" style="font-size:11px">Số CP outstanding, kế hoạch ESOP</td></tr></tbody></table></div>
+</section>
+
+<!-- ============ SECTION 12: CAPITAL USD LENS ============ -->
+<section id="sec-33k" class="section">
+  <div class="section-title aos"><span class="num">12</span><h2>Góc nhìn khoản đầu tư 800 triệu VND</h2><div class="divider"></div></div>
+  <div class="section-sub">Góc nhìn khoản đầu tư 800 triệu VND — lump sum vs DCA, drawdown, checklist kỷ luật</div>
+  <div class="grid-2">
+<div class="card">
+  <div class="card-head"><div><div class="card-title">Lump sum 800 triệu @ 21,000 VND</div></div></div>
+  <div class="grid-2">
+    <div class="stat"><div class="stat-label">Số cổ phiếu mua được</div><div class="stat-value">38,095</div><div class="stat-meta">≈ 0.0000% vốn hóa</div></div>
+    <div class="stat"><div class="stat-label">% vốn порт lý tưởng</div><div class="stat-value neu">5-8%</div><div class="stat-meta">= 40-64 triệu/cp chu kỳ</div></div>
+  </div>
+  <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-top:12px">
+  <strong>Không khuyến nghị lump sum toàn bộ 800 triệu</strong> ở mức Tech Score −6 (STRONG BEARISH) và giá đang trend DOWN. Nếu lump sum, bạn chịu ngay drawdown −22% (1Y) với xác suất cao. <strong>Chỉ lump sum nếu</strong>: giá đóng cửa tuần trên MA20 (24,235 VND) + volume tăng + Mả Lặng đã khởi công.</p>
+</div>
+
+<div class="card">
+  <div class="card-head"><div><div class="card-title">DCA 4 đợt × 200 triệu (khuyến nghị)</div></div></div>
+  <table class="fin-table">
+    <thead><tr><th>Đợt</th><th>Điều kiện kích hoạt</th><th>Giá ~ (VND)</th><th>CP mua</th></tr></thead>
+    <tbody>
+      <tr><td>1 (ngay)</td><td>Giá hiện tại 21,000 + 50% vốn</td><td class="col-latest">21,000</td><td>~9,524</td></tr>
+      <tr><td>2 (Q3/26)</td><td>Mả Lặng khởi công xác nhận</td><td>23,000-25,000</td><td>~8,000</td></tr>
+      <tr><td>3 (Q4/26)</td><td>Giá trên MA20 + volume ↑</td><td>25,000-27,000</td><td>~7,400</td></tr>
+      <tr><td>4 (Q1/27)</td><td>Dòng ngoại đảo chiều (net buy)</td><td>27,000-30,000</td><td>~6,700</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-top:8px">
+  DCA giảm rủi ro "bắt dao rơi" và tận dụng vùng tích lũy. <strong>Nếu giá mất 20,000 VND</strong> (đáy 52 tuần) → dừng DCA, chờ tín hiệu đảo chiều xác nhận (hammer weekly + RSI &gt; 40 + volume spike).</p>
+</div>
+</div>
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Drawdown lịch sử — 800 triệu có thể còn bao nhiêu?</div></div></div>
+  <table class="drawdown-table">
+    <thead><tr><th>Kịch bản</th><th>% giảm</th><th>800 triệu →</th><th>Bối cảnh</th></tr></thead>
+    <tbody>
+      <tr><td>1 tháng xấu nhất</td><td>−11.4%</td><td>709 triệu</td><td>Return 1M hiện tại</td></tr>
+      <tr><td>3 tháng xấu nhất</td><td>−16.0%</td><td>672 triệu</td><td>Return 3M hiện tại</td></tr>
+      <tr><td>6 tháng xấu nhất</td><td>−33.3%</td><td>534 triệu</td><td>Return 6M hiện tại</td></tr>
+      <tr><td>1 năm xấu nhất (hiện tại)</td><td>−22.0%</td><td>624 triệu</td><td>Performance 1Y</td></tr>
+      <tr><td>Max drawdown lịch sử (2Y)</td><td>−44.6%</td><td><strong>443 triệu</strong></td><td>Từ 37,000 → 20,500 VND</td></tr>
+      <tr><td>VaR 95% 1 ngày</td><td>−3.9%</td><td>769 triệu</td><td>Tail risk 1 phiên</td></tr>
+    </tbody>
+  </table>
+  <p class="dim" style="font-size:11px;margin-top:8px">Dựa trên technical_profile.json (return + drawdown + tail_risk). <a class="ref" href="#ref-10" title="KDH technical_profile.json — drawdown_profile">10</a>.</p>
+</div>
+
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Checklist kỷ luật trước khi đặt lệnh 800 triệu</div></div></div>
+  <ul class="check-list">
+    <li><span class="check-box off">□</span><div class="q"><strong>Tôi chấp nhận mất 357 triệu (−44.6% max DD)</strong> mà không panic bán? <span class="hint">Nếu không → giảm quy mô xuống 400 triệu hoặc bỏ qua KDH</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">Tôi đã đọc Notes BCTC breakdown tồn kho 23,260 tỷ? <span class="hint">Đất đã có quy hoạch vs đất chờ GPMB</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">Tôi đã verify tiến độ Mả Lặng (deadline 31/12/2026)? <span class="hint">Check tin tức + website KDH + công bố HOSE</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">Tôi có kế hoạch cắt lỗ rõ? <span class="hint">Đề xuất: đóng cửa tuần dưới 20,000 VND → cắt 50% vị thế</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">KDH chiếm &lt; 8% tổng portfolio? <span class="hint">Single-stock chu kỳ = rủi ro tập trung</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">Tôi đang DCA chứ không lump sum? <span class="hint">4 đợt × 200 triệu, mỗi đợt cần tín hiệu xác nhận</span></div></li>
+  </ul>
+</div>
+
+</section>
+
+<!-- ============ SECTION 13: SCENARIO ANALYSIS ============ -->
+<section id="sec-scenario" class="section">
+  <div class="section-title aos"><span class="num">13</span><h2>Scenario Analysis — 1–3 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">3 kịch bản 3 năm — Bull / Base / Bear với xác suất + driver</div>
+  <div class="scenario-grid">
+<div class="scenario-card bull">
+  <h4>🐂 Bull — "Mả Lặng thành công" <span class="pill pill-l">25%</span></h4>
+  <ul>
+    <li>Mả Lặng khởi công Q3/2026, bàn giao đúng tiến độ</li>
+    <li>Doanh thu FY26-28: 6,000 → 8,000 → 10,000 tỷ</li>
+    <li>ROE phục hồi 8-10%</li>
+    <li>Dòng ngoại đảo chiều Q4/2026</li>
+    <li>Giá mục tiêu 3 năm: 35,000-42,000 VND (P/B 1.8-2.2×)</li>
+    <li>Tổng return 3 năm: +67% đến +100%</li>
+  </ul>
+</div>
+
+<div class="scenario-card base">
+  <h4>⚖️ Base — "Tích lũy chậm" <span class="pill pill-m">50%</span></h4>
+  <ul>
+    <li>Mả Lặng đúng tiến độ nhưng mở bán chậm (2027-2028)</li>
+    <li>Doanh thu FY26-28: 5,000 → 6,000 → 7,500 tỷ</li>
+    <li>ROE 5-7%</li>
+    <li>Dòng ngoại flat (không bán ròng mạnh, không mua mạnh)</li>
+    <li>Giá mục tiêu 3 năm: 24,000-28,000 VND (P/B 1.3-1.5×)</li>
+    <li>Tổng return 3 năm: +14% đến +33%</li>
+  </ul>
+</div>
+
+<div class="scenario-card bear">
+  <h4>🐻 Bear — "Value trap" <span class="pill pill-h">25%</span></h4>
+  <ul>
+    <li>Mả Lặng trễ &gt; 12 tháng, vướng GPMB/pháp lý</li>
+    <li>Chu kỳ BĐS tiếp tục đóng băng đến 2027</li>
+    <li>Doanh thu FY26-28: 4,000 → 3,500 → 4,500 tỷ</li>
+    <li>ROE giảm &lt; 3%, tồn kho write-down</li>
+    <li>Dòng ngoại tiếp tục bán ròng</li>
+    <li>Giá mục tiêu 3 năm: 14,000-17,000 VND (P/B 0.7-0.9×)</li>
+    <li>Tổng return 3 năm: −19% đến −33%</li>
+  </ul>
+</div>
+</div>
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Bảng tổng hợp 3 kịch bản</div></div></div>
+  <div class="table-wrap"><table class="fin-table">
+    <thead><tr><th>Yếu tố</th><th class="pos">Bull (25%)</th><th class="neu">Base (50%)</th><th class="neg">Bear (25%)</th></tr></thead>
+    <tbody>
+      <tr><td>Doanh thu FY28 (tỷ VND)</td><td>10,000</td><td class="col-latest">7,500</td><td>4,500</td></tr>
+      <tr><td>ROE FY28 (%)</td><td>8-10</td><td>5-7</td><td>&lt; 3</td></tr>
+      <tr><td>P/B FY28 (×)</td><td>1.8-2.2</td><td>1.3-1.5</td><td>0.7-0.9</td></tr>
+      <tr><td>Giá mục tiêu (VND)</td><td>35,000-42,000</td><td>24,000-28,000</td><td>14,000-17,000</td></tr>
+      <tr><td>Tổng return 3 năm</td><td class="pos">+67% đến +100%</td><td class="neu">+14% đến +33%</td><td class="neg">−19% đến −33%</td></tr>
+      <tr><td>Xác suất trọng số</td><td colspan="3" class="dim">Kỳ vọng return = 0.25×83% + 0.5×23% + 0.25×(−26%) = +22% (3 năm, ~7%/năm)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="dim" style="font-size:11px;margin-top:8px">Xác suất chủ quan (MEDQ) — không phải dự báo chính xác. Cập nhật khi có tin Mả Lặng + báo cáo quý.</p>
+</div>
+
+</section>
+
+<!-- ============ SECTION 14: FINAL CHECKLIST ============ -->
+<section id="sec-checklist" class="section">
+  <div class="section-title aos"><span class="num">14</span><h2>Final Investment Checklist</h2><div class="divider"></div></div>
+  <div class="section-sub">Checklist đầu tư 5 nhóm — Business / Financial / Valuation / Risk / Discipline</div>
+  <div class="grid-2"><div class="card" style="border-top:3px solid var(--green)"><div class="card-head"><div><div class="card-title">Business</div></div></div><ul class="check-list"><li><span class="check-box on">✓</span><div class="q">KDH có moat rõ (quỹ đất Q.1, 15+ năm kinh nghiệm)? <span class="hint">Quỹ đất hiếm + thương hiệu khu Đông</span></div></li><li><span class="check-box on">✓</span><div class="q">Mô hình kiếm tiền hiểu được? <span class="hint">Developer nhà ở, rõ ràng</span></div></li><li><span class="check-box on">✓</span><div class="q">Segment mix đa dạng? <span class="hint">Căn hộ + nhà thấp tầng + đất nền</span></div></li><li><span class="check-box on">✓</span><div class="q">Catalyst rõ (Mả Lặng)? <span class="hint">16,369 tỷ, phê duyệt TP.HCM</span></div></li></ul></div><div class="card" style="border-top:3px solid var(--amber)"><div class="card-head"><div><div class="card-title">Financial</div></div></div><ul class="check-list"><li><span class="check-box off">□</span><div class="q">ROE ổn định / tăng? <span class="hint">Giảm 11.8% → 4.9% (5Y)</span></div></li><li><span class="check-box off">□</span><div class="q">CFO dương? <span class="hint">Âm suốt 5 năm (đặc thù BĐS)</span></div></li><li><span class="check-box off">□</span><div class="q">Tồn kho chất lượng tốt? <span class="hint">Cần verify breakdown đất</span></div></li><li><span class="check-box on">✓</span><div class="q">Đòn bẩy tài chính thấp? <span class="hint">Equity ratio 62%</span></div></li></ul></div><div class="card" style="border-top:3px solid var(--blue)"><div class="card-head"><div><div class="card-title">Valuation</div></div></div><ul class="check-list"><li><span class="check-box on">✓</span><div class="q">P/B dưới median lịch sử? <span class="hint">1.11× vs median 1.52×</span></div></li><li><span class="check-box on">✓</span><div class="q">P/E hợp lý (không bẫy)? <span class="hint">24.1× FY25 (bỏ qua FY24 262.5×)</span></div></li><li><span class="check-box on">✓</span><div class="q">Phần premium vs BVPS thấp? <span class="hint">+11% (rất thấp lịch sử)</span></div></li><li><span class="check-box off">□</span><div class="q">NAV đất verify độc lập? <span class="hint">Chưa audit NAV — rủi ro</span></div></li></ul></div><div class="card" style="border-top:3px solid var(--red)"><div class="card-head"><div><div class="card-title">Risk</div></div></div><ul class="check-list"><li><span class="check-box on">✓</span><div class="q">Rủi ro chu kỳ BĐS đã giá vào? <span class="hint">Giá −22% YoY phản ánh</span></div></li><li><span class="check-box off">□</span><div class="q">Rủi ro Mả Lặng trễ được giá? <span class="hint">Chưa — nếu trễ, giá còn giảm</span></div></li><li><span class="check-box off">□</span><div class="q">Dòng ngoại ngừng bán ròng? <span class="hint">Vẫn bán ròng Q2/2026</span></div></li><li><span class="check-box off">□</span><div class="q">Drawdown max chấp nhận được? <span class="hint">−44.6% max DD — cần plan cắt lỗ</span></div></li></ul></div></div>
+  
+<div class="card" style="margin-top:18px;border-left:3px solid var(--amber)">
+  <div class="card-head"><div><div class="card-title">5. Kỷ luật cá nhân (self-check)</div></div></div>
+  <ul class="check-list">
+    <li><span class="check-box off">□</span><div class="q">Tôi hiểu KDH là cổ phiếu chu kỳ, không phải growth stock? <span class="hint">Thesis đúng/sai phụ thuộc chu kỳ BĐS</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">Tôi chấp nhận hold 3 năm và chịu drawdown −30%? <span class="hint">Không phải trade ngắn hạn</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">Tôi có kế hoạch cắt lỗ rõ (20,000 VND)? <span class="hint">Viết ra trước khi mua</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">Tôi đang DCA, không FOMO? <span class="hint">4 đợt × 200 triệu với tín hiệu</span></div></li>
+    <li><span class="check-box off">□</span><div class="q">Tôi sẽ review mỗi quý (doanh thu, Mả Lặng, dòng ngoại)? <span class="hint">Đặt lịch quarterly review</span></div></li>
+  </ul>
+</div>
+
+</section>
+
+<!-- ============ SECTIONS 15-17: DYNAMIC INSIGHTS (1-4) ============ -->
+
+<section id="sec-insight-1" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 1 — Tồn kho 23,260 tỷ: tài sản chiến lược hay "đất kẹt"?</h2><div class="divider"></div></div>
+  <div class="section-sub">Frame 7 (Capital allocation) + đặc thù BĐS: đọc tồn kho developer đúng cách</div>
+
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Trigger question</div></div></div>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.7">"Tồn kho KDH 23,260.0 tỷ = 68% tổng tài sản. Đây là đất tốt chờ bán, hay đất kẹt không bán được?"</p>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Phân tích 2 nhánh tồn kho</div></div></div>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.65">Tồn kho developer BĐS gồm 2 loại:</p>
+      <ul style="margin:8px 0 0 18px;font-size:12.5px;color:var(--text-dim);line-height:1.7">
+        <li><strong>(a) Đất + chi phí dự án đang xây</strong>: Mega Ruby, Lucasta, Venica, Clarita, Emeria, Solina — đã có quy hoạch 1/500, đang khai thác. Đây là <strong>tài sản chất lượng tốt</strong>, sẽ thành doanh thu 2026-2028.</li>
+        <li><strong>(b) Đất dự án tương lai</strong>: đất Mả Lặng (chưa bàn giao mặt bằng), các dự án sơ cấp chưa xin chủ trương. Đây là <strong>tài sản có rủi ro</strong> — nếu GPMB trễ hoặc vướng pháp lý, phải write-down.</li>
+      </ul>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.65;margin-top:10px">KDH <strong>chưa công bố breakdown chi tiết</strong> (a) vs (b) trong BCTC → đây là điểm mù cần verify.</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">So sánh: tồn kho / doanh thu hàng năm</div></div></div>
+      <table class="fin-table">
+        <thead><tr><th>Năm</th><th>Tồn kho (tỷ)</th><th>Doanh thu (tỷ)</th><th>Tỉ lệ</th></tr></thead>
+        <tbody>
+          <tr><td>FY21</td><td>7,733</td><td>3,738</td><td>2.1×</td></tr>
+          <tr><td>FY25</td><td class="col-latest">23,260</td><td>4,651</td><td class="col-latest">5.0×</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-top:8px">Tỉ lệ tồn kho/doanh thu tăng từ 2.1× → 5.0× — "kho hàng" ngày càng lớn so với tốc độ bán. Nếu tỉ lệ tiếp tục tăng mà doanh thu không tăng → tín hiệu đất kẹt.</p>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px;border-left:4px solid var(--red)">
+    <div class="callout-title">⚠️ HONEST CORRECTION</div>
+    <div class="callout-body">
+    "Tồn kho = tài sản chiến lược" là luận điểm <strong>thường đúng nhưng không phải luôn luôn</strong>. <strong>3 cảnh báo:</strong>
+    <ol style="margin:8px 0 0 20px">
+      <li><strong>Đất có thể mất giá trị</strong>: nếu Mả Lặng trễ hoặc bỏ dự án, đất ghi theo giá gốc nhưng giá trị thực giảm. KDH chưa công bố impairment test chi tiết.</li>
+      <li><strong>Chi phí vốn chôn trong tồn kho</strong>: 23,260 tỷ tồn kho = vốn chôn → chi phí cơ hội (lãi vay + cơ hội đầu tư khác). Nếu kéo dài 5 năm, chi phí vốn = ~15-20% tồn kho.</li>
+      <li><strong>Thanh khoản tồn kho thấp</strong>: không thể bán tồn kho nhanh như cổ phiếu. Nếu KDH cần tiền gấp, phải bán đất giá rẻ → write-down.</li>
+    </ol>
+    <strong>Kết luận honest:</strong> Tồn kho là tài sản <em>chỉ nếu</em> dự án đúng tiến độ và thị trường BĐS hồi phục. Đừng treat tồn kho như tiền mặt.
+    </div>
+  </div>
+
+  <div class="callout good" style="margin-top:14px">
+    <div class="callout-title">Verdict + confidence</div>
+    <div class="callout-body"><strong>Tồn kho là tài sản chiến lược (confidence: MEDIUM).</strong> Phần lớn đất đã có quy hoạch + Mả Lặng đã được TP.HCM thông qua chủ trương. Nhưng confidence không HIGH vì thiếu breakdown chi tiết + rủi ro GPMB.</div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-head"><div><div class="card-title">KPI watchlist (3-5 điểm)</div></div></div>
+    <ul class="check-list">
+      <li><span class="check-box on">→</span><div class="q">Tỉ lệ tồn kho/doanh thu hàng năm (mục tiêu: giảm &lt; 4×)</div></li>
+      <li><span class="check-box on">→</span><div class="q">Breakdown (a) đất đang xây vs (b) đất chờ (đọc Notes BCTC)</div></li>
+      <li><span class="check-box on">→</span><div class="q">Impairment test trong BCTC (có write-down không?)</div></li>
+      <li><span class="check-box on">→</span><div class="q">Tiến độ Mả Lặng GPMB hàng quý</div></li>
+    </ul>
+  </div>
+
+  <div class="callout plain" style="margin-top:14px">
+    <div class="callout-title">💡 Nói cách khác — cho nhà đầu tư 800 triệu</div>
+    <div class="callout-body">Khi mua KDH, bạn đang mua <strong>"cái kho đất 23,260 tỷ"</strong> chứ không mua dòng tiền. Câu hỏi duy nhất: kho đó có bán được không, và khi nào? Nếu Mả Lặng đúng tiến độ → kho biến thành doanh thu 2027-2031. Nếu trễ → tiền của bạn bị "chôn" cùng.</div>
+  </div>
+</section>
+
+<section id="sec-insight-2" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 2 — CFO âm 5 năm: đặc thù BĐS hay dấu hiệu distress?</h2><div class="divider"></div></div>
+  <div class="section-sub">Frame 6 (Cyclicality) + đặc thù BĐS: đọc CFO developer đúng cách</div>
+
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Trigger question</div></div></div>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.7">"CFO KDH âm suốt 5 năm (−3,648 tỷ FY24 là đỉnh). Đây là bình thường với developer đang tích đất, hay dấu hiệu công ty đang gặp khó?"</p>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Tại sao CFO developer thường âm</div></div></div>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.65">Dòng tiền developer BĐS có 2 đặc thù:</p>
+      <ul style="margin:8px 0 0 18px;font-size:12.5px;color:var(--text-dim);line-height:1.7">
+        <li><strong>Tiền mua đất + xây dựng ra trước</strong>: KDH phải trả tiền mua đất, chi phí xây dựng, lãi vay — tất cả ra tiền <em>trước</em> khi bàn giao.</li>
+        <li><strong>Tiền bán nhà thu theo tiến độ</strong>: khách đóng tiền theo % hoàn thành, nhưng doanh thu chỉ ghi nhận khi bàn giao. <strong>Tiền thực ≠ lợi nhuận sổ sách</strong>.</li>
+      </ul>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.65;margin-top:10px">Vì vậy CFO âm + tồn kho tăng = dấu hiệu <strong>đang tích lũy</strong>, không phải distress.</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">CFO 5 năm KDH (tỷ VND)</div></div></div>
+      <table class="fin-table">
+        <thead><tr><th>Năm</th><th>CFO</th><th>Tồn kho Δ</th><th>Đánh giá</th></tr></thead>
+        <tbody>
+          <tr><td>FY21</td><td class="neg">-2,010</td><td>—</td><td>Tích lũy ban đầu</td></tr>
+          <tr><td>FY22</td><td class="neg">-1,047</td><td class="neg">+4,720</td><td>Tích đất</td></tr>
+          <tr><td>FY23</td><td class="neg">-1,543</td><td class="neg">+6,334</td><td>Tích đất</td></tr>
+          <tr><td>FY24</td><td class="neg">-3,648</td><td class="neg">+3,391</td><td>Tích đất (đỉnh)</td></tr>
+          <tr><td>FY25</td><td class="neg">-2,024</td><td class="neg">+1,082</td><td>Tích đất (giảm)</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-top:8px">Pattern: CFO âm nhưng tồn kho tăng song song → tiền đi vào đất, không bị mất. Đây là <strong>healthy accumulation</strong>.</p>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px;border-left:4px solid var(--red)">
+    <div class="callout-title">⚠️ HONEST CORRECTION</div>
+    <div class="callout-body">
+    "CFO âm là bình thường với developer" — <strong>đúng nhưng có giới hạn</strong>. <strong>3 cảnh báo:</strong>
+    <ol style="margin:8px 0 0 20px">
+      <li><strong>CFO âm kéo dài = stress thanh khoản</strong>: nếu kéo dài đến 2028-2029 mà Mả Lặng chưa mở bán, KDH phải vay thêm hoặc phát hành cổ phiếu mới → pha loãng EPS.</li>
+      <li><strong>CFO âm ≠ chi tiêu hợp lý</strong>: tiền có thể đi vào đất <em>kém chất lượng</em> (chưa có quy hoạch) chứ không phải đất tốt. Cần breakdown tồn kho.</li>
+      <li><strong>So sánh với peer</strong>: VHM (developer lớn nhất VN) CFO cũng âm nhưng quy mô nhỏ hơn tương đối. KDH CFO −3,648 tỷ / vốn hóa 24 tỷ = tỉ lệ cao hơn peer.</li>
+    </ol>
+    <strong>Kết luận honest:</strong> CFO âm <em>chấp nhận được</em> ở giai đoạn tích lũy, nhưng <strong>phải theo dõi CFO từ 2027 trở đi</strong> — nếu vẫn âm khi dự án đã mở bán, đó là tín hiệu distress thật sự.
+    </div>
+  </div>
+
+  <div class="callout good" style="margin-top:14px">
+    <div class="callout-title">Verdict + confidence</div>
+    <div class="callout-body"><strong>CFO âm là đặc thù BĐS, chưa phải distress (confidence: MEDIUM-HIGH đến 2027).</strong> Pattern CFO âm + tồn kho tăng + equity ratio 62% = healthy accumulation. Nhưng confidence giảm sau 2027 nếu dự án chưa mở bán.</div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-head"><div><div class="card-title">KPI watchlist</div></div></div>
+    <ul class="check-list">
+      <li><span class="check-box on">→</span><div class="q">CFO FY26-28: có chuyển dương khi Mả Lặng mở bán không?</div></li>
+      <li><span class="check-box on">→</span><div class="q">Tỉ lệ CFO/vốn hóa (so peer VHM, NLG)</div></li>
+      <li><span class="check-box on">→</span><div class="q">Nợ vay / equity (stress thanh khoản)</div></li>
+      <li><span class="check-box on">→</span><div class="q">FCFE (CFO − capex − trả nợ) — có dương không?</div></li>
+    </ul>
+  </div>
+
+  <div class="callout plain" style="margin-top:14px">
+    <div class="callout-title">💡 Nói cách khác — cho nhà đầu tư 800 triệu</div>
+    <div class="callout-body">KDH giống <strong>"người đang xây nhà, tiền ra trước tiền vào"</strong>. Khi nhà xong và bán được, tiền sẽ vào. Nhưng nếu xây mãi không xong, tiền cạn → phải vay thêm hoặc bỏ cuộc. Đó là lý do phải theo dõi CFO <strong>hàng quý từ 2027</strong> — khi Mả Lặng phải bắt đầu tạo doanh thu.</div>
+  </div>
+</section>
+
+<section id="sec-insight-3" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 3 — Mả Lặng 16,369 tỷ: game-changer hay cú cược tập trung quá lớn?</h2><div class="divider"></div></div>
+  <div class="section-sub">Frame 11 (Sum-of-parts / M&A) + đặc thù BĐS: rủi ro concentrated bet</div>
+
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Trigger question</div></div></div>
+    <p style="font-size:13px;color:var(--text-dim);line-height:1.7">"Dự án Mả Lặng 16,369 tỷ = 48% tổng tài sản KDH. Đây là cơ hội lớn nhất lịch sử công ty, hay là cú cược quá tập trung vào 1 dự án?"</p>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Thông tin dự án Mả Lặng</div></div></div>
+      <table class="fin-table">
+        <tbody>
+          <tr><td>Vị trí</td><td>Quận 1, TP.HCM (khu Mả Lặng + Chợ Gà-Gạo)</td></tr>
+          <tr><td>Tổng mức đầu tư</td><td class="col-latest">16,369 tỷ VND</td></tr>
+          <tr><td>Diện tích</td><td>~37,740 m² (Mả Lặng) + Chợ Gà-Gạo</td></tr>
+          <tr><td>Khởi công dự kiến</td><td>Quý III/2026</td></tr>
+          <tr><td>Deadline mặt bằng</td><td>31/12/2026 (UBND TP yêu cầu)</td></tr>
+          <tr><td>Giai đoạn khai thác</td><td>2026-2031 (5+ năm)</td></tr>
+          <tr><td>% tổng tài sản KDH</td><td class="col-latest">~48%</td></tr>
+          <tr><td>% vốn hóa KDH</td><td>~69%</td></tr>
+        </tbody>
+      </table>
+      <p class="dim" style="font-size:11px;margin-top:8px"><a class="ref" href="#ref-11" title="Tuổi Trẻ — Mả Lặng phê duyệt TP.HCM 06/2026">11</a> · <a class="ref" href="#ref-12" title="Dân Trí — giao mặt bằng trước 31/12">12</a>.</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Tại sao Mả Lặng là game-changer</div></div></div>
+      <ul style="margin:8px 0 0 18px;font-size:12.5px;color:var(--text-dim);line-height:1.7">
+        <li><strong>Đất Q.1 hiếm</strong>: chỉ VIC/VHM có quỹ đất tương tự. KDH vào "CLB" developer đất trung tâm.</li>
+        <li><strong>Doanh thu dự phóng 2027-2031</strong>: nếu fully operational, Mả Lặng có thể đóng góp 2,000-3,000 tỷ/năm (40-60% doanh thu hiện tại).</li>
+        <li><strong>Định vị thương hiệu</strong>: chuyển từ developer mid-cap sang developer đô thị lớn.</li>
+        <li><strong>NAV đất tăng</strong>: đất Q.1 định giá cao hơn đất khu Đông → P/B có thể mở rộng khi Mả Lặng ghi doanh thu.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px;border-left:4px solid var(--red)">
+    <div class="callout-title">⚠️ HONEST CORRECTION</div>
+    <div class="callout-body">
+    "Mả Lặng là game-changer" — <strong>đúng nhưng rủi ro concentrated bet cực cao</strong>. <strong>4 cảnh báo:</strong>
+    <ol style="margin:8px 0 0 20px">
+      <li><strong>1 dự án = 48% tổng tài sản</strong>: nếu Mả Lặng trễ/thất bại, write-down có thể ăn 30-50% vốn chủ sở hữu. Đây là <em>concentration risk</em> kinh điển.</li>
+      <li><strong>GPMB Q.1 phức tạp</strong>: đền bù giải phóng mặt bằng ở Q.1 thường chậm (dân cư đông, giá đền bù tranh chấp). Deadline 31/12/2026 <strong>tham vọng</strong> — trễ 6-12 tháng là khả thi.</li>
+      <li><strong>Tài chính: KDH phải huy động vốn</strong>: 16,369 tỷ đầu tư vượt xa CFO hiện tại (âm). KDH đã đề xuất tăng vốn tái chế <a class="ref" href="#ref-13" title="CafeF — KDH đề xuất tăng vốn tái chế">13</a> → pha loãng EPS.</li>
+      <li><strong>Thị trường BĐS 2027-2031 chưa biết</strong>: nếu chu kỳ đóng băng tiếp, Mả Lặng xây xong không bán được → tồn kho phình thêm.</li>
+    </ol>
+    <strong>Kết luận honest:</strong> Mả Lặng là cơ hội <em>và</em> rủi ro lớn nhất KDH. <strong>Đừng treat như "free option"</strong> — giá hiện tại chưa fully giá trị Mả Lặng, nhưng cũng chưa phản ánh rủi ro trễ.
+    </div>
+  </div>
+
+  <div class="callout neu" style="margin-top:14px">
+    <div class="callout-title">Verdict + confidence</div>
+    <div class="callout-body"><strong>Mả Lặng là driver lớn nhưng rủi ro cao (confidence: LOW-MEDIUM cho 2026-2027, MEDIUM cho 2028+).</strong> Phê duyệt TP.HCM OK (positive), nhưng GPMB + tài chính + thị trường là 3 biến số chưa giải quyết.</div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-head"><div><div class="card-title">KPI watchlist</div></div></div>
+    <ul class="check-list">
+      <li><span class="check-box on">→</span><div class="q">Tiến độ GPMB hàng quý (deadline 31/12/2026)</div></li>
+      <li><span class="check-box on">→</span><div class="q">Kế hoạch tăng vốn tái chế (khoản nào, % pha loãng)</div></li>
+      <li><span class="check-box on">→</span><div class="q">Khởi công thực tế Q3/2026 (verify công bố HOSE)</div></li>
+      <li><span class="check-box on">→</span><div class="q">Doanh thu Mả Lặng ghi nhận đầu tiên (dự phóng 2027-2028)</div></li>
+    </ul>
+  </div>
+
+  <div class="callout plain" style="margin-top:14px">
+    <div class="callout-title">💡 Nói cách khác — cho nhà đầu tư 800 triệu</div>
+    <div class="callout-body">Mua KDH hiện tại = <strong>đặt cược vào Mả Lặng</strong>. Nếu dự án thành công, bạn ×2-3 tiền trong 3-5 năm. Nếu trễ/thất bại, bạn mất 30-50%. Đây là bet <em>high-risk high-reward</em>, không phải "an toàn". Với 800 triệu, <strong>không nên đặt toàn bộ vào KDH</strong> — giới hạn 5-8% portfolio (= 40-64 triệu) nếu muốn play Mả Lặng.</div>
+  </div>
+</section>
+
+<!-- Each insight section uses pattern:
+<section id="sec-insight-N" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight N — KDH Insight</h2><div class="divider"></div></div>
+  <div class="section-sub"></div>
+  
+</section>
+-->
+
+<!-- ============ SECTION 18: TECHNICAL — ACTIVE ============ -->
+<section id="sec-tech" class="section">
+  <div class="section-title aos"><span class="num">18</span><h2>Phân tích kỹ thuật — Mode ACTIVE</h2><span class="tag red">TIMING/VERDICT</span><div class="divider"></div></div>
+  <div class="section-sub">Tech Score, chỉ báo (MA/RSI/MACD), pattern, beta. Verdict timing/verdict — 1 input, kết hợp fundamental</div>
+  
+<div class="tech-score-card">
+  <div>
+    <div class="tech-score-num neg">-6</div>
+    <div class="tech-verdict-pill verdict-strong-sell">TECHNICAL STRONG BEARISH</div>
+  </div>
+  <div>
+    <div class="tech-score-bar">
+      <div class="tech-score-marker" style="left:20%"></div>
+    </div>
+    <div class="tech-score-labels"><span>−10 SELL</span><span>0</span><span>+10 BUY</span></div>
+  </div>
+</div>
+<div class="callout warn" style="margin-top:12px">
+  <div class="callout-body"><strong>Score −6 = 6/6 chỉ báo đều bearish</strong>: giá dưới MA10/MA20/MA50, RSI &lt; 35, MACD dưới signal, BB ở vùng thấp. <a class="ref" href="#ref-14" title="KDH technical_active.json — tech_score_breakdown">14</a>. <strong>Guardrail:</strong> Score bearish ở cổ phiếu chu kỳ có thể là vùng tích lũy cho value investor — không phải lệnh bán.</div>
+</div>
+
+  <div class="grid-2">
+    <div class="card"><div class="card-head"><div><div class="card-title">Giá & MA</div></div></div><div class="chart-wrap"><canvas id="chartTechPrice"></canvas></div></div>
+    <div class="card"><div class="card-head"><div><div class="card-title">RSI(14)</div></div></div><div class="chart-wrap"><canvas id="chartTechRSI"></canvas></div></div>
+  </div>
+  
+<div class="signal-grid" style="margin-top:14px">
+  <div class="signal-cell bear"><div class="sig-name">Giá vs MA10</div><div class="sig-val">21,000 &lt; MA10 22,530 VND</div></div>
+  <div class="signal-cell bear"><div class="sig-name">Giá vs MA20</div><div class="sig-val">21,000 &lt; MA20 24,235 VND</div></div>
+  <div class="signal-cell bear"><div class="sig-name">Giá vs MA50</div><div class="sig-val">21,000 &lt; MA50 29,034 VND</div></div>
+  <div class="signal-cell bear"><div class="sig-name">RSI(14)</div><div class="sig-val">31.21 (&lt; 30 oversold)</div></div>
+  <div class="signal-cell bear"><div class="sig-name">MACD vs Signal</div><div class="sig-val">-2.0353 &lt; -1.8878</div></div>
+  <div class="signal-cell bear"><div class="sig-name">Bollinger position</div><div class="sig-val">6.9% (gần dưới)</div></div>
+</div>
+
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Pattern phát hiện (weekly)</div></div></div>
+  <div class="table-wrap"><table class="risk-table">
+    <thead><tr><th>Pattern</th><th>Trạng thái</th><th>Tín hiệu</th><th>Ghi chú</th></tr></thead>
+    <tbody>
+      <tr><td>Double bottom</td><td><span class="pill pill-h">Failed</span></td><td class="neg">Bearish</td><td>Giá break dưới đáy 25,300 → pattern thất bại</td></tr>
+      <tr><td>Descending channel</td><td><span class="pill pill-m">Active</span></td><td class="neg">Bearish</td><td>Kênh giảm từ 27,250 → 21,000</td></tr>
+      <tr><td>Shooting star (05/26)</td><td>—</td><td class="neg">Bearish</td><td>2 phiên 31/05 + 14/06</td></tr>
+      <tr><td>Marubozu bearish (28/06)</td><td>—</td><td class="neg">Bearish momentum</td><td>Nến bán mạnh</td></tr>
+      <tr><td>Hammer (12/07)</td><td>—</td><td class="pos">Bullish reversal?</td><td>Cần xác nhận phiên tiếp theo</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Beta & Alpha (vs VN-INDEX, 1Y)</div></div></div>
+  <div class="grid-3">
+    <div class="stat"><div class="stat-label">Beta (VN-INDEX, 252d)</div><div class="stat-value">0.819</div><div class="stat-meta">Di chuyển cùng thị trường</div></div>
+    <div class="stat"><div class="stat-label">Beta (VN30, 252d)</div><div class="stat-value">0.923</div><div class="stat-meta">Nhạy hơn VN30</div></div>
+    <div class="stat"><div class="stat-label">Alpha 1Y</div><div class="stat-value neg">-54.2%</div><div class="stat-meta">Underperform VN-INDEX mạnh</div></div>
+  </div>
+  <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-top:10px">KDH underperform VN-INDEX tới −54% (1Y) — cổ phiếu chu kỳ bị bán mạnh trong khi thị trường chung +34%. Đây là <strong>divergence cực lớn</strong>: hoặc KDH là value trap, hoặc là cơ hội tích lũy vùng đáy.</p>
+</div>
+
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">MACD chi tiết</div></div></div>
+  <div class="grid-3">
+    <div class="stat"><div class="stat-label">MACD</div><div class="stat-value neg">-2.0353</div></div>
+    <div class="stat"><div class="stat-label">Signal</div><div class="stat-value">-1.8878</div></div>
+    <div class="stat"><div class="stat-label">Histogram</div><div class="stat-value neg">-0.1475</div></div>
+  </div>
+  <p style="font-size:12.5px;color:var(--text-dim);line-height:1.6;margin-top:10px">MACD dưới signal (bearish), histogram âm nhưng nhỏ (−0.15) → <strong>động lượng bán đang yếu đi</strong>. Nếu histogram chuyển dương + RSI vượt 40 → tín hiệu đảo chiều đầu tiên.</p>
+</div>
+
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">3 kịch bản kỹ thuật (tuần)</div><div class="card-sub">Từ technical_active.json trading_strategy</div></div></div>
+  <div class="scenario-grid">
+    <div class="scenario-card bull"><h4>Bullish</h4><ul><li><strong>Trigger:</strong> Đóng cửa tuần trên MA20 (24,235 VND) + volume ↑</li><li><strong>Mục tiêu:</strong> 36,500 VND (52W high)</li><li><strong>Hủy:</strong> Đóng dưới 21,000 VND</li></ul></div>
+    <div class="scenario-card base"><h4>Neutral</h4><ul><li><strong>Range:</strong> 21,000 – 36,500 VND</li><li>Đi ngang trong channel</li><li>Chờ breakout xác nhận volume</li></ul></div>
+    <div class="scenario-card bear"><h4>Bearish</h4><ul><li><strong>Trigger:</strong> Mất MA50 (29,034 VND) hoặc RSI &lt; 30</li><li><strong>Mục tiêu:</strong> 21,000 VND (52W low)</li><li><strong>Hủy:</strong> Phục hồi trên MA10 + volume</li></ul></div>
+  </div>
+</div>
+
+</section>
+
+<!-- ============ SECTION 19: TECHNICAL — PROFILE (NON-ADVICE) ============ -->
+<section id="sec-tech-profile" class="section">
+  <div class="section-title aos"><span class="num">19</span><h2>Phân tích kỹ thuật — Mode PROFILE</h2><span class="tag amber">NON-ADVICE</span><div class="divider"></div></div>
+  <div class="section-sub">Profile giá lịch sử — mô tả trung tính, KHÔNG phải khuyến nghị giao dịch</div>
+  
+<div class="grid-4" style="margin-top:8px">
+  <div class="stat"><div class="stat-label">Return 1M</div><div class="stat-value neg">-11.4%</div></div>
+  <div class="stat"><div class="stat-label">Return 3M</div><div class="stat-value neg">-16.0%</div></div>
+  <div class="stat"><div class="stat-label">Return 6M</div><div class="stat-value neg">-33.3%</div></div>
+  <div class="stat"><div class="stat-label">Return 1Y</div><div class="stat-value neg">-21.3%</div></div>
+</div>
+<div class="grid-2" style="margin-top:14px">
+  <div class="card"><div class="card-head"><div><div class="card-title">Drawdown profile (2Y)</div></div></div><div class="chart-wrap"><canvas id="chartProfileDD"></canvas></div></div>
+  <div class="card"><div class="card-head"><div><div class="card-title">Phân phối lợi suất ngày (1Y)</div></div></div><div class="chart-wrap"><canvas id="chartProfileDist"></canvas></div></div>
+</div>
+
+  
+<div class="grid-2" style="margin-top:14px">
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Đặc điểm giá lịch sử</div></div></div>
+    <table class="fin-table">
+      <tbody>
+        <tr><td>Max drawdown</td><td class="neg">-44.6%</td></tr>
+        <tr><td>Drawdown hiện tại</td><td class="neg">-43.2%</td></tr>
+        <tr><td>Ngày underwater</td><td>210 ngày</td></tr>
+        <tr><td>Số episode drawdown</td><td>8</td></tr>
+        <tr><td>HV 20 ngày</td><td>24.4%</td></tr>
+        <tr><td>HV 252 ngày</td><td>39.8%</td></tr>
+        <tr><td>Median recovery</td><td>5 ngày</td></tr>
+        <tr><td>Max runup</td><td class="pos">+67.8%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-head"><div><div class="card-title">Tail risk & thanh khoản</div></div></div>
+    <table class="fin-table">
+      <tbody>
+        <tr><td>VaR 95% (1 ngày)</td><td class="neg">−3.91%</td></tr>
+        <tr><td>VaR 99% (1 ngày)</td><td class="neg">−6.21%</td></tr>
+        <tr><td>Expected shortfall 95%</td><td class="neg">−5.50%</td></tr>
+        <tr><td>GTGD TB 20 ngày</td><td>80.1 tỷ VND</td></tr>
+        <tr><td>Thanh khoản hiện tại (percentile)</td><td class="neg">4.8%</td></tr>
+        <tr><td>Rủi ro thanh khoản</td><td class="neu">trung bình</td></tr>
+        <tr><td>Money flow label</td><td class="neg">áp lực tiền âm</td></tr>
+        <tr><td>Volume-price confirmation</td><td class="neg">volume không cùng chiều giá</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="callout info" style="margin-top:14px">
+  <div class="callout-title">Archetype: accumulation_breakout</div>
+  <div class="callout-body">Setup hiện tại nghiêng tích lũy; đọc kỹ ở phiên xác nhận thoát nền. — Setup hiện tại nghiêng tích lũy; đọc kỹ ở phiên xác nhận thoát nền. Pattern quan sát: <strong>Cốc tay cầm</strong> (completion score 72.2%, watch zone 20–27 nghìn VND).</div>
+</div>
+
+  <div class="non-advice-panel">
+<h4>⚠️ Non-advice — đây là mô tả lịch sử</h4>
+<ul>
+  <li>Toàn bộ section này mô tả <strong>đã xảy ra</strong> trong quá khứ (2 năm dữ liệu ngày), không dự báo tương lai.</li>
+  <li>Drawdown, VaR, distribution là thống kê mô tả — không phải dự báo đáy/đỉnh hoặc dải giá kỳ vọng.</li>
+  <li>Archetype "accumulation_breakout" là nhãn quan sát, không phải tín hiệu mua.</li>
+  <li>Tỷ lệ trong quá khứ không đảm bảo lặp lại. Các cửa sổ quan sát chồng lấp, không độc lập.</li>
+  <li>Đây KHÔNG phải khuyến nghị giao dịch, không phải lời khuyên tài chính cá nhân.</li>
+</ul>
+</div>
+</section>
+
+<!-- ============ SECTION 20: ANALYST SYNTHESIS ============ -->
+<section id="sec-analyst" class="section">
+  <div class="section-title aos"><span class="num">20</span><h2>Analyst Synthesis</h2><span class="tag blue">BULL/BEAR</span><div class="divider"></div></div>
+  <div class="section-sub">Synthesis analyst + news — bull/bear, consensus target, divergence tin ngành vs disclosure</div>
+  
+<div class="grid-4">
+  <div class="stat"><div class="stat-label">Rating consensus</div><div class="stat-value pos">BUY</div><div class="stat-meta">Anh Pham · 11-May-26</div></div>
+  <div class="stat"><div class="stat-label">Giá mục tiêu</div><div class="stat-value pos">42,600</div><div class="stat-meta">VND · upside +103%</div></div>
+  <div class="stat"><div class="stat-label">Sentiment news</div><div class="stat-value neu">13</div><div class="stat-meta">NEUTRAL (8 tin)</div></div>
+  <div class="stat"><div class="stat-label">Phân loại tin</div><div class="stat-value">2/4/2</div><div class="stat-meta">bull/neutral/bear</div></div>
+</div>
+
+  
+<div class="callout warn">
+  <div class="callout-title">⚠️ Target có thể stale</div>
+  <div class="callout-body">Giá mục tiêu 42,600 VND đặt khi giá còn cao hơn hiện tại. Sau khi giá giảm −22% YoY, target này ngả về "bull case" thay vì "base case". Cần chờ update analyst sau báo cáo FY26. <strong>Đừng base quyết định solely vào target — verify logic underlying.</strong></div>
+</div>
+
+  
+<div class="card" style="margin-top:14px">
+  <div class="card-head"><div><div class="card-title">Analyst view (Investing.com consensus, 9 nhà phân tích)</div></div></div>
+  <table class="analyst-table">
+    <thead><tr><th>Nguồn</th><th>Rating</th><th>Giá mục tiêu (VND)</th><th>Thesis</th></tr></thead>
+    <tbody>
+      <tr><td class="firm">Anh Pham (TCBS)</td><td class="rating-buy">BUY</td><td class="target">42,600</td><td class="thesis">Vùng định giá hấp dẫn, catalyst Mả Lặng dài hạn. Upside +103%.</td></tr>
+      <tr><td class="firm">VikkiBankS</td><td class="rating-buy">Tích cực</td><td class="target">~38,850 (TB)</td><td class="thesis">P/B ~1.3x thấp 40% vs TB 5 năm; khai trương nhà mẫu 06/2026. Upside +85%.</td></tr>
+      <tr><td class="firm">Investing.com (9 analysts)</td><td class="rating-buy">BUY consensus</td><td class="target">38,850 (cao 47,100 / thấp 27,300)</td><td class="thesis">Đa số bullish,分歧 về timing.</td></tr>
+    </tbody>
+  </table>
+  <p class="dim" style="font-size:11px;margin-top:8px"><a class="ref" href="#ref-15" title="VikkiBankS — bản tin 07-07-2026">15</a> · <a class="ref" href="#ref-16" title="Investing.com consensus">16</a>.</p>
+</div>
+
+  <div class="grid-2">
+<div class="card" style="border-top:3px solid var(--green)">
+  <div class="card-head"><div><div class="card-title">🐂 Bull thesis</div></div></div>
+  <ul style="margin:0 0 0 18px;font-size:12.5px;color:var(--text-dim);line-height:1.7">
+    <li><strong>Mả Lặng 16,369 tỷ</strong>: phê duyệt TP.HCM, khởi công Q3/2026 → driver 2027-2031</li>
+    <li><strong>Định giá hấp dẫn</strong>: P/B 1.11×, chiết khấu 27% vs median</li>
+    <li><strong>Tồn kho chất lượng</strong>: 23,260 tỷ đất đã có quy hoạch phần lớn</li>
+    <li><strong>Equity ratio 62%</strong>: đòn bẩy thấp, ít rủi ro vỡ nợ</li>
+    <li><strong>3 dự án mở bán 2026</strong>: Clarita, Emeria, Solina — dòng tiền ngắn hạn</li>
+  </ul>
+</div>
+
+<div class="card" style="border-top:3px solid var(--red)">
+  <div class="card-head"><div><div class="card-title">🐻 Bear thesis</div></div></div>
+  <ul style="margin:0 0 0 18px;font-size:12.5px;color:var(--text-dim);line-height:1.7">
+    <li><strong>Dòng ngoại bán ròng</strong>: Hanoi Holdings + VinaCapital, áp lực ngắn hạn</li>
+    <li><strong>Tech Score −6</strong>: STRONG BEARISH, giá dưới cả 3 MA</li>
+    <li><strong>ROE giảm</strong>: 11.8% → 4.9% (5Y), hiệu quả vốn kém đi</li>
+    <li><strong>CFO âm 5 năm</strong>: stress thanh khoản nếu kéo dài</li>
+    <li><strong>Bẫy chu kỳ</strong>: P/E thấp có thể là value trap nếu BĐS đóng băng tiếp</li>
+    <li><strong>Concentration risk Mả Lặng</strong>: 1 dự án = 50% tổng tài sản</li>
+  </ul>
+</div>
+</div>
+  
+<div class="card" style="margin-top:14px">
+  <div class="card-head"><div><div class="card-title">View độc lập (không phải sell-side)</div></div></div>
+  <table class="analyst-table">
+    <thead><tr><th>Nguồn</th><th>Quan điểm</th><th>Lý do</th></tr></thead>
+    <tbody>
+      <tr><td class="firm">Vietstock (05/2026)</td><td class="rating-hold">Thận trọng</td><td class="thesis">Q1/2026 LNST +131% nhưng đến từ nhượng chuyển BĐS (An Lập), KHÔNG phải kinh doanh cốt lõi. Doanh thu giảm 60% YoY.</td></tr>
+      <tr><td class="firm">Báo Đầu Tư (05/2026)</td><td class="rating-hold">Neutrals</td><td class="thesis">Lãi đột biến Q1/2026 nhờ mua rẻ công ty — không lặp lại. Cần theo dõi doanh thu cốt lõi.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+  
+<div class="grid-3" style="margin-top:14px">
+  <div class="stat"><div class="stat-label">% sở hữu ngoại</div><div class="stat-value">24.88%</div><div class="stat-meta">giới hạn 50%</div></div>
+  <div class="stat"><div class="stat-label">GTGD TB 1 tháng</div><div class="stat-value">85.0</div><div class="stat-meta">tỷ VND/phiên</div></div>
+  <div class="stat"><div class="stat-label">Khối lượng TB</div><div class="stat-value">3.78</div><div class="stat-meta">triệu CP/phiên</div></div>
+</div>
+
+  
+<div class="callout info" style="margin-top:14px">
+  <div class="callout-title">Synthesis — divergence rõ ràng</div>
+  <div class="callout-body">
+  <strong>2 luồng tin trái ngược:</strong>
+  <ul style="margin:6px 0 0 18px">
+    <li><strong class="pos">Tin ngành + analyst: bullish (100/100)</strong> — Mả Lặng phê duyệt + định giá hấp dẫn. Đây là tin <em>dài hạn</em>.</li>
+    <li><strong class="neg">Tin disclosure: bearish (−57)</strong> — dòng ngoại bán ròng. Đây là tin <em>ngắn hạn</em>.</li>
+  </ul>
+  <strong>Diễn giải:</strong> thị trường đang định giá dòng tiền ngoại ngắn hạn, bỏ qua catalyst dài hạn. Đây là <em>classic divergence</em> ở cổ phiếu chu kỳ vùng tích lũy. <strong>Nếu bạn có horizont 3 năm</strong>, tin ngành quan trọng hơn tin disclosure. <strong>Nếu horizont &lt; 6 tháng</strong>, dòng ngoại áp lực hơn.
+  </div>
+</div>
+
+</section>
+
+<!-- ============ SECTION 21: GLOSSARY ============ -->
+<section id="sec-glossary" class="section">
+  <div class="section-title aos"><span class="num">21</span><h2>📖 Hướng dẫn đọc — Giải thích thuật ngữ</h2><div class="divider"></div></div>
+  <div class="section-sub">Hướng dẫn đọc — thuật ngữ tài chính + thuật ngữ BĐS Việt Nam</div>
+  
+<div class="callout plain">
+  <div class="callout-title">💡 Cách đọc báo cáo này</div>
+  <div class="callout-body">
+  Mỗi số lớn có footnote <span class="ref" style="position:relative;vertical-align:super">N</span> (citation). Click để xem nguồn.
+  <strong>3 nhãn chất lượng:</strong>
+  <span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn khớp ·
+  <span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần verify ·
+  <span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán.
+  <strong>Đặc thù KDH:</strong> developer BĐS chu kỳ → P/E ít ý nghĩa, ưu tiên P/B + NAV đất + tiến độ dự án.
+  </div>
+</div>
+
+  <div class="grid-2">
+    <div class="card"><div class="card-head"><div><div class="card-title">Thuật ngữ tài chính</div></div></div><div class="gloss-item"><div class="gloss-term">EPS</div><div class="gloss-def">Earnings Per Share — lợi nhuận trên mỗi cổ phiếu. KDH FY25 = 870 VND. ⚠️ FY24 = 80đ bất thường do cổ tức cổ phiếu.</div></div><div class="gloss-item"><div class="gloss-term">P/E</div><div class="gloss-def">Price/Earnings — giá / EPS. Cho developer chu kỳ, P/E thấp ở đỉnh chu kỳ là bẫy. KDH FY25 = 24.1×.</div></div><div class="gloss-item"><div class="gloss-term">P/B</div><div class="gloss-def">Price/Book — giá / giá trị sổ sách. Lens chính cho developer. KDH FY25 = 1.11× (dưới median 1.52×).</div></div><div class="gloss-item"><div class="gloss-term">ROE</div><div class="gloss-def">Return on Equity — lợi nhuận / vốn chủ sở hữu. KDH giảm 11.8% → 4.9% (5Y).</div></div><div class="gloss-item"><div class="gloss-term">BVPS</div><div class="gloss-def">Book Value Per Share — giá trị sổ sách / cổ phiếu. KDH FY25 = 18,859 VND.</div></div><div class="gloss-item"><div class="gloss-term">CFO</div><div class="gloss-def">Cash Flow from Operations — dòng tiền hoạt động. KDH âm suốt 5 năm (đặc thù BĐS tích đất).</div></div><div class="gloss-item"><div class="gloss-term">GP</div><div class="gloss-def">Gross Profit — lợi nhuận gộp. KDH FY25 = 2,754 tỷ, biên 59%.</div></div><div class="gloss-item"><div class="gloss-term">GAAP</div><div class="gloss-def">Generally Accepted Accounting Principles — chuẩn kế toán. VN dùng VAS (tương tự).</div></div><div class="gloss-item"><div class="gloss-term">NAV</div><div class="gloss-def">Net Asset Value — giá trị tài sản ròng. Cho developer, NAV đất = trữ đất định giá hiện tại.</div></div><div class="gloss-item"><div class="gloss-term">VaR</div><div class="gloss-def">Value at Risk — mức lỗ tối đa ở ngưỡng tin cậy. KDH VaR 95% 1 ngày = −3.9%.</div></div><div class="gloss-item"><div class="gloss-term">Beta</div><div class="gloss-def">Độ nhạy với thị trường. Beta 1 = di chuyển cùng thị trường. KDH beta VN-INDEX = 0.82.</div></div><div class="gloss-item"><div class="gloss-term">Alpha</div><div class="gloss-def">Lợi suất dư ra so với benchmark. KDH alpha 1Y = −54% (underperform nặng).</div></div></div>
+    <div class="card"><div class="card-head"><div><div class="card-title">Thuật ngữ Bất động sản</div></div></div><div class="gloss-item"><div class="gloss-term">Developer</div><div class="gloss-def">Công ty phát triển BĐS — mua đất, xin quy hoạch, xây dựng, bán. KDH là developer nhà ở TP.HCM.</div></div><div class="gloss-item"><div class="gloss-term">GPMB</div><div class="gloss-def">Giải phóng mặt bằng — thu hồi đất, đền bù, bàn giao cho dự án. Bước quan trọng, thường chậm ở VN.</div></div><div class="gloss-item"><div class="gloss-term">Quỹ đất</div><div class="gloss-def">Tổng diện tích đất developer đang sở hữu/quy hoạch. Tồn kho KDH 23,260 tỷ = đất + dự án.</div></div><div class="gloss-item"><div class="gloss-term">Cổ tức cổ phiếu</div><div class="gloss-def">Phát hành cổ phiếu mới thay vì trả tiền mặt. KDH 10% (04/2026) làm EPS FY24 = 80đ.</div></div><div class="gloss-item"><div class="gloss-term">ESOP</div><div class="gloss-def">Employee Stock Ownership Plan — phát hành CP cho nhân viên. KDH ESOP 1% (04/2026).</div></div><div class="gloss-item"><div class="gloss-term">Căn hộ</div><div class="gloss-def">Căn hộ chung cư — sản phẩm BĐS cao tầng. KDH: Jamila, Clarita, Emeria, Solina.</div></div><div class="gloss-item"><div class="gloss-term">Nhà thấp tầng</div><div class="gloss-def">Biệt thự, liền kề — sản phẩm BĐS thấp tầng, biên cao. KDH: Goldora, Lucasta, Venica.</div></div><div class="gloss-item"><div class="gloss-term">Đất nền</div><div class="gloss-def">Đất đã có quy hoạch, chưa xây — bán cho người mua tự xây. Biên cao nhất.</div></div><div class="gloss-item"><div class="gloss-term">Mả Lặng</div><div class="gloss-def">Khu trung tâm Q.1 TP.HCM — siêu dự án chỉnh trang đô thị 16,369 tỷ VND (2026-2031).</div></div><div class="gloss-item"><div class="gloss-term">Pre-sales</div><div class="gloss-def">Bán nhà theo tiến độ dự án — khách đóng tiền theo % hoàn thành trước khi bàn giao.</div></div><div class="gloss-item"><div class="gloss-term">Chỉnh trang đô thị</div><div class="gloss-def">Urban renewal — tái phát triển khu vực cũ. Mả Lặng + Chợ Gà-Gạo là ví dụ.</div></div><div class="gloss-item"><div class="gloss-term">Tăng vốn tái chế</div><div class="gloss-def">Phát hành CP mới từ lợi nhuận giữ lại — không gọi vốn tiền mặt. KDH đề xuất cho Mả Lặng.</div></div></div>
+  </div>
+  
+<div class="card" style="margin-top:14px">
+  <div class="card-head"><div><div class="card-title">Top 3 thuật ngữ cần biết khi đọc KDH</div></div></div>
+  <ol style="margin:0 0 0 20px;font-size:13px;color:var(--text-dim);line-height:1.8">
+    <li><strong>P/B + NAV đất</strong> — lens chính cho developer, quan trọng hơn P/E.</li>
+    <li><strong>Tồn kho + CFO âm</strong> — đặc thù BĐS, không treat như retail inventory hay distress signal.</li>
+    <li><strong>GPMB + Mả Lặng</strong> — rủi ro + cơ hội lớn nhất, theo dõi tiến độ hàng quý.</li>
+  </ol>
+</div>
+
+</section>
+
+</div><!-- /layout-content -->
+
+<!-- ============ TOC SIDEBAR (sticky, phải) ============ -->
+<aside class="toc-sidebar" id="tocSidebar">
+  <div class="toc-sidebar-head">📑 Mục lục</div>
+  <div class="toc-sidebar-hint">22 phần · click để nhảy đến</div>
+  <ul class="toc-sidebar-list">
+    <li><a class="toc-sidebar-item" href="#sec-hero"><span class="toc-sidebar-num">1</span><span class="toc-sidebar-label">Hero & KPI</span></a></li><li><a class="toc-sidebar-item" href="#sec-exec"><span class="toc-sidebar-num">2</span><span class="toc-sidebar-label">TL;DR</span></a></li><li><a class="toc-sidebar-item" href="#sec-biz"><span class="toc-sidebar-num">3</span><span class="toc-sidebar-label">Business 101</span></a></li><li><a class="toc-sidebar-item" href="#sec-industry"><span class="toc-sidebar-num">4</span><span class="toc-sidebar-label">Ngành</span></a></li><li><a class="toc-sidebar-item" href="#sec-history"><span class="toc-sidebar-num">5</span><span class="toc-sidebar-label">5 năm</span></a></li><li><a class="toc-sidebar-item" href="#sec-segment"><span class="toc-sidebar-num">6</span><span class="toc-sidebar-label">Segment</span></a></li><li><a class="toc-sidebar-item" href="#sec-thesis"><span class="toc-sidebar-num">7</span><span class="toc-sidebar-label">Thesis</span></a></li><li><a class="toc-sidebar-item" href="#sec-valuation"><span class="toc-sidebar-num">8</span><span class="toc-sidebar-label">Định giá</span></a></li><li><a class="toc-sidebar-item" href="#sec-peer"><span class="toc-sidebar-num">9</span><span class="toc-sidebar-label">Peer</span></a></li><li><a class="toc-sidebar-item" href="#sec-bs"><span class="toc-sidebar-num">10</span><span class="toc-sidebar-label">BS & FCF</span></a></li><li><a class="toc-sidebar-item" href="#sec-risk"><span class="toc-sidebar-num">11</span><span class="toc-sidebar-label">Rủi ro</span></a></li><li><a class="toc-sidebar-item" href="#sec-33k"><span class="toc-sidebar-num">12</span><span class="toc-sidebar-label">800tr VND</span></a></li><li><a class="toc-sidebar-item" href="#sec-scenario"><span class="toc-sidebar-num">13</span><span class="toc-sidebar-label">Kịch bản</span></a></li><li><a class="toc-sidebar-item" href="#sec-checklist"><span class="toc-sidebar-num">14</span><span class="toc-sidebar-label">Checklist</span></a></li><li><a class="toc-sidebar-item" href="#sec-insight-1"><span class="toc-sidebar-num">★1</span><span class="toc-sidebar-label">Tồn kho</span></a></li><li><a class="toc-sidebar-item" href="#sec-insight-2"><span class="toc-sidebar-num">★2</span><span class="toc-sidebar-label">CFO âm</span></a></li><li><a class="toc-sidebar-item" href="#sec-insight-3"><span class="toc-sidebar-num">★3</span><span class="toc-sidebar-label">Mả Lặng</span></a></li><li><a class="toc-sidebar-item" href="#sec-tech"><span class="toc-sidebar-num">18</span><span class="toc-sidebar-label">Technical</span></a></li><li><a class="toc-sidebar-item" href="#sec-tech-profile"><span class="toc-sidebar-num">19</span><span class="toc-sidebar-label">Profile</span></a></li><li><a class="toc-sidebar-item" href="#sec-analyst"><span class="toc-sidebar-num">20</span><span class="toc-sidebar-label">Analyst</span></a></li><li><a class="toc-sidebar-item" href="#sec-glossary"><span class="toc-sidebar-num">21</span><span class="toc-sidebar-label">Thuật ngữ</span></a></li><li><a class="toc-sidebar-item" href="#sec-source"><span class="toc-sidebar-num">22</span><span class="toc-sidebar-label">Nguồn</span></a></li>
+  </ul>
+</aside>
+
+</div><!-- /layout-main -->
+
+<!-- ============ DISCLAIMER (cho nhà đầu tư đọc trước khi ra quyết định) ============ -->
+<div class="disclaimer">
+  <div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+  <p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai. Mặc dù mỗi con số quan trọng đều có trích nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai.</p>
+  <div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+  <ol>
+    <li><strong>Đếm nguồn.</strong> Mỗi số quan trọng (doanh thu, EPS, P/E, FCF) nên có ít nhất 2 nguồn độc lập khớp nhau. Chỉ 1 nguồn = chưa chắc.</li>
+    <li><strong>Số bất thường = dừng.</strong> Con số khiến bạn thấy "ồ hay" hoặc "ồ tệ" → Google 30 giây để đối chiếu. Đó là lúc dễ tin nhất và AI dễ sai nhất.</li>
+    <li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt $800 triệu dựa trên con số này không?" Nếu chưa dám → verify thêm.</li>
+  </ol>
+  <div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+  <p>Mỗi số có nhãn ở bảng Data Quality bên dưới:</p>
+  <ul class="qlist">
+    <li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn chính thống khớp nhau</li>
+    <li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần đối chiếu thêm</li>
+    <li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán, không nên đặt quyết định lớn dựa trên số này</li>
+  </ul>
+  <p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình.</p>
+</div>
+
+<!-- ============ SECTION 22: SOURCE APPENDIX ============ -->
+<section id="sec-source" class="section">
+  <div class="section-title aos"><span class="num">22</span><h2>Source Appendix & Data Quality</h2><div class="divider"></div></div>
+  <div class="section-sub">Nguồn dữ liệu + Data Quality Matrix + hạn chế</div>
+  
+<div class="card">
+  <div class="card-head"><div><div class="card-title">Data Quality Matrix</div></div></div>
+  <div class="table-wrap"><table class="fin-table">
+    <thead><tr><th>Dữ liệu</th><th>Giá trị</th><th>Chất lượng</th><th>Nguồn</th><th>Ghi chú</th></tr></thead>
+    <tbody>
+      <tr><td>Giá đóng cửa</td><td>21,000 VND</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>vnstock (VCI)</td><td>Đóng cửa tuần 08/07/2026</td></tr>
+      <tr><td>Vốn hóa</td><td>23.57 nghìn tỷ VND</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>SSC/vnstock</td><td>Giá × CP outstanding</td></tr>
+      <tr><td>Doanh thu 5 năm</td><td>3,738 → 4,651 tỷ</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>BCTC kiểm toán</td><td>FY21-FY25</td></tr>
+      <tr><td>Lợi nhuận 5 năm</td><td>1,202 → 1,045 tỷ</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>BCTC kiểm toán</td><td>—</td></tr>
+      <tr><td>Tồn kho FY25</td><td>23,260 tỷ VND</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>BCTC kiểm toán</td><td>Đất + dự án</td></tr>
+      <tr><td>CFO 5 năm</td><td>−1.0 đến −3.6 tỷ</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>BCTC kiểm toán</td><td>Âm suốt</td></tr>
+      <tr><td>EPS FY24</td><td>80 VND</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>BCTC + note</td><td>Anomaly — cổ tức CP 10%</td></tr>
+      <tr><td>P/E FY24</td><td>262.5×</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Tính từ EPS méo</td><td>Đừng dùng — bẫy</td></tr>
+      <tr><td>Tech Score</td><td>−6</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>technical_active.json</td><td>Weekly 57 phiên</td></tr>
+      <tr><td>Rủi ro drawdown</td><td>−44.6% max</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>technical_profile.json</td><td>530 phiên ngày</td></tr>
+      <tr><td>Mả Lặng giá trị</td><td>16,369 tỷ</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>Tuổi Trẻ/VnExpress/Thanh Niên</td><td>4 nguồn báo</td></tr>
+      <tr><td>Mục tiêu analyst</td><td>42,600 VND</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>TCBS</td><td>1 analyst, có thể stale</td></tr>
+      <tr><td>Segment revenue breakdown</td><td>22/34/30/14%</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>Ước tính</td><td>KDH không công bố chi tiết</td></tr>
+      <tr><td>Peer P/B (VIC, VHM...)</td><td>0.8-1.5×</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>VikkiBankS/tcbs ước tính</td><td>Cần verify Yahoo/vnstock</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+  
+<div class="card" style="margin-top:18px">
+  <div class="card-head"><div><div class="card-title">Hạn chế dữ liệu — đọc trước khi quyết định</div></div></div>
+  <ul class="check-list">
+    <li><span class="check-box off">!</span><div class="q"><strong>Segment revenue không công bố chi tiết</strong> — breakdown 22/34/30/14% là ước tính LOWQ. KDH chỉ báo tổng doanh thu.</div></li>
+    <li><span class="check-box off">!</span><div class="q"><strong>NAV đất chưa audit độc lập</strong> — P/B dựa trên sổ sách, không phải giá trị thị trường đất.</div></li>
+    <li><span class="check-box off">!</span><div class="q"><strong>Breakdown tồn kho (a vs b)</strong> — KDH chưa công bố chi tiết đất đang xây vs đất chờ GPMB.</div></li>
+    <li><span class="check-box off">!</span><div class="q"><strong>Analyst coverage mỏng</strong> — chủ yếu TCBS + VikkiBankS, thiếu sell-side lớn (SSI, VNDirect).</div></li>
+    <li><span class="check-box off">!</span><div class="q"><strong>News window sparse</strong> — chỉ 6/50 tin trong 30 ngày, 5/6 là disclosure quy trình.</div></li>
+    <li><span class="check-box off">!</span><div class="q"><strong>Target price có thể stale</strong> — đặt khi giá cao hơn, chưa update sau −22% YoY.</div></li>
+  </ul>
+</div>
+
+  <div class="card" style="margin-top:18px"><div class="card-head"><div><div class="card-title">Nguồn trích dẫn (16)</div></div></div><ul class="refs"><li id="ref-1"><a href="#sec-source">KDH FY25 tồn kho — fundamental_sponsor.json</a><span class="src-meta">tồn kho = đất + chi phí dự án</span></li><li id="ref-2"><a href="https://tuoitre.vn" target="_blank" rel="noopener">Tuổi Trẻ — Mả Lặng phê duyệt TP.HCM</a></li><li id="ref-3"><a href="#sec-source">HOSE disclosure — foreign selling 06/2026</a><span class="src-meta">DDINS events</span></li><li id="ref-4"><a href="https://vikkibanks.vn" target="_blank" rel="noopener">VikkiBankS — KDH vùng định giá hấp dẫn</a></li><li id="ref-5"><a href="#sec-source">KDH FY25 — fundamental_sponsor.json</a></li><li id="ref-6"><a href="https://en.vneconomy.vn" target="_blank" rel="noopener">VnEconomy — 3 scenarios BĐS Q2/2026</a></li><li id="ref-7"><a href="https://tuoitre.vn" target="_blank" rel="noopener">Tuổi Trẻ — Mả Lặng</a></li><li id="ref-8"><a href="https://tuoitre.vn" target="_blank" rel="noopener">Tuổi Trẻ</a></li><li id="ref-9"><a href="https://vikkibanks.vn" target="_blank" rel="noopener">VikkiBankS — KDH vùng định giá hấp dẫn P/B ~1.3x</a></li><li id="ref-10"><a href="#sec-source">KDH technical_profile.json — drawdown_profile</a></li><li id="ref-11"><a href="https://tuoitre.vn" target="_blank" rel="noopener">Tuổi Trẻ — Mả Lặng phê duyệt TP.HCM 06/2026</a></li><li id="ref-12"><a href="https://dantri.com.vn" target="_blank" rel="noopener">Dân Trí — giao mặt bằng trước 31/12</a></li><li id="ref-13"><a href="https://cafef.vn" target="_blank" rel="noopener">CafeF — KDH đề xuất tăng vốn tái chế</a></li><li id="ref-14"><a href="#sec-source">KDH technical_active.json — tech_score_breakdown</a></li><li id="ref-15"><a href="https://vikkibanks.vn" target="_blank" rel="noopener">VikkiBankS — bản tin 07-07-2026</a></li><li id="ref-16"><a href="#sec-source">Investing.com consensus</a><span class="src-meta">9 analysts, MEDQ</span></li></ul></div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <div class="container" style="padding-top:0">
+    <div class="disclaimer">
+      <strong style="color:var(--red)">⚠️ Miễn trừ trách nhiệm.</strong>
+      Báo cáo này là <strong>investment evidence pack</strong> phục vụ nghiên cứu cá nhân, <strong>không phải khuyến nghị mua/bán</strong>,
+      không phải lệnh giao dịch, không phải tư vấn tài chính cá nhân.
+      Quyết định đầu tư là của bạn. Cổ phiếu có thể giảm 30–50%.
+    </div>
+    <p><strong>Nhà Khang Điền (HOSE: KDH)</strong> · Investment Evidence Pack · dữ liệu tính đến 08/07/2026 · không khuyến nghị mua/bán</p>
+    <p>Built với us-equity-research skill · skeleton template + KDH JSON data · Chart.js 4.4.1</p>
+    <p class="faint">Nguồn: vnstock (VCI), BCTC KDH kiểm toán, Tuổi Trẻ/VnExpress/Thanh Niên/Dân Trí/CafeF, VikkiBankS, TCBS, Investing.com · 16 citations</p>
+  </div>
+</footer>
+
+<script>
+
+/* ============ DATA (KDH — VND, tỷ VND unless noted) ============ */
+const DATA = {
+  // FY here = calendar year (KDH reports Jan-Dec). Unit: tỷ VND (÷1e9).
+  years: ["FY21", "FY22", "FY23", "FY24", "FY25"],
+  revenue:    [3738.4, 2912.0, 2087.8, 3278.6, 4651.1],      // tỷ VND
+  netIncome:  [1202.5, 1103.0, 715.7, 810.4, 1045.5],       // tỷ VND
+  grossProfit: [1793.7, 1459.5, 1586.6, 1739.5, 2753.5],      // tỷ VND
+  inventory:  [7732.8, 12453.3, 18786.9, 22178.0, 23260.0],      // tỷ VND (land bank + projects)
+  cfo:        [-2009.7, -1046.7, -1543.2, -3647.5, -2024.2],      // tỷ VND (negative all 5y)
+  equity:     [10221.2, 11794.5, 15522.9, 19453.4, 21164.3],       // tỷ VND
+  totalAssets:[14372.7, 21539.3, 26480.7, 30757.7, 34074.0],       // tỷ VND
+  eps:        [1790.0, 1440.0, 840.0, 722.0, 870.0],  // VND/share — FY24 adjusted 80→722 (pre-dilution estimate)
+  roe:        [11.76, 9.35, 4.61, 4.17, 4.94],    // %
+  peHist:     [11.7, 14.6, 25.0, 29.1, 24.1],  // × — FY24 adjusted (EPS 722 estimate, not 80 anomaly)
+  pbHist:     [2.31, 2.0, 1.52, 1.21, 1.11],     // ×
+  bvps:       [9108.0, 10510.0, 13832.0, 17335.0, 18859.0],   // VND/share
+  // approx 5Y averages (MEDQ — small sample)
+  pe5avg: 68.7, pe5med: 25.0,   // median more meaningful; FY24 262.5× is an outlier
+  pb5avg: 1.83, pb5med: 1.52,
+  // Peer scatter: VN real-estate developers (P/B vs revenue growth, bubble = mcap nghìn tỷ)
+  peers: [
+    {x: 1.11, y: 24.4, r: 16, label:'KDH',  own:true},   // KDH P/B 1.11×, rev growth +41.7% FY25
+    {x: 1.30, y:  5.0, r: 34, label:'VIC',  own:false},  // Vingroup (MEDQ estimate)
+    {x: 0.80, y:  8.0, r: 22, label:'VHM',  own:false},  // Vinhomes
+    {x: 1.50, y: 12.0, r: 12, label:'NLG',  own:false},  // Nam Long
+    {x: 0.95, y:  3.0, r:  9, label:'DIG',  own:false},  // Coteccons Real Estate (MEDQ)
+    {x: 1.10, y:  6.0, r:  7, label:'TCH',  own:false}   // Ho Chi Minh City Infrastructure Inv (MEDQ)
+  ],
+  // Tech (weekly bars) — VND per share
+  techWeeks: ['7/25','8/25','9/25','10/25','11/25','12/25','1/26','2/26','3/26','4/26','5/26','6/26','7/26'],
+  techPrice: [25400,26200,28100,30200,36500,33000,31000,28300,26400,25400,24200,22200,21000],
+  techMA10:  [24800,25100,26500,27800,32100,31800,31200,29500,27800,26600,25400,24100,22530],
+  techMA20:  [24600,24900,25800,27000,30200,31000,30500,29000,27500,26400,25200,24235,24235],
+  techMA50:  [24500,24800,25200,26000,27800,29000,29500,29200,29034,29034,29034,29034,29034],
+  techRSI:   [52,48,65,58,72,55,45,38,34,30,32,29,31.2],
+  // Drawdown profile (monthly resample, %)
+  ddMonths: ['7/24','9/24','11/24','1/25','3/25','5/25','7/25','9/25','11/25','1/26','3/26','5/26','7/26'],
+  ddValues: [0,3,-8,-12,-5,5,8,3,-15,-28,-35,-40,-43.2],
+  // Daily return distribution histogram (1Y, 252 obs)
+  distBins:  ['≤−5%','−5/−2%','−2/0%','0/2%','2/5%','>5%'],
+  distCounts:[8, 31, 112, 61, 33, 7],
+  // Segment mix — KDH project portfolio (approx, MEDQ)
+  segMix: {
+    labels:['Căn hộ chung cư','Nhà thấp tầng (biệt thự/liền kề)','Đất nền / dự án','Dự án đô thị tương lai (Mả Lạng)'],
+    values:[22, 34, 30, 14]
+  },
+  // Capex analog for real estate = inventory addition (land bank build)
+  invGrowth: [0.0, 4720.5, 6333.6, 3391.1, 1082.0]
+};
+
+/* ============ Chart defaults ============ */
+Chart.defaults.color = '#8b949e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.size = 11;
+
+function grad(ctx, c1, c2){
+  const chart = ctx.chart;
+  const {ctx: cc, chartArea} = chart;
+  if (!chartArea) return c1;
+  const g = cc.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
+
+const AMBER='#f5a623', BLUE='#4a9eff', GREEN='#3fb950', RED='#f85149', PURPLE='#a78bfa', GRID='rgba(255,255,255,0.05)';
+const baseScales = {
+  x: { grid:{display:false}, ticks:{font:{size:10}} },
+  y: { grid:{color:GRID}, ticks:{font:{size:10}} }
+};
+const baseOpts = (extra) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8, font:{size:11}}} },
+  ...extra
+});
+
+/* ============ CHARTS ============ */
+
+/* ===== frontend-polish: animation-on-scroll IntersectionObserver (MengTo) ===== */
+(function(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('animate');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.aos').forEach(function(el){ io.observe(el); });
+})();
+
+document.addEventListener('DOMContentLoaded', function(){
+  const $ = (id) => document.getElementById(id);
+
+  // --- Chart 1: Revenue + Net Income (10Y) ---
+  new Chart($('chartHistRev'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Doanh thu (tỷ VND)', data: DATA.revenue,
+        backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.9)','rgba(74,158,255,0.3)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Lợi nhuận (tỷ VND)', data: DATA.netIncome, type:'line',
+        borderColor: AMBER, backgroundColor: AMBER, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y1', order:1 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, position:'left', title:{display:true, text:'Doanh thu (tỷ VND)', font:{size:10}, color:'#565f6b'} },
+        y1:{ position:'right', grid:{display:false}, ticks:{font:{size:10}, color:AMBER} }
+      },
+      plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8}} }
+    })
+  });
+
+  // --- Chart 2: Capex vs FCF (10Y) ---
+  new Chart($('chartHistCash'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Tăng tồn kho (tỷ VND)', data: DATA.invGrowth,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'CFO (tỷ VND, âm)', data: DATA.cfo, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:(ctx)=> ctx.parsed.y < 0 ? RED : '#0f1419',
+        pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'} }
+      }
+    })
+  });
+
+  // --- Chart 3: Segment mix (doughnut) ---
+  new Chart($('chartSegMix'), {
+    type:'doughnut',
+    data:{ labels: DATA.segMix.labels, datasets:[{
+      data: DATA.segMix.values,
+      backgroundColor:[BLUE, PURPLE, AMBER, '#565f6b'],
+      borderColor:'#161b22', borderWidth:2
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{
+        legend:{position:'right', labels:{usePointStyle:true, boxWidth:8, font:{size:11}, padding:10}},
+        tooltip:{callbacks:{label:(c)=>` ${c.label}: ${c.parsed}%`}}
+      }
+    }
+  });
+
+  // --- Chart 4: Land bank / inventory accumulation (tỷ VND) ---
+  if ($('chartThesisRPO')) new Chart($('chartThesisRPO'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[{
+      label:'Tồn kho (tỷ VND)', data: DATA.inventory,
+      backgroundColor:(c)=>grad(c,'rgba(245,166,35,0.85)','rgba(245,166,35,0.25)'),
+      borderRadius:6
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, ticks:{callback:(v)=>v+' tỷ'}} },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>` Tồn kho: ${c.parsed} tỷ VND`}} }
+    })
+  });
+
+  // --- Chart 5: Forward project pipeline value (tỷ VND, MEDQ estimate) ---
+  if ($('chartThesisCapex')) new Chart($('chartThesisCapex'), {
+    type:'bar',
+    data:{ labels:['FY25 thực tế','FY26 dự phóng','FY27 dự phóng','Mả Lặng (toàn dự án)'], datasets:[{
+      label:'Giá trị dự án (tỷ VND)', data:[4651, 7000, 9000, 16369],
+      backgroundColor:(c)=>{
+        const i = c.dataIndex;
+        const cols=['rgba(74,158,255,0.7)','rgba(245,166,35,0.8)', 'rgba(167,139,250,0.7)', RED];
+        return cols[i];
+      }, borderRadius:6
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, ticks:{callback:(v)=>v+' tỷ'}} },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>` Giá trị: ${c.parsed} tỷ VND`}} }
+    })
+  });
+
+  // --- Chart 6: P/E history with avg bands (annotation) ---
+  new Chart($('chartValPE'), {
+    type:'line',
+    data:{ labels: DATA.years, datasets:[{
+      label:'P/E (ước tính)',
+      data: DATA.peHist,
+      borderColor: BLUE, backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.25)','rgba(74,158,255,0)'),
+      fill:true, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, borderWidth:2.5
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'P/E (x)', font:{size:10}, color:'#565f6b'}} },
+      plugins:{
+        legend:{labels:{usePointStyle:true, boxWidth:8}},
+        annotation:{
+          annotations:{
+            avg5: { type:'line', yMin:DATA.pe5med, yMax:DATA.pe5med, borderColor:AMBER, borderDash:[6,4], borderWidth:1.5,
+                    label:{content:'5Y median ~25×',display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
+            avg10:{ type:'line', yMin:DATA.pe5avg, yMax:DATA.pe5avg, borderColor:'#a78bfa', borderDash:[6,4], borderWidth:1.5,
+                    label:{content:'5Y avg ~68× (bị kéo bởi FY24)',display:true,position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
+            current:{ type:'point', xValue:'FY25', yValue:24.1, backgroundColor:RED, radius:6,
+                      label:{content:'Now ~24× (FY25)',display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
+          }
+        }
+      }
+    })
+  });
+
+  // --- Chart 7: Debt vs Cash (10Y) ---
+  new Chart($('chartBSDt'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Tồn kho (tỷ VND)', data: DATA.inventory,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.3)'), borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Vốn chủ sở hữu (tỷ VND)', data: DATA.equity, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
+    })
+  });
+
+  // --- Chart 8: Dividend + Buyback ---
+  new Chart($('chartBSDt2') || $('chartReturns'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'EPS (VND)', data: DATA.eps, backgroundColor:'rgba(63,185,80,0.7)', borderRadius:4, yAxisID:'y' },
+      { label:'ROE (%)', data: DATA.roe, type:'line', borderColor: BLUE, backgroundColor: BLUE, tension:0.3, pointRadius:4, yAxisID:'y1', borderWidth:2 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, stacked:true, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
+    })
+  });
+
+  // --- Chart 9: Peer scatter ---
+  const peers = {
+    datasets:[{
+      label:'Peer BĐS VN (P/B vs tăng trưởng, bubble=vốn hóa)',
+      data: DATA.peers,
+      backgroundColor:(ctx)=>{ const d=ctx.raw; return d.own ? AMBER : BLUE; },
+      borderColor:'#0f1419', borderWidth:1.5
+    }]
+  };
+  new Chart($('chartPeerScatter'), {
+    type:'bubble',
+    data: peers,
+    options: baseOpts({
+      scales:{
+        x:{ ...baseScales.x, title:{display:true, text:'P/B (×)', font:{size:10}, color:'#565f6b'}, min:0.5, max:2 },
+        y:{ ...baseScales.y, title:{display:true, text:'Tăng trưởng doanh thu (%)', font:{size:10}, color:'#565f6b'}, min:0, max:30 }
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:(c)=>{
+          const d=c.raw; return ` ${d.label}: P/B ${d.x}×, tăng trưởng ${d.y}%`;
+        }}},
+        datalabels:false
+      }
+    }),
+    plugins:[{
+      id:'peerLabels',
+      afterDatasetsDraw(chart){
+        const {ctx} = chart;
+        const ds = chart.data.datasets[0].data;
+        const meta = chart.getDatasetMeta(0);
+        ctx.save();
+        ctx.font = 'bold 11px Inter';
+        ctx.fillStyle = '#e6edf3';
+        ctx.textAlign='center';
+        ds.forEach((d,i)=>{
+          const pt = meta.data[i];
+          if(!pt) return;
+          ctx.fillText(d.label, pt.x, pt.y - d.r - 4);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+
+  // --- Chart 10: Technical — Price + MA (weekly) ---
+  const techWeeks = DATA.techWeeks;
+  const techPrice = DATA.techPrice;
+  const techMA10  = DATA.techMA10;
+  const techMA20  = DATA.techMA20;
+  const techMA50  = DATA.techMA50;
+  new Chart($('chartTechPrice'), {
+    type:'line',
+    data:{ labels: techWeeks, datasets:[
+      { label:'Close', data: techPrice, borderColor: AMBER, backgroundColor:'transparent', tension:0.3, pointRadius:3, borderWidth:2.5 },
+      { label:'MA10', data: techMA10, borderColor: BLUE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA20', data: techMA20, borderColor: PURPLE, borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 },
+      { label:'MA50', data: techMA50, borderColor: '#8b949e', borderDash:[4,3], tension:0.3, pointRadius:0, borderWidth:1.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND / cổ phiếu', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{labels:{usePointStyle:true, boxWidth:8}}, annotation:{ annotations:{ support:{type:'line', yMin:21000, yMax:21000, borderColor:GREEN, borderDash:[6,4], borderWidth:1, label:{content:'Hỗ trợ ~21,000 VND (52W low)', display:true, position:'start', backgroundColor:'rgba(63,185,80,0.85)', font:{size:9,weight:'bold'}, color:'#0f1419'}}, resist:{type:'line', yMin:29034, yMax:29034, borderColor:RED, borderDash:[6,4], borderWidth:1, label:{content:'Kháng cự ~29,034 VND (MA50)', display:true, position:'end', backgroundColor:'rgba(248,81,73,0.85)', font:{size:9,weight:'bold'}, color:'#fff'}} } } }
+    })
+  });
+
+  // --- Chart 11: RSI(14) ---
+  new Chart($('chartTechRSI'), {
+    type:'line',
+    data:{ labels: techWeeks, datasets:[{
+      label:'RSI(14)', data: DATA.techRSI,
+      borderColor:(c)=>grad(c,'rgba(245,166,35,0.9)','rgba(245,166,35,0.2)'), fill:true, tension:0.3, pointRadius:3, borderWidth:2
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, min:0, max:100,
+        title:{display:true, text:'RSI', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false}, annotation:{ annotations:{
+        ob:{type:'line', yMin:70, yMax:70, borderColor:RED, borderDash:[4,4], borderWidth:1, label:{content:'Overbought 70', display:true, position:'end', backgroundColor:'rgba(248,81,73,0.7)', font:{size:9}, color:'#fff'}},
+        os:{type:'line', yMin:30, yMax:30, borderColor:GREEN, borderDash:[4,4], borderWidth:1, label:{content:'Oversold 30', display:true, position:'end', backgroundColor:'rgba(63,185,80,0.7)', font:{size:9}, color:'#fff'}}
+      } } }
+    })
+  });
+
+  // --- Chart 12: Drawdown profile (2Y daily underwater curve, monthly resample) ---
+  const ddMonths = DATA.ddMonths;
+  const ddValues = DATA.ddValues;
+  new Chart($('chartProfileDD'), {
+    type:'line',
+    data:{ labels: ddMonths, datasets:[{
+      label:'Drawdown %', data: ddValues,
+      borderColor:(c)=>grad(c,'rgba(248,81,73,0.9)','rgba(248,81,73,0.2)'), fill:true, tension:0.3, pointRadius:2, borderWidth:2
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'%', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false} }
+    })
+  });
+
+  // --- Chart 13: Return distribution histogram ---
+  const distBins = DATA.distBins;
+  const distCounts = DATA.distCounts;
+  new Chart($('chartProfileDist'), {
+    type:'bar',
+    data:{ labels: distBins, datasets:[{
+      label:'Số ngày (2 năm)', data: distCounts,
+      backgroundColor: (c)=>{
+        const i=c.dataIndex;
+        return i<2 ? 'rgba(248,81,73,0.7)' : (i===2 ? '#565f6b' : 'rgba(63,185,80,0.7)');
+      }, borderRadius:4
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'số ngày', font:{size:10}, color:'#565f6b'} } },
+      plugins:{ legend:{display:false} }
+    })
+  });
+});
+
+/* ============ NAV / scroll-spy / progress / back-top ============ */
+(function(){
+  const nav = document.getElementById('topnav');
+  const links = Array.from(document.querySelectorAll('.topnav-link'));
+  const progressBar = document.getElementById('progressBar');
+  const backTop = document.getElementById('backTop');
+  const sections = links.map(l => document.getElementById(l.dataset.target)).filter(Boolean);
+
+  function onScroll(){
+    const y = window.scrollY;
+    // progress
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (h>0 ? (y/h*100) : 0) + '%';
+    // back-top
+    if (y > 600) backTop.classList.add('visible'); else backTop.classList.remove('visible');
+    // scroll-spy
+    const navH = nav.offsetHeight + 10;
+    let active = sections[0];
+    for (const s of sections){
+      if (s && (s.getBoundingClientRect().top - navH) <= 0) active = s;
+    }
+    links.forEach(l => {
+      l.classList.toggle('active', active && l.dataset.target === active.id);
+    });
+    // auto-scroll active link into view in nav
+    const activeLink = links.find(l => l.classList.contains('active'));
+    if (activeLink){
+      const navInner = nav.querySelector('.topnav-inner');
+      const linkRect = activeLink.getBoundingClientRect();
+      const innerRect = navInner.getBoundingClientRect();
+      if (linkRect.right > innerRect.right - 20 || linkRect.left < innerRect.left + 20){
+        navInner.scrollTo({ left: navInner.scrollLeft + (linkRect.left - innerRect.left - 40), behavior:'smooth' });
+      }
+    }
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  // smooth-scroll on click
+  links.forEach(l => {
+    l.addEventListener('click', (e)=>{
+      const t = document.getElementById(l.dataset.target);
+      if (!t) return;
+      e.preventDefault();
+      const top = t.getBoundingClientRect().top + window.scrollY - nav.offsetHeight - 8;
+      window.scrollTo({ top, behavior:'smooth' });
+    });
+  });
+  backTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+  onScroll();
+})();
+
+</script>
+</body>
+
+</html>

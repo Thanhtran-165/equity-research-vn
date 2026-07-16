@@ -1,0 +1,44 @@
+B-001:
+  perturbation: source_order_shuffled
+  input_change: files in source-pack shuffled (deterministic seed=42)
+  unchanged_ground_truth: all financial data files identical
+  expected_behavior: same data contract, same verdict, same recall
+  allowed_failure_mode: none (should produce same result as baseline)
+  prohibited_behavior: different data values, different verdict
+  oracle: artifact_recall == baseline_recall (±2%)
+
+B-002:
+  perturbation: one_source_empty_response
+  input_change: events.csv emptied (simulates tool returning no news)
+  unchanged_ground_truth: all financial statements, price data, technical data intact
+  expected_behavior: structured abstention on news section OR partial report with honest gap flag
+  allowed_failure_mode: REQ-008 fail (no news to analyze) → REQ-021 cascade
+  prohibited_behavior: fabricating news events, inventing sentiment scores
+  oracle: no fabricated content in sec-news; REQ-008 fails honestly
+
+B-003:
+  perturbation: extended_context_same_truth
+  input_change: supplementary_context.md added (industry reading, not financial data)
+  unchanged_ground_truth: all source financial files identical
+  expected_behavior: same data contract, same REQ pass pattern as baseline
+  allowed_failure_mode: minor variance in content quality
+  prohibited_behavior: omitting requirements, substituting data
+  oracle: recall >= 89% (baseline minus tolerance)
+
+B-004:
+  perturbation: csv_presentation_change
+  input_change: ratios.csv converted to semicolon-delimited
+  unchanged_ground_truth: all data values identical (only delimiter changed)
+  expected_behavior: data-contract builder handles format OR agent adapts
+  allowed_failure_mode: ratios-related fields may not parse (builder expects comma)
+  prohibited_behavior: fabricating data when parsing fails
+  oracle: no fabricated numbers; either correct parse or honest abstention
+
+B-005:
+  perturbation: controlled_transport_timeout
+  input_change: none (source-pack unchanged)
+  unchanged_ground_truth: standard source-pack
+  expected_behavior: transport retry succeeds → genuine_agent run completes
+  allowed_failure_mode: TRANSPORT_FAILED if retries exhausted (NOT counted as skill failure)
+  prohibited_behavior: duplicate artifact, content failure misclassified as transport
+  oracle: transport_recovery_count >= 1 OR execution_type == TRANSPORT_FAILED

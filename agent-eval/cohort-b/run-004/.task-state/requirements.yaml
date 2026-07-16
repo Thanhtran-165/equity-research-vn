@@ -1,0 +1,374 @@
+requirements:
+- id: REQ-001
+  text: Sponsor package phải hoạt động (tier golden). KHÔNG fallback community tier.
+  type: mandatory
+  priority: critical
+  failure_mode: FM-06
+  case_ref: LC-006
+  verification:
+    method: command
+    command: python3 -c "from vnstock_data import Finance; print('OK')" 2>/dev/null
+      | grep -q OK
+    expect_exit: 0
+  fix_hint: pip3 install 'vnstock==3.5.1' --break-system-packages
+- id: REQ-002
+  text: Sponsor data phải trả ≥20 kỳ (không phải community 8 kỳ).
+  type: mandatory
+  priority: critical
+  failure_mode: FM-02
+  case_ref: LC-006
+  verification:
+    method: command
+    command: python3 -c "import warnings; warnings.filterwarnings('ignore'); from
+      vnstock_data import Finance; f=Finance(symbol='$TICKER',source='VCI'); print(len(f.income_statement()))"
+      2>/dev/null | grep -E '^[0-9]+$' | tail -1
+    expect_min: 20
+  fix_hint: 'Downgrade vnstock: pip3 install ''vnstock==3.5.1'''
+- id: REQ-003
+  text: Audit split (Bẫy 5B) trước khi tính EPS/PE/PB. Back-calc CP = LNST/EPS từng
+    năm.
+  type: mandatory
+  priority: high
+  failure_mode: FM-08
+  verification:
+    method: artifact_check
+    check: Report phải mention 'split-adjusted' hoặc 'Bẫy 5B' hoặc 'cross-check EPS'
+- id: REQ-004
+  text: Data giá THẬT từ vnstock. KHÔNG mô phỏng/ngụy tạo data giá.
+  type: mandatory
+  priority: critical
+  failure_mode: FM-08
+  verification:
+    method: artifact_check
+    check: Chart data values phải khớp vnstock (không placeholder, không Oracle/HPG)
+- id: REQ-005
+  text: Technical mode ACTIVE (weekly 52 tuần, Tech Score -6→+6, Verdict, MA/RSI/MACD).
+  type: mandatory
+  priority: high
+  failure_mode: FM-01
+  verification:
+    method: artifact_check
+    check: Report phải có sec-tech với Tech Score số + Verdict (STRONG SELL→STRONG
+      BUY)
+- id: REQ-006
+  text: Technical mode PROFILE (daily ~2 năm, 15 block, archetype, NON-ADVICE).
+  type: mandatory
+  priority: high
+  failure_mode: FM-01
+  verification:
+    method: artifact_check
+    check: Report phải có sec-tech-profile, KHÔNG chứa 'bullish|bearish|khuyến nghị
+      mua|strong buy|strong sell'
+- id: REQ-007
+  text: Section PROFILE phải dùng ngôn ngữ neutral_descriptive_non_advice.
+  type: mandatory
+  priority: high
+  failure_mode: FM-03
+  verification:
+    method: artifact_check
+    check: 'Section PROFILE phải dùng ngôn ngữ neutral_descriptive_non_advice (P4:
+      negation-aware)'
+- id: REQ-008
+  text: News digest 30 ngày với sentiment score + category breakdown.
+  type: mandatory
+  priority: medium
+  failure_mode: FM-02
+  verification:
+    method: artifact_check
+    check: Report phải có sentiment score (số) + ít nhất 2 category
+- id: REQ-009
+  text: Dashboard copy từ dashboard_template.html (22 sections canonical). KHÔNG tự
+    chế section ids.
+  type: mandatory
+  priority: critical
+  failure_mode: FM-06
+  case_ref: LC-001, LC-002
+  verification:
+    method: section_map_check
+    canonical_sections:
+    - sec-hero
+    - sec-exec
+    - sec-biz
+    - sec-industry
+    - sec-history
+    - sec-segment
+    - sec-thesis
+    - sec-valuation
+    - sec-peer
+    - sec-bs
+    - sec-risk
+    - sec-33k
+    - sec-scenario
+    - sec-checklist
+    - sec-insight-1
+    - sec-insight-2
+    - sec-insight-3
+    - sec-tech
+    - sec-tech-profile
+    - sec-analyst
+    - sec-glossary
+    - sec-source
+    min_canonical_match: 20
+    required_signal_sections:
+    - sec-hero
+    - sec-exec
+    - sec-valuation
+- id: REQ-010
+  text: Tất cả tokens {{...}} phải được replace. Không token rỗng.
+  type: mandatory
+  priority: high
+  failure_mode: FM-02
+  verification:
+    method: command
+    command: grep -oE '\{\{[A-Z_0-9]+\}\}' $REPORT | wc -l | tr -d ' '
+    expect_max: 0
+- id: REQ-011
+  text: Canvas elements phải có height-wrapper (chặn Chart.js feedback loop giãn vô
+    hạn).
+  type: mandatory
+  priority: high
+  failure_mode: FM-02
+  case_ref: LC-004
+  verification:
+    method: canvas_check
+    check: Mỗi <canvas> phải có parent với class chart-wrap/tech-chart-wrap hoặc style
+      height
+- id: REQ-012
+  text: Charts ≥10, Sections ≥20, Refs ≥10.
+  type: mandatory
+  priority: high
+  failure_mode: FM-02
+  verification:
+    method: count_check
+    min_charts: 10
+    min_sections: 20
+    min_refs: 10
+- id: REQ-013
+  text: Mỗi section phải có content depth ≥200 chars (không rỗng/mỏng).
+  type: mandatory
+  priority: high
+  failure_mode: FM-02
+  verification:
+    method: content_depth_check
+    min_chars_per_section: 200
+    exempt_sections:
+    - sec-hero
+- id: REQ-014
+  text: 3 Special Insights riêng biệt (sec-insight-1/2/3), mỗi cái ≥500 chars.
+  type: mandatory
+  priority: high
+  failure_mode: FM-01
+  verification:
+    method: section_content_check
+    sections:
+    - sec-insight-1
+    - sec-insight-2
+    - sec-insight-3
+    min_chars_each: 500
+- id: REQ-015
+  text: Bull + Bear case cân bằng (không chỉ bullish).
+  type: mandatory
+  priority: high
+  failure_mode: FM-03
+  verification:
+    method: artifact_check
+    check: Section risk phải có content (không rỗng)
+- id: REQ-016
+  text: Valuation targets phải hợp lý (dương, không âm vô lý). DCF với FCF<0 phải
+    flag + dùng alternative.
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: LC-005
+  verification:
+    method: valuation_sanity_check
+    check: val-card prices phải dương. Nếu FCF<0 → phải có note giải thích
+- id: REQ-017
+  text: Flag honest về data limitation (ước tính, stale, community tier).
+  type: mandatory
+  priority: medium
+  failure_mode: FM-05
+  verification:
+    method: artifact_check
+    check: Report phải chứa ít nhất 1 'callout' với 'ước tính|limitation|stale|honest'
+- id: REQ-018
+  text: Sources & references ≥10 numbered citations.
+  type: mandatory
+  priority: medium
+  failure_mode: FM-02
+  verification:
+    method: command
+    command: grep -oE 'id="ref-[0-9]+"' $REPORT | wc -l | tr -d ' '
+    expect_min: 10
+- id: REQ-019
+  text: JS syntax hợp lệ (node --check pass).
+  type: mandatory
+  priority: high
+  failure_mode: FM-10
+  verification:
+    method: command
+    command: node --check $JS_FILE
+    expect_exit: 0
+- id: REQ-020
+  text: Div balance (open = close).
+  type: mandatory
+  priority: high
+  failure_mode: FM-10
+  verification:
+    method: div_balance_check
+- id: REQ-022
+  text: Revenue/NPATMI/EPS trong report KHỚP data files (±5%). KHÔNG bịa.
+  type: mandatory
+  priority: critical
+  failure_mode: FM-05
+  case_ref: LC-v2-fabrication
+  verification:
+    method: data_accuracy_check
+    data_file: data/financials.json
+    fields:
+    - key: revenue_ty
+      years:
+      - 2021
+      - 2022
+      - 2023
+      - 2024
+      - 2025
+      divisor: 1
+      tolerance_pct: 5
+    - key: npatmi_ty
+      years:
+      - 2021
+      - 2022
+      - 2023
+      - 2024
+      - 2025
+      divisor: 1
+      tolerance_pct: 5
+    - key: eps_vnd
+      years:
+      - 2025
+      divisor: 1
+      tolerance_pct: 5
+- id: REQ-023
+  text: Balance sheet metrics (Total Assets, Equity) khớp balance_sheet.json (±5%).
+  type: mandatory
+  priority: critical
+  failure_mode: FM-05
+  verification:
+    method: data_accuracy_check
+    data_file: data/balance_sheet.json
+    fields:
+    - key: Total Assets
+      years:
+      - '2025'
+      divisor: 1000000000
+      tolerance_pct: 5
+    - key: Owner's Equity
+      years:
+      - '2025'
+      divisor: 1000000000
+      tolerance_pct: 5
+- id: REQ-024
+  text: Capex trong chart/report KHỚP cash_flow.json 'Purchases of fixed assets'.
+    KHÔNG bịa capex array.
+  type: mandatory
+  priority: critical
+  failure_mode: FM-05
+  case_ref: LC-v2-fabrication-capex
+  verification:
+    method: capex_accuracy_check
+    data_file: data/cash_flow.json
+    capex_key: Purchases of fixed assets and other long term assets
+    report_chart_var: capex
+    tolerance_pct: 10
+- id: REQ-025
+  text: Valuation multiples (PE, PB, Graham) recomputed từ data == report values (±2%).
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  verification:
+    method: valuation_recompute_check
+    formulas:
+    - name: PE
+      formula: price / eps_2025
+      report_extract: P/E.*?([\d.]+)x
+      tolerance_pct: 2
+    - name: PB
+      formula: price / (equity / shares)
+      report_extract: P/B.*?([\d.]+)x
+      tolerance_pct: 2
+- id: REQ-026
+  text: Chart DATA JS object chứa values KHỚP data files (revenue, npatmi arrays).
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  verification:
+    method: chart_data_accuracy_check
+    data_file: data/financials.json
+    js_var: DATA
+    check_arrays:
+    - revenue
+    - netProfit
+    - eps
+- id: REQ-027
+  text: Số liệuexternal (WCM LN, MCH DT, store count) phải flag 'ước tính' nếu không
+    có data file.
+  type: mandatory
+  priority: medium
+  failure_mode: FM-05
+  verification:
+    method: external_claim_flag_check
+    patterns:
+    - WCM.*LN.*\d
+    - MCH.*DT.*\d
+    - \d+\s*điểm bán
+    must_flag: ước tính|estimate|external|marketing
+- id: REQ-028
+  text: 'Chart render-readiness: mỗi canvas ID referenced trong Chart() phải có HTML
+    element, không duplicate, có DATA object. (Học từ PNJ v2 test: 27/27 PASS nhưng
+    charts vẫn crash do duplicate canvas sau </body>.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-08
+  case_ref: PNJ-v2-test
+  verification:
+    method: chart_runtime_check
+- id: REQ-021
+  text: KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.
+  type: mandatory
+  priority: critical
+  failure_mode: FM-05
+  verification:
+    method: all_requirements_pass
+total: 28
+critical:
+- REQ-001
+- REQ-002
+- REQ-004
+- REQ-009
+- REQ-021
+- REQ-022
+- REQ-023
+- REQ-024
+high:
+- REQ-003
+- REQ-005
+- REQ-006
+- REQ-007
+- REQ-010
+- REQ-011
+- REQ-012
+- REQ-013
+- REQ-014
+- REQ-016
+- REQ-019
+- REQ-020
+- REQ-025
+- REQ-026
+- REQ-028
+medium:
+- REQ-008
+- REQ-015
+- REQ-017
+- REQ-018
+- REQ-027

@@ -1,0 +1,578 @@
+// Prisma schema for facebook-page-graph-dashboard
+// Generator & datasource
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ----- Enums (giả lập bằng String vì SQLite không hỗ trợ enum) -----
+
+// ----- Models -----
+
+model PageSnapshot {
+  id              Int      @id @default(autoincrement())
+  date            String   // YYYY-MM-DD (đơn vị ngày)
+  pageId          String
+  pageName        String?
+  followersCount  Int      @default(0)
+  fanCount        Int      @default(0)
+  followersDelta  Int?     @default(0)
+  createdAt       DateTime @default(now())
+
+  @@unique([pageId, date])
+  @@index([pageId, date])
+}
+
+model Post {
+  id              Int      @id @default(autoincrement())
+  fbPostId        String   @unique
+  externalPostId  String?  @unique // Facebook post ID thật (không prefix csv_)
+  pageId          String
+  message         String?
+  permalinkUrl    String?
+  createdTime     String?
+  postType        String   @default("unknown")
+  topic           String   @default("khac")
+  reactionsCount  Int      @default(0)
+  commentsCount   Int      @default(0)
+  sharesCount     Int      @default(0)
+  reach           Int?      // CHỈ chứa trueReach (post_impressions_unique). NULL nếu không có.
+  impressions     Int?
+  engagedUsers    Int?
+  clicks          Int?
+  videoViews      Int?      // post_video_views (metric thật cho video/reel, riêng biệt với reach)
+  publicEngagement Int?     // reactions + comments + shares (proxy, KHÔNG phải reach)
+  metricSource    String?   // facebook_graph_api_insights | facebook_video_metric | public_engagement_proxy | unavailable
+  engagementRate  Float?
+  score           Float?
+  rawJson         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  comments Comment[]
+
+  @@index([pageId, createdTime])
+  @@index([topic])
+}
+
+model VideoMetric {
+  id              Int      @id @default(autoincrement())
+  fbVideoId       String   @unique
+  fbPostId        String?
+  pageId          String
+  title           String?
+  createdTime     String?
+  views           Int      @default(0)
+  uniqueViews     Int      @default(0)
+  avgWatchTime    Float?
+  reach           Int?
+  reactionsCount  Int      @default(0)
+  commentsCount   Int      @default(0)
+  sharesCount     Int      @default(0)
+  rawJson         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([pageId, createdTime])
+}
+
+model Comment {
+  id              Int      @id @default(autoincrement())
+  fbCommentId     String   @unique
+  fbPostId        String
+  pageId          String
+  message         String?
+  createdTime     String?
+  likeCount       Int      @default(0)
+  commentCount    Int      @default(0)
+  keywordFlag     String?  // spam|attack|common_question|none
+  sentiment       String?  // positive|negative|neutral
+  riskLevel       String   @default("low") // low|medium|high
+  status          String   @default("new") // new|flagged|reviewed|replied|hidden
+  suggestedAction String?  // hide_or_review|manual_review|suggest_reply|none
+  suggestedReply  String?
+  rawJson         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  post Post @relation(fields: [fbPostId], references: [fbPostId], onDelete: Cascade)
+
+  @@index([fbPostId])
+  @@index([status])
+  @@index([riskLevel])
+}
+
+model WeeklyReport {
+  id              Int      @id @default(autoincrement())
+  weekStart       String   // YYYY-MM-DD
+  weekEnd         String   // YYYY-MM-DD
+  reachTotal      Int      @default(0)
+  engagementTotal Int      @default(0)
+  followerDelta   Int      @default(0)
+  topPostId       String?
+  topTopic        String?
+  summary         String?
+  recommendation  String?
+  createdAt       DateTime @default(now())
+
+  @@unique([weekStart, weekEnd])
+  @@index([weekStart])
+}
+
+// ----- Competitor Benchmark (Public Proxy Metrics) -----
+
+model CompetitorPage {
+  id              Int      @id @default(autoincrement())
+  pageName        String
+  pageUrl         String   @unique
+  category        String   @default("khac") // vi_mo|chung_khoan|lai_suat|bds|vang|influencer_tai_chinh|khac
+  description     String?
+  followersLatest Int?
+  isActive        Boolean  @default(true)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  snapshots CompetitorMetricSnapshot[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model CompetitorMetricSnapshot {
+  id                        Int      @id @default(autoincrement())
+  competitorPageId          Int
+  periodStart               String   // YYYY-MM-DD
+  periodEnd                 String   // YYYY-MM-DD
+  followers                 Int      @default(0)
+  postsCount                Int      @default(0)
+  reactionsCount            Int      @default(0)
+  commentsCount             Int      @default(0)
+  sharesCount               Int      @default(0)
+  videoViews                Int?
+  topPostUrl                String?
+  topPostEngagement         Int?
+  activeAds                  Boolean?
+  dominantTopic             String?
+  // Derived metrics
+  publicEngagement          Int?
+  publicEngagementPerPost   Float?
+  engagementPer1kFollowers  Float?
+  avgReactionsPerPost       Float?
+  avgCommentsPerPost        Float?
+  avgSharesPerPost          Float?
+  videoViewsPerFollower     Float?
+  commentIntensity          Float?
+  shareIntensity            Float?
+  postingFrequencyPerDay    Float?
+  benchmarkScore            Float?
+  rawJson                   String?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  page CompetitorPage @relation(fields: [competitorPageId], references: [id], onDelete: Cascade)
+
+  @@unique([competitorPageId, periodStart, periodEnd])
+  @@index([periodStart, periodEnd])
+}
+
+// Snapshot "public-comparable" của Page người dùng (tính từ internal Graph data)
+model OwnPagePublicComparableSnapshot {
+  id                        Int      @id @default(autoincrement())
+  pageId                    String
+  periodStart               String
+  periodEnd                 String
+  followers                 Int      @default(0)
+  postsCount                Int      @default(0)
+  reactionsCount            Int      @default(0)
+  commentsCount             Int      @default(0)
+  sharesCount               Int      @default(0)
+  videoViews                Int?
+  // Derived
+  publicEngagement          Int?
+  publicEngagementPerPost   Float?
+  engagementPer1kFollowers  Float?
+  avgReactionsPerPost       Float?
+  avgCommentsPerPost        Float?
+  avgSharesPerPost          Float?
+  videoViewsPerFollower     Float?
+  commentIntensity          Float?
+  shareIntensity            Float?
+  postingFrequencyPerDay    Float?
+  benchmarkScore            Float?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@unique([pageId, periodStart, periodEnd])
+  @@index([periodStart, periodEnd])
+}
+
+// ----- Meta Business Suite CSV Import -----
+
+model InsightImportBatch {
+  id                Int      @id @default(autoincrement())
+  filename          String
+  source            String   @default("meta_business_suite_csv")
+  importedAt        DateTime @default(now())
+  importedBy        String?
+  fileHash          String   @unique
+  rowCount          Int      @default(0)
+  matchedCount      Int      @default(0)
+  unmatchedCount    Int      @default(0)
+  skippedCount      Int      @default(0)
+  status            String   @default("pending") // pending | mapped | imported | failed
+  notes             String?
+  rawColumnsJson    String?
+  columnMappingJson String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  rows ImportedPostInsight[]
+
+  @@index([importedAt])
+  @@index([status])
+}
+
+model ImportedPostInsight {
+  id                  Int      @id @default(autoincrement())
+  batchId             Int
+  source              String   @default("meta_business_suite_csv")
+  postId              String?
+  permalinkUrl        String?
+  externalContentId   String?
+  createdTime         String?
+  messageSnippet      String?
+  reach               Int?
+  impressions         Int?
+  engagedUsers        Int?
+  clicks              Int?
+  reactions           Int?
+  comments            Int?
+  shares              Int?
+  videoViews          Int?
+  watchTime           Float?
+  rawRowJson          String?
+  matchStatus         String   @default("unmatched") // matched | unmatched | ambiguous | skipped
+  matchedPostId       String?
+  matchConfidence     Float?
+  createdAt           DateTime @default(now())
+
+  batch InsightImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([matchStatus])
+  @@index([matchedPostId])
+}
+
+// ----- Video Asset Registry -----
+
+model VideoAsset {
+  id                Int      @id @default(autoincrement())
+  externalVideoId   String   @unique
+  sharedVideoId     String?
+  pageId            String?
+  title             String?
+  createdTime       String?
+  permalinkUrl      String?
+  matchedPostId     String? // link to Post.fbPostId if matched
+  durationSeconds   Int?
+  source            String   @default("meta_business_suite_csv")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  dailyMetrics  VideoDailyMetric[]
+  lifetimeMetric VideoLifetimeMetric?
+
+  @@index([pageId])
+  @@index([matchedPostId])
+}
+
+// ----- Video Daily Time-Series (V02) -----
+
+model VideoDailyMetric {
+  id                Int      @id @default(autoincrement())
+  videoAssetId      Int
+  date              String   // YYYY-MM-DD
+  reach             Int?
+  videoViews3s      Int?
+  watchTimeSeconds  Float?
+  avgWatchTime      Float?
+  reactions         Int?
+  comments          Int?
+  shares            Int?
+  source            String   @default("meta_business_suite_csv")
+  importBatchId     Int?
+  rawRowJson        String?
+  createdAt         DateTime @default(now())
+
+  videoAsset VideoAsset @relation(fields: [videoAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([videoAssetId, date, source])
+  @@index([date])
+  @@index([videoAssetId, date])
+}
+
+// ----- Video Lifetime Metric (V01) -----
+
+model VideoLifetimeMetric {
+  id                Int      @id @default(autoincrement())
+  videoAssetId      Int      @unique
+  reach             Int?
+  videoViews3s      Int?
+  videoViews1min    Int?
+  uniqueViewers3s   Int?
+  uniqueViewers1min Int?
+  watchTimeSeconds  Float?
+  avgWatchTime      Float?
+  reactions         Int?
+  comments          Int?
+  shares            Int?
+  source            String   @default("meta_business_suite_csv")
+  importBatchId     Int?
+  rawRowJson        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  videoAsset VideoAsset @relation(fields: [videoAssetId], references: [id], onDelete: Cascade)
+
+  @@index([videoAssetId])
+}
+
+// ----- Data Reminder System -----
+
+model DataReminderRun {
+  id            Int      @id @default(autoincrement())
+  type          String   @default("weekly") // weekly | monthly
+  periodStart   String
+  periodEnd     String
+  dueAt         DateTime
+  status        String   @default("pending") // pending | in_progress | completed | overdue | skipped
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  completedAt   DateTime?
+  notes         String?
+
+  items DataReminderItem[]
+
+  @@unique([type, periodStart, periodEnd])
+  @@index([status])
+}
+
+model DataReminderItem {
+  id                Int      @id @default(autoincrement())
+  runId             Int
+  code              String   // W01/W02/W03/W04/M01/M02/M03/M04
+  title             String
+  priority          String   // P0 | P1 | P0-Monthly | P1-Monthly | P1-Backfill
+  required          Boolean  @default(true)
+  platform          String   @default("Facebook")
+  pageName          String   @default("Chim Cút")
+  dateRangeStart    String
+  dateRangeEnd      String
+  preset            String
+  dataView          String
+  contentLevel      String
+  filterMode        String
+  expectedFilename  String
+  purpose           String?
+  note              String?
+  status            String   @default("pending") // pending | meta_created | downloaded | renamed | moved_to_incoming | dry_run_ok | applied_ok
+  metaCreatedAt     DateTime?
+  downloadedAt      DateTime?
+  renamedAt         DateTime?
+  movedToIncomingAt DateTime?
+  dryRunAt          DateTime?
+  appliedAt         DateTime?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  run DataReminderRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([code])
+}
+
+// ----- Public Engagement Benchmark -----
+
+model BenchmarkPage {
+  id                        Int      @id @default(autoincrement())
+  name                      String
+  canonicalUrl              String   @unique
+  platform                  String   @default("facebook")
+  objectType                String   @default("facebook_page")
+  category                  String?
+  benchmarkRole             String   @default("watchlist")
+  scaleBand                 String?
+  collectionFrequency       String?
+  recommendedPostsPerCollection Int?
+  isOwnPage                 Boolean  @default(false)
+  activeStatus              String   @default("active")
+  verificationConfidence    String?
+  lastVerifiedAt            DateTime?
+  notes                     String?
+  lastCollectedAt           DateTime?
+  collectionStatus          String?  // success | partial | unavailable | blocked | never
+  collectionErrors          String?  // JSON array of error messages
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  audienceSnapshots BenchmarkAudienceSnapshot[]
+  posts             BenchmarkPost[]
+  periodSnapshots   BenchmarkPeriodSnapshot[]
+  collectionItems   BenchmarkCollectionItem[]
+  collectionLogs    CollectionLog[]
+
+  @@index([benchmarkRole])
+  @@index([objectType])
+  @@index([isOwnPage])
+}
+
+model BenchmarkAudienceSnapshot {
+  id                Int      @id @default(autoincrement())
+  benchmarkPageId   Int
+  capturedAt        DateTime @default(now())
+  audienceCount     Int?
+  audienceCountType String   @default("unknown")
+  source            String   @default("manual_public")
+  verificationConfidence String?
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  page BenchmarkPage @relation(fields: [benchmarkPageId], references: [id], onDelete: Cascade)
+
+  @@index([benchmarkPageId, capturedAt])
+}
+
+model BenchmarkPost {
+  id                        Int      @id @default(autoincrement())
+  benchmarkPageId           Int
+  postUrl                   String
+  postedAt                  DateTime?
+  textSnippet               String?
+  contentType               String?
+  topicTag                  String?
+  reactions                 Int?
+  comments                  Int?
+  shares                    Int?
+  publicVideoViews          Int?
+  reactionsObserved         Boolean  @default(false)
+  commentsObserved          Boolean  @default(false)
+  sharesObserved            Boolean  @default(false)
+  publicVideoViewsObserved  Boolean  @default(false)
+  comparableEngagement      Int?
+  observedPublicEngagement  Int?
+  metricCoverageScore       Float?
+  capturedAt                DateTime @default(now())
+  source                    String   @default("manual_public")
+  notes                     String?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  page BenchmarkPage @relation(fields: [benchmarkPageId], references: [id], onDelete: Cascade)
+
+  @@unique([benchmarkPageId, postUrl, capturedAt])
+  @@index([benchmarkPageId])
+  @@index([capturedAt])
+}
+
+model BenchmarkPeriodSnapshot {
+  id                                Int      @id @default(autoincrement())
+  benchmarkPageId                   Int
+  periodType                        String   @default("weekly")
+  periodStart                       DateTime
+  periodEnd                         DateTime
+  audienceCount                     Int?
+  audienceCountType                 String?
+  postsCaptured                     Int      @default(0)
+  postsWithReactions                Int      @default(0)
+  postsWithComments                 Int      @default(0)
+  postsWithShares                   Int      @default(0)
+  postsWithVideoViews               Int      @default(0)
+  totalReactions                    Int?
+  totalComments                     Int?
+  totalShares                       Int?
+  totalPublicVideoViews             Int?
+  totalComparableEngagement         Int?
+  totalObservedPublicEngagement     Int?
+  medianComparableEngagementPerPost Float?
+  avgComparableEngagementPerPost    Float?
+  medianObservedEngagementPerPost   Float?
+  engagementPerFollower             Float?
+  viralHitRate                      Float?
+  shareRatio                        Float?
+  commentRatio                      Float?
+  metricCoverageScore               Float?
+  createdAt                         DateTime @default(now())
+  updatedAt                         DateTime @updatedAt
+
+  page BenchmarkPage @relation(fields: [benchmarkPageId], references: [id], onDelete: Cascade)
+
+  @@unique([benchmarkPageId, periodType, periodStart, periodEnd])
+  @@index([benchmarkPageId])
+  @@index([periodStart, periodEnd])
+}
+
+// ----- Benchmark Weekly Collection Reminder -----
+// Separate from DataReminderRun/Item (Meta MBS exports) — different item shape.
+
+model BenchmarkCollectionRun {
+  id           Int       @id @default(autoincrement())
+  weekStart    DateTime
+  weekEnd      DateTime
+  dueAt        DateTime
+  status       String    @default("pending") // pending | in_progress | completed | overdue | skipped
+  snoozedUntil DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  completedAt  DateTime?
+
+  items BenchmarkCollectionItem[]
+
+  @@unique([weekStart, weekEnd])
+  @@index([status])
+}
+
+model BenchmarkCollectionItem {
+  id              Int      @id @default(autoincrement())
+  runId           Int
+  benchmarkPageId Int
+  targetPosts     Int      @default(4)
+  collectedPosts  Int      @default(0)
+  status          String   @default("not_started") // not_started | collecting | dry_run_ready | complete | skipped | blocked
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  run  BenchmarkCollectionRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  page BenchmarkPage          @relation(fields: [benchmarkPageId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, benchmarkPageId])
+  @@index([runId])
+}
+
+// ----- Automated Collection Log -----
+
+model CollectionLog {
+  id              Int      @id @default(autoincrement())
+  benchmarkPageId Int
+  status          String   // success | partial | unavailable | blocked
+  source          String   @default("fb_session_collector")
+  postsCollected  Int      @default(0)
+  postsWithError  Int      @default(0)
+  followerCount   Int?
+  rawSnapshot     String?  // JSON of raw collected data before normalization
+  errors          String?  // JSON array of error messages
+  collectedAt     DateTime @default(now())
+
+  page BenchmarkPage @relation(fields: [benchmarkPageId], references: [id], onDelete: Cascade)
+
+  @@index([benchmarkPageId, collectedAt])
+}
+

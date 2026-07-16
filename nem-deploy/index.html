@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEM · Newmont Corporation | Investment Evidence Pack (3–5 năm)</title>
+<meta name="description" content="Báo cáo nghiên cứu cổ phiếu Newmont (NEM) — investment evidence pack cho nhà đầu tư 3–5 năm, công ty khai thác vàng lớn nhất thế giới, không khuyến nghị mua/bán.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Hybrid dark clean — Bloomberg-ish, accent kìm */
+  --bg-0:#0f1419; --bg-1:#13181f; --bg-2:#1a2029;
+  --card:#161b22; --card-2:#1c232d;
+  --border:rgba(255,255,255,0.08); --border-hot:rgba(245,166,35,0.45);
+  --text:#e6edf3; --text-dim:#8b949e; --text-faint:#565f6b;
+  --amber:#f5a623; --amber-soft:rgba(245,166,35,0.14);
+  --blue:#4a9eff; --blue-soft:rgba(74,158,255,0.14);
+  --green:#3fb950; --green-soft:rgba(63,185,80,0.14);
+  --red:#f85149; --red-soft:rgba(248,81,73,0.14);
+  --purple:#a78bfa; --purple-soft:rgba(167,139,250,0.14);
+  --grad-amber:linear-gradient(135deg,#f5a623 0%,#d48806 100%);
+  --grad-blue:linear-gradient(135deg,#4a9eff 0%,#2670c8 100%);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --radius:12px; --radius-sm:8px;
+  --chart-grid:rgba(255,255,255,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- chrome ---------- */
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad-amber);z-index:1000;transition:width .1s ease-out}
+.topnav{position:sticky;top:0;z-index:900;background:rgba(15,20,25,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.topnav-inner{max-width:1480px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:thin;height:52px}
+.topnav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:16px;border-right:1px solid var(--border);margin-right:8px}
+.topnav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.topnav-link{font-size:12px;color:var(--text-dim);padding:6px 10px;border-radius:6px;white-space:nowrap;transition:all .15s;font-weight:500}
+.topnav-link:hover{color:var(--text);background:var(--card)}
+.topnav-link.active{color:var(--amber);background:var(--amber-soft)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;z-index:800}
+.back-top.visible{opacity:1;pointer-events:auto}
+.back-top:hover{border-color:var(--border-hot);color:var(--amber)}
+
+/* ---------- layout ---------- */
+.container{max-width:1480px;margin:0 auto;padding:24px 24px 80px}
+
+/* ---------- layout 2 cột: content + TOC sidebar phải (sticky) ---------- */
+.layout-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:start}
+.layout-content{min-width:0}
+.toc-sidebar{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding:14px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.toc-sidebar::-webkit-scrollbar{width:6px}
+.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border-hot);border-radius:3px}
+.toc-sidebar-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--amber);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.toc-sidebar-hint{font-size:10.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4}
+.toc-sidebar-list{list-style:none;padding:0;margin:0}
+.toc-sidebar-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text-dim);font-size:11.5px;line-height:1.35;transition:all .12s;border-left:2px solid transparent}
+.toc-sidebar-item:hover{background:rgba(245,166,35,0.06);color:var(--text);text-decoration:none;border-left-color:var(--amber)}
+.toc-sidebar-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:var(--card-2);color:var(--text-faint);font-size:10px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;margin-top:1px}
+.toc-sidebar-item:hover .toc-sidebar-num{background:var(--amber);color:#1a1206}
+.toc-sidebar-item .toc-sidebar-label{flex:1}
+@media(max-width:1100px){.layout-main{grid-template-columns:1fr;gap:0}.toc-sidebar{display:none}}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.section{margin-top:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}
+.section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.section-title .tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#1a1206}
+.tag.amber{background:var(--amber)} .tag.blue{background:var(--blue)} .tag.green{background:var(--green)} .tag.red{background:var(--red)} .tag.purple{background:var(--purple)}
+.divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.section-sub{color:var(--text-dim);font-size:13px;margin:4px 0 20px;padding-left:40px}
+
+/* ---------- hero ---------- */
+.hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(74,158,255,0.04));border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-amber);color:#1a1206;padding:5px 14px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:0.5px}
+.disclaimer-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(248,81,73,0.3);margin-left:8px}
+.company-name{font-size:38px;font-weight:800;margin-top:14px;letter-spacing:-0.8px}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:14px}
+.price-block{text-align:right}
+.price-now{font-size:46px;font-weight:800;letter-spacing:-1px;font-family:var(--font-mono)}
+.price-now .ccy{font-size:20px;color:var(--text-dim);font-weight:500;margin-right:4px}
+.price-meta{margin-top:6px;color:var(--text-dim);font-size:12px}
+.price-meta .delta{font-weight:600;margin-left:6px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
+.kpi:hover{border-color:var(--border-hot)}
+.kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}
+.kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
+
+/* ---------- card ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:11px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:300px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:360px} .chart-wrap.xs{height:180px}
+
+/* ---------- table ---------- */
+.fin-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.fin-table th,.fin-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.fin-table th:first-child,.fin-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim)}
+.fin-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;border-bottom:1px solid var(--border)}
+.fin-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+.fin-table .col-latest{background:var(--amber-soft);color:var(--amber);font-weight:700}
+.fin-table .row-strong td{font-weight:700;background:rgba(255,255,255,0.02)}
+.fin-table .row-total td{border-top:2px solid var(--border);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+
+/* ---------- callout / highlight ---------- */
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card)}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)} .callout.neu{border-left-color:var(--amber)}
+.callout-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.callout-body{font-size:13px;color:var(--text-dim);line-height:1.6}
+.callout-body strong{color:var(--text)}
+
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+
+/* ---------- metric stat ---------- */
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.stat-value{font-size:26px;font-weight:700;margin-top:4px;font-family:var(--font-mono)}
+.stat-meta{font-size:11px;color:var(--text-dim);margin-top:4px}
+.stat-verdict{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:6px}
+.verdict-good{background:var(--green-soft);color:var(--green)} .verdict-warn{background:var(--amber-soft);color:var(--amber)} .verdict-danger{background:var(--red-soft);color:var(--red)}
+
+/* ---------- gauge ---------- */
+.gauge{position:relative;height:8px;background:var(--bg-2);border-radius:4px;margin-top:8px;overflow:hidden}
+.gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px}
+.gauge-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px}
+
+/* ---------- ref / citation ---------- */
+.ref{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 5px;border-radius:4px;margin-left:2px;vertical-align:super;font-family:var(--font-mono);text-decoration:none;border:1px solid rgba(74,158,255,0.25)}
+.ref:hover{background:var(--blue);color:#0f1419;text-decoration:none}
+.refs{list-style:none;counter-reset:ref;padding-left:0}
+.refs li{counter-increment:ref;font-size:11.5px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;line-height:1.5}
+.refs li::before{content:counter(ref);font-family:var(--font-mono);font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 6px;border-radius:4px;font-size:10px;height:fit-content;flex-shrink:0;border:1px solid rgba(74,158,255,0.2)}
+.refs li a{color:var(--text-dim);word-break:break-all}
+.refs li a:hover{color:var(--blue)}
+.refs .src-meta{color:var(--text-faint);font-size:10.5px;display:block;margin-top:2px}
+
+/* ---------- checklist ---------- */
+.check-list{list-style:none;padding:0}
+.check-list li{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.check-list li:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.check-box.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.check-box.off{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.check-list .q{flex:1}
+.check-list .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+
+/* ---------- risk matrix ---------- */
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}
+.risk-table th,.risk-table td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.risk-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600}
+.risk-table td:first-child{font-weight:600;color:var(--text)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px}
+.pill-l{background:var(--green-soft);color:var(--green)} .pill-m{background:var(--amber-soft);color:var(--amber)} .pill-h{background:var(--red-soft);color:var(--red)}
+
+/* ---------- scenario ---------- */
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.scenario-card{border-radius:var(--radius);padding:18px;border:1px solid var(--border)}
+.scenario-card.bull{border-top:3px solid var(--green)} .scenario-card.base{border-top:3px solid var(--amber)} .scenario-card.bear{border-top:3px solid var(--red)}
+.scenario-card h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.scenario-card ul{list-style:none;padding:0;font-size:12px;color:var(--text-dim)}
+.scenario-card li{padding:4px 0;line-height:1.5}
+.scenario-card li::before{content:'›';color:var(--amber);margin-right:6px;font-weight:700}
+
+/* ---------- drawdown ---------- */
+.drawdown-table{width:100%;border-collapse:collapse;font-size:13px}
+.drawdown-table th,.drawdown-table td{padding:10px;border-bottom:1px solid var(--border);text-align:center}
+.drawdown-table th{font-size:10px;text-transform:uppercase;color:var(--text-faint);font-weight:600}
+.drawdown-table td:first-child{text-align:left;font-family:var(--font-mono);color:var(--red);font-weight:600}
+.drawdown-table td:last-child{text-align:left;font-family:var(--font-sans);color:var(--text-dim);font-size:12px}
+
+/* ---------- segment bar ---------- */
+.seg-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.seg-row:last-child{border-bottom:none}
+.seg-name{width:200px;font-size:12.5px;font-weight:500;flex-shrink:0}
+.seg-bar{flex:1;height:24px;background:var(--bg-2);border-radius:5px;overflow:hidden;position:relative}
+.seg-bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono)}
+.seg-meta{width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0}
+
+/* ---------- quality badge ---------- */
+.qbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;font-family:var(--font-mono)}
+.qbadge-HIGHQ{background:var(--green-soft);color:var(--green)} .qbadge-MEDQ{background:var(--amber-soft);color:var(--amber)} .qbadge-LOWQ{background:var(--red-soft);color:var(--red)}
+
+/* ---------- disclaimer block ---------- */
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+
+/* ---------- footer ---------- */
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}
+footer p{margin-bottom:6px}
+.disclaimer{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--radius);padding:14px 18px;margin:16px 0;font-size:11.5px;color:var(--text-dim)}
+
+/* ---------- value chain stack ---------- */
+.vc-stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.vc-layer{display:grid;grid-template-columns:130px 1fr 90px 90px;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;background:var(--card-2);border:1px solid var(--border);font-size:12px;position:relative;transition:border-color .2s}
+.vc-layer.upstream-most{border-left:3px solid var(--red)}
+.vc-layer.upstream{border-left:3px solid var(--amber)}
+.vc-layer.oracle{border-left:3px solid var(--blue);background:rgba(74,158,255,0.06)}
+.vc-layer.downstream{border-left:3px solid var(--text-faint)}
+.vc-name{font-weight:600;color:var(--text)}
+.vc-name .sub{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px}
+.vc-players{color:var(--text-dim);font-size:11.5px}
+.vc-rent{font-family:var(--font-mono);font-weight:700;font-size:11px;text-align:center}
+.vc-pillar{font-family:var(--font-mono);font-size:10.5px;text-align:center;font-weight:600}
+.vc-legend{display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-top:10px;flex-wrap:wrap}
+.vc-legend span{display:inline-flex;align-items:center;gap:6px}
+.vc-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* ---------- rent location gauge ---------- */
+.rent-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0;border:1px solid var(--border)}
+.rent-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono);padding:0 4px;text-align:center;line-height:1.1}
+.rent-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-faint);margin-bottom:4px;font-family:var(--font-mono)}
+
+/* ---------- barrier table ---------- */
+.barrier-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.barrier-table th,.barrier-table td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.barrier-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.barrier-table td.barrier-name{font-weight:600;color:var(--text);width:23%}
+.barrier-height{display:inline-flex;align-items:center;gap:2px}
+.barrier-bar{display:inline-block;width:8px;height:14px;background:var(--bg-2);border-radius:2px;margin-right:1px}
+.barrier-bar.on-red{background:var(--red)} .barrier-bar.on-amber{background:var(--amber)} .barrier-bar.on-green{background:var(--green)}
+.trend-up{color:var(--green)} .trend-down{color:var(--red)} .trend-flat{color:var(--text-dim)}
+
+/* ---------- dependency matrix ---------- */
+.dep-matrix{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:14px 0;font-size:11.5px}
+.dep-matrix>div{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.dep-matrix>div:nth-child(3n){border-right:none}
+.dep-matrix>div:nth-last-child(-n+3){border-bottom:none}
+.dep-matrix .head{background:var(--card-2);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint)}
+.dep-layer{font-weight:600;color:var(--text)}
+.dep-verdict{font-weight:600}
+.lock-high{color:var(--green)} .lock-med{color:var(--amber)} .lock-low{color:var(--red)}
+
+/* ---------- technical score ---------- */
+.tech-score-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,var(--card),var(--card-2));border:1px solid var(--border);margin-bottom:16px}
+.tech-score-num{font-size:48px;font-weight:800;font-family:var(--font-mono);line-height:1;min-width:80px;text-align:center}
+.tech-verdict-pill{display:inline-block;font-size:11px;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.verdict-strong-sell{background:var(--red-soft);color:var(--red);border:1px solid rgba(248,81,73,0.4)}
+.verdict-sell{background:rgba(248,81,73,0.2);color:var(--red)}
+.verdict-hold{background:var(--amber-soft);color:var(--amber)}
+.verdict-buy{background:rgba(63,185,80,0.2);color:var(--green)}
+.verdict-strong-buy{background:var(--green-soft);color:var(--green);border:1px solid rgba(63,185,80,0.4)}
+.tech-score-bar{flex:1;height:14px;background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);border-radius:7px;position:relative;min-width:200px}
+.tech-score-marker{position:absolute;top:-4px;width:4px;height:22px;background:var(--text);border-radius:2px;transform:translateX(-50%)}
+.tech-score-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:4px}
+
+.signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.signal-cell{background:var(--bg-2);border-radius:7px;padding:10px;font-size:11.5px;border-left:3px solid var(--border)}
+.signal-cell.bull{border-left-color:var(--green)} .signal-cell.bear{border-left-color:var(--red)} .signal-cell.neut{border-left-color:var(--amber)}
+.signal-cell .sig-name{font-weight:600;color:var(--text);font-size:11px}
+.signal-cell .sig-val{font-family:var(--font-mono);color:var(--text-dim);margin-top:2px;font-size:10.5px}
+
+/* ---------- candlestick mini ---------- */
+.candle-mini-wrap{position:relative;height:280px;margin:12px 0}
+
+/* ---------- non-advice footer (PROFILE mode) ---------- */
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+.non-advice-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:8px;font-weight:700}
+.non-advice-panel ul{list-style:none;padding:0;font-size:11.5px;color:var(--text-dim);line-height:1.65}
+.non-advice-panel li{padding:3px 0;padding-left:16px;position:relative}
+.non-advice-panel li::before{content:'›';position:absolute;left:0;color:var(--amber)}
+
+/* ---------- analyst table ---------- */
+.analyst-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.analyst-table th,.analyst-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.analyst-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.analyst-table td.firm{font-weight:600;color:var(--text)}
+.analyst-table td.target{font-family:var(--font-mono);font-weight:600}
+.analyst-table td.thesis{font-size:11px;color:var(--text-dim);line-height:1.5}
+.rating-buy{color:var(--green);font-weight:600} .rating-hold{color:var(--amber);font-weight:600} .rating-sell{color:var(--red);font-weight:600}
+
+/* ---------- glossary ---------- */
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.gloss-item{background:var(--card-2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:12px}
+.gloss-term{font-weight:700;color:var(--blue);font-family:var(--font-mono);font-size:11.5px}
+.gloss-def{color:var(--text-dim);margin-top:3px;line-height:1.5}
+
+/* ---------- plain-language callout (💡 Nói cách khác) ---------- */
+.callout.plain{border-left-color:var(--amber);background:rgba(245,166,35,0.05)}
+.callout.plain .callout-title{color:var(--amber)}
+.callout.plain .callout-body{color:var(--text);font-size:13px}
+.callout.plain .callout-body strong{color:var(--amber)}
+
+
+/* ---------- xref link (cross-reference inline) ---------- */
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}
+a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+
+/* ---------- responsive ---------- */
+@media(max-width:1100px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .exec-grid{grid-template-columns:1fr 1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .scenario-grid{grid-template-columns:1fr}
+  .grid-2-1,.grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .container{padding:16px 14px 60px}
+  .hero{padding:20px}
+  .company-name{font-size:28px}
+  .price-now{font-size:34px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .exec-grid{grid-template-columns:1fr}
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .topnav-brand{display:none}
+  .section-title h2{font-size:18px}
+  .price-block{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand"><span class="dot"></span>NEM · Evidence Pack</div>
+    <a class="topnav-link" href="#sec-hero" data-target="sec-hero">Tổng quan</a>
+    <a class="topnav-link" href="#sec-exec" data-target="sec-exec">TL;DR</a>
+    <a class="topnav-link" href="#sec-biz" data-target="sec-biz">Business</a>
+    <a class="topnav-link" href="#sec-industry" data-target="sec-industry">Ngành</a>
+    <a class="topnav-link" href="#sec-history" data-target="sec-history">10 năm</a>
+    <a class="topnav-link" href="#sec-segment" data-target="sec-segment">Segment</a>
+    <a class="topnav-link" href="#sec-thesis" data-target="sec-thesis">AI Thesis</a>
+    <a class="topnav-link" href="#sec-valuation" data-target="sec-valuation">Định giá</a>
+    <a class="topnav-link" href="#sec-peer" data-target="sec-peer">Peer</a>
+    <a class="topnav-link" href="#sec-bs" data-target="sec-bs">BS & FCF</a>
+    <a class="topnav-link" href="#sec-risk" data-target="sec-risk">Rủi ro</a>
+    <a class="topnav-link" href="#sec-33k" data-target="sec-33k">33K USD</a>
+    <a class="topnav-link" href="#sec-scenario" data-target="sec-scenario">Kịch bản</a>
+    <a class="topnav-link" href="#sec-checklist" data-target="sec-checklist">Checklist</a>
+    <a class="topnav-link" href="#sec-insight" data-target="sec-insight">★ Insight</a>
+    <a class="topnav-link" href="#sec-moat" data-target="sec-moat">★ Moat</a>
+    <a class="topnav-link" href="#sec-supply" data-target="sec-supply">★ Supply</a>
+    <a class="topnav-link" href="#sec-tech" data-target="sec-tech">Technical</a>
+    <a class="topnav-link" href="#sec-analyst" data-target="sec-analyst">Analyst</a>
+    <a class="topnav-link" href="#sec-glossary" data-target="sec-glossary">📖 Thuật ngữ</a>
+    <a class="topnav-link" href="#sec-source" data-target="sec-source">Nguồn</a>
+  </div>
+</nav>
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+
+<div class="container">
+
+<!-- ============ SECTION 1: HERO + KPI ============ -->
+<section id="sec-hero" class="section" style="margin-top:8px;scroll-margin-top:60px">
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="ticker-badge">NYSE: NEM</span>
+        <span class="disclaimer-badge">KHÔNG khuyến nghị mua/bán</span>
+        <div class="company-name">Newmont Corporation</div>
+        <div class="company-sub">Khai thác vàng lớn nhất thế giới &nbsp;·&nbsp; Sản lượng 5.9Moz (2025) &nbsp;·&nbsp; 118.2Moz trữ lượng &nbsp;·&nbsp; FY kết thúc 31/12 &nbsp;·&nbsp; HQ Denver, Colorado</div>
+        <div class="company-sub dim" style="margin-top:10px">
+          Investment evidence pack cho nhà đầu tư cơ bản, tầm nhìn 3–5 năm, vốn tham khảo 33.000 USD.
+          Dữ liệu chính: <strong>FY2025 (kết thúc 31/12/2025)</strong> + giá vàng spot 7/7/2026. Báo cáo này không phải lệnh giao dịch.
+        </div>
+      </div>
+      <div class="price-block">
+        <div class="price-now"><span class="ccy">$</span>98.20</div>
+        <div class="price-meta">Giá đóng cửa <span class="dim">7/7/2026</span></div>
+        <div class="price-meta dim" style="margin-top:4px;font-size:11px">📅 <strong>Dữ liệu tính đến 7/7/2026</strong> — giá vàng và cổ phiếu có thể đã thay đổi. Mỗi số có nhãn HIGHQ/MEDQ/LOWQ ở section 22.</div>
+        <div class="price-meta dim" style="margin-top:4px">Market cap ≈ <span class="mono">$105B</span> &nbsp;·&nbsp; 52W <span class="mono">$55.37–$134.88</span> <span class="neg">(−27% so với đỉnh)</span></div>
+        <div class="price-meta dim" style="margin-top:4px">Giá vàng spot ≈ <span class="mono">$4,140/oz</span> <span class="neg">(−26% từ ATH $5,500)</span></div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi">
+        <div class="kpi-label">Revenue FY2025</div>
+        <div class="kpi-value">$22.7B</div>
+        <div class="kpi-delta pos">▲ +21% YoY</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Sản lượng vàng</div>
+        <div class="kpi-value">5.9Moz</div>
+        <div class="kpi-delta dim">#1 thế giới</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">AISC 2025 (by-product)</div>
+        <div class="kpi-value">$1,358/oz</div>
+        <div class="kpi-delta neg">Guide 2026: $1,680/oz ▲</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Free cash flow FY2025</div>
+        <div class="kpi-value pos">$7.3B</div>
+        <div class="kpi-delta pos">Kỷ lục</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">P/E TTM</div>
+        <div class="kpi-value">~12.7×</div>
+        <div class="kpi-delta dim">Forward ~8.8×</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Trữ lượng</div>
+        <div class="kpi-value">118.2Moz</div>
+        <div class="kpi-delta dim">~20 năm life</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LAYOUT 2 CỘT: content (trái) + TOC sidebar (phải, sticky) ============ -->
+<div class="layout-main">
+<div class="layout-content">
+
+<!-- ============ SECTION 1: HERO + KPI ============ -->
+
+<!-- ============ SECTION 2: EXECUTIVE SUMMARY ============ -->
+<section id="sec-exec" class="section">
+  <div class="section-title"><span class="num">2</span><h2>Tóm tắt điều hành (TL;DR)</h2><div class="divider"></div></div>
+  <div class="section-sub">4 callout: thesis / rủi ro / định giá / góc nhìn $33K. Đọc phần này trước khi xuống chi tiết.</div>
+
+  <div class="grid-2">
+    <div class="card" style="border-left:3px solid var(--amber)">
+      <div class="card-title neu" style="color:var(--amber)">💡 Luận điểm đầu tư (thesis)</div>
+      <p style="font-size:13.5px;line-height:1.65;margin-top:10px">
+        Newmont là <strong>công ty khai thác vàng lớn nhất thế giới</strong> (5.9Moz sản lượng 2025, gấp 1.7× Agnico Eagle vị trí #2).
+        Sau thương vụ Newcrest $19B (11/2023), NEM sở hữu <strong>>50% tài sản Tier-1</strong> toàn cầu với 118.2Moz trữ lượng (~20 năm life).
+        Luận điểm 3-5 năm: <strong>nếu giá vàng giữ được $3,500-4,500/oz</strong>, NEM in ra FCF $5-8B/năm, trả nợ, buyback, dividend.
+        Tại AISC $1,358/oz và giá vàng $4,140, <strong>biên trên mỗi ounce >$2,700</strong> — mức kỷ lục.
+      </p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--red)">
+      <div class="card-title neg">⚠️ Rủi ro lớn nhất</div>
+      <p style="font-size:13.5px;line-height:1.65;margin-top:10px">
+        <strong>Chu kỳ giá vàng</strong>. Gold đã giảm 26% từ ATH $5,500 (1/2026) về $4,140 (7/2026).
+        Nếu vàng về $2,500 (−40%), EPS NEM <strong>collapse 50-60%</strong> (đòn bẩy nhà máy).
+        Thêm: <strong>AISC 2026 guide tăng $1,680/oz</strong> (+24% YoY) do royalty gold-price-linked + lạm phát chi phí.
+        P/E 12.7× hiện tại <strong>trông rẻ nhưng là bẫy chu kỳ</strong> — EPS đang ở đỉnh.
+      </p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--blue)">
+      <div class="card-title blue">📊 Định giá hiện tại</div>
+      <p style="font-size:13.5px;line-height:1.65;margin-top:10px">
+        P/E TTM 12.7× (forward 8.8×) — <strong>rẻ hơn median 10 năm 16.5×</strong>, NHƯNG P/B 3.0× đang ở
+        <strong>phân vị 89% (đắt nhất 10 năm)</strong>. Mâu thuẫn do EPS đỉnh chu kỳ.
+        EV/EBITDA 6.2× (vs 5Y avg 9.7×) và <strong>P/NAV ~25% discount</strong> →定 giá rẻ theo asset-based.
+        Verdict: <strong>Trung tính — rẻ theo DCF/NAV, đắt theo P/B</strong>.
+      </p>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--green)">
+      <div class="card-title pos">💵 Góc nhìn $33.000</div>
+      <p style="font-size:13.5px;line-height:1.65;margin-top:10px">
+        Với $33.000 ở giá $98.20 = <strong>336 cổ phiếu NEM</strong>.
+        Drawdown 30% = mất ~$10.000. Drawdown 50% (nếu vàng về $2,500) = mất ~$16.500.
+        NEM <strong>không phải holding forever</strong> — chu kỳ vàng quyết định.
+        Nếu mua, <strong>chia 3-4 đợt</strong> gắn với giá vàng (xem <a href="#sec-33k" class="xref">Section 12</a>).
+        <strong>Không mua nếu không chịu được drawdown 40%</strong>.
+      </p>
+    </div>
+  </div>
+
+  <div class="callout plain" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+      Newmont giống <strong>một "cỗ máy in tiền khi vàng đắt"</strong>. Khi vàng $4,000+, NEM in FCF $7B/năm.
+      Khi vàng $1,500 (như 2019), NEM gần hòa vốn. Câu hỏi duy nhất: <strong>bạn tin giá vàng giữ được ở mức cao không?</strong>
+      Nếu "có, khá chắc" → NEM hấp dẫn ở P/E 8.8× forward. Nếu "không, có thể về $2,500" → đợi giá cổ phiếu phản ánh rủi ro đó.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: BUSINESS 101 ============ -->
+<section id="sec-biz" class="section">
+  <div class="section-title"><span class="num">3</span><h2>Business 101 — Newmont kiếm tiền thế nào?</h2><div class="divider"></div></div>
+  <div class="section-sub">Cho người chưa biết: Newmont làm gì, bán cho ai, tiền đến từ đâu.</div>
+
+  <div class="card">
+    <div class="card-title">Newmont là gì?</div>
+    <p style="font-size:14px;line-height:1.7;margin-top:10px">
+      <strong>Newmont Corporation</strong> là công ty khai thác vàng lớn nhất thế giới tính theo sản lượng và trữ lượng.
+      Thành lập 1921, trụ sở Denver, Colorado. Niêm yết NYSE: NEM. Hiện tại:
+    </p>
+    <ul style="font-size:13.5px;line-height:1.7;margin-top:10px;padding-left:24px">
+      <li><strong>Sản lượng 2025:</strong> 5.9 triệu ounce vàng attributable (số 1 thế giới, gấp 1.7× AEM)</li>
+      <li><strong>Trữ lượng:</strong> 118.2Moz proven & probable (~20 năm khai thác ở rate hiện tại)</li>
+      <li><strong>Sản phẩm phụ:</strong> 135,000 tấn đồng + 28Moz bạc (by-product credit quan trọng)</li>
+      <li><strong>Mỏ:</strong> 12+ Tier-1 assets ở Mỹ, Úc, Peru, Mexico, Ghana, Suriname, Argentina, Canada, PNG, Dominican Republic</li>
+      <li><strong>Thương vụ lớn:</strong> Newcrest $19B (11/2023) — gold M&A lớn nhất lịch sử</li>
+    </ul>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px">
+    <div class="card">
+      <div class="card-title">Tiền đến từ đâu?</div>
+      <p style="font-size:13px;line-height:1.65;margin-top:8px">
+        Newmont bán <strong>vàng vật lý + đồng + bạc</strong> theo giá thị trường (spot price).
+        Khách hàng: <strong>ngân hàng trung ương, ETF (GLD/IAU), jewelry industry, nhà đầu tư cá nhân</strong>.
+        Không có "customer concentration" — vàng là commodity, ai cũng mua.
+      </p>
+      <p style="font-size:13px;line-height:1.65;margin-top:10px">
+        <strong>Doanh thu 2025: $22.7B</strong> (+21% YoY). Chủ yếu từ:
+      </p>
+      <ul style="font-size:12.5px;padding-left:20px;margin-top:6px">
+        <li>Vàng: ~85% revenue (5.9Moz × ~$3,850/oz avg)</li>
+        <li>Đồng: ~10% (135kt × ~$8/lb... thực tế giá đồng biến động)</li>
+        <li>Bạc: ~5% (28Moz)</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mô hình kinh tế</div>
+      <p style="font-size:13px;line-height:1.65;margin-top:8px">
+        Newmont <strong>không phải software</strong>. Mô hình = commodity producer với:
+      </p>
+      <ul style="font-size:12.5px;padding-left:20px;margin-top:6px;line-height:1.65">
+        <li><strong>Capex nặng:</strong> xây mỏ tốn $1-3B, 7-10 năm permit+xây</li>
+        <li><strong>AISC (All-In Sustaining Cost):</strong> $1,358/oz 2025, guide $1,680/oz 2026</li>
+        <li><strong>Biên thay đổi theo giá vàng:</strong> giá $4,140 → biên ~67%. Về $2,000 → biên ~32%</li>
+        <li><strong>Khấu hao lớn:</strong> D&A ~$4B/năm (phi tiền) → FCF > net income</li>
+        <li><strong>Reserves cạn dần:</strong> mỗi năm khai thác 5.9Moz, phải explore/acquire để bổ sung</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout plain" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+      Tưởng tượng Newmont là <strong>1 trang trại vàng khổng lồ</strong>. Mỗi năm đào 5.9Moz vàng ra đất,
+      bán theo giá thị trường. Chi phí đào + lọc + vận hành = $1,358/oz. Phần còn lại = lợi nhuận gộp.
+      <strong>Khi vàng $4,140, mỗi ounce lợi ~$2,780</strong>. Khi vàng $1,800 (như 2022), mỗi ounce chỉ lợi ~$440.
+      Đây là <strong>đòn bẩy giá vàng</strong>: giá vàng tăng 30% → lợi nhuận NEM tăng 100%+.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4: INDUSTRY POSITION ============ -->
+<section id="sec-industry" class="section">
+  <div class="section-title"><span class="num">4</span><h2>Vị trí ngành — Newmont đứng ở đâu?</h2><div class="divider"></div></div>
+  <div class="section-sub">3 lớp ngành: gold miners / streaming-royalty / commodity-vàng.</div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">4.1 Gold miners — Top 10 thế giới (sản lượng 2025)</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">#</th><th style="text-align:left">Công ty</th><th>Sản lượng 2025 (Moz)</th><th>Trữ lượng (Moz)</th><th>Market cap</th><th>P/E TTM</th></tr></thead>
+        <tbody>
+          <tr class="row-strong"><td style="text-align:left">1</td><td style="text-align:left"><strong>Newmont (NEM)</strong></td><td class="col-latest"><strong>5.9</strong></td><td>118.2</td><td>$105B</td><td>12.7×</td></tr>
+          <tr><td style="text-align:left">2</td><td style="text-align:left">Agnico Eagle (AEM)</td><td>3.45</td><td>55.4</td><td>$78B</td><td>14.6×</td></tr>
+          <tr><td style="text-align:left">3</td><td style="text-align:left">Barrick Mining (B)</td><td>3.26</td><td>85</td><td>$64B</td><td>10.1×</td></tr>
+          <tr><td style="text-align:left">4</td><td style="text-align:left">AngloGold (AU)</td><td>3.09</td><td>36.5</td><td>$42B</td><td>12.3×</td></tr>
+          <tr><td style="text-align:left">5</td><td style="text-align:left">Kinross (KGC)</td><td>2.01</td><td>~thập kỷ</td><td>$30B</td><td>10.5×</td></tr>
+          <tr><td style="text-align:left">—</td><td style="text-align:left">Wheaton (WPM) — streaming</td><td>~0.7 GEO</td><td>—</td><td>$52B</td><td>29.1×</td></tr>
+          <tr><td style="text-align:left">—</td><td style="text-align:left">Franco-Nevada (FNV) — royalty</td><td>~0.5 GEO</td><td>—</td><td>$41B</td><td>30.0×</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--text-faint);margin-top:8px">
+      NEM lớn nhất về sản lượng + trữ lượng. AEM đắt nhất về P/E (premium quality).
+      Streaming/royalty (WPM/FNV) giao dịch P/E ~30× do margin >75% (model không phải mining).
+    </p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">4.2 Điểm khác biệt của Newmont</div>
+      <ul style="font-size:12.5px;line-height:1.7;padding-left:20px;margin-top:8px">
+        <li><strong>Quy mô lớn nhất:</strong> 5.9Moz/năm, gấp 1.7× AEM, 1.8× Barrick</li>
+        <li><strong>Trữ lượng 118Moz:</strong> ~20 năm life — dài nhất ngành</li>
+        <li><strong>By-product credit:</strong> Đồng 135kt + Bạc 28Moz giảm AISC by-product</li>
+        <li><strong>Đa dạng địa lý:</strong> 10 quốc gia, không tập trung 1 mỏ</li>
+        <li><strong>Tier-1 portfolio:</strong> 12+ mỏ Tier-1 (>500koz/năm, life >10 năm, AISC lower half)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">4.3 Điểm yếu vs peer</div>
+      <ul style="font-size:12.5px;line-height:1.7;padding-left:20px;margin-top:8px">
+        <li><strong>AISC cao hơn AEM:</strong> $1,358 (NEM) vs $1,339 (AEM) — chi phí Newcrest</li>
+        <li><strong>AISC 2026 tăng mạnh:</strong> guide $1,680/oz (+24% YoY) — royalty structure</li>
+        <li><strong>Beta thấp (0.48):</strong> kỳ lạ — thị trường định giá NEM ít vol hơn peer</li>
+        <li><strong>Newcrest integration risk:</strong> $19B deal chưa thực sự prove synergies ($500M claim)</li>
+        <li><strong>Rủi ro địa lý:</strong> Peru, Ghana, PNG, Argentina — chính trị bất ổn</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout plain" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+      Trong ngành gold mining, NEM là <strong>"ông lớn cồng kềnh"</strong>: quy mô lớn nhất, trữ lượng dày nhất,
+      nhưng cũng chậm nhất. AEM (Canada) được xem là "chất lượng cao nhất" — giao dịch premium.
+      WPM/FNV (streaming/royalty) là <strong>model tài chính thông minh hơn</strong>: margin 75%+, không có rủi ro vận hành,
+      nhưng P/E 30×. <strong>NEM rẻ vì là miner, đắt vì lớn</strong>.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 5: FINANCIAL HISTORY 10Y ============ -->
+<section id="sec-history" class="section">
+  <div class="section-title"><span class="num">5</span><h2>Lịch sử tài chính 10 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">Bảng FY2016-FY2025. ⚠️ <strong>Rupture Q4 2023</strong>: Newcrest deal làm data pre-2024 không so sánh trực tiếp.</div>
+
+  <div class="card">
+    <div class="card-title">5.1 Bảng tài chính 10 năm (USD)</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">Fiscal Year</th>
+            <th>Revenue</th>
+            <th>Rev Growth</th>
+            <th>Op Income</th>
+            <th>Net Income</th>
+            <th>EPS Diluted</th>
+            <th>OCF</th>
+            <th>Capex</th>
+            <th>FCF</th>
+            <th>Total Debt</th>
+            <th>Gold Price Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="text-align:left">FY2016</td><td>$6.7B</td><td>—</td><td>−$0.4B</td><td class="neg">−$0.7B</td><td class="neg">−$1.18</td><td>$1.7B</td><td>−$1.0B</td><td>$0.7B</td><td>$2.5B</td><td>$1,250</td></tr>
+          <tr><td style="text-align:left">FY2017</td><td>$7.3B</td><td>+8%</td><td>$1.2B</td><td>$0.5B</td><td>$0.89</td><td>$1.7B</td><td>−$0.7B</td><td>$1.0B</td><td>$2.4B</td><td>$1,260</td></tr>
+          <tr><td style="text-align:left">FY2018</td><td>$7.3B</td><td>0%</td><td>$0.4B</td><td>$0.05B</td><td>$0.09</td><td>$1.6B</td><td>−$0.7B</td><td>$0.9B</td><td>$3.1B</td><td>$1,268</td></tr>
+          <tr><td style="text-align:left">FY2019</td><td>$9.7B</td><td>+33%</td><td>$2.1B</td><td>$2.4B</td><td>$0.50</td><td>$3.4B</td><td>−$1.2B</td><td>$2.2B</td><td>$4.4B</td><td>$1,390</td></tr>
+          <tr><td style="text-align:left">FY2020</td><td>$11.4B</td><td>+18%</td><td>$4.8B</td><td>$3.4B</td><td>$4.11</td><td>$5.4B</td><td>−$1.7B</td><td>$3.7B</td><td>$5.5B</td><td>$1,770</td></tr>
+          <tr><td style="text-align:left">FY2021</td><td>$12.2B</td><td>+7%</td><td>$2.9B</td><td>$2.3B</td><td>$2.92</td><td>$4.2B</td><td>−$1.9B</td><td>$2.3B</td><td>$5.6B</td><td>$1,800</td></tr>
+          <tr><td style="text-align:left">FY2022</td><td>$11.9B</td><td>−2%</td><td>$1.4B</td><td>−$1.4B</td><td class="neg">−$2.06</td><td>$3.2B</td><td>−$2.13B</td><td>$1.1B</td><td>$6.0B</td><td>$1,800</td></tr>
+          <tr><td style="text-align:left">FY2023*</td><td>$11.7B</td><td>−2%</td><td>$0.5B</td><td>−$1.4B</td><td class="neg">−$1.94</td><td>$2.8B</td><td>−$2.67B</td><td>$0.1B</td><td>$7.0B</td><td>$1,940</td></tr>
+          <tr><td style="text-align:left">FY2024**</td><td>$18.7B</td><td>+60%</td><td>$5.9B</td><td>$3.3B</td><td>$2.92</td><td>$6.4B</td><td>−$3.40B</td><td>$3.0B</td><td>$7.9B</td><td>$2,386</td></tr>
+          <tr class="row-strong"><td style="text-align:left"><strong>FY2025</strong></td><td class="col-latest"><strong>$22.7B</strong></td><td class="pos">+21%</td><td class="col-latest"><strong>$11.0B</strong></td><td class="col-latest"><strong>$7.1B</strong></td><td class="col-latest"><strong>$6.39</strong></td><td class="col-latest"><strong>$10.3B</strong></td><td class="col-latest">−$3.04B</td><td class="col-latest pos"><strong>$7.3B</strong></td><td>$7.9B</td><td>$3,900</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--text-faint);margin-top:8px">
+      *FY2023 = standalone Newmont (Newcrest close 11/2023, không góp vào full year).
+      **FY2024 = first full year combined với Newcrest → rupture, không so sánh trực tiếp.
+      EPS 2023 âm do Newcrest deal costs (goodwill impairment, integration).
+      Gold price avg = LBMA năm đó.
+    </p>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px">
+    <div class="card">
+      <div class="card-title neu" style="color:var(--amber)">Quan sát chính</div>
+      <ul style="font-size:12.5px;line-height:1.7;padding-left:20px;margin-top:8px">
+        <li><strong>Revenue 2020→2025 tăng 2×</strong>: $11.4B → $22.7B (do giá vàng + Newcrest)</li>
+        <li><strong>FCF kỷ lục 2025: $7.3B</strong> — tăng 140% YoY</li>
+        <li><strong>EPS biến động mạnh</strong>: −$2.06 (2022) → $6.39 (2025) — chu kỳ vàng rõ ràng</li>
+        <li><strong>Debt tăng $2.5B → $7.9B</strong>: do Newcrest deal + capex</li>
+        <li><strong>2 năm lỗ (2022, 2023)</strong>: suy thoái vàng + Newcrest charges</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠️ Bẫy khi đọc</div>
+      <ul style="font-size:12.5px;line-height:1.7;padding-left:20px;margin-top:8px">
+        <li><strong>EPS 2025 $6.39 = đỉnh chu kỳ</strong>, không phải "bình thường mới"</li>
+        <li><strong>P/E 12.7× dựa EPS này = low vì mẫu số cao</strong></li>
+        <li><strong>Pre-2024 không comparable</strong> — Newcrest thêm ~50% revenue nhưng cũng ~50% cost</li>
+        <li><strong>Gold price driver</strong>: giá vàng 2025 avg $3,900, nếu 2026 avg $3,500 → revenue −10%</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 6: SEGMENT ANALYSIS ============ -->
+<section id="sec-segment" class="section">
+  <div class="section-title"><span class="num">6</span><h2>Phân tích mảng — Mine portfolio</h2><div class="divider"></div></div>
+  <div class="section-sub">Top mines theo sản lượng + AISC. Newmont không phân chia "segment" theo SaaS mà theo mỏ địa lý.</div>
+
+  <div class="card">
+    <div class="card-title">6.1 Top Tier-1 mines (FY2025 ước tính)</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Mỏ</th><th style="text-align:left">Quốc gia</th><th>Sản lượng (koz)</th><th>AISC ($/oz)</th><th>Nguồn gốc</th><th>Vai trò</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left">Peñasquito</td><td style="text-align:left">Mexico</td><td>~700</td><td>~$1,200</td><td>Original</td><td>Top 1 by volume</td></tr>
+          <tr><td style="text-align:left">Yanacocha</td><td style="text-align:left">Peru</td><td>~500</td><td>~$1,000</td><td>Original</td><td>Sulfide expansion ramping</td></tr>
+          <tr><td style="text-align:left">Boddington</td><td style="text-align:left">Australia</td><td>~700</td><td>~$1,300</td><td>Original</td><td>Vàng-đồng by-product</td></tr>
+          <tr><td style="text-align:left">Cadia</td><td style="text-align:left">Australia</td><td>~600</td><td>~$900</td><td>Newcrest</td><td>Low-cost Tier-1</td></tr>
+          <tr><td style="text-align:left">Lihir</td><td style="text-align:left">Papua New Guinea</td><td>~700</td><td>~$1,500</td><td>Newcrest</td><td>Geothermal/refractory ore</td></tr>
+          <tr><td style="text-align:left">Ahafo</td><td style="text-align:left">Ghana</td><td>~500</td><td>~$1,100</td><td>Original</td><td>+ Ahafo North ramping</td></tr>
+          <tr><td style="text-align:left">CC&V (đã thoái vốn 2024)</td><td style="text-align:left">USA</td><td>—</td><td>—</td><td>Original</td><td>Divested</td></tr>
+          <tr><td style="text-align:left">Pueblo Viejo (JV 50/50 w/ Barrick)</td><td style="text-align:left">Dominican Republic</td><td>~250 (NEM share)</td><td>~$1,200</td><td>Original</td><td>Expansion underway</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--text-faint);margin-top:8px">
+      Số liệu ước tính từ Newmont Q4 2024 deck + Q1 2026 results. Per-mine exact koz/AISC cần pull deck chính thức.
+      Tier-1 = mỏ >500koz/năm, life >10 năm, AISC lower-half industry.
+    </p>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px">
+    <div class="card">
+      <div class="card-title">6.2 Mix sản phẩm</div>
+      <ul style="font-size:12.5px;line-height:1.7;padding-left:20px;margin-top:8px">
+        <li><strong>Vàng:</strong> ~5.9Moz — 85% revenue</li>
+        <li><strong>Đồng:</strong> 135kt — ~10% revenue (Boddington, Peñasquito, Cadia)</li>
+        <li><strong>Bạc:</strong> 28Moz — ~5% revenue</li>
+        <li><strong>By-product credit</strong>: doanh thu đồng+bạc giảm AISC từ $1,609 (co-product) xuống $1,358 (by-product) — <strong>chênh $251/oz</strong></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">6.3 Địa lý (sản lượng 2025)</div>
+      <ul style="font-size:12.5px;line-height:1.7;padding-left:20px;margin-top:8px">
+        <li><strong>Úc:</strong> ~30% (Boddington, Cadia, Tanami, Telfer)</li>
+        <li><strong>Mỹ:</strong> ~15% (Nevada, Colorado)</li>
+        <li><strong>Canada:</strong> ~10% (Brucejack, Éléonore, Red Chris)</li>
+        <li><strong>Peru + Mexico:</strong> ~20% (Yanacocha, Peñasquito)</li>
+        <li><strong>Ghana + Suriname:</strong> ~10% (Ahafo, Akyem, Merian)</li>
+        <li><strong>PNG + Argentina + DR:</strong> ~15% (Lihir, Cerro Negro, Pueblo Viejo)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 7: AI INFRASTRUCTURE THESIS ============ -->
+<section id="sec-thesis" class="section">
+  <div class="section-title"><span class="num">7</span><h2>Luận điểm đầu tư 3-5 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">Đây không phải thesis "AI miễn phí rủi ro". Đây là thesis "đòn bẩy giá vàng có quản trị rủi ro chu kỳ".</div>
+
+  <div class="card" style="border-left:3px solid var(--amber);margin-bottom:18px">
+    <div class="card-title neu" style="color:var(--amber)">7.1 Thesis chính</div>
+    <p style="font-size:14px;line-height:1.7;margin-top:10px">
+      <strong>Nếu giá vàng giữ $3,500-4,500/oz trong 3-5 năm tới</strong>, Newmont in ra FCF $5-8B/năm,
+      dùng để trả nợ ($7.9B → $5B), buyback ($6B authorization mới), và dividend (yield ~1%).
+      Tại P/E forward 8.8× và P/NAV 25% discount, cổ phiếu phản ánh kỳ vọng thấp.
+      <strong>Đòn bẩy giá vàng 2-3×</strong>: vàng +20% → cổ phiếu NEM có thể +40-60%.
+    </p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="border-left:3px solid var(--green)">
+      <div class="card-title pos">7.2 Điều kiện để thesis đúng</div>
+      <ol style="font-size:12.5px;line-height:1.75;padding-left:20px;margin-top:8px">
+        <li><strong>Real yields giảm</strong>: 10Y TIPS từ 2.24% về 1.5% → vàng phục hồi</li>
+        <li><strong>Central bank tiếp tục mua</strong>: PBoC + EM CBs giữ nhịp ~1,000 tấn/năm</li>
+        <li><strong>USD yếu lại</strong>: DXY từ 100 về 95 → vàng tăng</li>
+        <li><strong>AISC kiểm soát được</strong>: 2026 $1,680/oz, 2027 quay về $1,400-1,500</li>
+        <li><strong>Newcrest synergies realize</strong>: $500M claim转化为FCF thật</li>
+        <li><strong>Sản lượng ổn định</strong>: 5.3Moz (2026) → 6Moz+ (2027+)</li>
+        <li><strong>Divestiture thành công</strong>: 6 mỏ Tier-2 bán được giá hợp lý</li>
+        <li><strong>Geopolitical không bùng nổ</strong>: không nationalization ở Peru/Ghana/PNG</li>
+      </ol>
+    </div>
+
+    <div class="card" style="border-left:3px solid var(--red)">
+      <div class="card-title neg">7.3 Điều kiện khiến thesis sai</div>
+      <ol style="font-size:12.5px;line-height:1.75;padding-left:20px;margin-top:8px">
+        <li><strong>Real yields tiếp tục tăng</strong>: TIPS >2.5% → vàng mất hấp dẫn</li>
+        <li><strong>Gold về $2,500</strong>: EPS NEM −50%, P/E dilate lên 30×</li>
+        <li><strong>Gold về $1,800</strong>: NEM lỗ (AISC > giá), P/E vô nghĩa</li>
+        <li><strong>Central bank giảm mua</strong>: nếu PBoC dừng 23 tháng chain</li>
+        <li><strong>AISC vượt $2,000/oz</strong>: lạm phát chi phí + royalty</li>
+        <li><strong>Reserve depletion</strong>: grade decline tiếp tục, không bổ sung được</li>
+        <li><strong>Newcrest goodwill impairment</strong>: nếu deal prove overpaid</li>
+        <li><strong>Nationalization</strong>: Ghana đã công bố plan mua 30% sản lượng từ 7/2026</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">7.4 KPI theo dõi hàng quý</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">KPI</th><th>Vì sao quan trọng</th><th>Tín hiệu tích cực</th><th>Tín hiệu tiêu cực</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left"><strong>AISC by-product ($/oz)</strong></td><td>Chi phí thật của 1 oz vàng</td><td class="pos">&lt;$1,500</td><td class="neg">&gt;$1,800</td></tr>
+          <tr><td style="text-align:left"><strong>Sản lượng attributable (Moz)</strong></td><td>Quy mô + trend</td><td class="pos">≥6Moz</td><td class="neg">&lt;5Moz</td></tr>
+          <tr><td style="text-align:left"><strong>Free cash flow ($B)</strong></td><td>Tiền thật tạo ra</td><td class="pos">&gt;$5B/năm</td><td class="neg">&lt;$2B/năm</td></tr>
+          <tr><td style="text-align:left"><strong>Net debt ($B)</strong></td><td>Tải nợ</td><td class="pos">&lt;$3B</td><td class="neg">&gt;$6B</td></tr>
+          <tr><td style="text-align:left"><strong>Reserves (Moz YoY)</strong></td><td>Replace production?</td><td class="pos">Tăng hoặc flat</td><td class="neg">Giảm &gt;5%/năm</td></tr>
+          <tr><td style="text-align:left"><strong>Real yields 10Y TIPS</strong></td><td>Driver vàng chính</td><td class="pos">&lt;1.5%</td><td class="neg">&gt;2.5%</td></tr>
+          <tr><td style="text-align:left"><strong>DXY</strong></td><td>Vàng inverse USD</td><td class="pos">&lt;95</td><td class="neg">&gt;102</td></tr>
+          <tr><td style="text-align:left"><strong>Gold spot ($/oz)</strong></td><td>Biên lợi nhuận trực tiếp</td><td class="pos">&gt;$3,800</td><td class="neg">&lt;$2,500</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout plain" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+      <strong>Theo dõi 2 thứ mỗi quý</strong>: (1) AISC — nếu tăng liên tục 2 quý, rủi ro. (2) Gold price + real yields.
+      Newmont <strong>không phải cổ phiếu "mua và quên"</strong>. Phải review mỗi quý earnings xem AISC và FCF path có đúng không.
+      Nếu vàng về $2,500 và AISC vẫn $1,680 → biên còn $820/oz × 5Moz = $4.1B gross profit (không đủ cho opex + capex).
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 8: VALUATION ============ -->
+<section id="sec-valuation" class="section">
+  <div class="section-title"><span class="num">8</span><h2>Định giá — P/E, P/B, EV/EBITDA</h2><div class="divider"></div></div>
+  <div class="section-sub">Current vs 5Y/10Y avg + 3-zone verdict. ⚠️ P/E bị bóp méo bởi chu kỳ — đọc kỹ.</div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-title">8.1 Bảng định giá</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Metric</th><th>Current</th><th>5Y Avg</th><th>5Y Med</th><th>10Y Avg</th><th>10Y Med</th><th>%-ile</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left"><strong>P/E TTM</strong></td><td class="col-latest">~12.7×</td><td>≈23.7×</td><td>≈16.1×</td><td>≈25.6×</td><td>≈16.5×</td><td class="pos">~10% (thấp)</td><td class="pos">Cheap-ish*</td></tr>
+          <tr><td style="text-align:left">Forward P/E (FY26E EPS ~$11.2)</td><td>~8.8×</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>Cheap</td></tr>
+          <tr><td style="text-align:left"><strong>P/B</strong></td><td class="col-latest">~3.0×</td><td>≈1.97×</td><td>≈1.76×</td><td>≈1.74×</td><td>≈1.56×</td><td class="neg">~89% (đắt)</td><td class="neg">Expensive</td></tr>
+          <tr><td style="text-align:left"><strong>EV/EBITDA</strong></td><td class="col-latest">~6.2×</td><td>≈9.7×</td><td>—</td><td>—</td><td>—</td><td class="pos">~25% (thấp)</td><td class="pos">Cheap</td></tr>
+          <tr><td style="text-align:left">P/NAV (analyst est.)</td><td>~25% discount</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="pos">Cheap</td></tr>
+          <tr><td style="text-align:left">FCF yield</td><td>~7%</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="pos">Hấp dẫn</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--text-faint);margin-top:8px">
+      *<strong>CYCLICAL VALUE TRAP</strong>: P/E 12.7× trông rẻ nhưng EPS $7.71 = đỉnh chu kỳ.
+      Nếu EPS chuẩn hóa (cycle average) = $3-4, normalized P/E = 25-32×.
+      Median 10Y P/E (16.5×) đáng tin hơn average (25.6×) vì bị kéo bởi 2 năm bơm (2018: 54×, 2021: 42×).
+      4 năm (2016, 2017, 2022, 2023) NEM lỗ → P/E = N/A → sample bị lệch.
+    </p>
+  </div>
+
+  <div class="card" style="border-left:3px solid var(--amber)">
+    <div class="card-title neu" style="color:var(--amber)">⚠️ Bẫy chu kỳ — quan trọng nhất</div>
+    <p style="font-size:13.5px;line-height:1.7;margin-top:10px">
+      <strong>P/E 12.7× không phải "rẻ thực"</strong>. P/E thường <strong>thấp ở đỉnh chu kỳ</strong> (EPS cao) và
+      <strong>cao ở đáy chu kỳ</strong> (EPS thấp/lỗ). Case NEM:
+    </p>
+    <ul style="font-size:12.5px;padding-left:20px;margin-top:8px;line-height:1.7">
+      <li>2025 (đỉnh vàng): EPS $6.39 → P/E 12.7× — trông "rẻ"</li>
+      <li>2022 (đáy): EPS −$2.06 → P/E = N/A — trông "đắt"</li>
+      <li>2018 (chu kỳ thường): EPS $0.09 → P/E 54× — trông "phồng"</li>
+    </ul>
+    <p style="font-size:13px;line-height:1.65;margin-top:10px">
+      <strong>Cách đúng</strong>: dùng <strong>P/NAV</strong> (NPV của trữ lượng), <strong>EV/EBITDA</strong>,
+      và <strong>FCF yield</strong> — 3 chỉ số này ít bị chu kỳ bóp méo hơn P/E.
+      Cả 3 đều báo "rẻ" cho NEM (P/NAV −25%, EV/EBITDA 6.2× vs avg 9.7×, FCF yield 7%).
+    </p>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">8.2 Verdict tổng hợp — 3 vùng</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Vùng</th><th>Điều kiện</th><th>Ý nghĩa</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left"><strong>Comfort Zone</strong></td><td>Gần/dưới median lịch sử + thesis rõ</td><td>Margin of safety</td></tr>
+          <tr><td style="text-align:left"><strong>Neutral Zone</strong></td><td>Cao hơn median, growth xác nhận</td><td>Có thể OK, theo dõi</td></tr>
+          <tr><td class="col-latest"><strong>⚠️ Mixed Zone (NEM)</strong></td><td>P/E + EV/EBITDA rẻ, P/B đắt</td><td>Phải understand cyclical</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:10px;line-height:1.6">
+      <strong>Verdict NEM:</strong> <span class="neu">Trung tính nghiêng rẻ</span> — rẻ theo asset-based (NAV, EV/EBITDA, FCF yield),
+      đắt theo earnings-based (P/B). Đòn bẩy chính = giá vàng.
+      <strong>Nếu bạn tin vàng giữ $3,500+</strong>: NEM hấp dẫn ở forward P/E 8.8×.
+      <strong>Nếu bạn nghĩ vàng về $2,500</strong>: hiện tại chưa đủ cheap.
+    </p>
+  </div>
+
+  <div class="callout plain" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+      P/E 12.7× cho NEM <strong>giống như P/E 8× cho ExxonMobil ở giá dầu $120</strong> — trông rẻ, nhưng đó là đỉnh chu kỳ.
+      Đừng đọc P/E của miner mà không hỏi: "EPS này ở đâu trong chu kỳ giá vàng?".
+      <strong>Định giá đúng cách</strong>: NAV (asset), EV/EBITDA (cash flow), FCF yield (real cash).
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 9: PEER COMPARISON ============ -->
+<section id="sec-peer" class="section">
+  <div class="section-title"><span class="num">9</span><h2>So sánh peer — Gold miners + streaming</h2><div class="divider"></div></div>
+  <div class="section-sub">NEM vs 6 peer. Số liệu TTM, early July 2026. Streaming (WPM/FNV) có model khác hoàn toàn.</div>
+
+  <div class="card">
+    <div class="card-title">9.1 Peer table</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Company</th><th>Ticker</th><th>Model</th><th>Mcap</th><th>Production</th><th>AISC</th><th>P/E TTM</th><th>EV/EBITDA</th><th>Beta</th><th>Comment</th></tr></thead>
+        <tbody>
+          <tr class="row-strong"><td style="text-align:left">Newmont</td><td class="col-latest">NEM</td><td>Miner</td><td class="col-latest">$105B</td><td class="col-latest">5.9Moz</td><td>$1,358</td><td class="col-latest">12.7×</td><td>6.2×</td><td>0.48</td><td>#1 scale, FCF kỷ lục</td></tr>
+          <tr><td style="text-align:left">Agnico Eagle</td><td>AEM</td><td>Miner</td><td>$78B</td><td>3.45Moz</td><td>$1,339</td><td>14.6×</td><td>7.8×</td><td>0.60</td><td>Premium quality, lowest AISC</td></tr>
+          <tr><td style="text-align:left">Barrick Mining</td><td>B</td><td>Miner</td><td>$64B</td><td>3.26Moz</td><td>$1,373</td><td>10.1×</td><td>6.0×</td><td>1.10</td><td>Rebrand 2025, copper mix</td></tr>
+          <tr><td style="text-align:left">AngloGold</td><td>AU</td><td>Miner</td><td>$42B</td><td>3.09Moz</td><td>$1,751</td><td>12.3×</td><td>6.6×</td><td>0.67</td><td>AISC cao nhất, Africa focus</td></tr>
+          <tr><td style="text-align:left">Kinross</td><td>KGC</td><td>Miner</td><td>$30B</td><td>2.01Moz</td><td>$1,500</td><td>10.5×</td><td>5.7×</td><td>1.41</td><td>Rủi ro địa chính trị (Russia history)</td></tr>
+          <tr><td style="text-align:left">Wheaton</td><td>WPM</td><td>Streaming</td><td>$52B</td><td>~0.7 GEO</td><td>~$0</td><td>29.1×</td><td>22.0×</td><td>1.19</td><td>Margin 75%, P/E premium</td></tr>
+          <tr><td style="text-align:left">Franco-Nevada</td><td>FNV</td><td>Royalty</td><td>$41B</td><td>~0.5 GEO</td><td>~$0</td><td>30.0×</td><td>21.1×</td><td>0.90</td><td>Royalty thuần, không capex</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px">
+    <div class="card">
+      <div class="card-title pos">NEM rẻ hơn ai?</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.7">
+        <li>Rẻ hơn <strong>AEM</strong>: 12.7× vs 14.6× P/E (AEM = premium quality)</li>
+        <li>Rẻ hơn <strong>streaming/royalty</strong>: 12.7× vs 29-30× P/E</li>
+        <li>EV/EBITDA 6.2× — thấp thứ 2 trong 5 miners</li>
+        <li>AISC $1,358 — quartile 1 (tốt nhất trong 5 miners)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title neg">NEM đắt hơn ai?</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.7">
+        <li>Đắt hơn <strong>Barrick</strong>: 12.7× vs 10.1× P/E (B = diversi + copper)</li>
+        <li>Đắt hơn <strong>Kinross</strong>: 12.7× vs 10.5× P/E</li>
+        <li>P/B 3.0× — cao nhất nhóm (vì retained earnings phồng)</li>
+        <li>Beta 0.48 — kỳ lạ thấp (market coi NEM defensive?)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout plain" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+      Trong nhóm 5 miners, NEM đứng <strong>giữa</strong>: đắt hơn B/KGC (những miner "kém chất lượng hơn"),
+      rẻ hơn AEM (miner "chất lượng cao nhất"). <strong>Streaming/royalty (WPM/FNV) là môn khác</strong> —
+      model không có AISC, margin 75%+, xứng đáng P/E 30×.
+      Nếu bạn muốn <strong>pure lever vào giá vàng</strong>: NEM/AEM. Nếu muốn <strong>"vàng không rủi ro vận hành"</strong>: WPM/FNV.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 10: BALANCE SHEET & FCF ============ -->
+<section id="sec-bs" class="section">
+  <div class="section-title"><span class="num">10</span><h2>Bảng cân đối, Capex và Free Cash Flow</h2><div class="divider"></div></div>
+  <div class="section-sub">Khác tech companies (FCF âm vì capex AI lớn): NEM FCF DƯƠNG kỷ lục khi giá vàng cao. Capex = sustaining + development.</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">10.1 Balance sheet snapshot (FY2025)</div>
+      <ul style="font-size:12.5px;line-height:1.8;padding-left:20px;margin-top:8px">
+        <li><strong>Cash & equivalents:</strong> ~$3.6-8.8B (range theo quarter)</li>
+        <li><strong>Total debt:</strong> $7.9B (gồm Newcrest debt assumption)</li>
+        <li><strong>Net debt:</strong> ~$4.3-5B</li>
+        <li><strong>D/E ratio:</strong> 15.76% — thấp, mạnh</li>
+        <li><strong>Current ratio:</strong> 2.44 — thanh khoản tốt</li>
+        <li><strong>ARO (mine closure):</strong> ~$1.6-1.8B (ước tính, cần verify 10-K)</li>
+        <li><strong>Interest expense 2025:</strong> $229M — rất thấp so với FCF $7.3B</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">10.2 FCF và Capex</div>
+      <ul style="font-size:12.5px;line-height:1.8;padding-left:20px;margin-top:8px">
+        <li><strong>FCF 2025: $7.3B</strong> — kỷ lục (+140% YoY)</li>
+        <li><strong>OCF 2025: $10.3B</strong></li>
+        <li><strong>Capex 2025: $3.0B</strong> (sustaining + development)</li>
+        <li><strong>FCF 2024: $3.0B</strong> — post-Newcrest first full year</li>
+        <li><strong>D&A 2025: ~$4.2B</strong> — phi tiền, FCF > Net income</li>
+        <li><strong>FCF/Net income ratio:</strong> ~1.0× (đặc thù capital-intensive)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px;border-left:3px solid var(--green)">
+    <div class="card-title pos">✅ Tốt cho nhà đầu tư</div>
+    <ul style="font-size:12.5px;line-height:1.75;padding-left:20px;margin-top:8px">
+      <li><strong>FCF dương kỷ lục</strong> — commodity producer tạo tiền thật khi giá bán cao. Không giống tech capex-heavy.</li>
+      <li><strong>Debt low</strong> — D/E 15.76%, interest expense chỉ $229M</li>
+      <li><strong>Buyback mới $6B authorized</strong> + dividend yield ~1%</li>
+      <li><strong>Capital return 2025: $3.4B</strong> (div + buyback)</li>
+    </ul>
+  </div>
+
+  <div class="card" style="margin-top:12px;border-left:3px solid var(--red)">
+    <div class="card-title neg">⚠️ Rủi ro</div>
+    <ul style="font-size:12.5px;line-height:1.75;padding-left:20px;margin-top:8px">
+      <li><strong>FCF phụ thuộc giá vàng</strong>: nếu vàng $2,500 → FCF có thể $1-2B (vẫn dương nhưng nhỏ)</li>
+      <li><strong>Capex development tăng</strong>: Ahafo North, Tanami Exp 2 — capex 2026 có thể $3.5-4B</li>
+      <li><strong>ARO revision risk</strong>: chi phí đóng mỏ có thể tăng (environmental)</li>
+      <li><strong>Acquisition debt</strong>: $7.9B debt phần lớn từ Newcrest — cần trả tiếp</li>
+    </ul>
+  </div>
+
+  <div class="callout plain" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+      Newmont <strong>không có "vấn đề FCF"</strong> như tech companies (capex AI khổng lồ).
+      FCF $7.3B = tiền thật in ra mỗi năm. Nhưng <strong>"FCF này bền không?"</strong> = câu hỏi giá vàng.
+      Nếu vàng $4,000+: FCF bền. Nếu vàng $2,000: FCF giảm 70-80%.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 11: RISK MATRIX ============ -->
+<section id="sec-risk" class="section">
+  <div class="section-title"><span class="num">11</span><h2>Ma trận rủi ro</h2><div class="divider"></div></div>
+  <div class="section-sub">Rủi ro đặc thù gold mining + rủi ro chung. Prob/Impact = judgment định tính.</div>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table class="risk-table">
+        <thead><tr><th style="text-align:left">Risk</th><th>Prob</th><th>Impact</th><th>Evidence</th><th>KPI watch</th><th>Investor meaning</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left"><strong>Gold price decline</strong> (về $2,500)</td><td class="neg">Cao</td><td class="neg">Cao</td><td>−26% từ ATH đã xảy ra</td><td>Gold spot, real yields</td><td>EPS −50%, P/E dilate</td></tr>
+          <tr><td style="text-align:left"><strong>AISC inflation</strong> (guide $1,680 2026)</td><td class="neg">Cao</td><td class="neg">Cao</td><td>+24% YoY AISC guide</td><td>AISC/oz quarterly</td><td>Margin thu hẹp</td></tr>
+          <tr><td style="text-align:left"><strong>Cyclical value trap</strong></td><td class="neg">Cao</td><td class="neg">Trung</td><td>P/E 12.7× misleading</td><td>Normalized EPS vs reported</td><td>Buy đỉnh chu kỳ</td></tr>
+          <tr><td style="text-align:left"><strong>Nationalization / political</strong></td><td class="neu">Thấp-Trung</td><td class="neg">Cao</td><td>Ghana plan mua 30% sản lượng</td><td>Country risk monitoring</td><td>Mất mỏ chính</td></tr>
+          <tr><td style="text-align:left"><strong>Newcrest integration</strong></td><td class="neu">Trung</td><td class="neu">Trung</td><td>$500M synergy claim chưa verify</td><td>Synergy realization</td><td>Goodwill impairment risk</td></tr>
+          <tr><td style="text-align:left"><strong>Reserve depletion</strong></td><td class="neg">Cao</td><td class="neu">Trung</td><td>Grade decline −7-13% decade</td><td>Reserves YoY</td><td>Production decline long-term</td></tr>
+          <tr><td style="text-align:left"><strong>Tailings dam failure</strong></td><td class="pos">Thấp</td><td class="neg">Cao</td><td>Brumadinho precedent (Vale 2019)</td><td>TSF audit reports</td><td>Catastrophic if happens</td></tr>
+          <tr><td style="text-align:left"><strong>Real yields tăng</strong></td><td class="neu">Trung</td><td class="neg">Cao</td><td>TIPS 2.24% (high)</td><td>10Y TIPS yield</td><td>Gold headwind</td></tr>
+          <tr><td style="text-align:left"><strong>USD mạnh (DXY)</strong></td><td class="neu">Trung</td><td class="neg">Trung</td><td>DXY ~100.9</td><td>DXY trend</td><td>Gold inverse</td></tr>
+          <tr><td style="text-align:left"><strong>Central bank stop buying</strong></td><td class="pos">Thấp</td><td class="neg">Cao</td><td>PBoC 23-month chain</td><td>WGC quarterly CB demand</td><td>Structural floor mất</td></tr>
+          <tr><td style="text-align:left"><strong>Counterparty (ETF outflow)</strong></td><td class="neu">Trung</td><td class="neu">Trung</td><td>Western ETFs selling 2026</td><td>GLD/IAU holdings</td><td>Western demand weak</td></tr>
+          <tr><td style="text-align:left"><strong>Execution (Ahafo, Tanami)</strong></td><td class="neu">Trung</td><td class="neu">Trung</td><td>Project delays common</td><td>Production guidance vs actual</td><td>Lower production</td></tr>
+          <tr><td style="text-align:left"><strong>Capital allocation</strong></td><td class="pos">Thấp</td><td class="neu">Trung</td><td>$6B buyback new auth</td><td>Buyback $ vs P/E at buyback</td><td>Value destroy if at peak</td></tr>
+          <tr><td style="text-align:left"><strong>Climate / ESG</strong></td><td class="neu">Trung</td><td class="neu">Trung</td><td>Carbon intensity, water use</td><td>tCO2/oz</td><td>Regulatory cost</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 12: 33,000 USD LENS ============ -->
+<section id="sec-33k" class="section">
+  <div class="section-title"><span class="num">12</span><h2>Góc nhìn $33.000</h2><div class="divider"></div></div>
+  <div class="section-sub">Không khuyến nghị. Framework tham khảo cho nhà đầu tư 3-5 năm.</div>
+
+  <div class="grid-2">
+    <div class="card" style="border-left:3px solid var(--green)">
+      <div class="card-title pos">12.1 Lump-sum (1 lần)</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.7;margin-top:8px">
+        <li><strong>$33.000 @ $98.20 = 336 shares</strong></li>
+        <li>✅ Đơn giản, ít心理</li>
+        <li>✅ Nếu vàng tăng → full upside</li>
+        <li>❌ Rủi ro timing — nếu mua đỉnh chu kỳ, drawdown sâu</li>
+        <li>❌ Beta 0.48 không phản ánh vol thật — có thể giảm 40%+ khi vàng sập</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left:3px solid var(--blue)">
+      <div class="card-title blue">12.2 DCA (chia đợt)</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.7;margin-top:8px">
+        <li><strong>Đợt 1 (30%): $10.000</strong> — entry ngay nếu OK với thesis</li>
+        <li><strong>Đợt 2 (25%): $8.000</strong> — khi vàng về $3,500 hoặc NEM về $85</li>
+        <li><strong>Đợt 3 (25%): $8.000</strong> — sau Q3 earnings confirm AISC ổn định</li>
+        <li><strong>Đợt 4 (20%): $7.000</strong> — reserve cho market correction</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">12.3 Drawdown tolerance</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Scenario</th><th>NEM Drawdown</th><th>$33.000 loss</th><th>Ý nghĩa</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left">Sửa nhẹ (−10%)</td><td>$98.20 → $88</td><td class="neg">−$3.300</td><td>Chấp nhận được</td></tr>
+          <tr><td style="text-align:left">Sửa vừa (−20%)</td><td>$98.20 → $78</td><td class="neg">−$6.600</td><td>Cần tin thesis</td></tr>
+          <tr><td style="text-align:left">Sửa sâu (−30%)</td><td>$98.20 → $69</td><td class="neg">−$9.900</td><td>Có hoặc không chịu được?</td></tr>
+          <tr><td style="text-align:left">Sửa nặng (−40%)</td><td>$98.20 → $59</td><td class="neg">−$13.200</td><td>Nếu vàng về $2,500</td></tr>
+          <tr><td style="text-align:left">Sửa thảm (−50%)</td><td>$98.20 → $49</td><td class="neg">−$16.500</td><td>Nếu vàng về $2,000 + recession</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">12.4 Checklist trước khi giải ngân</div>
+    <ul style="font-size:12.5px;line-height:1.8;padding-left:20px;margin-top:8px">
+      <li>☐ Tôi hiểu Newmont kiếm tiền = bán vàng theo giá thị trường?</li>
+      <li>☐ Tôi hiểu AISC là gì và vì sao $1,358 quan trọng?</li>
+      <li>☐ Tôi hiểu đòn bẩy giá vàng: vàng −30% → cổ phiếu −50%?</li>
+      <li>☐ Tôi hiểu P/E 12.7× = bẫy chu kỳ?</li>
+      <li>☐ Tôi chịu được drawdown 40% (−$13.200) mà không panic sell?</li>
+      <li>☐ Tôi sẽ theo dõi giá vàng + real yields + AISC hàng quý?</li>
+      <li>☐ Tôi hiểu Newcrest deal + rủi ro integration?</li>
+      <li>☐ Tôi đã quyết định DCA hay lump-sum?</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ SECTION 13: SCENARIO ANALYSIS ============ -->
+<section id="sec-scenario" class="section">
+  <div class="section-title"><span class="num">13</span><h2>Phân tích kịch bản 3-5 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">3 kịch bản. Không phải dự báo — là framework "nếu X thì Y".</div>
+
+  <div class="grid-3">
+    <div class="card" style="border-top:3px solid var(--green)">
+      <div class="card-title pos">🟢 Bull Case</div>
+      <ul style="font-size:12px;padding-left:18px;line-height:1.7;margin-top:8px">
+        <li>Vàng $5,000+ (ATH mới)</li>
+        <li>Real yields &lt; 1.5%</li>
+        <li>Central bank mua &gt;1,500 tấn/năm</li>
+        <li>NEM FCF $10B+/năm</li>
+        <li>AISC kiểm soát $1,500/oz</li>
+        <li>P/E rerate 15×</li>
+        <li><strong>Cổ phiếu ~$180-220</strong></li>
+        <li><strong>+80-120% upside</strong></li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:3px solid var(--amber)">
+      <div class="card-title neu">🟡 Base Case</div>
+      <ul style="font-size:12px;padding-left:18px;line-height:1.7;margin-top:8px">
+        <li>Vàng $3,500-4,500</li>
+        <li>Real yields 1.8-2.2%</li>
+        <li>Central bank mua tiếp 1,000 tấn</li>
+        <li>NEM FCF $5-7B/năm</li>
+        <li>AISC $1,600-1,700</li>
+        <li>P/E giữ 10-12×</li>
+        <li><strong>Cổ phiếu ~$100-130</strong></li>
+        <li><strong>+0-30% upside</strong></li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:3px solid var(--red)">
+      <div class="card-title neg">🔴 Bear Case</div>
+      <ul style="font-size:12px;padding-left:18px;line-height:1.7;margin-top:8px">
+        <li>Vàng về $2,500</li>
+        <li>Real yields &gt; 2.5%</li>
+        <li>Central bank giảm mua</li>
+        <li>NEM FCF $1-2B/năm</li>
+        <li>AISC $1,800+</li>
+        <li>P/E dilate hoặc N/A (lỗ)</li>
+        <li><strong>Cổ phiếu ~$50-65</strong></li>
+        <li><strong>−35-50% downside</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">13.1 Probabilities (judgment, không khoa học)</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Scenario</th><th>Prob ước tính</th><th>Expected return</th><th>Risk to $33.000</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left">Bull (vàng $5,000+)</td><td class="pos">~25%</td><td class="pos">+80-120%</td><td class="pos">$26-39K gain</td></tr>
+          <tr><td style="text-align:left">Base (vàng $3,500-4,500)</td><td>~50%</td><td class="pos">+0-30%</td><td>$0-10K gain</td></tr>
+          <tr><td style="text-align:left">Bear (vàng $2,500)</td><td class="neg">~25%</td><td class="neg">−35-50%</td><td class="neg">−$12-17K loss</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--text-faint);margin-top:8px">
+      Probabilities = judgment of báo cáo, KHÔNG phải model định lượng.
+      Expected value = (0.25 × +100%) + (0.50 × +15%) + (0.25 × −40%) = +23.75% over 3-5 năm.
+      <strong>Nhưng phân phối risk</strong>: 25% trường hợp mất 40%+ — cần tolerance.
+    </p>
+  </div>
+</section>
+
+<!-- ============ SECTION 14: FINAL CHECKLIST ============ -->
+<section id="sec-checklist" class="section">
+  <div class="section-title"><span class="num">14</span><h2>Final checklist tổng hợp</h2><div class="divider"></div></div>
+  <div class="section-sub">Đọc xong báo cáo — tick từng câu. Nếu &gt;3 câu "chưa" → chưa nên mua.</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🏢 Business</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+        <li>☐ Tôi hiểu Newmont = gold miner #1 thế giới?</li>
+        <li>☐ Tôi hiểu AISC, by-product, co-product?</li>
+        <li>☐ Tôi hiểu Newcrest deal + integration risk?</li>
+        <li>☐ Tôi hiểu trữ lượng 118Moz + 20 năm life?</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">💰 Financial</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+        <li>☐ Tôi hiểu FCF $7.3B kỷ lục phụ thuộc giá vàng?</li>
+        <li>☐ Tôi hiểu P/E 12.7× = bẫy chu kỳ?</li>
+        <li>☐ Tôi hiểu D&A phi tiền → FCF &gt; Net income?</li>
+        <li>☐ Tôi hiểu AISC 2026 tăng $1,680 vì sao?</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Valuation</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+        <li>☐ Tôi hiểu P/E 12.7× vs P/B 3.0× — mâu thuẫn vì sao?</li>
+        <li>☐ Tôi hiểu P/NAV, EV/EBITDA, FCF yield?</li>
+        <li>☐ Tôi hiểu vì sao dùng 3 chỉ số thay vì P/E?</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠️ Risk</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+        <li>☐ Tôi chịu được drawdown 40% (−$13.200)?</li>
+        <li>☐ Tôi hiểu rủi ro nationalization (Ghana 30%)?</li>
+        <li>☐ Tôi hiểu reserve depletion long-term?</li>
+      </ul>
+    </div>
+    <div class="card" style="grid-column:span 2">
+      <div class="card-title neg">🚫 Discipline (KHÔNG)</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+        <li>❌ KHÔNG mua chỉ vì "vàng luôn tăng" — vàng đã −26% từ ATH</li>
+        <li>❌ KHÔNG dùng P/E 12.7× như理由 "rẻ" — đó là bẫy chu kỳ</li>
+        <li>❌ KHÔNG bỏ qua AISC trend — 2026 guide tăng +24%</li>
+        <li>❌ KHÔNG tin FCF $7.3B bền mãi — phụ thuộc giá vàng</li>
+        <li>❌ KHÔNG dùng báo cáo này như lệnh giao dịch</li>
+        <li>✅ Review sau mỗi kỳ earnings + vàng quarterly</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight" class="section">
+  <div class="section-title"><span class="num">15</span><h2>★ Insight: Chu kỳ giá vàng — đây là 2011 hay 2013?</h2><span class="tag amber">Dynamic insight</span><div class="divider"></div></div>
+  <div class="section-sub">Frame 6 (Cyclicality/obsolescence analog). Gold đã +130% 5 năm — đây là siêu chu kỳ hay bong bóng?</div>
+
+  <div class="card">
+    <div class="card-title">15.1 Câu hỏi cốt lõi</div>
+    <p style="font-size:13.5px;line-height:1.7;margin-top:10px">
+      Gold hiện $4,140/oz (−26% từ ATH $5,500 tháng 1/2026). <strong>Câu hỏi $33.000:</strong>
+      đây là <strong>siêu chu kỳ vàng cấu trúc</strong> (như 2002-2011, +600%) hay <strong>bong bóng deflation</strong> (như 2011-2015, −40%)?
+    </p>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">15.2 Bằng chứng BULL (siêu chu kỳ)</div>
+    <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+      <li><strong>Central bank mua 23 tháng liên</strong> (PBoC +10 tấn/tháng 5/2026) — structural floor</li>
+      <li><strong>Reserve depletion</strong>: chỉ 350 mỏ phát hiện 1990-2023, grade −7-13%/decade</li>
+      <li><strong>Underinvestment cycle</strong>: mỏ mới không online đến 2030 (capex cut 2014-2020)</li>
+      <li><strong>Geopolitical + dedollarization</strong>: EM CBs đa dạng hóa khỏi USD</li>
+      <li><strong>Gold demand từ India/China middle class</strong>: structural long-term</li>
+    </ul>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">15.3 Bằng chứng BEAR (bong bóng)</div>
+    <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+      <li><strong>Real yields 2.24% (cao lịch sử)</strong> — gold không sinh lãi, cơ hội持仓 tăng</li>
+      <li><strong>DXY 100.9 (mạnh)</strong> — gold inverse USD</li>
+      <li><strong>Fed diều hâu (Chair Warsh)</strong> — policy不利 gold</li>
+      <li><strong>ETF Western outflows</strong> — Western investors đang bán</li>
+      <li><strong>−26% đã xảy ra trong 6 tháng</strong> — momentum đã break</li>
+    </ul>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">15.4 Historical analogs</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Period</th><th>Gold</th><th>Miners</th><th>Outcome</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left">2002-2011 (super bull)</td><td>$300 → $1,900 (+530%)</td><td>NEM +500%+</td><td class="pos">Bull — structural</td></tr>
+          <tr><td style="text-align:left">2011-2015 (bear)</td><td>$1,900 → $1,050 (−45%)</td><td>NEM −70%</td><td class="neg">Bear — deflation</td></tr>
+          <tr><td style="text-align:left">2018-2020 (bull)</td><td>$1,200 → $2,050 (+70%)</td><td>NEM +120%</td><td class="pos">Bull — COVID + QE</td></tr>
+          <tr><td style="text-align:left"><strong>2021-2026 (current)</strong></td><td>$1,800 → $5,500 → $4,140</td><td>NEM $30 → $135 → $98</td><td class="neu">?</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <div class="callout-title neg">⚠️ HONEST CORRECTION (BẮT BUỘC)</div>
+    <div class="callout-body">
+      <strong>"Siêu chu kỳ vàng" và "bong bóng vỡ" KHÔNG loại nhau</strong>.
+      Cả 2 có thể cùng đúng: <strong>trend dài hạn bullish</strong> (CB buying, reserve depletion) <strong>compatible với</strong>
+      <strong>correction ngắn hạn sâu</strong> (real yields cao, USD mạnh). Case 2011-2015: trend vàng vẫn bullish dài hạn NHƯNG
+      gold vẫn −45% trong 4 năm. <strong>Nếu bạn mua NEM ở $98 và vàng về $2,500 trong 2 năm, bạn mất 40% dù "thesis dài hạn đúng"</strong>.
+      <br><br>
+      <strong>Timing</strong>: ngay cả bull case đúng, bạn có thể wrong 2-3 năm trước khi đúng. NEM không phải "hold through storm" —
+      nó là <strong>cyclical stock</strong>, không phải secular growth.
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title pos">15.5 Verdict + KPI</div>
+    <p style="font-size:13px;line-height:1.7;margin-top:8px">
+      <strong>Verdict (medium confidence):</strong> Gold có <strong>sàn cấu trúc ~$3,000</strong> (CB buying + depletion),
+      <strong>ceiling短 hạn ~$5,500</strong> (real yields). NEM hấp dẫn nếu bạn tin floor $3,000 bền.
+    </p>
+    <p style="font-size:12.5px;line-height:1.65;margin-top:8px"><strong>KPI watchlist:</strong></p>
+    <ul style="font-size:12px;padding-left:20px;line-height:1.7">
+      <li>10Y TIPS yield (target &lt;1.8%)</li>
+      <li>DXY (target &lt;98)</li>
+      <li>Central bank net buying (WGC quarterly)</li>
+      <li>Gold ETF flows (GLD, IAU)</li>
+    </ul>
+  </div>
+</section>
+
+<section id="sec-moat" class="section">
+  <div class="section-title"><span class="num">16</span><h2>★ Insight: AISC moat — biên có giữ được không?</h2><span class="tag amber">Dynamic insight</span><div class="divider"></div></div>
+  <div class="section-sub">Frame 2 (Margin defensibility). AISC NEM $1,358 — quartile 1 ngành. Nhưng guide 2026 tăng +24%.</div>
+
+  <div class="card">
+    <div class="card-title">16.1 AISC trong ngành — NEM đứng đâu?</div>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Công ty</th><th>AISC 2025 ($/oz)</th><th>Quartile</th><th>AISC 2026 guide</th><th>Δ%</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left">AEM (best)</td><td>$1,339</td><td class="pos">Q1</td><td>~$1,450</td><td class="neg">+8%</td></tr>
+          <tr class="row-strong"><td style="text-align:left"><strong>NEM</strong></td><td class="col-latest"><strong>$1,358</strong></td><td class="pos"><strong>Q1</strong></td><td><strong>$1,680</strong></td><td class="neg"><strong>+24%</strong></td></tr>
+          <tr><td style="text-align:left">Barrick</td><td>$1,373</td><td class="pos">Q1</td><td>~$1,500</td><td>+9%</td></tr>
+          <tr><td style="text-align:left">Kinross</td><td>$1,500</td><td>Q2</td><td>—</td><td>—</td></tr>
+          <tr><td style="text-align:left">AngloGold</td><td>$1,751</td><td class="neg">Q4</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">16.2 Tại sao AISC 2026 tăng mạnh?</div>
+    <ul style="font-size:12.5px;padding-left:20px;line-height:1.75;margin-top:8px">
+      <li><strong>Royalty gold-price-linked</strong>: % royalty tăng theo giá vàng → AISC scale với giá</li>
+      <li><strong>$150M sustaining capex hoãn từ 2025</strong> → đẩy vào 2026</li>
+      <li><strong>Thuế quan ~$185/oz potential impact</strong></li>
+      <li><strong>Sản lượng giảm ~10% YoY</strong> (5.3Moz vs 5.9Moz) → fixed cost spread thinner</li>
+      <li><strong>Lạm phát chi phí</strong>: labor, energy, reagents</li>
+    </ul>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">16.3 By-product credit — kết cấu thông minh</div>
+    <p style="font-size:12.5px;line-height:1.65;margin-top:8px">
+      NEM report 2 con số AISC:
+    </p>
+    <ul style="font-size:12.5px;padding-left:20px;line-height:1.7;margin-top:6px">
+      <li><strong>By-product AISC: $1,358</strong> — trừ doanh thu đồng/bạc khỏi cost</li>
+      <li><strong>Co-product AISC: $1,609</strong> — coi đồng/bạc là sản phẩm riêng</li>
+      <li><strong>Chênh $251/oz</strong> = by-product credit</li>
+    </ul>
+    <p style="font-size:12px;color:var(--text-dim);margin-top:8px">
+      <strong>Rủi ro</strong>: nếu giá đồng/bạc giảm, by-product credit giảm → AISC by-product tăng.
+      Đồng 135kt + Bạc 28Moz = ~$1B revenue phụ thuộc commodity prices khác.
+    </p>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <div class="callout-title neg">⚠️ HONEST CORRECTION (BẮT BUỘC)</div>
+    <div class="callout-body">
+      <strong>AISC quartile 1 KHÔNG bảo vệ margin khi giá vàng giảm</strong>.
+      Ngành gold mining là <strong>commodity business</strong> — không có pricing power.
+      Tất cả miners (kể cả NEM) <strong>sell cùng giá vàng</strong>, chỉ khác AISC.
+      AISC thấp = biên dày hơn, NHƯNG khi giá vàng −40%, mọi miners đều bị đau.
+      <br><br>
+      <strong>AISC NEM tăng +24% 2026</strong> = <strong>tín hiệu cảnh báo</strong>.
+      Royalty structure có nghĩa là <strong>AISC tự động tăng khi giá vàng tăng</strong> — ăn mòn một phần đòn bẩy.
+      Đây là <strong>"gold price tax" cấu trúc</strong> — không thể tránh.
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title pos">16.4 Verdict + KPI</div>
+    <p style="font-size:13px;line-height:1.7;margin-top:8px">
+      <strong>Verdict (medium-high confidence):</strong> AISC NEM competitive (Q1 ngành) NHƯNG trend tăng là real concern.
+      Đòn bẩy giá vàng bị royalty structure吃 một phần.
+    </p>
+    <ul style="font-size:12px;padding-left:20px;line-height:1.7;margin-top:8px">
+      <li>AISC by-product quarterly (target &lt;$1,500)</li>
+      <li>Co-product vs by-product gap (target ~$250 — nếu widen = giá đồng/bạc giảm)</li>
+      <li>Cash cost vs AISC (target gap ổn định)</li>
+    </ul>
+  </div>
+</section>
+
+<section id="sec-supply" class="section">
+  <div class="section-title"><span class="num">17</span><h2>★ Insight: Newcrest M&A + portfolio optimization</h2><span class="tag amber">Dynamic insight</span><div class="divider"></div></div>
+  <div class="section-sub">Frame 11 (M&A / sum-of-parts). Deal $19B + thoái vốn 6 mỏ = thesis unlock value?</div>
+
+  <div class="card">
+    <div class="card-title">17.1 Newcrest deal — facts</div>
+    <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+      <li><strong>Close:</strong> 11/2023 (gần 3 năm trước)</li>
+      <li><strong>Value:</strong> ~$19B (gold M&A lớn nhất lịch sử)</li>
+      <li><strong>Ratio:</strong> 0.400 NEM shares per Newcrest share</li>
+      <li><strong>Synergies claim:</strong> $500M run-rate, NPV ~$5B</li>
+      <li><strong>Mines新增:</strong> Cadia, Lihir, Telfer, Brucejack, Red Chris</li>
+      <li><strong>Synergies realized:</strong> "on track / ahead" — qualitative, chưa verify quantitative</li>
+    </ul>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">17.2 Portfolio optimization (divestiture program)</div>
+    <p style="font-size:12.5px;line-height:1.65;margin-top:8px">
+      Post-Newcrest, NEM announced <strong>divest 6 non-core Tier-2 assets</strong>:
+    </p>
+    <div class="table-wrap" style="margin-top:10px">
+      <table class="fin-table">
+        <thead><tr><th style="text-align:left">Asset</th><th style="text-align:left">Quốc gia</th><th style="text-align:left">Status</th><th>Buyer</th></tr></thead>
+        <tbody>
+          <tr><td style="text-align:left">Telfer + Havieron (70%)</td><td style="text-align:left">Australia</td><td style="text-align:left" class="pos">Sold 2024</td><td>Greatland Gold</td></tr>
+          <tr><td style="text-align:left">Akyem</td><td style="text-align:left">Ghana</td><td style="text-align:left" class="pos">Sold 2024</td><td>Zijin Mining (~$1B)</td></tr>
+          <tr><td style="text-align:left">CC&V</td><td style="text-align:left">USA</td><td style="text-align:left" class="pos">Sold 2024</td><td>—</td></tr>
+          <tr><td style="text-align:left">Porcupine, Musselwhite, Éléonore, Cerro Negro</td><td style="text-align:left">Canada/Argentina</td><td style="text-align:left" class="neu">Marketed</td><td>—</td></tr>
+          <tr><td style="text-align:left">Brucejack</td><td style="text-align:left">Canada</td><td style="text-align:left" class="neu">Reported for sale</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">17.3 Sum-of-parts — NEM có đang bị discount?</div>
+    <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+      <li><strong>Market cap:</strong> $105B</li>
+      <li><strong>P/NAV estimate:</strong> ~25% discount (Seeking Alpha analyst)</li>
+      <li><strong>NAV floor (Finbox):</strong> ~$131B</li>
+      <li><strong>Implied:</strong> Market定价 NEM at 75% of NAV — <strong>discount for complexity/integration risk</strong></li>
+      <li><strong>So sánh AEM:</strong> giao dịch premium (~110-115% NAV) — vì "quality + clean integration"</li>
+    </ul>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <div class="callout-title neg">⚠️ HONEST CORRECTION (BẮT BUỘC)</div>
+    <div class="callout-body">
+      <strong>Discount 25% có thể JUSTIFIED</strong>, không phải opportunity.
+      Lý do market discount NEM:
+      <ul style="margin-top:8px;font-size:12px;padding-left:18px;line-height:1.7">
+        <li><strong>Newcrest integration complexity</strong>: 3 năm chưa prove $500M synergies定量</li>
+        <li><strong>Portfolio bloat</strong>: 12+ mines khó quản lý vs AEM 8 mines focused</li>
+        <li><strong>Geographic risk</strong>: 10 quốc gia, 1 số unstable (PNG, Ghana, Suriname)</li>
+        <li><strong>Cyclical EPS</strong>: market reluctant pay NAV premium cho cyclical</li>
+        <li><strong>M&A track record</strong>: Goldcorp 2019 OK, nhưng Newcrest chưa prove</li>
+      </ul>
+      <strong>Trigger cho re-rate</strong>: nếu NEM realize synergies rõ ràng + complete divestitures + improve AISC →
+      discount có thể narrow từ 25% về 10-15% → cổ phiếu +15-20%.
+      <strong>NHƯNG nếu commodity downturn</strong>, discount WIDEN (market(price fear) → cổ phiếu −30%+).
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title pos">17.4 Verdict + KPI</div>
+    <p style="font-size:13px;line-height:1.7;margin-top:8px">
+      <strong>Verdict (medium confidence):</strong> Portfolio optimization là <strong>catalyst thật</strong> nhưng cần thời gian.
+      Discount 25% = "show me" story — NEM phải deliver synergies + divestitures.
+    </p>
+    <ul style="font-size:12px;padding-left:20px;line-height:1.7;margin-top:8px">
+      <li>Synergy realization quantitative (target $500M by 2026)</li>
+      <li>Divestiture completion (target 4/6 mines sold by end 2026)</li>
+      <li>P/NAV discount trend (narrowing = re-rate)</li>
+      <li>Reserves YoY (replace production)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ SECTION 18: TECHNICAL — MODE ACTIVE ============ -->
+<section id="sec-tech" class="section">
+  <div class="section-title"><span class="num">18</span><h2>Kỹ thuật — Mode ACTIVE</h2><span class="tag amber">Non-advice</span><div class="divider"></div></div>
+  <div class="section-sub">Đọc profile giá-khối lượng. KHÔNG phải khuyến nghị mua/bán.</div>
+
+  <div class="card">
+    <div class="card-title">18.1 Tech snapshot (giá NEM 7/7/2026)</div>
+    <div class="grid-3" style="margin-top:10px">
+      <div class="kpi">
+        <div class="kpi-label">Price</div>
+        <div class="kpi-value">$98.20</div>
+        <div class="kpi-delta neg">−27% từ 52W high $134.88</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">52W range</div>
+        <div class="kpi-value">$55–$135</div>
+        <div class="kpi-delta dim">Giữa dải</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Beta (yfinance)</div>
+        <div class="kpi-value">0.48</div>
+        <div class="kpi-delta neg">⚠️ Kỳ lạ thấp cho miner</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">18.2 Pattern observations (descriptive, không advice)</div>
+    <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+      <li><strong>Đỉnh 52W $134.88</strong> — khi vàng gần ATH $5,500 (1/2026)</li>
+      <li><strong>Correction −27%</strong> theo vàng −26% — đòn bẩy ~1:1 (kỳ lạ, thường 2-3×)</li>
+      <li><strong>Beta 0.48 bất thường</strong>: có thể do yfinance stale data, hoặc NEM bị market coi "defensive" vì scale</li>
+      <li><strong>Momentum: giảm</strong> — vàng đã break down từ ATH, NEM theo</li>
+    </ul>
+  </div>
+
+  <div class="callout plain" style="margin-top:18px">
+    <div class="callout-title">💡 Nói cách khác</div>
+    <div class="callout-body">
+      Technical analysis cho gold miner <strong>phụ thuộc giá vàng</strong> hơn là pattern cổ phiếu riêng.
+      Nếu bạn muốn technical thật, hãy xem <strong>chart giá vàng</strong> + USD index, không chỉ NEM.
+      Beta 0.48 = <strong>dữ liệu cần verify</strong> — yfinance có thể sai.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 19: TECHNICAL — MODE PROFILE ============ -->
+<section id="sec-tech-profile" class="section">
+  <div class="section-title"><span class="num">19</span><h2>Kỹ thuật — Mode PROFILE</h2><span class="tag red">NON-ADVICE</span><div class="divider"></div></div>
+  <div class="section-sub">Hồ sơ giá-khối lượng. Mô tả, không khuyến nghị.</div>
+
+  <div class="card">
+    <div class="card-title">Profile blocks</div>
+    <ul style="font-size:12.5px;padding-left:20px;line-height:1.8;margin-top:8px">
+      <li><strong>Trend:</strong> giảm từ đỉnh $135 (1/2026) — correction theo vàng</li>
+      <li><strong>Volume:</strong> dữ liệu cần verify qua Yahoo chart</li>
+      <li><strong>RSI/MACD:</strong> không compute ở đây — cần chart tool</li>
+      <li><strong>Support:</strong> $85-90 (gap zone), $55 (52W low)</li>
+      <li><strong>Resistance:</strong> $110, $135 (52W high)</li>
+    </ul>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <div class="callout-title neg">⚠️ NON-ADVICE</div>
+    <div class="callout-body">
+      Phần này mô tả profile, <strong>KHÔNG đưa tín hiệu mua/bán</strong>.
+      Gold miner technical phải được đọc cùng giá vàng vĩ mô. Không dùng riêng lẻ.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 20: ANALYST SYNTHESIS ============ -->
+<section id="sec-analyst" class="section">
+  <div class="section-title"><span class="num">20</span><h2>Tổng hợp analyst</h2><div class="divider"></div></div>
+  <div class="section-sub">Consensus + bull/bear points. Target có thể stale.</div>
+
+  <div class="grid-2">
+    <div class="card" style="border-left:3px solid var(--green)">
+      <div class="card-title pos">Bull points</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.75;margin-top:8px">
+        <li>FCF kỷ lục $7.3B (2025)</li>
+        <li>Buyback mới $6B authorized</li>
+        <li>Biên >$2,700/oz tại vàng $4,140</li>
+        <li>P/NAV discount 25%</li>
+        <li>Balance sheet mạnh (D/E 15.76%)</li>
+        <li>Bernstein upgrade → $157 target</li>
+      </ul>
+    </div>
+    <div class="card" style="border-left:3px solid var(--red)">
+      <div class="card-title neg">Bear points</div>
+      <ul style="font-size:12.5px;padding-left:20px;line-height:1.75;margin-top:8px">
+        <li>AISC 2026 guide $1,680 (+24%)</li>
+        <li>Thuế quan ~$185/oz potential</li>
+        <li>Sản xuất −10% YoY (5.3 vs 5.9Moz)</li>
+        <li>Newcrest integration risk</li>
+        <li>Ghana plan mua 30% sản lượng</li>
+        <li>Cyclical value trap (P/E misleading)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">Consensus (July 2026)</div>
+    <div class="grid-3" style="margin-top:10px">
+      <div class="kpi">
+        <div class="kpi-label">Rating</div>
+        <div class="kpi-value pos">Strong Buy</div>
+        <div class="kpi-delta dim">29 analysts</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Mean target</div>
+        <div class="kpi-value">$139</div>
+        <div class="kpi-delta pos">+42% upside</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Range</div>
+        <div class="kpi-value">$72–$175</div>
+        <div class="kpi-delta dim">Wide</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:18px">
+    <div class="callout-title neg">⚠️ Target có thể stale</div>
+    <div class="callout-body">
+      Consensus $139 đặt khi vàng ở mức khác. Ở giá NEM hiện tại $98,
+      target ngụ ý +42% upside — nhưng <strong>cần verify target đã update cho gold price hiện tại</strong>.
+      Nếu vàng tiếp tục giảm, expect analyst cut target.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 21: GLOSSARY ============ -->
+<section id="sec-glossary" class="section">
+  <div class="section-title"><span class="num">21</span><h2>📖 Giải thích thuật ngữ</h2><div class="divider"></div></div>
+  <div class="section-sub">24 thuật ngữ — generic tài chính + đặc thù gold mining.</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Thuật ngữ tài chính chung</div>
+      <ul style="font-size:12px;padding-left:20px;line-height:1.75;margin-top:8px">
+        <li><strong>P/E (Price/Earnings):</strong> giá / EPS. Thấp = rẻ (nhưng chu kỳ!) </li>
+        <li><strong>P/B (Price/Book):</strong> giá / book value. Cao cho miner (retained earnings phồng)</li>
+        <li><strong>EV/EBITDA:</strong> enterprise value / earnings before interest tax D&A. Chuẩn cho capex-heavy</li>
+        <li><strong>FCF (Free Cash Flow):</strong> OCF − capex. Tiền thật</li>
+        <li><strong>EPS:</strong> earnings per share. Volatile cho miner</li>
+        <li><strong>ROE:</strong> return on equity. NEM ~25% (đỉnh chu kỳ)</li>
+        <li><strong>Beta:</strong> vol vs market. NEM 0.48 (kỳ lạ thấp)</li>
+        <li><strong>Dividend yield:</strong> cổ tức / giá. NEM ~1%</li>
+        <li><strong>D/E (Debt/Equity):</strong> tải nợ. NEM 15.76% (thấp)</li>
+        <li><strong>GAAP vs non-GAAP:</strong> chuẩn kế toán vs adjusted</li>
+        <li><strong>TTM:</strong> trailing twelve months</li>
+        <li><strong>Diluted shares:</strong> cổ phiếu pha loãng</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Thuật ngữ đặc thù gold mining</div>
+      <ul style="font-size:12px;padding-left:20px;line-height:1.75;margin-top:8px">
+        <li><strong>AISC (All-In Sustaining Cost):</strong> tổng chi phí 1 oz vàng. NEM $1,358</li>
+        <li><strong>By-product AISC:</strong> trừ doanh thu đồng/bạc khỏi cost</li>
+        <li><strong>Co-product AISC:</strong> coi đồng/bạc là sản phẩm riêng (cao hơn)</li>
+        <li><strong>Reserves (Proven & Probable):</strong> trữ lượng xác định. NEM 118.2Moz</li>
+        <li><strong>M&I (Measured & Indicated):</strong> resources bao gồm reserves</li>
+        <li><strong>Ounce (oz):</strong> 1 troy ounce = 31.1 gram</li>
+        <li><strong>Tier-1 asset:</strong> mỏ lớn (>500koz/năm), life >10 năm, AISC lower half</li>
+        <li><strong>P/NAV (Price/Net Asset Value):</strong> giá / NPV trữ lượng. Chuẩn nhất cho miner</li>
+        <li><strong>Grade (g/t):</strong> hàm lượng vàng trong quặng. Cao = rẻ hơn/oz</li>
+        <li><strong>Streaming/Royalty:</strong> model trả upfront cho quyền mua sản lượng (WPM, FNV)</li>
+        <li><strong>Real yields (TIPS):</strong> lợi suất trái phiếu DOI thực. Driver chính giá vàng</li>
+        <li><strong>ARO (Asset Retirement Obligation):</strong> chi phí đóng mỏ tương lai</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div><!-- /layout-content -->
+
+<!-- ============ TOC SIDEBAR (sticky, phải) ============ -->
+<aside class="toc-sidebar" id="tocSidebar">
+  <div class="toc-sidebar-head">📑 Mục lục</div>
+  <div class="toc-sidebar-hint">22 phần · click để nhảy đến</div>
+  <ul class="toc-sidebar-list">
+    <li><a class="toc-sidebar-item" href="#sec-hero"><span class="toc-sidebar-num">1</span><span class="toc-sidebar-label">Tổng quan & KPI</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-exec"><span class="toc-sidebar-num">2</span><span class="toc-sidebar-label">Tóm tắt điều hành</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-biz"><span class="toc-sidebar-num">3</span><span class="toc-sidebar-label">Business 101</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-industry"><span class="toc-sidebar-num">4</span><span class="toc-sidebar-label">Vị trí ngành</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-history"><span class="toc-sidebar-num">5</span><span class="toc-sidebar-label">Lịch sử 10 năm</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-segment"><span class="toc-sidebar-num">6</span><span class="toc-sidebar-label">Mine portfolio</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-thesis"><span class="toc-sidebar-num">7</span><span class="toc-sidebar-label">Luận điểm vàng</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-valuation"><span class="toc-sidebar-num">8</span><span class="toc-sidebar-label">Định giá</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-peer"><span class="toc-sidebar-num">9</span><span class="toc-sidebar-label">So sánh peer</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-bs"><span class="toc-sidebar-num">10</span><span class="toc-sidebar-label">BS & FCF</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-risk"><span class="toc-sidebar-num">11</span><span class="toc-sidebar-label">Ma trận rủi ro</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-33k"><span class="toc-sidebar-num">12</span><span class="toc-sidebar-label">Góc nhìn $33K</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-scenario"><span class="toc-sidebar-num">13</span><span class="toc-sidebar-label">Kịch bản 3-5 năm</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-checklist"><span class="toc-sidebar-num">14</span><span class="toc-sidebar-label">Checklist tổng hợp</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight"><span class="toc-sidebar-num">15</span><span class="toc-sidebar-label">★ Insight: Chu kỳ vàng</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-moat"><span class="toc-sidebar-num">16</span><span class="toc-sidebar-label">★ Insight: AISC moat</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-supply"><span class="toc-sidebar-num">17</span><span class="toc-sidebar-label">★ Insight: Newcrest M&A</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech"><span class="toc-sidebar-num">18</span><span class="toc-sidebar-label">Kỹ thuật ACTIVE</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech-profile"><span class="toc-sidebar-num">19</span><span class="toc-sidebar-label">Kỹ thuật PROFILE</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-analyst"><span class="toc-sidebar-num">20</span><span class="toc-sidebar-label">Tổng hợp analyst</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-glossary"><span class="toc-sidebar-num">21</span><span class="toc-sidebar-label">📖 Thuật ngữ</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-source"><span class="toc-sidebar-num">22</span><span class="toc-sidebar-label">Nguồn & Data Quality</span></a></li>
+  </ul>
+</aside>
+
+</div><!-- /layout-main -->
+
+<!-- ============ DISCLAIMER ============ -->
+<div class="disclaimer">
+  <div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+  <p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai. Mặc dù mỗi con số quan trọng đều có trích nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai.</p>
+  <div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+  <ol>
+    <li><strong>Đếm nguồn.</strong> Mỗi số quan trọng (AISC, FCF, reserves, P/E) nên có ít nhất 2 nguồn độc lập khớp nhau. Chỉ 1 nguồn = chưa chắc.</li>
+    <li><strong>Số bất thường = dừng.</strong> P/E 8.8× nghe "rẻ quá" → verify — có thể bẫy chu kỳ.</li>
+    <li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt $33.000 dựa trên con số này không?"</li>
+  </ol>
+  <div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+  <ul class="qlist">
+    <li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn chính thống khớp nhau</li>
+    <li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần đối chiếu thêm</li>
+    <li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán, không nên đặt quyết định lớn</li>
+  </ul>
+  <p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình.</p>
+</div>
+
+<!-- ============ SECTION 22: SOURCE APPENDIX ============ -->
+<section id="sec-source" class="section">
+  <div class="section-title"><span class="num">22</span><h2>Nguồn & Data Quality</h2><div class="divider"></div></div>
+  <div class="section-sub">Mọi số liệu quan trọng có nguồn. Đánh giá chất lượng dữ liệu thành thật.</div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-head"><div><div class="card-title">Data Quality Matrix</div></div></div>
+    <div class="table-wrap">
+      <table class="risk-table">
+        <thead><tr><th>Data block</th><th>Source chính</th><th>Coverage</th><th>Freshness</th><th>Confidence</th><th>Caveat</th></tr></thead>
+        <tbody>
+          <tr><td>FY2025 financials</td><td>Newmont IR earnings release + 10-K 2024</td><td>Full year</td><td>Current</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>10-K 2025 chưa filed, dùng PR + yfinance</td></tr>
+          <tr><td>Sản lượng + AISC</td><td>Newmont Q4 2025 deck + Q1 2026 results</td><td>FY24-FY26 guide</td><td>Current</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>By-product vs co-product khác $251/oz</td></tr>
+          <tr><td>Reserves 118.2Moz</td><td>Newmont 2024 Reserves PR</td><td>YE2024</td><td>Feb 2025</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>2025 reserves chưa release</td></tr>
+          <tr><td>P/E, P/B current</td><td>Macrotrends, Yahoo, CompaniesMarketCap</td><td>TTM</td><td>7/7/2026</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Range 11.3-12.7× do TTM cutoff</td></tr>
+          <tr><td>5Y/10Y P/E avg</td><td>Macrotrends, Finbox</td><td>5-10 năm</td><td>Monthly</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>4 năm lỗ → sample lệch</td></tr>
+          <tr><td>P/NAV 25% discount</td><td>Seeking Alpha analyst + Finbox</td><td>Snapshot</td><td>2026</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>Broker-dependent, không official</td></tr>
+          <tr><td>Newcrest deal $19B</td><td>Newmont IR + press</td><td>11/2023</td><td>Historical</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>Fact</td></tr>
+          <tr><td>Peer metrics</td><td>yfinance TTM</td><td>7 peers</td><td>7/7/2026</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>AISC by-product basis khác peer</td></tr>
+          <tr><td>Gold price $4,140</td><td>Trading Economics + Kitco</td><td>Spot</td><td>7/7/2026</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>Real-time</td></tr>
+          <tr><td>Per-mine production/AISC</td><td>Q4 2024 deck (estimated)</td><td>FY2024</td><td>2/2025</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>Ranges, không exact integers</td></tr>
+          <tr><td>ARO balance</td><td>10-K (not extracted)</td><td>—</td><td>—</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>NOT FOUND — verify 10-K note</td></tr>
+          <tr><td>Beta 0.48</td><td>yfinance</td><td>TTM</td><td>7/7/2026</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>Kỳ lạ thấp, có thể stale data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚠️ Data Limitations</div>
+    <ul style="font-size:12px;padding-left:20px;line-height:1.8;margin-top:8px">
+      <li><strong>Rupture Q4 2023</strong>: pre-Newcrest data không comparable post-deal</li>
+      <li><strong>P/E sample lệch</strong>: 4/10 năm lỗ → avg bị kéo bởi 2018 (54×), 2021 (42×)</li>
+      <li><strong>P/NAV không official</strong>: broker-dependent, không công bố chính thức</li>
+      <li><strong>Per-mine AISC</strong>: ranges, không exact — cần pull deck chính thức</li>
+      <li><strong>ARO + debt detail</strong>: cần verify 10-K note trực tiếp</li>
+      <li><strong>Beta 0.48</strong>: bất thường — verify qua chart tool</li>
+      <li><strong>Forward EPS $11.20</strong>: analyst consensus, phụ thuộc giá vàng</li>
+      <li><strong>Analyst target $139</strong>: có thể stale vs giá vàng hiện tại</li>
+    </ul>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">Nguồn chính</div>
+    <ul style="font-size:11.5px;padding-left:20px;line-height:1.7;margin-top:8px">
+      <li>Newmont IR — <a href="https://www.newmont.com/investors/">newmont.com/investors</a></li>
+      <li>SEC 10-K FY2024 — <a href="https://www.sec.gov/Archives/edgar/data/1164727/">sec.gov NEM</a></li>
+      <li>Q4 2025 Results — <a href="https://s24.q4cdn.com/382246808/files/doc_earnings/2025/q4/earnings-result/Newmont-Q4-2025-Earnings-Release_Final.pdf">PDF</a></li>
+      <li>Macrotrends — <a href="https://www.macrotrends.net/stocks/charts/NEM/newmont/pe-ratio">P/E history</a></li>
+      <li>TipRanks — <a href="https://www.tipranks.com/stocks/nem/forecast">analyst</a></li>
+      <li>World Gold Council — <a href="https://www.gold.org/goldhub/">gold market data</a></li>
+      <li>Trading Economics — <a href="https://tradingeconomics.com/commodity/gold">gold spot</a></li>
+      <li>yfinance — structured data (price, financials, ratios)</li>
+    </ul>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <div class="container" style="padding-top:0">
+    <div style="border-top:1px solid var(--border);padding:24px 0;color:var(--text-faint);font-size:11px;text-align:center">
+      Newmont (NEM) Investment Evidence Pack · Dữ liệu tính đến 7/7/2026 · KHÔNG khuyến nghị mua/bán · Built with us-equity-research skill
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+
+<script>
+// Topnav active state on scroll
+(function(){
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.topnav-link');
+  const backTop = document.getElementById('backTop');
+  const progressBar = document.querySelector('.progress-bar');
+
+  function onScroll(){
+    const scrollY = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if(progressBar) progressBar.style.width = (scrollY/docHeight*100) + '%';
+    if(backTop){ if(scrollY > 400) backTop.classList.add('visible'); else backTop.classList.remove('visible'); }
+
+    let current = '';
+    sections.forEach(s => {
+      const top = s.offsetTop - 80;
+      if(scrollY >= top) current = s.id;
+    });
+    navLinks.forEach(l => {
+      l.classList.toggle('active', l.dataset.target === current);
+    });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+  if(backTop) backTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+})();
+</script>
+
+</body>
+</html>

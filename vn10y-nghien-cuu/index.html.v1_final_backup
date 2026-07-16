@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VN10Y — Một Nghiên cứu về Lợi suất Trái phiếu Việt Nam</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0f172a; --bg2:#1e293b; --card:#1e293b; --card2:#273449;
+    --txt:#e2e8f0; --muted:#94a3b8; --line:#334155;
+    --red:#ef4444; --amber:#f59e0b; --green:#22c55e; --blue:#3b82f6; --violet:#8b5cf6; --cyan:#06b6d4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.8;font-size:17px}
+  .hero{background:linear-gradient(135deg,#422006 0%,#1e3a8a 50%,#312e81 100%);padding:90px 24px 70px;text-align:center;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.08),transparent 40%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.06),transparent 40%);pointer-events:none}
+  .hero .badge{display:inline-block;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:999px;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:#fde68a;margin-bottom:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2)}
+  .hero h1{font-size:clamp(1.9rem,4.5vw,3.2rem);font-weight:800;line-height:1.2;max-width:960px;margin:0 auto 18px}
+  .hero p.sub{color:#e2e8f0;font-size:1.12rem;max-width:800px;margin:0 auto;opacity:.92}
+  .hero .meta{margin-top:28px;color:#cbd5e1;font-size:.9rem}
+  .hero .meta span{display:inline-block;margin:0 10px}
+  .container{max-width:800px;margin:0 auto;padding:0 24px}
+  main{padding:50px 0 80px}
+  section{margin-bottom:56px;scroll-margin-top:90px}
+  h2.section-title{font-size:1.5rem;font-weight:700;margin-bottom:14px;padding-bottom:16px;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,var(--amber),rgba(245,158,11,.2),transparent) 1;display:flex;align-items:center;gap:14px}
+  h2.section-title .num{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.95rem;font-weight:800;flex-shrink:0;box-shadow:0 4px 12px rgba(245,158,11,.3),inset 0 1px 0 rgba(255,255,255,.2)}
+  h3{font-size:1.18rem;margin:28px 0 10px;color:#fbbf24;display:flex;align-items:center;gap:8px}
+  h4{font-size:1.05rem;margin:18px 0 8px;color:#fff}
+  p{margin-bottom:16px;color:#cbd5e1}
+  strong{color:#fff}
+  em{color:#fcd34d;font-style:normal}
+  ul.bul{margin:12px 0 18px 4px;padding-left:22px}
+  ul.bul li{margin-bottom:8px;color:#cbd5e1;position:relative;padding-left:4px}
+  ul.bul li::marker{color:var(--amber)}
+  ol.numlist{margin:12px 0 18px 4px;padding-left:22px}
+  ol.numlist li{margin-bottom:8px;color:#cbd5e1}
+  a.src{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue)}
+  .ref{display:inline-block;font-size:.65rem;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:0 4px;margin:0 1px;line-height:1.4;vertical-align:super;text-decoration:none;transition:.15s;min-width:16px;text-align:center}
+  .ref:hover{background:rgba(251,191,36,.3);color:#fde68a;transform:translateY(-1px)}
+  ol.refs{list-style:none;counter-reset:ref;padding-left:0;margin:18px 0}
+  ol.refs li{counter-increment:ref;display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:.86rem;line-height:1.55;align-items:flex-start}
+  ol.refs li:last-child{border-bottom:none}
+  ol.refs li::before{content:counter(ref);display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:1px}
+  ol.refs li a{color:#93c5fd;text-decoration:none;border-bottom:1px dotted #93c5fd;word-break:break-all}
+  ol.refs li a:hover{color:#fbbf24;border-bottom-color:#fbbf24}
+  ol.refs li .src-meta{color:var(--muted);font-size:.78rem;display:block;margin-top:3px}
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:22px 0}
+  .kpi{background:linear-gradient(180deg,rgba(245,158,11,.06),rgba(30,41,59,.6));border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:20px 18px;transition:.22s;position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),transparent)}
+  .kpi:hover{transform:translateY(-3px);border-color:var(--amber);box-shadow:0 8px 24px rgba(245,158,11,.15)}
+  .kpi .val{font-size:1.85rem;font-weight:800;color:#fbbf24;line-height:1;text-shadow:0 0 24px rgba(245,158,11,.3)}
+  .kpi .lab{font-size:.82rem;color:var(--muted);margin-top:10px;line-height:1.4}
+  .kpi.red{border-color:rgba(239,68,68,.3);background:linear-gradient(180deg,rgba(239,68,68,.06),rgba(30,41,59,.6))}.kpi.red::before{background:linear-gradient(90deg,var(--red),transparent)}.kpi.red:hover{border-color:var(--red);box-shadow:0 8px 24px rgba(239,68,68,.15)}
+  .kpi.green{border-color:rgba(34,197,94,.3);background:linear-gradient(180deg,rgba(34,197,94,.06),rgba(30,41,59,.6))}.kpi.green::before{background:linear-gradient(90deg,var(--green),transparent)}.kpi.green:hover{border-color:var(--green);box-shadow:0 8px 24px rgba(34,197,94,.15)}
+  .kpi.cyan{border-color:rgba(6,182,212,.3);background:linear-gradient(180deg,rgba(6,182,212,.06),rgba(30,41,59,.6))}.kpi.cyan::before{background:linear-gradient(90deg,var(--cyan),transparent)}.kpi.cyan:hover{border-color:var(--cyan);box-shadow:0 8px 24px rgba(6,182,212,.15)}
+  .kpi.violet{border-color:rgba(139,92,246,.3);background:linear-gradient(180deg,rgba(139,92,246,.06),rgba(30,41,59,.6))}.kpi.violet::before{background:linear-gradient(90deg,var(--violet),transparent)}.kpi.violet:hover{border-color:var(--violet);box-shadow:0 8px 24px rgba(139,92,246,.15)}
+  .kpi.red .val{color:var(--red);text-shadow:0 0 24px rgba(239,68,68,.3)} .kpi.green .val{color:var(--green);text-shadow:0 0 24px rgba(34,197,94,.3)} .kpi.cyan .val{color:var(--cyan);text-shadow:0 0 24px rgba(6,182,212,.3)} .kpi.violet .val{color:var(--violet);text-shadow:0 0 24px rgba(139,92,246,.3)}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:24px 0}
+  .compare .col{border-radius:14px;padding:0;border:1px solid var(--line);overflow:hidden;transition:.22s}
+  .compare .col:hover{transform:translateY(-2px)}
+  .compare .col h4{margin:0;padding:16px 22px 12px;font-size:1.05rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .compare .col ul.bul{padding:14px 22px 20px;margin:0}
+  .compare .before{background:linear-gradient(180deg,rgba(6,182,212,.10),rgba(6,182,212,.02));border-color:rgba(6,182,212,.35)}
+  .compare .before h4{background:linear-gradient(180deg,rgba(6,182,212,.12),transparent)}
+  .compare .after{background:linear-gradient(180deg,rgba(245,158,11,.10),rgba(245,158,11,.02));border-color:rgba(245,158,212,.35)}
+  .compare .after h4{background:linear-gradient(180deg,rgba(245,158,11,.12),transparent)}
+  .compare .tag{display:inline-block;font-size:.7rem;padding:3px 12px;border-radius:999px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-left:auto}
+  .compare .before .tag{background:linear-gradient(135deg,var(--cyan),#0891b2);color:#062b33;box-shadow:0 2px 8px rgba(6,182,212,.3)}
+  .compare .after .tag{background:linear-gradient(135deg,var(--amber),#d97706);color:#3a2400;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+  @media(max-width:720px){.compare{grid-template-columns:1fr}}
+  table.tbl{width:100%;border-collapse:collapse;margin:20px 0;font-size:.92rem;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  table.tbl th,table.tbl td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  table.tbl thead th{background:linear-gradient(180deg,rgba(245,158,11,.16),rgba(245,158,11,.06));color:#fbbf24;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid rgba(245,158,11,.3);position:relative}
+  table.tbl thead th::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber);opacity:0;transition:.2s}
+  table.tbl thead th:first-child::before{opacity:1}
+  table.tbl tbody tr{transition:.15s}
+  table.tbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  table.tbl tbody tr:hover td{background:rgba(245,158,11,.06)}
+  table.tbl tr:last-child td{border-bottom:none}
+  table.tbl td strong{color:#fcd34d}
+  .callout{position:relative;background:linear-gradient(135deg,rgba(139,92,246,.10),rgba(59,130,246,.05));border:1px solid rgba(139,92,246,.25);border-left:4px solid var(--violet);padding:18px 22px 18px 24px;border-radius:0 14px 14px 0;margin:22px 0;transition:.2s}
+  .callout:hover{box-shadow:0 4px 18px rgba(139,92,246,.12);transform:translateX(2px)}
+  .callout.warn{border-color:rgba(239,68,68,.25);border-left-color:var(--red);background:linear-gradient(135deg,rgba(239,68,68,.10),rgba(239,68,68,.03))}
+  .callout.warn:hover{box-shadow:0 4px 18px rgba(239,68,68,.12)}
+  .callout.good{border-color:rgba(34,197,94,.25);border-left-color:var(--green);background:linear-gradient(135deg,rgba(34,197,94,.10),rgba(34,197,94,.03))}
+  .callout.good:hover{box-shadow:0 4px 18px rgba(34,197,94,.12)}
+  .callout.info{border-color:rgba(59,130,246,.25);border-left-color:var(--blue);background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(59,130,246,.03))}
+  .callout.info:hover{box-shadow:0 4px 18px rgba(59,130,246,.12)}
+  .callout h4{color:#fff;margin-bottom:6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .callout p{margin:0;color:#e2e8f0}
+  .chart-box{background:linear-gradient(180deg,var(--card),rgba(15,23,42,.6));border:1px solid var(--line);border-radius:16px;padding:22px;margin:24px 0;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .chart-box::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),var(--blue),transparent)}
+  .chart-box h4{color:#fbbf24;margin-bottom:6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .chart-box .desc{color:var(--muted);font-size:.85rem;margin-bottom:16px;padding-left:10px;border-left:2px solid rgba(245,158,11,.3);font-style:italic}
+  .chart-wrap{position:relative;height:320px}
+  .chart-wrap.tall{height:380px}
+  footer{text-align:center;padding:30px 24px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+  .progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#fbbf24,#f59e0b,#ef4444);z-index:1000;transition:width .12s ease-out}
+  .minimap{position:fixed;top:24px;right:24px;width:272px;max-height:calc(100vh - 48px);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;overflow-y:auto;z-index:50;opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .35s ease, transform .35s ease;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none}
+  @media(min-width:1024px){body.nav-active .minimap{display:block;opacity:1;transform:translateX(0);pointer-events:auto}}
+  .minimap::-webkit-scrollbar{width:6px}.minimap::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .minimap .mm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
+  .minimap .mm-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+  .minimap .mm-pct{font-size:.72rem;color:#fbbf24;font-weight:700}
+  .mm-search{position:relative;margin-bottom:12px}
+  .mm-search input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 10px 8px 30px;font-size:.82rem;outline:none;transition:.2s}
+  .mm-search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+  .mm-search input::placeholder{color:var(--muted)}
+  .mm-search::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.75rem;opacity:.7}
+  .mm-group{margin-bottom:4px;border-radius:9px;overflow:hidden}
+  .mm-group-head{display:flex;align-items:center;gap:7px;width:100%;background:transparent;border:none;color:#cbd5e1;cursor:pointer;padding:8px 8px;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:left;border-radius:8px;transition:.15s}
+  .mm-group-head:hover{background:rgba(255,255,255,.04);color:#fff}
+  .mm-group-head .chev{font-size:.65rem;transition:transform .2s;color:var(--muted);width:10px}
+  .mm-group.open .mm-group-head .chev{transform:rotate(90deg)}
+  .mm-group-head .gcount{margin-left:auto;font-size:.66rem;color:var(--muted);font-weight:600;background:var(--bg2);padding:1px 7px;border-radius:999px}
+  .mm-items{list-style:none;padding:2px 0 6px 14px;margin:0;max-height:0;overflow:hidden;transition:max-height .3s ease;border-left:1px solid var(--line);margin-left:8px}
+  .mm-group.open .mm-items{max-height:600px}
+  .mm-items li{margin:0}
+  .mm-items a{display:flex;align-items:center;gap:7px;text-decoration:none;color:var(--muted);font-size:.8rem;padding:5px 8px;border-radius:6px;transition:.15s;line-height:1.3}
+  .mm-items a:hover{color:#fbbf24;background:rgba(255,255,255,.03)}
+  .mm-items a .dot{width:6px;height:6px;border-radius:50%;background:var(--line);flex-shrink:0;transition:.2s}
+  .mm-items a.active{color:#fbbf24;font-weight:600;background:rgba(251,191,36,.08)}
+  .mm-items a.active .dot{background:#fbbf24;box-shadow:0 0 0 3px rgba(251,191,36,.2)}
+  .mm-no-result{display:none;font-size:.78rem;color:var(--muted);font-style:italic;padding:14px 8px;text-align:center}
+  .minimap.searching .mm-no-result.show{display:block}
+  .mm-fab{display:none;position:fixed;bottom:24px;right:24px;z-index:200;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:1.3rem;box-shadow:0 8px 24px rgba(239,68,68,.4);align-items:center;justify-content:center}
+  @media(max-width:1023px){.mm-fab{display:flex}.minimap{display:none;top:0;right:0;left:0;bottom:0;width:auto;max-height:none;border-radius:0;border:none;transform:translateY(20px)}body.nav-mobile-open .minimap{display:block;opacity:1;transform:translateY(0);pointer-events:auto}body.nav-mobile-open .mm-fab{display:none}}
+  .mm-overlay-close{display:none;position:absolute;top:14px;right:16px;font-size:1.6rem;background:none;border:none;color:var(--muted);cursor:pointer;line-height:1}
+  @media(max-width:1023px){.mm-overlay-close{display:block}}
+  .to-top{position:fixed;bottom:24px;left:24px;z-index:200;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}
+  body.nav-active .to-top.show,body.loaded .to-top.show{opacity:1;transform:translateY(0);pointer-events:auto}
+  .to-top:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+  @media(max-width:1023px){.to-top{bottom:88px}}
+  .pres-btn{position:fixed;top:24px;left:24px;z-index:300;width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(59,130,246,.4);opacity:0;transform:translateY(-10px);pointer-events:none;transition:.3s}
+  body.nav-active .pres-btn,body.loaded .pres-btn{opacity:1;transform:translateY(0);pointer-events:auto}
+  .pres-btn:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 10px 28px rgba(139,92,246,.5)}
+  .pres-overlay{position:fixed;inset:0;z-index:9999;background:#0a0f1d;display:flex;flex-direction:column;height:100vh;height:100dvh;opacity:0;pointer-events:none;transition:opacity .4s ease}
+  .pres-overlay.active{opacity:1;pointer-events:auto}
+  .pres-top{display:flex;align-items:center;gap:16px;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .pres-progress-bg{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+  .pres-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#fbbf24,#ef4444);border-radius:2px;transition:width .4s ease}
+  .pres-counter{font-size:.85rem;color:#94a3b8;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pres-counter b{color:#fbbf24;font-size:1.05rem}
+  .pres-exit{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:.82rem;transition:.2s}
+  .pres-exit:hover{background:rgba(239,68,68,.3);color:#fff}
+  .pres-stage{flex:1 1 auto;position:relative;overflow:hidden;min-height:0;width:100%}
+  .pres-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 7%;text-align:center;opacity:0;transform:translateX(60px) scale(.97);transition:opacity .5s ease, transform .5s cubic-bezier(.22,1,.36,1);pointer-events:none}
+  .pres-slide.active{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
+  .pres-slide.prev{transform:translateX(-60px) scale(.97)}
+  .pres-slide .slide-inner{width:100%;max-width:1100px;margin:auto}
+  .slide-title .badge{display:inline-block;background:rgba(255,255,255,.1);padding:6px 18px;border-radius:999px;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:#fde68a;margin-bottom:22px;border:1px solid rgba(255,255,255,.18)}
+  .slide-title h1{font-size:clamp(2rem,5.5vw,4rem);font-weight:800;line-height:1.1;margin:0 0 18px;background:linear-gradient(135deg,#fff,#fde68a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .slide-title .sub{font-size:clamp(1rem,2vw,1.35rem);color:#cbd5e1;max-width:760px;margin:0 auto 24px}
+  .slide-section{background:radial-gradient(circle at 50% 40%,rgba(245,158,11,.12),transparent 60%)}
+  .slide-section .sec-num{font-size:clamp(4rem,12vw,8rem);font-weight:800;line-height:1;color:rgba(255,255,255,.08);margin-bottom:0}
+  .slide-section .sec-label{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:#fbbf24;margin-bottom:8px}
+  .slide-section h2{font-size:clamp(1.8rem,4.5vw,3.2rem);font-weight:800;color:#fff;margin:8px 0 0;line-height:1.15}
+  .slide-content h2{font-size:clamp(1.5rem,3.2vw,2.3rem);font-weight:800;color:#fff;margin:0 0 6px;line-height:1.2}
+  .slide-content .kicker{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24;font-weight:700;margin-bottom:10px}
+  .slide-list ul{list-style:none;text-align:left;max-width:760px;margin:20px auto 0}
+  .slide-list li{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:clamp(1rem,1.8vw,1.18rem);color:#e2e8f0}
+  .slide-list li:last-child{border-bottom:none}
+  .slide-list li .num{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700}
+  .slide-list li .txt strong{color:#fbbf24}
+  .slide-quote{background:radial-gradient(circle at 50% 40%,rgba(245,158,11,.12),transparent 60%)}
+  .slide-quote .qmark{font-size:5rem;color:rgba(245,158,11,.3);line-height:.5;margin-bottom:10px}
+  .slide-quote .qtext{font-size:clamp(1.4rem,3vw,2.1rem);font-weight:700;color:#fff;line-height:1.35;max-width:880px;margin:0 auto 16px}
+  .slide-quote .qsource{font-size:.9rem;color:#94a3b8;margin-top:10px}
+  .pres-bottom{display:flex;align-items:center;justify-content:center;gap:18px;padding:14px 28px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .pres-nav{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.15rem;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .pres-nav:hover:not(:disabled){background:var(--blue);border-color:var(--blue);transform:scale(1.1)}
+  .pres-nav:disabled{opacity:.3;cursor:not-allowed}
+  .pres-dots{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:65%}
+  .pres-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.25s;border:none;padding:0}
+  .pres-dot:hover{background:rgba(255,255,255,.4)}
+  .pres-dot.active{background:#fbbf24;width:22px;border-radius:4px}
+  .pres-hint{font-size:.72rem;color:#64748b;text-align:center;padding:2px 0 6px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<body>
+
+<header class="hero">
+  <span class="badge">Tự nghiên cứu · 2014–2026 · TPCP HNX chính thức</span>
+  <h1>VN10Y — Một Nghiên cứu về Lợi suất Trái phiếu Chính phủ Việt Nam</h1>
+  <p class="sub">VN10Y có quan hệ với cổ phiếu, volume, các ngành và trái phiếu toàn cầu ra sao? Mười sáu chương phân tích tương quan, nhân quả và hội nhập — viết bằng số liệu thực nghiệm, không ngoại suy.</p>
+  <div class="meta">
+    <span>🗓️ HNX + VN-Index → 26/06/2026 · Quốc tế (Investing) dừng 23/06/2026</span>
+    <span>📐 Phạm vi: 2014–2026 · TPCP HNX chính thức (3.113 ngày)</span>
+    <span>📚 24 chương + phụ lục · 13 biểu đồ · 22 breadth metrics</span>
+  </div>
+</header>
+
+<main class="container">
+
+  <section id="tong-quan">
+    <h2 class="section-title">Tóm tắt điều hành</h2>
+    <p>Nghiên cứu này kiểm tra mối quan hệ giữa lợi suất trái phiếu Chính phủ Việt Nam kỳ hạn 10 năm (VN10Y) và thị trường chứng khoán, dựa trên hơn 3.000 ngày dữ liệu TPCP chính thức từ HNX (2014–2026), kết hợp với 16 trái phiếu chính phủ toàn cầu để đặt Việt Nam trong bối cảnh quốc tế.</p>
+    <div class="callout good">
+      <h4>6 phát hiện chính</h4>
+      <ul class="bul">
+        <li><strong>Lãi suất tăng, cổ phiếu giảm — quan hệ đồng thời ở tầm tháng.</strong> Khi lợi suất trái phiếu 10 năm tăng 1 điểm phần trăm trong một tháng, VN-Index trung bình giảm gần 7%. Quan hệ <strong>đồng thời</strong> này mạnh nhất ở các cửa sổ 3–6 tháng, gần như biến mất ở tầm ngày. Lưu ý: tương quan đồng thời <em>không đồng nghĩa với forward predictability</em> (xem Chương XVd).</li>
+        <li><strong>Cổ phiếu có thông tin dự báo bond (predictability trong mẫu).</strong> Lagged VN-Index có thông tin dự báo thống kê cho VN10Y (Granger F=7,11). Đây là chiều ngược với các thị trường phát triển.</li>
+        <li><strong>Việt Nam là ngoại lệ ở châu Á.</strong> Trong số 4 nước mới nổi được so sánh, Việt Nam là nước duy nhất có quan hệ bond-stock nghịch biến rõ (chưa được tái kiểm định trong V2).</li>
+        <li><strong>Cơ chế truyền dẫn chính là kênh tín dụng.</strong> Ngành tài chính phản ứng nhạy hơn phi tài chính (chưa được tái kiểm định trong V2).</li>
+        <li><strong>Độ rộng cơ hội: khi yield↑, khó chọn mã hơn.</strong> Win rate gần như không đổi. 5/23 chỉ báo monthly còn ý nghĩa sau BH-FDR (chưa được tái kiểm định trong V2).</li>
+        <li><strong>Nhưng không thể dùng để dự báo.</strong> Forward return 1/3/6 tháng: 0/3 pass FDR (V2 local projections). Out-of-sample R² âm. Auction repricing: 0/6 pass FDR. Đây là quan hệ mô tả đồng thời, không phải tín hiệu dự báo hay timing.</li>
+      </ul>
+    </div>
+    <div class="callout info">
+      <h4>Hàm ý cho nhà đầu tư</h4>
+      <p>Quan hệ bond-stock VN tồn tại ở dạng <strong>đồng thời</strong> (contemporaneous): khi bond và stock cùng được quan sát trong tháng, chúng nghịch biến. Nhưng bond thay đổi <em>không dự báo được</em> stock tháng sau — forward return tests không significant. Auction outcomes cũng không có association đáng tin cậy với CAR. Do đó: đừng dùng bond làm <strong>tín hiệu timing</strong>, nhưng có thể dùng làm <strong>bối cảnh đánh giá rủi ro</strong> khi phân tích thị trường hàng tháng.</p>
+    </div>
+    <div class="callout warn">
+      <h4>Điểm cần thận trọng</h4>
+      <p>Phân tích đuôi (tail) và beta theo ngành ở tầm <strong>daily</strong> không đáng tin — dữ liệu VN10Y có 16,5% ngày đứng yên, tạo noise. Chỉ kết luận quan hệ đồng thời ở <strong>mẫu monthly</strong>. Chi tiết phương pháp và cảnh báo kỹ thuật nằm ở các chương sau và Phụ lục.</p>
+    </div>
+  </section>
+
+  <section id="chuong-1">
+    <h2 class="section-title"><span class="num">I</span>Câu hỏi nghiên cứu</h2>
+    <p>Khi một nhà đầu tư chứng khoán Việt Nam mở ứng dụng xem thị trường, một trong những con số họ thường xuyên đối diện là <strong>lợi suất trái phiếu Chính phủ kỳ hạn 10 năm (VN10Y)</strong>. Con số này được trích dẫn như một "nhiệt kế vĩ mô": lãi suất đang lên hay xuống, tiền có đắt hơn không, cổ phiếu có chịu áp lực không.</p>
+    <p>Nhưng đằng sau thói quen đó là một loạt câu hỏi mà ít ai đặt ra cho đến khi cần trả lời thật: <em>VN10Y thực sự di chuyển cùng cổ phiếu không, hay đó chỉ là trùng hợp?</em> Nếu có quan hệ, nó mạnh đến đâu, đổi chiều khi nào, và ai dẫn ai? Và khi nhìn ra bên ngoài, VN10Y là một phần của thị trường trái phiếu toàn cầu, hay là một hòn đảo riêng?</p>
+    <div class="callout info">
+      <h4>🎯 Nghiên cứu này trả lời 4 câu hỏi</h4>
+      <p>(1) VN10Y có quan hệ với thị trường chứng khoán Việt Nam không? (2) Quan hệ đó đồng nhất giữa các ngành, hay thay đổi theo ngành? (3) VN10Y bị cô lập hay hội nhập với trái phiếu toàn cầu? (4) <strong>Phản ứng lan rộng ra sao trong độ rộng thị trường — chỉ vài mã lớn hay toàn thị trường?</strong></p>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="val">3.353</div><div class="lab">Ngày dữ liệu (2013–2026, đến 26/6)</div></div>
+      <div class="kpi cyan"><div class="val">451</div><div class="lab">Mã HOSE phân tích breadth (bottom-up)</div></div>
+      <div class="kpi violet"><div class="val">22</div><div class="lab">Breadth metrics (A/D, TRIN, McClellan...)</div></div>
+      <div class="kpi green"><div class="val">18</div><div class="lab">Phương pháp thống kê áp dụng (14 chính, 4 phụ đang sửa)</div></div>
+    </div>
+    <p>Để trả lời, nghiên cứu dùng dữ liệu lịch sử từ <strong>2013 đến 2026</strong>: <strong>TPCP 10Y chính thức từ HNX</strong> (3.113 ngày, chỉ 16,5% ngày đứng yên), giá của <strong>451 mã HOSE</strong> cho breadth analysis (point-in-time, giảm survivorship bias), gần một nghìn tám trăm ngày cho mười tám chỉ số ngành, và mười bảy trái phiếu chính phủ kỳ hạn 10 năm trên khắp thế giới. Mọi con số trong bài đều được chạy lại thực nghiệm từ dữ liệu thô lưu trên máy cục bộ<sup class="ref">1</sup>, không có giá trị nào bịa ra hay nội suy tay.</p>
+  </section>
+
+  <section id="chuong-2">
+    <h2 class="section-title"><span class="num">II</span>Một cảnh báo phải đặt sớm: VN10Y không phải tài sản giao dịch</h2>
+    <p>Trước khi đi vào bất kỳ kết quả nào, cần nói thẳng một đặc thù của dữ liệu VN10Y mà nhiều phân tích bỏ qua. Lợi suất trái phiếu Chính phủ kỳ hạn 10 năm tại Việt Nam <em>không phải một tài sản giao dịch liên tục</em> theo nghĩa mark-to-market từng tick như cổ phiếu. Nó là một <strong>benchmark được HNX tổng hợp</strong> — yield curve được tính lại hàng ngày từ giao dịch TPCP kỳ hạn gần 10 năm, chỉ 16,5% ngày đứng yên (update mịn hơn nhiều so với benchmark bên thứ ba).</p>
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="val">16,5%</div><div class="lab">Số ngày TPCP HNX đứng yên (|Δ| &lt; 0,01%)</div></div>
+      <div class="kpi green"><div class="val">2 ngày</div><div class="lab">Chuỗi đông cứng dài nhất (|Δ| &lt; 0,001pp); 5 ngày nếu |Δ| &lt; 0,01pp</div></div>
+      <div class="kpi violet"><div class="val">98,4%</div><div class="lab">Số ngày có giao dịch thật (|Δ| ≥ 0,001)</div></div>
+    </div>
+    <div class="chart-box">
+      <h4>📊 VN10Y và VN-Index — 16 năm song hành</h4>
+      <div class="desc">Lợi suất trái phiếu giảm từ 11,4% (2010) xuống 4,4% (2026); VN-Index tăng từ 531 lên 1.869 điểm.</div>
+      <div class="chart-wrap"><canvas id="chartTimeSeries"></canvas></div>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Hệ quả cho mọi kết quả trong bài</h4>
+      <p>Với 16,5% số ngày VN10Y gần như không đổi, tương quan ở tầm <strong>daily</strong> bị yếu đi (r=−0,001 n.s. ở Chương IV). Nghiên cứu vẫn dùng VN10Y làm biến chính, nhưng chỉ tìm thấy quan hệ đồng thời ở <strong>mẫu monthly</strong> (r=−0,33). Hơn nữa, đặc thù 16,5% ngày đứng yên phản ánh thanh khoản TPCP kỳ hạn dài còn hạn chế và sự can thiệp của NHNN, khiến lãi suất VN mang tính <em>policy-driven</em> nhiều hơn thị trường.</p>
+    </div>
+  </section>
+
+  <section id="chuong-3">
+    <h2 class="section-title"><span class="num">III</span>Phương pháp &amp; nguồn dữ liệu</h2>
+    <p>Nghiên cứu này giữ một nguyên tắc phương pháp xuyên suốt: <strong>chỉ dùng tương quan miêu tả</strong> — quan sát các mối quan hệ tồn tại trong dữ liệu, không xây mô hình dự báo. Lý do là đặc thù dữ liệu VN10Y đã nêu ở Chương II: một biến có 16,5% ngày đứng yên không thể là đối tượng dự báo đáng tin.</p>
+    <h3>Nguồn dữ liệu</h3>
+    <table class="tbl">
+      <thead><tr><th>Biến</th><th>Nguồn</th><th>Kỳ hạn</th><th>Chất lượng</th></tr></thead>
+      <tbody>
+        <tr><td><strong>VN10Y</strong></td><td>TPCP 10Y HNX chính thức<sup class="ref">7</sup></td><td>2014–2026 · 3.113 ngày</td><td>✅ Sạch (16,5% stale, cập nhật 26/6)</td></tr>
+        <tr><td><strong>VN-Index</strong> + Volume</td><td>vnstock API (nguồn VCI)<sup class="ref">3</sup></td><td>2009–2026 · 4.303 ngày</td><td>✅ Continuous</td></tr>
+        <tr><td><strong>18 chỉ số ngành HOSE</strong></td><td>vnstock API</td><td>2019–2026 · 1.781 ngày</td><td>✅ Continuous</td></tr>
+        <tr><td><strong>US10Y, 16 peer toàn cầu</strong></td><td>Investing.com</td><td>2010–2026 · 4.268 ngày</td><td>✅ Acceptable (1–23% stale — trái phiếu G7 thanh khoản cao)</td></tr>
+      </tbody>
+    </table>
+    <h3>Mười phương pháp thống kê được áp dụng</h3>
+    <p>Để tránh phụ thuộc vào một chỉ số đơn lẻ, nghiên cứu dùng <strong>14 phương pháp</strong> đan xen và kiểm chứng chéo. Khi nhiều phương pháp cho cùng kết luận, độ tin cậy cao hơn một phương pháp đơn lẻ.</p>
+    <div class="two-col">
+      <ul class="bul">
+        <li><strong>Pearson &amp; Spearman</strong> — tương quan tuyến tính và xếp hạng</li>
+        <li><strong>Multi-horizon</strong> — từ 1 ngày đến 1 năm</li>
+        <li><strong>Rolling correlation</strong> — ổn định theo thời gian</li>
+        <li><strong>Granger causality</strong> (VAR) — chiều dự báo</li>
+        <li><strong>Johansen cointegration</strong> — quan hệ dài hạn</li>
+      </ul>
+      <ul class="bul">
+        <li><strong>VECM</strong> — tốc độ điều chỉnh về equilibrium</li>
+        <li><strong>Rolling correlation</strong> — tương quan theo thời gian (thay DCC-GARCH)</li>
+        <li><strong>Extreme Quantile Co-movement</strong> — phân tích đuôi (bootstrap CI)</li>
+        <li><strong>PCA / Factor model</strong> — global bond factor</li>
+        <li><strong>Hierarchical clustering</strong> — cụm thị trường</li>
+      </ul>
+    </div>
+
+    <h3>Khung giả thuyết — 4 câu hỏi cốt lõi</h3>
+    <p>Mỗi phương pháp gắn với một câu hỏi kiểm định rõ ràng:</p>
+    <ul class="bul">
+      <li><strong>H1 — Lãi suất và cổ phiếu có nghịch biến?</strong> ✅ Có (monthly, robust sau khi kiểm soát DXY/US10Y).</li>
+      <li><strong>H2 — Có chiều dự báo rõ?</strong> ⚠️ Lagged VN-Index có thông tin dự báo VN10Y trong Granger; GFEVD cho cross-variable spillover thấp, chỉ 3,48%.</li>
+      <li><strong>H3 — Có quan hệ cân bằng dài hạn?</strong> ✅ Có cointegration ( Trace 60,4).</li>
+      <li><strong>H4 — Khi yield↑, cơ hội kiếm tiền thay đổi?</strong> ⚠️ Win rate không đổi (38%), nhưng chất lượng cơ hội xấu: ít mã trend up (−7,4pp monthly), breakdown tăng (+1,4pp).</li>
+    </ul>
+    <p style="margin-top:8px"><em>Bảng đầy đủ 7 giả thuyết (H1-H7) và multivariate robustness xem <a href="#phu-luc-ky-thuat">Phụ lục Kỹ thuật</a>.</em></p>
+  </section>
+
+  <section id="truc-chi-so">
+    <h2 class="section-title"><span class="num">IV</span>Trục chỉ số: bề nổi của thị trường</h2>
+    <p>Phần này phân tích quan hệ bond-stock qua lăng kính <strong>chỉ số</strong> (VN-Index, sector indices) — bề nổi mà nhà đầu tư nhìn thấy. So sánh song song <strong>2 biến</strong>: VN10Y (lãi suất tuyệt đối) và Spread VN-US (risk premium tương đối). Mục tiêu: câu chuyện bề nổi có phản ánh đúng bên trong không?</p>
+
+    <h3>Correlation: bond vs spread vs VN-Index</h3>
+    <table class="tbl">
+      <thead><tr><th>Horizon</th><th>r vs VN10Y</th><th>r vs Spread</th><th>Kết luận</th></tr></thead>
+      <tbody>
+        <tr><td>Daily</td><td>−0,001 (n.s.)</td><td>−0,009 (n.s.)</td><td>Cả 2 đều không có — daily là noise</td></tr>
+        <tr><td><strong>Monthly</strong></td><td><strong>−0,327 ***</strong></td><td><strong>−0,23 **</strong></td><td>Bond mạnh hơn spread</td></tr>
+        <tr><td>3-6 tháng</td><td>−0,29 (đỉnh)</td><td>−0,32 (đỉnh)</td><td>Spread đỉnh hơi sớm hơn</td></tr>
+        <tr><td>1 năm</td><td>−0,22</td><td>−0,24</td><td>Tương đương</td></tr>
+      </tbody>
+    </table>
+
+    <div class="chart-box">
+      <h4>📊 Độ lớn tương quan đồng thời theo cửa sổ tổng hợp</h4>
+      <div class="desc">Bell curve: ~0 ở daily, đỉnh ở cửa sổ 3-6 tháng (|r|≈0,31), phẳng ở ~0,22 dài hạn. Đây là tương quan <strong>đồng thời</strong> (contemporaneous), không phải forward predictability.</div>
+      <div class="chart-wrap"><canvas id="chartInfluenceCurve"></canvas></div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">−0,327</div><div class="lab">r monthly VN10Y ↔ VN-Index (p=6,2×10⁻⁵)</div></div>
+      <div class="kpi red"><div class="val">−6,92%</div><div class="lab">β monthly: yield +1pp → VN-Index giảm 6,92%</div></div>
+      <div class="kpi violet"><div class="val">10,7%</div><div class="lab">R²: lãi suất giải thích 10,7% biến động cổ phiếu</div></div>
+    </div>
+
+    <div class="callout good">
+      <h4>✅ Phát hiện cốt lõi</h4>
+      <p>Khi lợi suất trái phiếu 10 năm tăng 1pp trong một tháng, VN-Index <strong>trung bình giảm 6,92%</strong> (R²=10,7%). Quan hệ này <strong>robust</strong> sau khi kiểm soát DXY + US10Y (β giảm chỉ 12%). Bond mạnh hơn spread ở monthly (r −0,33 vs −0,23).</p>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Cảnh báo: daily không có quan hệ</h4>
+      <p>Ở tầm daily, r=−0,001 (n.s.) cho cả bond và spread. Quan hệ đồng thời chỉ thấy ở <strong>mẫu monthly</strong>. Lưu ý: tương quan đồng thời ở các cửa sổ 3-6 tháng <strong>không đồng nghĩa với forward predictability</strong> — xem Chương XVd.</p>
+      <p style="margin-top:8px"><strong>💡 Ghi chú:</strong> r=−0,327 dùng non-overlapping month-end (n=149). Overlapping 21-day cho r=−0,213 — cùng dấu, yếu hơn.</p>
+    </div>
+
+    <h3>Chiều dẫn dắt: cổ phiếu dự báo bond (predictability)</h3>
+    <div class="compare">
+      <div class="col before">
+        <h4>Cổ phiếu → Bond <span class="tag">Có Granger predictability</span></h4>
+        <ul class="bul">
+          <li>VN-Index alone → VN10Y: F=7,11, p=1×10⁻⁵</li>
+          <li>Kết luận: lagged VNI có thông tin dự báo bond</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Bond → Cổ phiếu <span class="tag">Không Granger predictability</span></h4>
+        <ul class="bul">
+          <li>Bond → VN-Index: F=1,24, p=0,29</li>
+          <li>Kết luận: bond không dự báo được cổ phiếu</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Cảnh báo phương pháp</h4>
+      <p>Granger causality là "tương quan dự báo thống kê", không phải nhân quả thật. Với dữ liệu VN10Y có 16,5% ngày đứng yên, "zero cells" có thể thổi phồng kết quả. Đọc như quan sát nhất quán với cointegration.</p>
+    </div>
+    <div class="callout info">
+      <h4>🔬 Diebold-Yilmaz Spillover: truyền dẫn chéo thấp</h4>
+      <p>GFEVD Pesaran-Shin đã chuẩn hóa theo variance shock cho total spillover <strong>3,48%</strong>. VNI→Bond = 0,63% và Bond→VNI = 0,22%; không có cơ sở nói bond truyền 28% variance sang VNI.</p>
+    </div>
+
+    <h3>Cân bằng dài hạn (cointegration)</h3>
+    <p>Johansen cointegration: Trace 60,4 (CV 29,8) → có 1 vector cointegration giữa VN10Y, VN-Index và Volume. VECM cho thấy Volume điều chỉnh nhanh nhất (half-life ~102 ngày), bond cực chậm (half-life ~6 năm).</p>
+    <div class="callout warn">
+      <h4>⚠️ Cảnh báo diễn giải</h4>
+      <p>Vector cointegration stationary (ADF p=2,8×10⁻⁵), nhưng hệ số β không diễn giải kinh tế trực tiếp (scale mismatch). Johansen det_order=0 (conservative); test det_order=1 cho Trace 73,5 → robust.</p>
+    </div>
+  </section>
+
+  <section id="truc-co-phieu">
+    <h2 class="section-title"><span class="num">V</span>Trục cổ phiếu: bên trong thị trường</h2>
+    <p>Chỉ số (cap-weighted) che lấp cấu trúc bên trong. Phần này phân tích <strong>451 mã HOSE riêng lẻ</strong> (bottom-up, point-in-time, 2013-2026) — trả lời 3 câu hỏi thực tiễn: (1) Cơ hội kiếm tiền thay đổi ra sao khi yield↑? (2) Ngành nào nhạy nhất? (3) Volume từng mã phản ứng thế nào? So sánh song song <strong>bond vs spread</strong>.</p>
+
+    <h3>Bond vs Spread: ai mạnh hơn ở per-stock?</h3>
+    <table class="tbl">
+      <thead><tr><th>Metric</th><th>Bond (VN10Y)</th><th>Spread (VN-US)</th><th>Mạnh hơn</th></tr></thead>
+      <tbody>
+        <tr><td>Per-stock β median</td><td>−5,50</td><td>−2,43</td><td><strong>Bond</strong></td></tr>
+        <tr><td>% mã β sig âm</td><td><strong>35,5%</strong></td><td>14,1%</td><td><strong>Bond</strong></td></tr>
+        <tr><td>% mã giảm volume</td><td><strong>67,5%</strong></td><td>59,9%</td><td><strong>Bond</strong></td></tr>
+        <tr><td>Monthly % trên MA20</td><td>−5,5pp</td><td><strong>−6,8pp</strong></td><td><strong>Spread</strong></td></tr>
+        <tr><td>Monthly % oversold</td><td>+3,7pp</td><td><strong>+4,1pp</strong></td><td><strong>Spread</strong></td></tr>
+        <tr><td>Monthly drawdown</td><td>+1,1pp</td><td><strong>+1,1pp</strong></td><td>=</td></tr>
+      </tbody>
+    </table>
+    <div class="callout info">
+      <h4>💡 Insight cross: 2 biến kể 2 câu chuyện</h4>
+      <p><strong>Daily/per-stock</strong>: Bond có độ rộng dấu lớn hơn (β âm 35,3% vs 14,1%; volume âm 67,5% vs 62,7%). Đây là thống kê mô tả vì các mã không độc lập chéo. <strong>Monthly/breadth</strong>: Spread có chênh lệch mô tả lớn hơn ở một số chỉ báo, nhưng family spread-index không qua FDR (0/2 daily + monthly HAC).</p>
+    </div>
+
+    <h3>Cơ hội kiếm tiền: khi yield↑, khó chọn mã hơn</h3>
+    <p>Win rate (% mã tăng) gần như không đổi khi yield↑ hay ↓. Có 5/23 chỉ báo monthly còn ý nghĩa sau BH-FDR:</p>
+    <table class="tbl">
+      <thead><tr><th>Chỉ báo</th><th>Tháng Y↑</th><th>Tháng Y↓</th><th>Diff</th><th>p</th></tr></thead>
+      <tbody>
+        <tr><td><strong>% trên MA5</strong></td><td>45,6%</td><td>50,1%</td><td><strong>−4,5pp</strong></td><td>q=0,039</td></tr>
+        <tr><td><strong>% trên MA10</strong></td><td>46,3%</td><td>52,8%</td><td><strong>−6,5pp</strong></td><td>q=0,039</td></tr>
+        <tr><td><strong>% oversold (RSI&lt;30)</strong></td><td>13,6%</td><td>9,2%</td><td><strong>+4,4pp</strong></td><td>q=0,039</td></tr>
+        <tr><td><strong>% lợi suất ngày &lt; −1%</strong></td><td>25,3%</td><td>22,2%</td><td><strong>+3,1pp</strong></td><td>q=0,039</td></tr>
+        <tr><td><strong>% tích cực 5 ngày</strong></td><td>43,4%</td><td>48,6%</td><td><strong>−5,2pp</strong></td><td>q=0,039</td></tr>
+      </tbody>
+    </table>
+    <div class="chart-box">
+      <h4>📊 % mã trên MA theo period — yield↑ vs yield↓ (monthly)</h4>
+      <div class="desc">Khi yield↑: ít mã trong trend tăng ở MỌI period (MA5→MA50). MA50 giảm nhiều nhất (−8,3pp).</div>
+      <div class="chart-wrap"><canvas id="chartOppMonthly"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h4>📊 Cơ hội kiếm tiền: yield↑ vs yield↓ (daily)</h4>
+      <div class="desc">Win rate KHÔNG đổi (38,6%). Nhưng % breakdown tăng (+1,4pp), % trend up giảm (−1,9pp).</div>
+      <div class="chart-wrap"><canvas id="chartOppDaily"></canvas></div>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Số lượng cơ hội không giảm — chất lượng xấu đi</h4>
+      <p>Win rate không đổi (38,6%), nhưng ít mã trend up (−7,4pp monthly), nhiều mã breakdown (+1,4pp daily), biến động tăng (+0,16pp). <strong>Chọn đúng mã khó hơn, né sai mã khó hơn.</strong></p>
+    </div>
+    <div class="callout good">
+      <h4>✅ Insight thực tiễn khi Bond Y tăng</h4>
+      <ol style="margin-top:8px; padding-left:20px">
+        <li><strong>Đừng hoảng</strong> — win rate 38% không đổi. Thị trường không chết.</li>
+        <li><strong>Thận trọng hơn</strong> — chỉ 46,6% mã trend up (vs 54%), breakdown nhiều hơn.</li>
+        <li><strong>Biến động tăng</strong> — swing trade có cơ hội nhưng rủi ro cao.</li>
+        <li><strong>Ưu tiên né tránh</strong> — breakdown tăng nghĩa là nhiều bẫy hơn.</li>
+      </ol>
+    </div>
+
+    <h3>Volume từng mã: 67% có dấu thanh khoản âm khi yield↑</h3>
+    <p>Thống kê mô tả per-stock cho thấy <strong>266/394 mã (67,5%)</strong> có dấu volume âm khi VN10Y tăng. Các mã không độc lập chéo, nên tỷ lệ này không được dùng như một p-value thị trường.</p>
+    <div class="chart-box">
+      <h4>📊 Volume khi yield↑ vs yield↓ + lag</h4>
+      <div class="desc">Độ rộng dấu volume âm: bond 67,5% vs spread 62,7%. Không diễn giải như kiểm định độc lập giữa các mã.</div>
+      <div class="chart-wrap"><canvas id="chartVolYield"></canvas></div>
+    </div>
+
+    <h3>Ngành nào nhạy nhất? (per-stock β by ICB)</h3>
+    <p>β từng mã riêng (418 mã, monthly), nhóm theo ngành ICB:</p>
+    <table class="tbl">
+      <thead><tr><th>Ngành</th><th>n</th><th>Mean β</th><th>% sig âm</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dầu khí</strong></td><td>3</td><td><strong>−13,1</strong></td><td><strong>100%</strong></td></tr>
+        <tr><td><strong>Dịch vụ tài chính</strong></td><td>19</td><td>−11,1</td><td>68%</td></tr>
+        <tr><td><strong>Ngân hàng</strong></td><td>19</td><td>−9,5</td><td>68%</td></tr>
+        <tr><td>Bất động sản</td><td>56</td><td>−7,7</td><td>52%</td></tr>
+        <tr><td>Bảo hiểm</td><td>5</td><td>−6,9</td><td>60%</td></tr>
+        <tr><td>Công nghệ TT</td><td>8</td><td>−5,5</td><td>25%</td></tr>
+        <tr><td>Ô tô (ít nhạy nhất)</td><td>10</td><td>−1,4</td><td>30%</td></tr>
+      </tbody>
+    </table>
+    <div class="callout good">
+      <h4>✅ Ngân hàng + Dịch vụ TC + Dầu khí nhạy nhất</h4>
+      <p>Mọi mã ngân hàng (100%) có β âm. BĐS 93% âm nhưng phân tán (FIT β=−21 đến mã kháng). Ô tô ít nhạy nhất (70%). <strong>Cap-size effect</strong>: large cap (VN30) β=−9,80 vs small β=−5,67 (p=0,002) — large cap là proxy dòng ngoại.</p>
+    </div>
+
+    <h3>Ma trận giá × volume: ai không phát hiện quan hệ với BondY?</h3>
+    <p>Phân tích 393 mã theo 2 chiều bằng hồi quy HAC, sau đó BH-FDR trên family gồm toàn bộ kiểm định giá và volume:</p>
+    <table class="tbl">
+      <thead><tr><th></th><th>Volume BỊ ảnh hưởng</th><th>Volume KHÔNG bị ảnh hưởng</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Giá BỊ ảnh hưởng</strong></td><td>0 mã</td><td>0 mã (Price-only)</td></tr>
+        <tr><td><strong>Giá KHÔNG bị ảnh hưởng</strong></td><td>1 mã (Volume-only)</td><td><strong>392 mã (KHÔNG PHÁT HIỆN)</strong></td></tr>
+      </tbody>
+    </table>
+    <div class="chart-box">
+      <h4>📊 Ma trận 2×2: 393 mã theo ảnh hưởng giá × volume</h4>
+      <div class="desc">392 mã không qua ngưỡng phát hiện sau HAC + FDR. Đây không phải bằng chứng các mã “miễn nhiễm”.</div>
+      <div class="chart-wrap"><canvas id="chartMatrix"></canvas></div>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ “Không phát hiện” không đồng nghĩa “không có quan hệ”</h4>
+      <p>TOST với biên |r|&lt;0,05, cỡ mẫu hiệu dụng AR(1) và BH-FDR chỉ xác lập tương đương cho <strong>119/393 chuỗi giá</strong>, <strong>0/393 chuỗi volume</strong> và <strong>0/393 mã trên cả hai chiều</strong>.</p>
+    </div>
+    <div class="callout info">
+      <h4>💡 Nhóm Volume-only</h4>
+      <p>Chỉ còn 1 mã volume-only sau HAC + FDR; mẫu này không đủ để suy luận tín hiệu dẫn đầu.</p>
+    </div>
+  </section>
+
+  <section id="cross-bond-spread">
+    <h2 class="section-title"><span class="num">VI</span>Cross: bề nổi vs bên trong — tổng hợp</h2>
+    <p>Đặt 2 trục cạnh nhau, câu chuyện bond-stock VN hiện rõ:</p>
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">Bond</div><div class="lab">Mạnh hơn daily + per-stock (β 35%, volume 67%)</div></div>
+      <div class="kpi cyan"><div class="val">Spread</div><div class="lab">Mạnh hơn monthly + breadth (MA20, oversold, drawdown)</div></div>
+      <div class="kpi violet"><div class="val">Index</div><div class="lab">Che lấp cap-size: large cap nhạy gấp đôi</div></div>
+      <div class="kpi green"><div class="val">38%</div><div class="lab">Win rate không đổi — không hết cơ hội, chỉ khó chọn</div></div>
+    </div>
+    <div class="callout good">
+      <h4>🎯 Kết luận cross</h4>
+      <p>Quan hệ bond-stock VN <strong>thật nhưng đa chiều</strong>: mạnh monthly không daily, mạnh per-stock không chỉ index, bond mạnh ngắn hạn nhưng spread mạnh breadth. Nhà đầu tư cần nhìn cả 2 trục + 2 biến để hiểu đầy đủ. Index một mình <strong>không đủ</strong> — nó che lấp cap-size effect và không cho thấy breadth suy yếu bên trong.</p>
+    </div>
+  </section>
+
+  <section id="chuong-11">
+    <h2 class="section-title"><span class="num">XI</span>Mười sáu trái phiếu toàn cầu: VN đi cùng ai?</h2>
+    <p>Ra khỏi biên giới Việt Nam, câu hỏi trở nên: VN10Y là một phần của thị trường trái phiếu toàn cầu, hay là hòn đảo riêng? Để trả lời, nghiên cứu so sánh VN10Y với <strong>16 trái phiếu chính phủ kỳ hạn 10 năm</strong> khác: G7 (Mỹ, Đức, Nhật, Anh, Pháp, Hàn), châu Á mới nổi (Ấn, Trung, Indonesia, Thái, Philippines), và EM (Brazil, Mexico, Nam Phi, Ý, Tây Ban Nha).</p>
+    <div class="chart-box">
+      <h4>📊 Tương quan VN10Y vs 16 peer — daily và 1 năm</h4>
+      <div class="desc">Daily: EM LatAm (Mexico, Brazil) cao nhất. 1 năm: G7 (Hàn, Đức, Mỹ) cao nhất. Trung Quốc âm ở mọi horizon.</div>
+      <div class="chart-wrap tall"><canvas id="chartGlobal"></canvas></div>
+    </div>
+    <div class="callout info">
+      <h4>💡 Hai kênh, hai nhóm đối tác</h4>
+      <p>VN10Y có <strong>hai cụm quan hệ</strong>: (1) <em>Ngắn hạn</em> — tương quan cao nhất với EM LatAm (Mexico +0,063, Nam Phi +0,062, Brazil +0,055), phản ánh sentiment dòng vốn EM. (2) <em>Dài hạn</em> — tương quan cao nhất với G7 (Hàn +0,58, Đức +0,55, Mỹ +0,54), phản ánh fundamentals lãi suất. VN là <strong>cầu nối</strong> giữa hai cụm.</p>
+    </div>
+    <h3>Và ai KHÔNG đi cùng VN</h3>
+    <div class="compare">
+      <div class="col before">
+        <h4>Trung Quốc: khác kỳ hoàn toàn <span class="tag">Âm</span></h4>
+        <ul class="bul">
+          <li>r daily: −0,029</li>
+          <li>r 1 năm: −0,009</li>
+          <li>Cointegration: KHÔNG</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>EU periphery (Ý, TBN): không liên quan <span class="tag">≈ 0</span></h4>
+        <ul class="bul">
+          <li>IT10Y r 1y: +0,14, không cointegration</li>
+          <li>ES10Y r 1y: +0,22, không cointegration</li>
+          <li>VN chỉ quan hệ "lõi G7"</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="chuong-12">
+    <h2 class="section-title"><span class="num">XII</span>Indonesia — peer tự nhiên của Việt Nam</h2>
+    <p>Trong số 16 peer, một nước nổi bật như đối tác tự nhiên nhất của Việt Nam: <strong>Indonesia</strong>. Không phải Trung Quốc, không phải Thái Lan — mà Indonesia, một EM châu Á có quy mô và cấu trúc tương tự VN.</p>
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="val">+0,457</div><div class="lab">r 1-năm VN10Y vs ID10Y (xếp #5 toàn bộ peer)</div></div>
+      <div class="kpi green"><div class="val">CÓ</div><div class="lab">Cointegration (Trace 15,73 &gt; CV 15,49)</div></div>
+      <div class="kpi green"><div class="val">2 chiều</div><div class="lab">Granger causality (ID→VN p=0,001, VN→ID p=0,01)</div></div>
+    </div>
+    <div class="callout good">
+      <h4>✅ Tại sao Indonesia, không phải TQ/Thái Lan?</h4>
+      <p>Indonesia và Việt Nam cùng là EM châu Á phụ thuộc dòng vốn ngoại, có risk premium tương tự, quy mô thị trường tương đương. Thái Lan có thị trường vốn phát triển hơn, lãi suất thấp, ít phụ thuộc vốn ngoại EM → khác cycle. Trung Quốc có chính sách tiền tệ độc lập (PBoC nới khi Fed thắt) → <strong>ngược chiều</strong> VN. Kết luận: khi cần benchmark châu Á cho VN10Y, <strong>Indonesia là lựa chọn tự nhiên nhất</strong>.</p>
+    </div>
+  </section>
+
+  <section id="chuong-13">
+    <h2 class="section-title"><span class="num">XIII</span>Phân tích thành phần chính: VN cô lập cỡ nào?</h2>
+    <p>Để tổng hợp cấu trúc toàn cầu, nghiên cứu dùng <strong>Principal Component Analysis (PCA)</strong> trên 16 trái phiếu peer — rút ra các "factor" chung chi phối biến động trái phiếu toàn cầu, rồi tính beta của VN10Y với từng factor.</p>
+    <div class="chart-box">
+      <h4>📊 3 factor chính chi phối 71% biến động trái phiếu toàn cầu</h4>
+      <div class="desc">PC1 (40,3%) = G7 factor (Mỹ/Đức/Nhật/Hàn). PC2 (17,9%) = EU periphery/EM. PC3 (13,3%) = EM LatAm.</div>
+      <div class="chart-wrap"><canvas id="chartPCA"></canvas></div>
+    </div>
+    <h3>Beta của VN10Y vs global factor</h3>
+    <div class="compare">
+      <div class="col before">
+        <h4>β vs PC1 (G7) <span class="tag">Có ý nghĩa</span></h4>
+        <ul class="bul">
+          <li>β = +0,100, p = 0,0003</li>
+          <li>VN có exposure yếu-trung bình với G7</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>β vs PC2/PC3 <span class="tag">Không sig</span></h4>
+        <ul class="bul">
+          <li>β(PC2) = −0,045 (p=0,28)</li>
+          <li>β(PC3) = +0,005 (p=0,93)</li>
+          <li>EU periphery, EM LatAm không giải thích VN</li>
+        </ul>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">7,1%</div><div class="lab">R²: global factor giải thích bao nhiêu VN10Y (monthly)</div></div>
+      <div class="kpi red"><div class="val">0,150</div><div class="lab">Integration score VN (avg |r| với peers) — ISOLATED</div></div>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ VN là "hòn đảo" trong global bond market</h4>
+      <p>Global factor chỉ giải thích <strong>7,1% biến động monthly</strong> của VN10Y — 93% đến từ yếu tố nội địa (NHNN, chính sách VN). Hierarchical clustering đặt VN vào <strong>cụm riêng với Philippines</strong>, tách khỏi tất cả cluster chính. Điểm hội nhập (avg |r|) của VN chỉ 0,150 — xếp cùng nhóm cô lập với Trung Quốc, Philippines, Anh.</p>
+    </div>
+  </section>
+
+  <section id="chuong-14">
+    <h2 class="section-title"><span class="num">XIV</span>Tương quan đồng thời theo cửa sổ tổng hợp</h2>
+    <p>Toàn bộ các chương trước báo cáo tương quan ở các horizon rời rạc — 1 ngày, 1 tháng, 1 năm. Phần này tính tương quan đồng thời (contemporaneous) trên 13 cửa sổ tổng hợp từ 1 ngày đến 2 năm. <strong>Lưu ý quan trọng:</strong> độ lớn tương quan đồng thời <em>không đồng nghĩa với forward predictability</em> — một quan hệ có thể mạnh ở cửa sổ 4 tháng nhưng vẫn không dự báo được return tương lai (xem Chương XVd).</p>
+    <div class="chart-box">
+      <h4>📊 Tương quan đồng thời theo cửa sổ</h4>
+      <div class="desc">Trong nước: |r| đỉnh ở 3–6 tháng rồi giảm. Quốc tế (G7): vẫn tăng đến 2 năm.</div>
+      <div class="chart-wrap tall"><canvas id="chartPeak"></canvas></div>
+    </div>
+    <h3>Trong nước: |r| đỉnh ở 3–6 tháng</h3>
+    <p>Cả hai cặp trong nước đều theo dạng chuông: |r| <strong>tăng dần</strong> từ daily lên đỉnh ở <strong>3–6 tháng</strong> (|r| ≈ 0,29–0,32), rồi <strong>giảm dần</strong> về ~0,15 ở 2 năm. Đây là độ lớn tương quan <strong>đồng thời</strong> — cho thấy bond và stock di chuyển cùng nhau mạnh nhất khi đo trên cửa sổ 3–6 tháng, nhưng không cho biết bond thay đổi hôm nay dự báo stock tháng sau ra sao.</p>
+    <div class="callout warn">
+      <h4>⚠️ Đỉnh tương quan ≠ cửa sổ dự báo</h4>
+      <p>Đỉnh |r| ở 3–6 tháng là đặc tính của dữ liệu đồng thời (overlapping windows). Kiểm định forward (local projections tại h=1/3/6) cho thấy <strong>không có quan hệ dự báo</strong> (0/3 pass FDR). Không nên diễn giải đỉnh này là "khoảng thời gian price-in" hoặc đưa khuyến nghị nhìn 3–6 tháng.</p>
+    </div>
+    <h3>Quốc tế: tương quan VN10Y–G7 lớn hơn khi đo ở cửa sổ dài</h3>
+    <div class="kpi-grid">
+      <div class="kpi violet"><div class="val">+0,66</div><div class="lab">r VN10Y vs DE10Y ở 2 năm (vẫn tăng, chưa đỉnh)</div></div>
+      <div class="kpi violet"><div class="val">+0,60</div><div class="lab">r VN10Y vs ID10Y ở 2 năm (Indonesia)</div></div>
+      <div class="kpi green"><div class="val">+0,24</div><div class="lab">r VN10Y vs BR10Y đỉnh 1,5 năm (EM LatAm)</div></div>
+    </div>
+    <p>Khác hẳn quan hệ trong nước, tương quan VN10Y với G7 <strong>vẫn tăng đều</strong> đến 2 năm và chưa hề chạm đỉnh. Tại daily chỉ +0,02; 1 năm +0,54; 2 năm +0,66. Tương quan VN10Y–G7 lớn hơn khi đo ở cửa sổ dài hơn.</p>
+    <div class="compare">
+      <div class="col before">
+        <h4>Trong nước: hình chuông <span class="tag">Đỉnh 3–6m</span></h4>
+        <ul class="bul">
+          <li>|r| tăng dần: daily → 6 tháng</li>
+          <li>Đỉnh đồng thời: 6 tháng (VN10Y) / 3 tháng (spread)</li>
+          <li>Giảm dần: 6 tháng → 2 năm</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Quốc tế: vẫn tăng <span class="tag">Chưa đỉnh</span></h4>
+        <ul class="bul">
+          <li>|r| tăng liên tục: daily → 2 năm</li>
+          <li>Chưa đỉnh ở 2 năm</li>
+          <li>Tương quan lớn hơn ở cửa sổ dài hơn</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Giới hạn diễn giải</h4>
+      <p>Đây là tương quan <strong>đồng thời</strong> theo cửa sổ — không chứng minh transmission lag hay price-in. Forward predictability đã được kiểm định riêng (Chương XVd): 0/3 pass FDR. Không nên dùng đỉnh |r| để khuyến nghị "nhìn 3–6 tháng" hay "đợi 1–2 năm".</p>
+    </div>
+    <div class="callout info">
+      <h4>💡 Lưu ý robustness</h4>
+      <p>Hàng "trong nước" (cyan/cam) dùng TPCP HNX chính thức. Hàng "quốc tế" (xanh/lục) dùng Investing cho 16 peer toàn cầu (không có HNX tương đương).</p>
+    </div>
+    <div class="callout info">
+      <h4>🔬 Bổ sung: Markov-Switching chính thức</h4>
+      <p>MarkovRegression hai trạng thái với switching intercept và switching slope theo thay đổi VN10Y đã hội tụ:</p>
+      <table class="tbl" style="margin-top:10px">
+        <thead><tr><th>Regime</th><th>% thời gian</th><th>Mean rolling r</th><th>Mean VNI ret</th></tr></thead>
+        <tbody>
+          <tr><td>Regime 0 (hiếm)</td><td>3,23%</td><td>Intercept −0,0357</td><td>βbond +0,0406</td></tr>
+          <tr><td>Regime 1 (phổ biến)</td><td>96,77%</td><td>Intercept +0,00168</td><td>βbond +0,00109</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px">Mô hình phát hiện một regime hiếm, không phải phân chia 50/50. Chưa gắn nhãn risk-on/risk-off vì chưa có xác nhận kinh tế độc lập cho từng trạng thái.</p>
+    </div>
+  </section>
+
+  <section id="chuong-15d">
+    <h2 class="section-title"><span class="num">XVd</span>Kiểm định V2: đồng thời không đồng nghĩa predictive</h2>
+    <p>Các chương trước cho thấy tương quan <strong>đồng thời</strong> bond-stock mạnh ở cửa sổ 3–6 tháng. Nhưng câu hỏi quan trọng hơn: bond thay đổi hôm nay có <em>dự báo</em> được stock tháng sau không? Phase 1 V2 kiểm định trực tiếp câu hỏi này bằng 2 phương pháp.</p>
+
+    <h3>1. Local projections: forward return 1/3/6 tháng</h3>
+    <p>Đo forward return: log(VNI[t+h]/VNI[t])×100 vs yield level change +10bp, với controls (2 lags VNI return + factor changes). 2000 moving-block bootstrap, simultaneous bands centered (β_boot−β̂)/SE_boot, BH-FDR trên 3 primary horizons:</p>
+    <table class="tbl">
+      <thead><tr><th>Horizon</th><th>β/10bp</th><th>p</th><th>q_BH</th><th>Simultaneous band</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>h=1 tháng</td><td>−0,154</td><td>0,444</td><td>0,828</td><td>[−0,787, +0,479]</td><td>not_supported</td></tr>
+        <tr><td>h=3 tháng</td><td>−0,103</td><td>0,828</td><td>0,828</td><td>[−1,600, +1,394]</td><td>not_supported</td></tr>
+        <tr><td>h=6 tháng</td><td>−0,204</td><td>0,746</td><td>0,828</td><td>[−2,182, +1,774]</td><td>not_supported</td></tr>
+      </tbody>
+    </table>
+    <p><strong>0/3 pass FDR.</strong> Forward return không có association đáng tin cậy với yield change. d_level simultaneous critical value = 3,142.</p>
+
+    <h3>2. Auction event study: repricing quanh đấu thầu</h3>
+    <p>Kiểm định 3 biến (allocation ratio, demand intensity, yield surprise proxy) × 2 cửa sổ ([0,+1], [−1,+1]) = 6 tests. Trading-day offsets, matched placebo (1000 reps), quarter block bootstrap (2000 reps), BH-FDR:</p>
+    <table class="tbl">
+      <thead><tr><th>Variable</th><th>Window</th><th>q_BH</th><th>Placebo p</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Allocation ratio</td><td>[0,+1]</td><td>0,952</td><td>0,563</td><td>inconclusive</td></tr>
+        <tr><td>Allocation ratio</td><td>[−1,+1]</td><td>0,952</td><td>0,752</td><td>inconclusive</td></tr>
+        <tr><td>Demand intensity</td><td>[0,+1]</td><td>0,952</td><td>0,901</td><td>inconclusive</td></tr>
+        <tr><td>Demand intensity</td><td>[−1,+1]</td><td>0,952</td><td>0,868</td><td>inconclusive</td></tr>
+        <tr><td>Yield surprise</td><td>[0,+1]</td><td>0,952</td><td>0,832</td><td>inconclusive</td></tr>
+        <tr><td>Yield surprise</td><td>[−1,+1]</td><td>0,952</td><td>0,961</td><td>inconclusive</td></tr>
+      </tbody>
+    </table>
+    <p><strong>0/6 pass FDR.</strong> Không phát hiện repricing đáng tin cậy quanh auction outcomes với 3 proxy và 2 cửa sổ đã kiểm định.</p>
+
+    <div class="callout warn">
+      <h4>⚠️ Kết luận V2</h4>
+      <p>Tương quan đồng thời mạnh (r=−0,33 ở monthly) <strong>không chuyển thành forward predictability</strong>. Điều này nhất quán với OOS R²=−0,02 từ V1. Hàm ý: quan hệ bond-stock VN là <strong>đồng thời/mô tả</strong>, không phải dự báo. Bond yield không nên dùng làm tín hiệu timing hay stock selection.</p>
+    </div>
+    <div class="callout info">
+      <h4>💡 Phạm vi và giới hạn</h4>
+      <p>V2 kiểm định forward predictability và auction repricing. Các kết quả V1 khác (win rate 38,6%, daily r≈0, cross-country outlier, breadth 5/23) <strong>không được tái kiểm định trong V2</strong> — chúng vẫn thuộc V1 với cùng caveats đã ghi. V2 bổ sung, không thay thế V1.</p>
+    </div>
+  </section>
+
+  <section id="chuong-15">
+    <h2 class="section-title"><span class="num">XV</span>Hiểu lầm thường gặp</h2>
+    <p>Trong quá trình thảo luận nghiên cứu này, một số phản biện xuất hiện lặp lại. Phần này giải đáp trực tiếp — không phải để bác bỏ, mà để phân định đâu là phê phán đúng, đâu là phê phán nửa vời.</p>
+
+    <h3>Hiểu lầm 1: "Gbond VN không có tính thị trường nên không có giá trị tham khảo"</h3>
+    <div class="callout warn">
+      <h4>❌ Lời phê phán</h4>
+      <p>Vì lợi suất trái phiếu Chính phủ Việt Nam không được giao dịch liên tục như cổ phiếu, nhiều người kết luận toàn bộ nghiên cứu bond-stock là vô nghĩa.</p>
+    </div>
+    <div class="callout good">
+      <h4>✅ Thực tế dữ liệu</h4>
+      <p>Đây là <strong>nửa đúng, nửa sai</strong>. Đúng: VN10Y không phải tài sản giao dịch liên tục — nó là benchmark được HNX tổng hợp (16,5% ngày đứng yên), nên không thể dùng để dự báo hay giao dịch. Nhưng chính đặc thù đó lại là tín hiệu: (1) 16,5% ngày đứng yên phản ánh thanh khoản TPCP kỳ hạn dài còn hạn chế, NHNN can thiệp; (2) khi bond THỰC SỰ biến động (top 5% ngày có giao dịch), đó là event thật. Nghiên cứu đã lường trước điều này — chỉ dùng miêu tả/sự kiện, không dự báo. Người phê phán đúng về "tính thị trường" nhưng sai về "không tham khảo": quan hệ vĩ mô (Granger, cointegration) <strong>vẫn robust</strong> trên dữ liệu HNX chính thức.</p>
+    </div>
+
+    <h3>Hiểu lầm 2: "Tương quan không phải nhân quả, nên vô nghĩa"</h3>
+    <div class="callout warn">
+      <h4>❌ Lời phê phán</h4>
+      <p>Tương quan Pearson chỉ cho biết hai biến di chuyển cùng nhau, không chứng minh quan hệ nhân quả.</p>
+    </div>
+    <div class="callout good">
+      <h4>✅ Thực tế dữ liệu</h4>
+      <p>Đúng về mặt lý thuyết. Nhưng nghiên cứu không chỉ dùng Pearson — nó dùng <strong>14 phương pháp đan xen</strong> (Pearson, Granger, Johansen, VECM, rolling correlation, PCA, clustering, extreme quantile, Chow break, robustness). Khi nhiều phương pháp cho cùng kết luận, độ tin cậy cao hơn một phương pháp đơn lẻ. Quan hệ âm bond-stock xuất hiện nhất quán qua các phương pháp vĩ mô.</p>
+    </div>
+
+    <h3>Hiểu lầm 3: "Tương quan mức giá −0,81 chứng tỏ quan hệ rất mạnh"</h3>
+    <div class="callout warn">
+      <h4>❌ Lời phê phán</h4>
+      <p>VN10Y và VN-Index có tương quan −0,81 → quan hệ nghịch cực mạnh.</p>
+    </div>
+    <div class="callout good">
+      <h4>✅ Thực tế dữ liệu</h4>
+      <p>Đây là <strong>tương quan giả</strong> (spurious). Cả hai chuỗi đều có trend dài hạn ngược chiều trùng nhau về thời gian. Khi dùng returns, tương quan thật chỉ −0,05 (daily), −0,32 (monthly). Bất kỳ nghiên cứu bond-stock nào dùng level correlation đều cần cảnh báo này.</p>
+    </div>
+
+    <h3>Hiểu lầm 4: "DXY ảnh hưởng VN10Y"</h3>
+    <div class="callout warn">
+      <h4>❌ Lời phê phán</h4>
+      <p>USD mạnh (DXY tăng) → vốn rút EM → lãi suất VN tăng. Vậy DXY phải ảnh hưởng VN10Y.</p>
+    </div>
+    <div class="callout good">
+      <h4>✅ Thực tế dữ liệu</h4>
+      <p>Dữ liệu cho thấy DXY có tương quan gần <strong>0</strong> với VN10Y (r = +0,008, không cointegration). Lý do: NHNN neo tỷ giá (managed float), capital controls. Khác hẳn Brazil/Mexico (DXY có quan hệ mạnh). Kênh tỷ giá USD→VN gần như bị khóa.</p>
+    </div>
+
+    <h3>Hiểu lầm 5: "VN bond thị trường hoàn toàn cô lập, không liên quan gì quốc tế"</h3>
+    <div class="callout warn">
+      <h4>❌ Lời phê phán</h4>
+      <p>VN10Y bị điều hành, nên không có bất kỳ liên kết nào với trái phiếu toàn cầu.</p>
+    </div>
+    <div class="callout good">
+      <h4>✅ Thực tế dữ liệu</h4>
+      <p>Nửa đúng. Ở ngắn hạn: đúng, integration score chỉ 0,150, cluster với Philippines. Nhưng ở <strong>dài hạn (1 năm+)</strong> có cointegration với G7 (Đức/Mỹ/Nhật), r = 0,5+. Đặc biệt Indonesia là peer tự nhiên (r 1y = +0,46, Granger 2 chiều). VN có hai kênh: EM sentiment (daily) + G7 fundamentals (dài hạn).</p>
+    </div>
+
+    <h3>Hiểu lầm 6: "Volume tăng = tín hiệu giá tăng"</h3>
+    <div class="callout warn">
+      <h4>❌ Lời phê phán</h4>
+      <p>Volume tăng báo hiệu giá sẽ tăng — niềm tin phổ biến của nhà đầu tư cá nhân.</p>
+    </div>
+    <div class="callout good">
+      <h4>✅ Thực tế dữ liệu</h4>
+      <p>Volume <strong>không dự báo chiều giá</strong> (r signed ≈ 0). Volume chỉ là proxy biến động (r với |return| = +0,15). Khi volume bùng nổ, cả bond lẫn stock dao động mạnh hơn, nhưng không cho biết tăng hay giảm. Đừng trade theo volume đơn thuần.</p>
+    </div>
+  </section>
+
+  <section id="chuong-15b">
+    <h2 class="section-title"><span class="num">XVb</span>Cross-country: VN có đặc biệt không?</h2>
+    <p>External validity test: chạy cùng pipeline bond-stock cho 4 nước EM châu Á (VN, Indonesia, Thailand, Philippines), so sánh dấu và magnitude của monthly correlation. Mục tiêu trả lời: <em>quan hệ bond-stock âm ở VN có phải pattern chung EM, hay VN là ngoại lệ?</em></p>
+    <table class="tbl">
+      <thead><tr><th>Quốc gia</th><th>Monthly r</th><th>β</th><th>p</th><th>Kết luận</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Việt Nam</strong></td><td><strong>−0,301</strong></td><td><strong>−0,064</strong></td><td>&lt;0,001 ***</td><td>🔴 Âm rõ</td></tr>
+        <tr><td>Indonesia</td><td>−0,015</td><td>−0,003</td><td>0,84 n.s.</td><td>⚪ Không quan hệ</td></tr>
+        <tr><td>Thailand</td><td>+0,148</td><td>+0,045</td><td>0,037 **</td><td>🟢 Dương (cùng chiều!)</td></tr>
+        <tr><td>Philippines</td><td>+0,055</td><td>+0,011</td><td>0,44 n.s.</td><td>⚪ Không quan hệ</td></tr>
+      </tbody>
+    </table>
+    <div class="callout good">
+      <h4>✅ VN là OUTLIER thực sự</h4>
+      <p>VN có monthly r = <strong>−0,301</strong> — âm hơn mức trung bình peers (+0,063) tới <strong>0,36 điểm</strong>. Trong khi ID/PH gần 0 (không quan hệ), TH thậm chí <strong>dương</strong> (yield tăng → stock tăng, ngược VN). Việt Nam là nước <strong>duy nhất</strong> trong nhóm EM châu Á có quan hệ bond-stock nghịch biến mạnh.</p>
+    </div>
+    <div class="callout info">
+      <h4>💡 Ý nghĩa: tại sao VN đặc biệt?</h4>
+      <p>Đây là <strong>selling point của nghiên cứu</strong>, không phải weakness. Sự khác biệt gợi ý cơ chế riêng của VN: (1) NHNN điều hành lãi suất theo kiểu hành chính (administered rates), (2) ngân hàng nắm phần lớn TPCP (portfolio balance channel), (3) dòng ngoại phản ứng khác EM khác. <em>Cơ chế này cần nghiên cứu lý thuyết sâu hơn</em> (xem Hướng nghiên cứu).</p>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Hạn chế data</h4>
+      <p>Stock indices của ID/TH/PH từ yfinance (chỉ từ 2010). Bond yields từ Investing. Period 2010-2026, n=197 tháng. Kết luận consistent qua 4 nước nhưng cần mở rộng sample ( thêm Malaysia, India) để robust hơn.</p>
+    </div>
+  </section>
+
+  <section id="chuong-15b2">
+    <h2 class="section-title"><span class="num">XVb²</span>Synthetic Control: kiểm định cú sốc SCB 2022</h2>
+    <p>Nghiên cứu dùng Synthetic Control Method với sự kiện SCB tháng 10/2022, một cú sốc đặc thù Việt Nam phù hợp hơn COVID. Outcome là tương quan bond-stock rolling 24 tháng và donor pool gồm 10 nước.</p>
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="val">0,485</div><div class="lab">Post/pre RMSPE ratio</div></div>
+      <div class="kpi"><div class="val">IN 93,5% + US 6,5%</div><div class="lab">Trọng số synthetic VN</div></div>
+      <div class="kpi violet"><div class="val">p=1,000</div><div class="lab">Finite-sample permutation, 10 placebo</div></div>
+    </div>
+    <div class="callout good">
+      <h4>❌ SCM không xác nhận treatment effect</h4>
+      <p>Pre-RMSPE = 0,609 và post-RMSPE = 0,295, nên ratio chỉ 0,485; gap sau treatment trung bình −0,060 và permutation p=1,000. Dữ liệu không cho thấy divergence tăng sau sự kiện SCB.</p>
+    </div>
+    <div class="callout info">
+      <h4>💡 Diễn giải được phép</h4>
+      <p>Cross-country comparison vẫn là bằng chứng mô tả rằng VN khác một số peer. SCM hiện tại không bổ sung bằng chứng nhân quả và không được dùng để xác nhận claim “VN outlier”.</p>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Hạn chế SCM</h4>
+      <p>(1) Chỉ có 10 placebo, nên p-value nhỏ nhất có thể là 0,091. (2) Pre-fit yếu trên thang tương quan [-1;1]. (3) Outcome rolling 24 tháng làm mờ thời điểm treatment. Vì vậy thiết kế có sức mạnh thống kê thấp.</p>
+    </div>
+  </section>
+
+  <section id="chuong-15b3">
+    <h2 class="section-title"><span class="num">XVb³</span>Cơ chế truyền dẫn: lãi suất lan tới cổ phiếu qua đâu?</h2>
+    <p>Quan hệ bond-stock monthly là nghịch biến và cross-country cho thấy VN khác một số peer, nhưng SCM không xác nhận treatment effect. Phần này chỉ khảo sát <em>cơ chế truyền dẫn khả dĩ</em> bằng proxy tests, không phải nhận diện nhân quả:</p>
+    <table class="tbl">
+      <thead><tr><th>Kênh</th><th>Proxy test</th><th>Kết quả</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><strong>2. Credit/cashflow</strong></td><td>β tài chính vs phi tài chính</td><td>−3,95 vs −2,71, <strong>t=−6,66, p=0,0003</strong></td><td>✅ <strong>Mạnh nhất</strong></td></tr>
+        <tr><td>3. Foreign flow</td><td>Spread VN-US → VNI (outflow proxy)</td><td>r=−0,056 *** (Granger n.s.)</td><td>✅ Đồng biến</td></tr>
+        <tr><td>1. Discount rate</td><td>β growth vs value sector</td><td>−2,95 vs −2,43</td><td>🟡 Yếu</td></tr>
+      </tbody>
+    </table>
+    <div class="callout good">
+      <h4>✅ Kênh credit (tài chính) là cơ chế chính</h4>
+      <p>Ngành <strong>tài chính</strong> (VNFINLEAD, VNFINSELECT, VNFIN, VNDIAMOND) có β trung bình <strong>−3,95%/pp</strong> — nhạy hơn ngành phi tài chính (−2,71%) tới <strong>46%</strong>, với t-test p=0,0003 ***. Đây là bằng chứng gián tiếp mạnh cho <strong>kênh credit/cashflow</strong>: khi yield tăng, ngân hàng chịu áp lực kép (NIM co, mark-to-market loss trên bond portfolio) → earnings ↓ → giá ngân hàng ↓ mạnh hơn. Cơ chế này nhất quán với VN — nơi ngân hàng chiếm ~30% vốn hóa và nắm phần lớn TPCP.</p>
+    </div>
+    <div class="callout info">
+      <h4>💡 Kênh foreign flow (yếu hơn) + discount rate (yếu nhất)</h4>
+      <p><strong>Foreign flow:</strong> spread VN-US widening (proxy risk premium ↑ = capital outflow) đi cùng VNI giảm (r=−0,056 ***), nhưng <em>không Granger-cause</em> (p=0,11) — quan hệ đồng thời, không dẫn dắt. <strong>Discount rate:</strong> growth sectors nhạy hơn value (−2,95 vs −2,43) nhưng chênh nhỏ, proxy duration chưa đủ mạnh.</p>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Hạn chế proxy tests</h4>
+      <p>Đây là <strong>bằng chứng gián tiếp</strong>, không phải mediation test hoàn chỉnh. Thiếu: bank NIM quarterly (kênh 2 formal), foreign net buy/sell daily (kênh 3 formal), sector-level DCF duration (kênh 1 formal). Kết luận "kênh credit trội" dựa trên <em>sector β differential</em> — hợp lý nhưng cần data fundamentals để confirm. Đây là gap cho follow-up research.</p>
+    </div>
+  </section>
+
+  <section id="chuong-15b4">
+    <h2 class="section-title"><span class="num">XVb⁴</span>β theo kỳ hạn: VNI nhạy với lãi suất dài hay ngắn?</h2>
+    <p>Proxy test (XVb³) cho kênh discount rate còn yếu. Câu hỏi trực tiếp hơn: nếu discount rate là cơ chế, thì VNI phải nhạy với <strong>kỳ hạn dài</strong> (duration cao) hơn ngắn. Nghiên cứu test β của VNI monthly return lên Δyield <em>từng kỳ hạn riêng</em> (1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 20Y) — dữ liệu 11 kỳ hạn HNX (3M→20Y), chưa ai khai thác.</p>
+    <table class="tbl">
+      <thead><tr><th>Tenor</th><th>β monthly</th><th>SE HAC</th><th>p</th><th>R²</th></tr></thead>
+      <tbody>
+        <tr><td>1Y</td><td>−0,060</td><td>0,017</td><td>0,0006 ***</td><td>10,6%</td></tr>
+        <tr><td>2Y</td><td>−0,055</td><td>0,019</td><td>0,003 ***</td><td>8,5%</td></tr>
+        <tr><td>3Y</td><td>−0,054</td><td>0,020</td><td>0,006 ***</td><td>8,1%</td></tr>
+        <tr><td>5Y</td><td>−0,061</td><td>0,024</td><td>0,013 **</td><td>7,5%</td></tr>
+        <tr><td>7Y</td><td>−0,068</td><td>0,023</td><td>0,003 ***</td><td>10,9%</td></tr>
+        <tr><td><strong>10Y</strong></td><td><strong>−0,069</strong></td><td>0,026</td><td>0,007 ***</td><td>10,6%</td></tr>
+        <tr><td>20Y</td><td>−0,021</td><td>0,017</td><td>0,23 n.s.</td><td>1,4%</td></tr>
+      </tbody>
+    </table>
+    <div class="callout good">
+      <h4>✅ Kênh discount rate được hỗ trợ (mạnh hơn proxy test)</h4>
+      <p>Monthly β <strong>tăng dần từ short → long</strong> (1Y: −0,060 → 10Y: −0,069) — VNI nhạy hơn với lãi suất <strong>dài hạn</strong>, đúng như lý thuyết discount rate (duration cao → P/E nhạy hơn). Đây là <strong>bằng chứng dữ liệu thật</strong> cho kênh 1 (XVb³ chỉ là proxy yếu). Cả 6 kỳ hạn 1-10Y đều ***. Đỉnh ở 7-10Y, giảm ở 20Y (thanh khoản kém).</p>
+    </div>
+    <div class="callout info">
+      <h4>💡 Daily vs Monthly: kỳ hạn nào quan trọng?</h4>
+      <p>Một phát hiện thú vị: <strong>daily</strong> β mạnh nhất ở <em>ngắn hạn</em> (1-3Y, p&lt;0,05), nhưng <strong>monthly</strong> β mạnh nhất ở <em>dài hạn</em> (7-10Y). Giải thích: daily phản ứng NHNN policy signal (short-rate = công cụ điều hành), monthly phản ứng discount rate thật (long-duration assets). Cả 2 cơ chế cùng tồn tại ở các horizon khác nhau.</p>
+    </div>
+    <div class="callout warn">
+      <h4>⚠️ Hạn chế</h4>
+      <p>β theo tenor chỉ là univariate (mỗi tenor riêng). Multivariate với nhiều tenor cùng lúc bị multicollinearity (các kỳ hạn tương quan cao). Để phân rã chính xác (level/slope/curvature factor), cần Nelson-Siegel decomposition — đề xuất cho Paper 2. Nghiên cứu này chỉ test univariate để xác nhận kênh discount rate.</p>
+    </div>
+  </section>
+
+  <section id="chuong-15c">
+    <h2 class="section-title"><span class="num">XVc</span>Không thể dự báo — mối quan hệ chỉ là mô tả</h2>
+    <p>Câu hỏi tàn nhẫn nhưng cần thiết: quan hệ bond-stock <em>có thật trong sample</em>, nhưng <strong>có dự báo được ngoài mẫu</strong> không? Nếu không, giá trị thực tiễn chỉ là mô tả, không phải trading/prediction edge. Nghiên cứu test thẳng thừng 4 cách:</p>
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">12%</div><div class="lab">% rolling windows Granger significant (60-tháng)</div></div>
+      <div class="kpi red"><div class="val">−0,02</div><div class="lab">OOS R² (Campbell-Thompson) — âm, worse than naive mean</div></div>
+      <div class="kpi"><div class="val">0,65</div><div class="lab">Sharpe market-timing vs buy-hold 0,83</div></div>
+      <div class="kpi"><div class="val">n.s.</div><div class="lab">Diebold-Mariano test (model vs mean)</div></div>
+    </div>
+    <div class="callout warn">
+      <h4>🚨 Kết quả trung thực: KHÔNG có predictive edge</h4>
+      <p>Quan hệ bond-stock VN tồn tại in-sample (r=−0,33, p&lt;0,001), nhưng <strong>không dự báo được ngoài mẫu</strong>:</p>
+      <ul class="bul" style="margin-top:8px">
+        <li><strong>Rolling Granger</strong>: chỉ 12% windows significant — quan hệ <em>không persistent</em></li>
+        <li><strong>OOS R² = −0,02</strong>: mô hình dự báo <em>tệ hơn</em> baseline naïve mean</li>
+        <li><strong>Market-timing</strong>: strategy Sharpe 0,65 &lt; buy-hold 0,83 — <strong>không có tradeable edge</strong> sau transaction cost</li>
+        <li><strong>DM test</strong>: không khác biệt significant với baseline</li>
+      </ul>
+      <p style="margin-top:8px">→ <strong>Đây là kết quả quan trọng cho credibility.</strong> Nghiên cứu không over-claim. Quan hệ bond-stock VN là <em>pattern mô tả thật</em>, nhưng <strong>không đủ mạnh để trade riêng lẻ</strong>. Có thể hữu ích như 1 input trong multi-factor model, không phải standalone signal.</p>
+    </div>
+    <div class="callout info">
+      <h4>💡 Tại sao in-sample significant mà OOS không?</h4>
+      <p>Đây là hiện tượng phổ biến trong finance (Campbell-Thompson 2008). Lý do: (1) yếu tố regime-dependence — quan hệ mạnh ở một số giai đoạn, yếu ở giai đoạn khác; (2) sample 2014-2026 có COVID shock tạo outlier; (3) bond yield VN bị điều hành, không hoàn toàn thị trường → signal không stable. <strong>Kết luận này củng cố cảnh báo từ đầu: VN10Y không phải tài sản giao dịch liên tục, không nên dùng để forecast.</strong></p>
+    </div>
+  </section>
+
+  <section id="chuong-16">
+    <h2 class="section-title"><span class="num">XVI</span>Tổng kết: mười phát hiện chính</h2>
+    <p>Sau mười lăm chương phân tích với 14 phương pháp thống kê, đây là những phát hiện đáng tin nhất — xếp theo độ mạnh của bằng chứng.</p>
+    <div class="callout info">
+      <h4>💡 Ghi chú multiple testing (Benjamini-Hochberg FDR)</h4>
+      <p>BH-FDR được áp dụng theo các family giả thuyết định trước: <strong>core bond-stock 7/10</strong>, sector HAC <strong>13/18</strong>, global PCA <strong>1/3</strong>, spread-index <strong>0/2</strong>. Profitability dùng OLS-HAC và có 3/23 chỉ báo daily, 5/23 chỉ báo monthly qua FDR.</p>
+    </div>
+
+    <h3>Tier 1 — Phát hiện cốt lõi (rất đáng tin)</h3>
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">−0,327</div><div class="lab">r monthly VN10Y ↔ VN-Index — âm rõ, p&lt;0,0001</div></div>
+      <div class="kpi violet"><div class="val">VNI → Bond</div><div class="lab">Cổ phiếu dẫn trái phiếu, ngược G7 (F=7,11, robust trên non-stale)</div></div>
+      <div class="kpi amber"><div class="val">38,6%</div><div class="lab">Win rate KHÔNG đổi khi yield↑ hay ↓ (p=0,99) — bond không giúp chọn cổ phiếu</div></div>
+      <div class="kpi green"><div class="val">Khác peer</div><div class="lab">Bằng chứng cross-country mang tính mô tả; SCM SCB không xác nhận treatment effect</div></div>
+      <div class="kpi cyan"><div class="val">−7,4pp</div><div class="lab">Khi yield↑ monthly: % mã trend up giảm (46,6% vs 54,0%), breakdown tăng</div></div>
+    </div>
+
+    <h3>Tier 2 — Phát hiện quan trọng</h3>
+    <ul class="bul">
+      <li><strong>Granger robust trên non-stale subset</strong>: F=6,88 trên |Δ|≥0,01pp (vs 7,11 full), F=4,73 trên |Δ|≥0,05pp — vẫn significant. Không phải artifact stale.</li>
+      <li><strong>SCM SCB không có bằng chứng tác động</strong>: RMSPE ratio 0,485; p=1,000; pre-fit yếu.</li>
+      <li><strong>"KHÔNG PHÁT HIỆN" không phải equivalence</strong>: chỉ 119/393 mã đạt TOST cho giá, không mã nào đạt đồng thời giá và volume sau FDR.</li>
+      <li>⚠️ <strong>Đuôi bond-stock KHÔNG robust</strong>: tail return loạn xạ, không thể kết luận chiều ở đuôi.</li>
+      <li><strong>Spread VN–US</strong>: không mạnh hơn VN10Y đơn — monthly r −0,23 vs −0,33.</li>
+      <li><strong>DXY không ảnh hưởng</strong> VN10Y (r ≈ 0) — NHNN neo tỷ giá quá chặt.</li>
+      <li><strong>Volume = proxy biến động</strong>, không phải chỉ báo giá (r signed ≈ 0).</li>
+      <li><strong>Quan hệ phi đối xứng</strong>: yield tăng tác động mạnh hơn yield giảm.</li>
+      <li><strong>Ngành tài chính</strong> nhạy cảm hơn phi tài chính với lãi suất ở monthly horizon (kênh credit, t=−6,66, p=0,0003). Daily β sector không robust trên HNX.</li>
+    </ul>
+
+    <div class="callout good">
+      <h4>💡 "Điều này có ý nghĩa gì với tôi?" — Dành cho nhà đầu tư</h4>
+      <p><strong>3 điều nên nhớ:</strong></p>
+      <ol style="margin-top:8px; padding-left:20px">
+        <li><strong>Bond không giúp bạn chọn cổ phiếu.</strong> Win rate 38,6% không đổi dù yield tăng hay giảm (p=0,99). Đừng mua/bán dựa trên daily bond movement.</li>
+        <li><strong>Nhưng bond cho biết "độ khó" của thị trường.</strong> Khi yield tăng trong tháng, chỉ 46,6% mã trend up (vs 54%), breakdown tăng. Chọn đúng mã khó hơn, né sai mã cũng khó hơn.</li>
+        <li><strong>Cổ phiếu dẫn bond — nhìn VN-Index để đoán chính sách.</strong> Nếu thị trường giảm mạnh, NHNN có thể nới lãi suất → đây mới là tín hiệu hữu ích (đảo ngược G7).</li>
+      </ol>
+      <p style="margin-top:8px"><strong>Câu chuyện hội nhập:</strong> Spread VN-US giảm từ 9% (2011) → 1,6% (2026) — rủi ro quốc gia giảm, VN hội nhập tài chính sâu hơn. Nhưng quan hệ bond-stock vẫn nội địa (global factor chỉ 7%).</p>
+    </div>
+
+    <h3>So sánh với literature</h3>
+    <div class="callout info">
+      <h4>📊 R² = 10,7% so với chuẩn quốc tế</h4>
+      <p>Monthly R² bond-stock của VN (10,7%) đặt trong bối cảnh literature empirical finance:</p>
+      <table class="tbl" style="margin-top:10px">
+        <thead><tr><th>Nghiên cứu</th><th>Thị trường</th><th>R² monthly</th></tr></thead>
+        <tbody>
+          <tr><td>Campbell &amp; Ammer (1993)</td><td>US</td><td>~5-15%</td></tr>
+          <tr><td>Baele et al. (2010)</td><td>10 developed</td><td>~8-12%</td></tr>
+          <tr><td>Panchenko &amp; Wu (2009)</td><td>18 EM</td><td>~5-10%</td></tr>
+          <tr><td>Phylaktis &amp; Ravazzolo (2005)</td><td>Pacific Basin EM</td><td>~6-10%</td></tr>
+          <tr><td><strong>Nghiên cứu này (VN)</strong></td><td><strong>Vietnam</strong></td><td><strong>10,7%</strong></td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px">→ R² của VN nằm trong <strong>phạm vi trên trung bình cho EM</strong>, tương đương developed markets. Một đợt yield giảm 50bps → VNI tăng ~3,1% trong tháng (so với equity risk premium monthly ~0,5-0,7% — tác động lớn về mặt kinh tế). Tuy nhiên, OOS R² = −2% (Ch.XVc) cho thấy pattern in-sample <em>không dự báo được ngoài mẫu</em> — statistical significance ≠ trading edge.</p>
+    </div>
+
+    <h3>Hàm ý thực tiễn</h3>
+    <table class="tbl">
+      <thead><tr><th>Tình huống</th><th>Quan sát</th></tr></thead>
+      <tbody>
+        <tr><td>Hiểu VN10Y ngắn hạn</td><td>Nhìn <strong>cổ phiếu VN</strong> + <strong>Indonesia/Brazil</strong></td></tr>
+        <tr><td>Hiểu VN10Y dài hạn</td><td>Nhìn <strong>Đức/Mỹ/Hàn</strong> (G7 fundamentals)</td></tr>
+        <tr><td>Bond tăng đột biến</td><td>Cẩn thận <strong>tài chính, ngân hàng, small-cap</strong></td></tr>
+        <tr><td>Bond giảm (risk-on)</td><td>Cơ hội <strong>BĐS, tài chính</strong></td></tr>
+        <tr><td>Benchmark VN quốc tế</td><td><strong>Indonesia</strong> gần nhất, nhưng vẫn yếu</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="tai-lieu-tham-khao">
+    <h2 class="section-title"><span class="num">📚</span>Tài liệu tham khảo &amp; phương pháp</h2>
+    <p>Danh sách nguồn số liệu và phương pháp luận viện dẫn trong báo cáo. Mọi con số có thể được tái tạo bằng script <code>verify_all_v2.py</code> chạy trên dữ liệu thô lưu cục bộ (TPCP HNX chính thức).</p>
+
+    <h3>I. Nguồn dữ liệu</h3>
+    <ol class="refs">
+      <li>
+        <div>
+          <strong>Dữ liệu thô lưu cục bộ</strong> — "bond_research/" dataset (cập nhật 26/6/2026)
+          <span class="src-meta">3.113 ngày TPCP HNX (nguồn chính), 4.272 ngày Investing (tham chiếu), 4.303 ngày VN-Index, 17 trái phiếu 10Y toàn cầu. Script verification: <code>verify_all_v2.py</code>.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Investing.com</strong> — US10Y, 16 trái phiếu chính phủ toàn cầu (G7 + EM)
+          <span class="src-meta">Nguồn cho trái phiếu toàn cầu (US10Y, DE10Y, JP10Y...). Truy cập 06/2026. Dừng cập nhật ở 23/6 (HTTP 403).</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>vnstock</strong> — API dữ liệu tài chính Việt Nam (nguồn VCI)
+          <a href="https://vnstock.site/" target="_blank" rel="noopener">vnstock.site</a>
+          <span class="src-meta">Nguồn VN-Index, volume, 18 chỉ số ngành HOSE/HNX/UPCOM. Phiên bản 4.x.</span>
+        </div>
+      </li>
+    </ol>
+
+    <h3>II. Phương pháp thống kê</h3>
+    <ol class="refs" start="4">
+      <li>
+        <div>
+          <strong>Granger, C.W.J.</strong> — "Investigating Causal Relations by Econometric Models and Cross-spectral Methods" (1969)
+          <span class="src-meta">Granger causality test. Triển khai qua <code>statsmodels.tsa.api.VAR</code>.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Johansen, S.</strong> — "Statistical Analysis of Cointegration Vectors" (1988)
+          <span class="src-meta">Johansen cointegration test + VECM. Triển khai qua <code>statsmodels.tsa.vector_ar.vecm</code>.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Engle, R.</strong> — "Dynamic Conditional Correlation" (2002)
+          <span class="src-meta">Rolling correlation (cửa sổ trượt 1 năm) cho tương quan theo thời gian.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Jolliffe, I.</strong> — "Principal Component Analysis" (Springer, 2nd ed. 2002)
+          <span class="src-meta">PCA cho global bond factor. Triển khai qua <code>sklearn.decomposition.PCA</code>.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>BondLab Daily Brief</strong> — cơ sở dữ liệu nội bộ (main sonet, 2026)
+          <span class="src-meta">TPCP 10Y chính thức HNX (3.113 ngày, cập nhật 26/6), interbank SBV (76 ngày), US rates/SOFR/VIX/DXY. Nguồn chính cho VN10Y trong báo cáo này.</span>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout info">
+      <h4>💡 Bản chất của báo cáo</h4>
+      <p>Đây là <strong>ghi chép tự nghiên cứu</strong>, không phải tài liệu học thuật chuẩn mực hay khuyến nghị đầu tư. Mục tiêu là minh bạch hóa các mối quan hệ trong dữ liệu để người đọc tự đánh giá. Phương pháp nhất quán: tương quan miêu tả, không dự báo. Mọi số liệu chạy lại được từ dữ liệu thô.</p>
+    </div>
+  </section>
+
+  <section id="phu-luc-robustness">
+    <h2 class="section-title"><span class="num">🔬</span>Phụ lục: Robustness</h2>
+    <h3>Non-stale subset — loại bỏ ngày đứng yên</h3>
+    <p>Dù TPCP HNX chỉ 16,5% ngày đứng yên (1,6% hoàn toàn đông cứng), để chắc chắn rằng stale days không tạo noise, nghiên cứu chạy lại trên subset chỉ gồm ngày bond <strong>thực sự biến động</strong> (|Δyield| ≥ 0,001):</p>
+    <table class="tbl">
+      <thead><tr><th>Metric</th><th>Full sample (n=3.111)</th><th>Non-stale (n=3.062, 98,4%)</th><th>Robust?</th></tr></thead>
+      <tbody>
+        <tr><td>Monthly r</td><td>−0,325</td><td>−0,324</td><td>✅ gần như giống hệt</td></tr>
+        <tr><td>Daily r</td><td>−0,003 (n.s.)</td><td>−0,003 (n.s.)</td><td>✅ không đổi</td></tr>
+        <tr><td>Tail top5% → VNI</td><td>+0,059%</td><td>+0,050%</td><td>✅ cùng dấu</td></tr>
+      </tbody>
+    </table>
+    <p>→ Vì HNX đã sạch, non-stale subset gần như = full sample. <strong>Kết luận vĩ mô robust</strong> dù loại bỏ ngày đứng yên.</p>
+  </section>
+
+  <section id="phu-luc-ky-thuat">
+    <h2 class="section-title"><span class="num">📐</span>Phụ lục Kỹ thuật</h2>
+    <p>Chi tiết thống kê đầy đủ, dành cho người đọc muốn kiểm chứng phương pháp. Các bảng dưới đây bổ sung cho phần tóm tắt trong thân bài.</p>
+
+    <h3>Bảng giả thuyết đầy đủ (H1–H7)</h3>
+    <table class="tbl">
+      <thead><tr><th>Hypothesis</th><th>Phương pháp kiểm định</th><th>Kết quả</th></tr></thead>
+      <tbody>
+        <tr><td><strong>H1:</strong> Bond-stock có tương quan âm</td><td>Pearson (monthly) + Multivariate controls</td><td>✅ Supported (β=−0,062, p=0,008 sau controls)</td></tr>
+        <tr><td><strong>H2:</strong> Có chiều dự báo rõ</td><td>Granger + Diebold-Yilmaz spillover</td><td>⚠️ Granger: VNI có thông tin dự báo bond; total spillover chỉ 3,48%</td></tr>
+        <tr><td><strong>H3:</strong> Có equilibrium dài hạn</td><td>Johansen cointegration + VECM</td><td>✅ Supported (Trace 60,4, rank=1)</td></tr>
+        <tr><td><strong>H4:</strong> VN cô lập với toàn cầu</td><td>PCA / global factor</td><td>✅ Supported (R²=7,1% — 93% nội địa)</td></tr>
+        <tr><td><strong>H5:</strong> Đuôi có tail dependence</td><td>Copula + empirical λ</td><td>❌ Not supported (λ≈0,05 ≈ base rate)</td></tr>
+        <tr><td><strong>H6:</strong> Có regime shift</td><td>MarkovRegression</td><td>⚠️ Có regime hiếm 3,23%; chưa đủ cơ sở gắn nhãn risk-on/off</td></tr>
+        <tr><td><strong>H7:</strong> VN đặc biệt so với EM (outlier)</td><td>Cross-country comparison + SCM SCB 2022</td><td>⚠️ Cross-country mô tả ủng hộ; SCM không xác nhận treatment effect (p=1,000)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Multivariate robustness — kiểm soát common factors</h3>
+    <p>Câu hỏi nền tảng: nếu bond và stock cùng phản ứng global factors (DXY, US10Y), thì tương quan âm có phải do omitted variable bias không? Test OLS monthly với HAC SE:</p>
+    <table class="tbl">
+      <thead><tr><th>Model</th><th>β_bond</th><th>p</th><th>R²</th></tr></thead>
+      <tbody>
+        <tr><td>Bivariate (baseline)</td><td>−0,070</td><td>0,006 ***</td><td>0,109</td></tr>
+        <tr><td><strong>+ DXY + US10Y</strong></td><td><strong>−0,062</strong></td><td><strong>0,008 ***</strong></td><td>0,162</td></tr>
+      </tbody>
+    </table>
+    <p>β_bond giảm chỉ <strong>12% magnitude</strong> sau khi thêm controls → <strong>không phải spurious</strong>. Bonus: DXY significant (β=−0,675, p=0,004) — USD mạnh → VNI giảm.</p>
+
+    <h3>Diebold-Yilmaz Spillover Index (VAR-based GFEVD)</h3>
+    <table class="tbl">
+      <thead><tr><th>Cặp</th><th>Gross spillover</th><th>Net</th></tr></thead>
+      <tbody>
+        <tr><td>Bond → VNI</td><td>0,22%</td><td>Bond nhận ròng nhẹ</td></tr>
+        <tr><td>VNI → Bond</td><td>0,63%</td><td><strong>Net pairwise +0,40pp</strong></td></tr>
+      </tbody>
+    </table>
+    <p>Total spillover index: <strong>3,48%</strong> — truyền dẫn chéo trong hệ thấp.</p>
+
+    <h3>VECM — tốc độ điều chỉnh</h3>
+    <ul class="bul">
+      <li>Volume: α=−0,0068, half-life ~102 ngày (điều chỉnh nhanh nhất)</li>
+      <li>VN-Index: α≈0 (weakly exogenous)</li>
+      <li>Bond yield: α=−0,0003, half-life ~6 năm (gần exogenous)</li>
+      <li>ADF residual: p=2,8×10⁻⁵ (equilibrium error stationary)</li>
+    </ul>
+
+    <h3>Tail Dependence (copula + empirical)</h3>
+    <ul class="bul">
+      <li>Clayton λL=0; Gumbel λU=0,0138, bootstrap CI [0,0000; 0,0435]</li>
+      <li>Bond UP (≥95%) → stock DOWN: empirical λ = 0,0513 ≈ base rate</li>
+      <li><strong>H5 KHÔNG được hỗ trợ</strong> — không có tail dependence bất lợi rõ.</li>
+    </ul>
+
+    <h3>Regime detection (MarkovRegression)</h3>
+    <table class="tbl">
+      <thead><tr><th>Regime</th><th>% thời gian</th><th>Mean rolling r</th><th>Mean VNI ret</th></tr></thead>
+      <tbody>
+        <tr><td>Regime 0</td><td>3,23%</td><td>Intercept −0,0357</td><td>βbond +0,0406</td></tr>
+        <tr><td>Regime 1</td><td>96,77%</td><td>Intercept +0,00168</td><td>βbond +0,00109</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.85em;color:#94a3b8"><em>Mô hình hội tụ; regime hiếm chưa được gắn nhãn kinh tế nếu thiếu kiểm định đặc trưng độc lập.</em></p>
+
+    <h3>β theo kỳ hạn (discount rate channel test)</h3>
+    <table class="tbl">
+      <thead><tr><th>Tenor</th><th>β monthly</th><th>p (HAC)</th></tr></thead>
+      <tbody>
+        <tr><td>1Y</td><td>−0,060</td><td>0,0006 ***</td></tr>
+        <tr><td>2Y</td><td>−0,055</td><td>0,003 ***</td></tr>
+        <tr><td>5Y</td><td>−0,061</td><td>0,013 **</td></tr>
+        <tr><td>10Y</td><td>−0,069</td><td>0,007 ***</td></tr>
+        <tr><td>20Y</td><td>−0,021</td><td>0,23 n.s.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Out-of-sample test</h3>
+    <table class="tbl">
+      <thead><tr><th>Test</th><th>Kết quả</th></tr></thead>
+      <tbody>
+        <tr><td>Rolling Granger (60-tháng)</td><td>12% windows significant</td></tr>
+        <tr><td>OOS R² (Campbell-Thompson)</td><td>−0,02 (negative)</td></tr>
+        <tr><td>Market-timing Sharpe</td><td>0,65 < buy-hold 0,83</td></tr>
+        <tr><td>Diebold-Mariano test</td><td>n.s.</td></tr>
+      </tbody>
+    </table>
+    <p>Quan hệ có thật in-sample nhưng <strong>không có predictive edge ngoài mẫu</strong>.</p>
+
+    <h3>Benjamini-Hochberg FDR correction</h3>
+    <p>BH-FDR theo family: <strong>core 7/10</strong>, sector HAC <strong>13/18</strong>, global PCA <strong>1/3</strong>, spread-index <strong>0/2</strong>. Không dùng một tỷ lệ gộp cho các giả thuyết khác bản chất.</p>
+  </section>
+
+</main>
+
+</main>
+
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = '-apple-system, Segoe UI, Roboto, sans-serif';
+Chart.defaults.borderColor = '#334155';
+
+document.addEventListener('DOMContentLoaded', function() {
+new Chart(document.getElementById('chartInfluenceCurve'), {
+  type:'line',
+  data:{ labels:['1 ngày','3 ngày','5 ngày','2 tuần','1 tháng','2 tháng','3 tháng','4 tháng','6 tháng','8 tháng','10 tháng','1 năm','1,5 năm','2 năm'],
+    datasets:[
+      { label:'|r| tương quan đồng thời', data:[0.003,0.080,0.108,0.162,0.213,0.266,0.291,0.306,0.293,0.272,0.256,0.223,0.234,0.207],
+        borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.15)', tension:.4, fill:true, borderWidth:2.5, pointRadius:3, pointBackgroundColor:['#64748b','#64748b','#64748b','#64748b','#64748b','#64748b','#fbbf24','#ef4444','#fbbf24','#64748b','#64748b','#64748b','#64748b','#64748b'], pointRadius:[3,3,3,3,3,3,5,7,5,3,3,3,3,3] }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ y:{ beginAtZero:true, max:0.35, title:{display:true,text:'|r|',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false}, ticks:{font:{size:9}, maxRotation:45} } }
+  }
+});
+
+new Chart(document.getElementById('chartOppDaily'), {
+  type:'bar',
+  data:{ labels:['Win rate (%)','% tăng >2%','% breakdown','% trên MA20'],
+    datasets:[
+      { label:'Yield↑', data:[38.6,15.6,13.6,49.4], backgroundColor:'rgba(239,68,68,.7)', borderRadius:4 },
+      { label:'Yield↓', data:[38.6,15.9,12.2,51.3], backgroundColor:'rgba(34,197,94,.7)', borderRadius:4 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:true, position:'top', labels:{color:'#e2e8f0', font:{size:11}}} },
+    scales:{ y:{ beginAtZero:false, title:{display:true,text:'%',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false} } }
+  }
+});
+
+new Chart(document.getElementById('chartOppMonthly'), {
+  type:'bar',
+  data:{ labels:['MA5','MA10','MA20','MA50','MA100','MA200','% RSI>50','% oversold','Golden 5>20'],
+    datasets:[
+      { label:'Tháng Yield↑', data:[45.7,46.4,47.1,47.8,49.5,52.0,45.8,13.6,47.2], backgroundColor:'rgba(239,68,68,.7)', borderRadius:4 },
+      { label:'Tháng Yield↓', data:[50.2,52.9,54.5,56.1,54.5,53.0,52.0,9.2,53.7], backgroundColor:'rgba(34,197,94,.7)', borderRadius:4 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:true, position:'top', labels:{color:'#e2e8f0', font:{size:11}}} },
+    scales:{ y:{ beginAtZero:false, title:{display:true,text:'%',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false}, ticks:{font:{size:9}} } }
+  }
+});
+
+new Chart(document.getElementById('chartVolYield'), {
+  type:'bar',
+  data:{ labels:['Median rel volume','% mã volume thấp','Lag t+1','Lag t+3','Lag t+5'],
+    datasets:[
+      { label:'Yield↑', data:[0.021,44.7,-0.032,-0.032,-0.055], backgroundColor:'rgba(239,68,68,.7)', borderRadius:4 },
+      { label:'Yield↓', data:[0.056,43.1,null,null,null], backgroundColor:'rgba(34,197,94,.7)', borderRadius:4 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:true, position:'top', labels:{color:'#e2e8f0', font:{size:11}}} },
+    scales:{ y:{ beginAtZero:false, title:{display:true,text:'Value',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false}, ticks:{font:{size:9}} } }
+  }
+});
+
+new Chart(document.getElementById('chartMatrix'), {
+  type:'bar',
+  data:{ labels:['Affected','Price-only','Volume-only','KHÔNG PHÁT HIỆN'],
+    datasets:[{ label:'Số mã', data:[0,0,1,392],
+      backgroundColor:['rgba(239,68,68,.8)','rgba(245,158,11,.7)','rgba(139,92,246,.7)','rgba(34,197,94,.6)'], borderRadius:6 }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ y:{ beginAtZero:true, title:{display:true,text:'Số mã (HAC + BH-FDR)',color:'#e2e8f0'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+
+new Chart(document.getElementById('chartTimeSeries'), {
+  type:'line',
+  data:{ labels:['2010','2012','2014','2016','2018','2020','2022','2024','2026'],
+    datasets:[
+      { label:'VN10Y yield (%)', data:[10.96,9.5,6.8,6.7,4.6,2.5,2.6,0.8,4.53],
+        borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.15)', yAxisID:'y', tension:.35, fill:true, borderWidth:2, pointRadius:3 },
+      { label:'VN-Index (điểm)', data:[531,440,540,670,950,1100,1470,1250,1869],
+        borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.12)', yAxisID:'y1', tension:.35, fill:false, borderWidth:2, pointRadius:3 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+    plugins:{ legend:{display:true, position:'top', labels:{color:'#e2e8f0', font:{size:11}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y;}}} },
+    scales:{ y:{ type:'linear', position:'left', title:{display:true,text:'VN10Y (%)',color:'#ef4444'}, grid:{color:'#334155'}, beginAtZero:true },
+      y1:{ type:'linear', position:'right', title:{display:true,text:'VN-Index',color:'#3b82f6'}, grid:{display:false} },
+      x:{ grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+
+new Chart(document.getElementById('chartGlobal'), {
+  type:'bar',
+  data:{ labels:['MX10Y','ZA10Y','BR10Y','ID10Y','JP10Y','DE10Y','KR10Y','US10Y','IN10Y','CN10Y'],
+    datasets:[
+      { label:'r daily', data:[0.063,0.062,0.055,0.034,0.034,0.027,0.023,0.017,0.009,-0.029],
+        backgroundColor:'rgba(59,130,246,.6)', borderRadius:4 },
+      { label:'r 1-year', data:[0.176,-0.053,0.187,0.457,0.510,0.550,0.580,0.535,0.420,-0.009],
+        backgroundColor:'rgba(245,158,11,.6)', borderRadius:4 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+    plugins:{ legend:{display:true, position:'top', labels:{color:'#e2e8f0', font:{size:11}}} },
+    scales:{ x:{ beginAtZero:false, title:{display:true,text:'Pearson r'}, grid:{color:'#334155'} },
+      y:{ grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+
+new Chart(document.getElementById('chartPCA'), {
+  type:'bar',
+  data:{ labels:['PC1 (G7)','PC2 (EU/EM)','PC3 (EM LatAm)','PC4','PC5'],
+    datasets:[{ label:'Variance explained (%)', data:[40.3,17.9,13.3,6.5,5.1],
+      backgroundColor:['rgba(239,68,68,.7)','rgba(245,158,11,.6)','rgba(59,130,246,.6)','rgba(139,92,246,.5)','rgba(6,182,212,.5)'], borderRadius:6 }]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ y:{ beginAtZero:true, title:{display:true,text:'Variance explained (%)'}, grid:{color:'#334155'}, max:50 },
+      x:{ grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+
+new Chart(document.getElementById('chartPeak'), {
+  type:'line',
+  data:{ labels:['1d','2d','3d','1w','2w','1m','2m','3m','6m','9m','1y','1.5y','2y'],
+    datasets:[
+      { label:'ΔVN10Y(Investing) vs VNI', data:[-0.0525,-0.0929,-0.1210,-0.1555,-0.1935,-0.2372,-0.2663,-0.2854,-0.2867,-0.2640,-0.2174,-0.1889,-0.1496],
+        borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.1)', tension:.35, borderWidth:2.5, pointRadius:3, fill:false },
+      { label:'ΔVN10Y(HNX chính thức) vs VNI', data:[-0.003,-0.048,-0.075,-0.108,-0.159,-0.213,-0.262,-0.291,-0.292,-0.252,-0.223,-0.223,-0.223],
+        borderColor:'#38bdf8', backgroundColor:'rgba(56,189,248,.1)', tension:.35, borderWidth:2.5, pointRadius:3, fill:false, borderDash:[6,4] },
+      { label:'ΔSpread vs VNI (trong nước)', data:[-0.0569,-0.0972,-0.1109,-0.1384,-0.1582,-0.2252,-0.2723,-0.3169,-0.2960,-0.2645,-0.2431,-0.2616,-0.1782],
+        borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.1)', tension:.35, borderWidth:2.5, pointRadius:3, fill:false },
+      { label:'ΔVN10Y vs DE10Y (G7)', data:[0.0271,0.0382,0.0543,0.0959,0.1530,0.2277,0.3221,0.3710,0.4344,0.5178,0.5502,0.5840,0.6682],
+        borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)', tension:.35, borderWidth:2.5, pointRadius:3, fill:false },
+      { label:'ΔVN10Y vs ID10Y (Indonesia)', data:[0.0337,0.0567,0.0884,0.1308,0.1644,0.2049,0.2333,0.2748,0.3481,0.4197,0.4566,0.5289,0.6048],
+        borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,.1)', tension:.35, borderWidth:2.5, pointRadius:3, fill:false }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+    plugins:{ legend:{display:true, position:'top', labels:{color:'#e2e8f0', font:{size:10}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y.toFixed(3);}}} },
+    scales:{ y:{ beginAtZero:false, title:{display:true,text:'Pearson r'}, grid:{color:'#334155'} },
+      x:{ grid:{display:false}, ticks:{font:{size:10}} } }
+  }
+});
+
+
+(function(){
+  const body = document.body;
+  const minimap = document.getElementById('minimap');
+  const fab = document.getElementById('mmFab');
+  const closeBtn = document.getElementById('mmClose');
+  const toTop = document.getElementById('toTop');
+  const progressBar = document.getElementById('progressBar');
+  const mmPct = document.getElementById('mmPct');
+  const search = document.getElementById('mmSearch');
+  const noResult = document.getElementById('mmNoResult');
+  const groups = Array.from(document.querySelectorAll('.mm-group'));
+  const allLinks = Array.from(document.querySelectorAll('.mm-items a'));
+  const sections = allLinks.map(a => {
+    const id = a.getAttribute('href').slice(1);
+    return { link: a, section: document.getElementById(id), id };
+  }).filter(x => x.section);
+
+  setTimeout(() => document.body.classList.add('loaded'), 800);
+
+  function openGroupContaining(link){
+    const grp = link.closest('.mm-group');
+    if (grp && !grp.classList.contains('open')) grp.classList.add('open');
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){
+        const id = entry.target.id;
+        const found = sections.find(s => s.id === id);
+        if (found){
+          sections.forEach(s => s.link.classList.remove('active'));
+          found.link.classList.add('active');
+          openGroupContaining(found.link);
+        }
+      }
+    });
+  }, { rootMargin:'-90px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s.section));
+
+  function onScroll(){
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = Math.min(100, Math.max(0, (window.scrollY / h) * 100));
+    progressBar.style.width = pct + '%';
+    mmPct.textContent = Math.round(pct) + '%';
+    if (window.scrollY > 400){
+      body.classList.add('nav-active');
+      toTop.classList.add('show');
+    } else {
+      body.classList.remove('nav-active');
+      toTop.classList.remove('show');
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+
+  toTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+  groups.forEach(g => {
+    const head = g.querySelector('.mm-group-head');
+    head.addEventListener('click', () => g.classList.toggle('open'));
+  });
+
+  search.addEventListener('input', () => {
+    const q = search.value.trim().toLowerCase();
+    minimap.classList.toggle('searching', !!q);
+    let anyVisible = false;
+    allLinks.forEach(a => {
+      const text = a.textContent.toLowerCase();
+      const match = !q || text.includes(q);
+      a.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+      if (match && q) openGroupContaining(a);
+    });
+    noResult.classList.toggle('show', !anyVisible);
+  });
+
+  fab.addEventListener('click', () => body.classList.add('nav-mobile-open'));
+  closeBtn.addEventListener('click', () => body.classList.remove('nav-mobile-open'));
+
+  allLinks.forEach(a => {
+    a.addEventListener('click', () => {
+      if (window.innerWidth < 1024) body.classList.remove('nav-mobile-open');
+    });
+  });
+})();
+
+(function(){
+  const presBtn = document.getElementById('presBtn');
+  const overlay = document.getElementById('presOverlay');
+  const exitBtn = document.getElementById('presExit');
+  const prevBtn = document.getElementById('presPrev');
+  const nextBtn = document.getElementById('presNext');
+  const stage = document.getElementById('presStage');
+  const dotsBox = document.getElementById('presDots');
+  const progressFill = document.getElementById('presProgress');
+  const currentEl = document.getElementById('presCurrent');
+  const totalEl = document.getElementById('presTotal');
+  if (!presBtn || !overlay) return;
+
+  const SLIDES = [
+    { type:'title', badge:'Tự nghiên cứu · 2014–2026 · HNX chính thức',
+      title:'VN10Y — Một Nghiên cứu về Lợi suất Trái phiếu Việt Nam',
+      sub:'16 chương · 10 phương pháp · 17 trái phiếu toàn cầu · 3.113 ngày TPCP HNX',
+      meta:'Cập nhật 26/06/2026' },
+    { type:'section', num:'I', label:'Chương 1', title:'Câu hỏi nghiên cứu' },
+    { type:'list', kicker:'Phát hiện cốt lõi', title:'VN10Y ↔ VN-Index',
+      items:[
+        {t:'r monthly = <strong>−0,327</strong> (p &lt; 0,0001) — âm rõ ràng, robust'},
+        {t:'β = <strong>−6,92%</strong> per 1pp yield, R² = 10,7% (nguồn HNX)'},
+        {t:'Đuôi Investing: bond top 5% → VNI <strong>−0,29%/ngày</strong> (HNX đảo dấu)'},
+        {t:'Cổ phiếu <strong>Granger-cause</strong> bond (F=7,11 HNX), không ngược lại'}
+      ]},
+    { type:'quote', q:'"VN10Y là hòn đảo trong global bond market — global factor chỉ giải thích 7% biến động."',
+      source:'Chương XIII — PCA / Factor Model' },
+    { type:'section', num:'XVI', label:'Kết luận', title:'Tổng kết 10 phát hiện chính' },
+    { type:'quote', q:'"Mọi con số chạy lại thực nghiệm được. Không ngoại suy."',
+      source:'Nguyên tắc phương pháp' }
+  ];
+
+  let current = 0;
+  let built = false;
+  let slideEls = [];
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  function renderSlide(sl, idx){
+    const cls = 'slide-' + sl.type;
+    let inner = '';
+    if (sl.type === 'title'){
+      inner = '<div class="slide-inner"><span class="badge">'+esc(sl.badge)+'</span><h1>'+esc(sl.title)+'</h1><p class="sub">'+esc(sl.sub)+'</p><p class="sub" style="color:#94a3b8;font-size:.9rem;margin-top:18px">'+esc(sl.meta)+'</p></div>';
+    } else if (sl.type === 'section'){
+      inner = '<div class="slide-inner"><div class="sec-num">'+esc(sl.num)+'</div><div class="sec-label">'+esc(sl.label)+'</div><h2>'+esc(sl.title)+'</h2></div>';
+    } else if (sl.type === 'list'){
+      const items = sl.items.map(function(it,i){ return '<li><span class="num">'+(i+1)+'</span><span class="txt">'+it.t+'</span></li>'; }).join('');
+      inner = '<div class="slide-inner slide-content"><div class="kicker">'+esc(sl.kicker)+'</div><h2>'+esc(sl.title)+'</h2><ul>'+items+'</ul></div>';
+    } else if (sl.type === 'quote'){
+      inner = '<div class="slide-inner"><div class="qmark">"</div><p class="qtext">'+esc(sl.q)+'</p><p class="qsource">'+esc(sl.source)+'</p></div>';
+    }
+    return '<div class="pres-slide '+cls+(idx===0?' active':'')+'" data-idx="'+idx+'">'+inner+'</div>';
+  }
+
+  function build(){
+    if (built) return;
+    built = true;
+    stage.innerHTML = SLIDES.map(function(sl,i){ return renderSlide(sl,i); }).join('');
+    slideEls = Array.from(stage.children);
+    totalEl.textContent = SLIDES.length;
+    SLIDES.forEach(function(_, i){
+      const d = document.createElement('button');
+      d.className = 'pres-dot' + (i===0?' active':'');
+      d.setAttribute('aria-label','Slide '+(i+1));
+      d.addEventListener('click', function(){ goTo(i); });
+      dotsBox.appendChild(d);
+    });
+  }
+
+  function updateUI(){
+    progressFill.style.width = ((current+1)/SLIDES.length*100)+'%';
+    currentEl.textContent = current+1;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === SLIDES.length-1;
+    Array.from(dotsBox.children).forEach(function(d,i){ d.classList.toggle('active', i===current); });
+  }
+  function goTo(idx){
+    if (idx < 0 || idx >= SLIDES.length || idx === current) return;
+    const dir = idx > current ? 'forward' : 'back';
+    const old = slideEls[current];
+    const nw = slideEls[idx];
+    old.classList.remove('active');
+    if (dir === 'forward') old.classList.add('prev'); else old.classList.remove('prev');
+    nw.classList.remove('prev');
+    void nw.offsetWidth;
+    nw.classList.add('active');
+    current = idx;
+    updateUI();
+  }
+  function open(){ build(); overlay.classList.add('active'); overlay.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; current=0; updateUI(); }
+  function close(){ overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+
+  presBtn.addEventListener('click', open);
+  exitBtn.addEventListener('click', close);
+  prevBtn.addEventListener('click', function(){ goTo(current-1); });
+  nextBtn.addEventListener('click', function(){ goTo(current+1); });
+  document.addEventListener('keydown', function(e){
+    if (!overlay.classList.contains('active')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown'){ e.preventDefault(); goTo(current+1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); goTo(current-1); }
+    else if (e.key === 'Escape'){ close(); }
+    else if (e.key === 'Home'){ goTo(0); }
+    else if (e.key === 'End'){ goTo(SLIDES.length-1); }
+  });
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+})();
+
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  LONGFORM REPORT — Article Template (CORE components only)
+  ============================================================================
+  Skill: longform-report
+  Source pattern: bdong-tien / ttck-trung-quoc / bao-cao-bds-trung-quoc
+
+  CÁCH DÙNG:
+  1. Copy file này vào {project}/{slug}/index.html
+  2. Replace mọi placeholder TOKEN (viết hoa UPPER_SNAKE, bọc trong 2 ngoặc nhọn)
+     bằng nội dung thật — xem references/components.md cho danh sách TOKEN đầy đủ
+     + recipe component nâng cao.
+  3. Duplicate <section> block cho mỗi chương. Cập nhật minimap groups.
+  4. Verify: grep "{{[A-Z_]*}}" phải trả 0; node scripts/qa_article.js.
+
+  THEME FAMILY (chọn 1):
+  - AMBER (mặc định): num badge gradient + kpi glow — bài tự nghiên cứu/nhân quả.
+  - BLUE: đổi `.num` background → var(--blue) phẳng, `.kpi` nền phẳng (xem references/themes.md).
+
+  HERO GRADIENT MOOD: đổi 1 dòng `.hero{background:linear-gradient(...)}` theo chủ đề
+  (xem references/themes.md cho bảng mood: BĐS-nóng, TQ-cyan, giáo dục-rêu, tài chính-nâu đất).
+  ============================================================================
+-->
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trái phiếu chính phủ Việt Nam: mối quan hệ đảo dấu theo regime chính sách</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a; --bg2:#1e293b; --card:#1e293b; --card2:#273449;
+    --txt:#e2e8f0; --muted:#94a3b8; --line:#334155;
+    --red:#ef4444; --amber:#f59e0b; --green:#22c55e; --blue:#3b82f6; --violet:#8b5cf6; --cyan:#06b6d4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.8;font-size:17px}
+
+  /* ===== HERO (mood gradient — đổi dòng này theo chủ đề, xem references/themes.md) ===== */
+  .hero{background:linear-gradient(135deg,#422006 0%,#1e3a8a 50%,#312e81 100%);padding:90px 24px 70px;text-align:center;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,255,255,.08),transparent 40%),radial-gradient(circle at 80% 70%,rgba(255,255,255,.06),transparent 40%);pointer-events:none}
+  .hero .badge{display:inline-block;background:rgba(255,255,255,.12);padding:6px 16px;border-radius:999px;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:#fde68a;margin-bottom:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2)}
+  .hero h1{font-size:clamp(1.9rem,4.5vw,3.2rem);font-weight:800;line-height:1.2;max-width:960px;margin:0 auto 18px}
+  .hero p.sub{color:#e2e8f0;font-size:1.12rem;max-width:800px;margin:0 auto;opacity:.92}
+  .hero .meta{margin-top:28px;color:#cbd5e1;font-size:.9rem}
+  .hero .meta span{display:inline-block;margin:0 10px}
+
+  /* ===== LAYOUT ===== */
+  .container{max-width:800px;margin:0 auto;padding:0 24px}
+  main{padding:50px 0 80px}
+  section{margin-bottom:56px;scroll-margin-top:90px}
+
+  /* ===== TYPOGRAPHY & SECTION TITLE ===== */
+  h2.section-title{font-size:1.5rem;font-weight:700;margin-bottom:14px;padding-bottom:16px;border-bottom:1px solid transparent;border-image:linear-gradient(90deg,var(--amber),rgba(245,158,11,.2),transparent) 1;display:flex;align-items:center;gap:14px}
+  h2.section-title .num{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.95rem;font-weight:800;flex-shrink:0;box-shadow:0 4px 12px rgba(245,158,11,.3),inset 0 1px 0 rgba(255,255,255,.2)}
+  h3{font-size:1.18rem;margin:28px 0 10px;color:#fbbf24;display:flex;align-items:center;gap:8px}
+  h4{font-size:1.05rem;margin:18px 0 8px;color:#fff}
+  p{margin-bottom:16px;color:#cbd5e1}
+  strong{color:#fff}
+  em{color:#fcd34d;font-style:normal}
+  ul.bul{margin:12px 0 18px 4px;padding-left:22px}
+  ul.bul li{margin-bottom:8px;color:#cbd5e1;position:relative;padding-left:4px}
+  ul.bul li::marker{color:var(--amber)}
+  ol.numlist{margin:12px 0 18px 4px;padding-left:22px}
+  ol.numlist li{margin-bottom:8px;color:#cbd5e1}
+  a.src{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue)}
+
+  /* ===== INLINE CITATION + REFS LIST (chế độ numerated) ===== */
+  .ref{display:inline-block;font-size:.65rem;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:4px;padding:0 4px;margin:0 1px;line-height:1.4;vertical-align:super;text-decoration:none;transition:.15s;min-width:16px;text-align:center}
+  .ref:hover{background:rgba(251,191,36,.3);color:#fde68a;transform:translateY(-1px)}
+  ol.refs{list-style:none;counter-reset:ref;padding-left:0;margin:18px 0}
+  ol.refs li{counter-increment:ref;display:flex;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:.86rem;line-height:1.55;align-items:flex-start}
+  ol.refs li:last-child{border-bottom:none}
+  ol.refs li::before{content:counter(ref);display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0;margin-top:1px}
+  ol.refs li a{color:#93c5fd;text-decoration:none;border-bottom:1px dotted #93c5fd;word-break:break-all}
+  ol.refs li a:hover{color:#fbbf24;border-bottom-color:#fbbf24}
+  ol.refs li .src-meta{color:var(--muted);font-size:.78rem;display:block;margin-top:3px}
+
+  /* ===== KPI / STAT CARDS ===== */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:22px 0}
+  .kpi{background:linear-gradient(180deg,rgba(245,158,11,.06),rgba(30,41,59,.6));border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:20px 18px;transition:.22s;position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),transparent)}
+  .kpi:hover{transform:translateY(-3px);border-color:var(--amber);box-shadow:0 8px 24px rgba(245,158,11,.15)}
+  .kpi .val{font-size:1.85rem;font-weight:800;color:#fbbf24;line-height:1;text-shadow:0 0 24px rgba(245,158,11,.3)}
+  .kpi .lab{font-size:.82rem;color:var(--muted);margin-top:10px;line-height:1.4}
+  .kpi.red{border-color:rgba(239,68,68,.3);background:linear-gradient(180deg,rgba(239,68,68,.06),rgba(30,41,59,.6))}.kpi.red::before{background:linear-gradient(90deg,var(--red),transparent)}.kpi.red:hover{border-color:var(--red);box-shadow:0 8px 24px rgba(239,68,68,.15)}
+  .kpi.green{border-color:rgba(34,197,94,.3);background:linear-gradient(180deg,rgba(34,197,94,.06),rgba(30,41,59,.6))}.kpi.green::before{background:linear-gradient(90deg,var(--green),transparent)}.kpi.green:hover{border-color:var(--green);box-shadow:0 8px 24px rgba(34,197,94,.15)}
+  .kpi.cyan{border-color:rgba(6,182,212,.3);background:linear-gradient(180deg,rgba(6,182,212,.06),rgba(30,41,59,.6))}.kpi.cyan::before{background:linear-gradient(90deg,var(--cyan),transparent)}.kpi.cyan:hover{border-color:var(--cyan);box-shadow:0 8px 24px rgba(6,182,212,.15)}
+  .kpi.violet{border-color:rgba(139,92,246,.3);background:linear-gradient(180deg,rgba(139,92,246,.06),rgba(30,41,59,.6))}.kpi.violet::before{background:linear-gradient(90deg,var(--violet),transparent)}.kpi.violet:hover{border-color:var(--violet);box-shadow:0 8px 24px rgba(139,92,246,.15)}
+  .kpi.red .val{color:var(--red);text-shadow:0 0 24px rgba(239,68,68,.3)} .kpi.green .val{color:var(--green);text-shadow:0 0 24px rgba(34,197,94,.3)} .kpi.cyan .val{color:var(--cyan);text-shadow:0 0 24px rgba(6,182,212,.3)} .kpi.violet .val{color:var(--violet);text-shadow:0 0 24px rgba(139,92,246,.3)}
+
+  /* ===== COMPARE (before/after 2 cột) ===== */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:24px 0}
+  .compare .col{border-radius:14px;padding:0;border:1px solid var(--line);overflow:hidden;transition:.22s}
+  .compare .col:hover{transform:translateY(-2px)}
+  .compare .col h4{margin:0;padding:16px 22px 12px;font-size:1.05rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .compare .col ul.bul{padding:14px 22px 20px;margin:0}
+  .compare .before{background:linear-gradient(180deg,rgba(6,182,212,.10),rgba(6,182,212,.02));border-color:rgba(6,182,212,.35)}
+  .compare .before h4{background:linear-gradient(180deg,rgba(6,182,212,.12),transparent)}
+  .compare .after{background:linear-gradient(180deg,rgba(245,158,11,.10),rgba(245,158,11,.02));border-color:rgba(245,158,212,.35)}
+  .compare .after h4{background:linear-gradient(180deg,rgba(245,158,11,.12),transparent)}
+  .compare .tag{display:inline-block;font-size:.7rem;padding:3px 12px;border-radius:999px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-left:auto}
+  .compare .before .tag{background:linear-gradient(135deg,var(--cyan),#0891b2);color:#062b33;box-shadow:0 2px 8px rgba(6,182,212,.3)}
+  .compare .after .tag{background:linear-gradient(135deg,var(--amber),#d97706);color:#3a2400;box-shadow:0 2px 8px rgba(245,158,11,.3)}
+  @media(max-width:720px){.compare{grid-template-columns:1fr}}
+
+  /* ===== TABLE ===== */
+  table.tbl{width:100%;border-collapse:collapse;margin:20px 0;font-size:.92rem;background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  table.tbl th,table.tbl td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  table.tbl thead th{background:linear-gradient(180deg,rgba(245,158,11,.16),rgba(245,158,11,.06));color:#fbbf24;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid rgba(245,158,11,.3);position:relative}
+  table.tbl thead th::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber);opacity:0;transition:.2s}
+  table.tbl thead th:first-child::before{opacity:1}
+  table.tbl tbody tr{transition:.15s}
+  table.tbl tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  table.tbl tbody tr:hover td{background:rgba(245,158,11,.06)}
+  table.tbl tr:last-child td{border-bottom:none}
+  table.tbl td strong{color:#fcd34d}
+
+  /* ===== CALLOUT (info box) ===== */
+  .callout{position:relative;background:linear-gradient(135deg,rgba(139,92,246,.10),rgba(59,130,246,.05));border:1px solid rgba(139,92,246,.25);border-left:4px solid var(--violet);padding:18px 22px 18px 24px;border-radius:0 14px 14px 0;margin:22px 0;transition:.2s}
+  .callout:hover{box-shadow:0 4px 18px rgba(139,92,246,.12);transform:translateX(2px)}
+  .callout.warn{border-color:rgba(239,68,68,.25);border-left-color:var(--red);background:linear-gradient(135deg,rgba(239,68,68,.10),rgba(239,68,68,.03))}
+  .callout.warn:hover{box-shadow:0 4px 18px rgba(239,68,68,.12)}
+  .callout.good{border-color:rgba(34,197,94,.25);border-left-color:var(--green);background:linear-gradient(135deg,rgba(34,197,94,.10),rgba(34,197,94,.03))}
+  .callout.good:hover{box-shadow:0 4px 18px rgba(34,197,94,.12)}
+  .callout.info{border-color:rgba(59,130,246,.25);border-left-color:var(--blue);background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(59,130,246,.03))}
+  .callout.info:hover{box-shadow:0 4px 18px rgba(59,130,246,.12)}
+  .callout h4{color:#fff;margin-bottom:6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .callout p{margin:0;color:#e2e8f0}
+
+  /* ===== CHART CONTAINER ===== */
+  .chart-box{background:linear-gradient(180deg,var(--card),rgba(15,23,42,.6));border:1px solid var(--line);border-radius:16px;padding:22px;margin:24px 0;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+  .chart-box::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),var(--blue),transparent)}
+  .chart-box h4{color:#fbbf24;margin-bottom:6px;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .chart-box .desc{color:var(--muted);font-size:.85rem;margin-bottom:16px;padding-left:10px;border-left:2px solid rgba(245,158,11,.3);font-style:italic}
+  .chart-wrap{position:relative;height:320px}
+  .chart-wrap.tall{height:380px}
+
+  /* ===== TIMELINE ===== */
+  .timeline{position:relative;margin:26px 0;padding-left:32px;border-left:2px solid transparent;border-image:linear-gradient(180deg,var(--amber),var(--line)) 1}
+  .tl-item{position:relative;margin-bottom:28px}
+  .tl-item::before{content:"";position:absolute;left:-41px;top:4px;width:16px;height:16px;border-radius:50%;background:var(--amber);border:3px solid var(--bg);box-shadow:0 0 0 2px var(--amber),0 0 14px rgba(245,158,11,.5)}
+  .tl-item.red::before{background:var(--red);box-shadow:0 0 0 2px var(--red),0 0 14px rgba(239,68,68,.5)}
+  .tl-item.green::before{background:var(--green);box-shadow:0 0 0 2px var(--green),0 0 14px rgba(34,197,94,.5)}
+  .tl-year{font-weight:800;color:#fbbf24;font-size:.95rem;letter-spacing:.02em}
+  .tl-body{color:#cbd5e1;margin-top:4px}
+
+  /* ===== LAYOUT HELPERS ===== */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+  @media(max-width:720px){.two-col{grid-template-columns:1fr}}
+
+  footer{text-align:center;padding:30px 24px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+
+  /* ===== PROGRESS BAR (top) ===== */
+  .progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#fbbf24,#f59e0b,#ef4444);z-index:1000;transition:width .12s ease-out}
+
+  /* ===== MINIMAP (floating TOC) ===== */
+  .minimap{position:fixed;top:24px;right:24px;width:272px;max-height:calc(100vh - 48px);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 14px;overflow-y:auto;z-index:50;opacity:0;transform:translateX(20px);pointer-events:none;transition:opacity .35s ease, transform .35s ease;box-shadow:0 12px 40px rgba(0,0,0,.35);display:none}
+  @media(min-width:1024px){body.nav-active .minimap{display:block;opacity:1;transform:translateX(0);pointer-events:auto}}
+  .minimap::-webkit-scrollbar{width:6px}.minimap::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .minimap .mm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px}
+  .minimap .mm-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+  .minimap .mm-pct{font-size:.72rem;color:#fbbf24;font-weight:700}
+  .mm-search{position:relative;margin-bottom:12px}
+  .mm-search input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:8px 10px 8px 30px;font-size:.82rem;outline:none;transition:.2s}
+  .mm-search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+  .mm-search input::placeholder{color:var(--muted)}
+  .mm-search::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:.75rem;opacity:.7}
+  .mm-group{margin-bottom:4px;border-radius:9px;overflow:hidden}
+  .mm-group-head{display:flex;align-items:center;gap:7px;width:100%;background:transparent;border:none;color:#cbd5e1;cursor:pointer;padding:8px 8px;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-align:left;border-radius:8px;transition:.15s}
+  .mm-group-head:hover{background:rgba(255,255,255,.04);color:#fff}
+  .mm-group-head .chev{font-size:.65rem;transition:transform .2s;color:var(--muted);width:10px}
+  .mm-group.open .mm-group-head .chev{transform:rotate(90deg)}
+  .mm-group-head .gcount{margin-left:auto;font-size:.66rem;color:var(--muted);font-weight:600;background:var(--bg2);padding:1px 7px;border-radius:999px}
+  .mm-items{list-style:none;padding:2px 0 6px 14px;margin:0;max-height:0;overflow:hidden;transition:max-height .3s ease;border-left:1px solid var(--line);margin-left:8px}
+  .mm-group.open .mm-items{max-height:500px}
+  .mm-items li{margin:0}
+  .mm-items a{display:flex;align-items:center;gap:7px;text-decoration:none;color:var(--muted);font-size:.8rem;padding:5px 8px;border-radius:6px;transition:.15s;line-height:1.3}
+  .mm-items a:hover{color:#fbbf24;background:rgba(255,255,255,.03)}
+  .mm-items a .dot{width:6px;height:6px;border-radius:50%;background:var(--line);flex-shrink:0;transition:.2s}
+  .mm-items a.active{color:#fbbf24;font-weight:600;background:rgba(251,191,36,.08)}
+  .mm-items a.active .dot{background:#fbbf24;box-shadow:0 0 0 3px rgba(251,191,36,.2)}
+  .mm-no-result{display:none;font-size:.78rem;color:var(--muted);font-style:italic;padding:14px 8px;text-align:center}
+  .minimap.searching .mm-no-result.show{display:block}
+
+  /* ===== FLOATING BUTTONS ===== */
+  .mm-fab{display:none;position:fixed;bottom:24px;right:24px;z-index:200;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:1.3rem;box-shadow:0 8px 24px rgba(239,68,68,.4);align-items:center;justify-content:center}
+  @media(max-width:1023px){.mm-fab{display:flex}.minimap{display:none;top:0;right:0;left:0;bottom:0;width:auto;max-height:none;border-radius:0;border:none;transform:translateY(20px)}body.nav-mobile-open .minimap{display:block;opacity:1;transform:translateY(0);pointer-events:auto}body.nav-mobile-open .mm-fab{display:none}}
+  .mm-overlay-close{display:none;position:absolute;top:14px;right:16px;font-size:1.6rem;background:none;border:none;color:var(--muted);cursor:pointer;line-height:1}
+  @media(max-width:1023px){.mm-overlay-close{display:block}}
+  .to-top{position:fixed;bottom:24px;left:24px;z-index:200;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}
+  body.nav-active .to-top.show,body.loaded .to-top.show{opacity:1;transform:translateY(0);pointer-events:auto}
+  .to-top:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+  @media(max-width:1023px){.to-top{bottom:88px}}
+  .pres-btn{position:fixed;top:24px;left:24px;z-index:300;width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(59,130,246,.4);opacity:0;transform:translateY(-10px);pointer-events:none;transition:.3s}
+  body.nav-active .pres-btn,body.loaded .pres-btn{opacity:1;transform:translateY(0);pointer-events:auto}
+  .pres-btn:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 10px 28px rgba(139,92,246,.5)}
+
+  /* ===== PRESENTATION MODE OVERLAY ===== */
+  .pres-overlay{position:fixed;inset:0;z-index:9999;background:#0a0f1d;display:flex;flex-direction:column;height:100vh;height:100dvh;opacity:0;pointer-events:none;transition:opacity .4s ease}
+  .pres-overlay.active{opacity:1;pointer-events:auto}
+  .pres-top{display:flex;align-items:center;gap:16px;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .pres-progress-bg{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+  .pres-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#fbbf24,#ef4444);border-radius:2px;transition:width .4s ease}
+  .pres-counter{font-size:.85rem;color:#94a3b8;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pres-counter b{color:#fbbf24;font-size:1.05rem}
+  .pres-exit{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:.82rem;transition:.2s}
+  .pres-exit:hover{background:rgba(239,68,68,.3);color:#fff}
+  .pres-stage{flex:1 1 auto;position:relative;overflow:hidden;min-height:0;width:100%}
+  .pres-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 7%;text-align:center;opacity:0;transform:translateX(60px) scale(.97);transition:opacity .5s ease, transform .5s cubic-bezier(.22,1,.36,1);pointer-events:none}
+  .pres-slide.active{opacity:1;transform:translateX(0) scale(1);pointer-events:auto}
+  .pres-slide.prev{transform:translateX(-60px) scale(.97)}
+  .pres-slide .slide-inner{width:100%;max-width:1100px;margin:auto}
+  .slide-title .badge{display:inline-block;background:rgba(255,255,255,.1);padding:6px 18px;border-radius:999px;font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:#fde68a;margin-bottom:22px;border:1px solid rgba(255,255,255,.18)}
+  .slide-title h1{font-size:clamp(2rem,5.5vw,4rem);font-weight:800;line-height:1.1;margin:0 0 18px;background:linear-gradient(135deg,#fff,#fde68a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .slide-title .sub{font-size:clamp(1rem,2vw,1.35rem);color:#cbd5e1;max-width:760px;margin:0 auto 24px}
+  .slide-section{background:radial-gradient(circle at 50% 40%,rgba(245,158,11,.12),transparent 60%)}
+  .slide-section .sec-num{font-size:clamp(4rem,12vw,8rem);font-weight:800;line-height:1;color:rgba(255,255,255,.08);margin-bottom:0}
+  .slide-section .sec-label{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:#fbbf24;margin-bottom:8px}
+  .slide-section h2{font-size:clamp(1.8rem,4.5vw,3.2rem);font-weight:800;color:#fff;margin:8px 0 0;line-height:1.15}
+  .slide-content h2{font-size:clamp(1.5rem,3.2vw,2.3rem);font-weight:800;color:#fff;margin:0 0 6px;line-height:1.2}
+  .slide-content .kicker{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:#fbbf24;font-weight:700;margin-bottom:10px}
+  .slide-list ul{list-style:none;text-align:left;max-width:760px;margin:20px auto 0}
+  .slide-list li{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:clamp(1rem,1.8vw,1.18rem);color:#e2e8f0}
+  .slide-list li:last-child{border-bottom:none}
+  .slide-list li .num{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700}
+  .slide-list li .txt strong{color:#fbbf24}
+  .slide-quote{background:radial-gradient(circle at 50% 40%,rgba(245,158,11,.12),transparent 60%)}
+  .slide-quote .qmark{font-size:5rem;color:rgba(245,158,11,.3);line-height:.5;margin-bottom:10px}
+  .slide-quote .qtext{font-size:clamp(1.4rem,3vw,2.1rem);font-weight:700;color:#fff;line-height:1.35;max-width:880px;margin:0 auto 16px}
+  .slide-quote .qsource{font-size:.9rem;color:#94a3b8;margin-top:10px}
+  .pres-bottom{display:flex;align-items:center;justify-content:center;gap:18px;padding:14px 28px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+  .pres-nav{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.15rem;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .pres-nav:hover:not(:disabled){background:var(--blue);border-color:var(--blue);transform:scale(1.1)}
+  .pres-nav:disabled{opacity:.3;cursor:not-allowed}
+  .pres-dots{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:65%}
+  .pres-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:.25s;border:none;padding:0}
+  .pres-dot:hover{background:rgba(255,255,255,.4)}
+  .pres-dot.active{background:#fbbf24;width:22px;border-radius:4px}
+  .pres-hint{font-size:.72rem;color:#64748b;text-align:center;padding:2px 0 6px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- ============================ HERO ============================ -->
+<header class="hero">
+  <span class="badge">Nghiên cứu vĩ mô · Tài chính VN</span>
+  <h1>Trái phiếu chính phủ Việt Nam: mối quan hệ đảo dấu theo regime chính sách</h1>
+  <p class="sub">Phân tích truyền dẫn tiền tệ qua 5 regime (2014–2026) — khám phá rằng tương quan trái phiếu↔tỷ giá đảo từ −0,96 đến +0,87 khi đổi regime, điều mà phân tích full-period che giấu.</p>
+  <div class="meta">
+    <span>🗓️ Cập nhật: 09/07/2026</span>
+    <span>📐 Phạm vi: 2014–2026 · 11 nguồn data</span>
+    <span>📚 12 chương</span>
+  </div>
+</header>
+
+<!-- ============================ MAIN ============================ -->
+<main class="container">
+
+  <!-- ===== CHƯƠNG 1: Câu hỏi nghiên cứu — regime-dependent ===== -->
+  <section id="chuong-1">
+    <h2 class="section-title"><span class="num">1</span>Câu chuyện bắt đầu từ một con số lừa dối</h2>
+
+    <p>Hãy tưởng tượng bạn đọc một báo cáo tài chính và thấy câu: <em>"Lợi suất trái phiếu 10 năm tương quan với tỷ giá USD/VND ở mức −0,66 — quan hệ ngược chiều mạnh"</em>. Kết luận tự nhiên: khi trái phiếu tăng, VND mạnh lên. Nghe hợp lý. Nghe đủ để ra quyết định đầu tư.</p>
+
+    <p>Nhưng con số <strong>−0,66</strong> đó là <strong>ảo tưởng</strong>.</p>
+
+    <!-- KPI GRID — visual impact -->
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">−0,66</div><div class="lab">Tương quan full-period (2014–2026) — nghe "mạnh"</div></div>
+      <div class="kpi violet"><div class="val">−0,96 → +0,87</div><div class="lab">Thực tế khi chia theo giai đoạn</div></div>
+      <div class="kpi amber"><div class="val">Đảo dấu</div><div class="lab">Từ âm mạnh sang dương mạnh</div></div>
+      <div class="kpi green"><div class="val">2/5</div><div class="lab">Giai đoạn thực sự có quan hệ rõ</div></div>
+    </div>
+
+    <p>Khi cùng dữ liệu đó được chia theo <strong>5 giai đoạn chính sách</strong> của Ngân hàng Nhà nước (SBV), tương quan <em>đảo dấu hoàn toàn</strong>: từ −0,96 (năm 2017) đến +0,87 (năm 2026). Nghĩa là cùng một cặp biến — trái phiếu và tỷ giá — nhưng ở giai đoạn này đi ngược chiều, giai đoạn khác đi cùng chiều. Hiện tượng này có tên: <strong>nghịch lý Simpson</strong> — gộp các cơ chế khác nhau vào chung một con số tạo ra một mối quan hệ không hề tồn tại.<sup class="ref">1</sup></p>
+
+    <div class="callout info">
+      <h4>💡 Ví dụ đời thường cho nghịch lý Simpson</h4>
+      <p>Tưởng tượng một nhà hàng: tháng nào cũng đông khách nhưng <em>doanh thu giảm</em>. Sao lạ vậy? Vì cuối tuần (ít khách nhưng bill cao) và ngày thường (đông khách nhưng bill thấp) có cơ chế khác nhau. Gộp lại → nhìn貌似矛盾. Tách ra → rõ ràng. Trái phiếu↔tỷ giá VN cũng vậy.</p>
+    </div>
+
+    <!-- CHART BOX: Hero chart — bond yields monthly 2014-2026 -->
+    <div class="chart-box">
+      <h4>📊 Lợi suất trái phiếu Chính phủ VN 2014–2026</h4>
+      <div class="desc">Ba kỳ hạn: 2 năm, 5 năm, 10 năm. Theo dõi đường 10 năm (vàng) — dao động từ 9% (2014) xuống đáy 1,8% (2021) rồi hồi 4,4% (2026).</div>
+      <div class="chart-wrap"><canvas id="chartBondYields"></canvas></div>
+    </div>
+
+    <!-- CHART BOX 2: Rolling correlation — chứng minh thesis -->
+    <div class="chart-box">
+      <h4>📊 Tương quan trái phiếu↔tỷ giá — dao động qua 0</h4>
+      <div class="desc">Đường vàng = tương quan trái phiếu↔USD/VND (cửa sổ 24 tháng). Chú ý nó <strong>đi qua vạch 0</strong> nhiều lần: lúc âm (textbook), lúc dương (phi textbook). Nếu chỉ nhìn con số −0,66 cuối kỳ, bạn sẽ hiểu sai.</div>
+      <div class="chart-wrap"><canvas id="chartRollingCorr"></canvas></div>
+    </div>
+
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm của chương này</h4>
+      <p><strong>Không thể dùng một con số tương quan để mô tả mối quan hệ trái phiếu↔tỷ giá VN.</strong> Phải biết đang ở giai đoạn chính sách nào. Toàn bộ 12 chương dưới đây trả lời câu hỏi: <em>tại sao mối quan hệ này lại đổi theo từng giai đoạn, và giai đoạn hiện tại (2023–2026) đang thuộc loại nào?</em></p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 2: Dữ liệu — ngắn gọn ===== -->
+  <section id="chuong-2">
+    <h2 class="section-title"><span class="num">2</span>Dữ liệu — đủ để tin, minh bạch để kiểm chứng</h2>
+
+    <p>Bài này dựa trên <strong>11 nguồn dữ liệu</strong>, tổng cộng khoảng <strong>43.000 dòng số liệu</strong>, bao phủ từ 2014 đến 2026. Tất cả đều là nguồn chính thức hoặc quốc tế — không có số "ước tính".</p>
+
+    <div class="kpi-grid">
+      <div class="kpi amber"><div class="val">3.121</div><div class="lab">Ngày lợi suất trái phiếu (HNX)</div></div>
+      <div class="kpi green"><div class="val">2.941</div><div class="lab">Ngày tỷ giá trung tâm (SBV)</div></div>
+      <div class="kpi blue"><div class="val">69</div><div class="lab">Tháng CPI (NSO)</div></div>
+      <div class="kpi violet"><div class="val">31</div><div class="lab">Quyết định lãi suất SBV</div></div>
+    </div>
+
+    <div class="callout warn">
+      <h4>⚠️ Một khoảng trống cần biết</h4>
+      <p>Dữ liệu <strong>lãi suất liên ngân hàng</strong> (VNIBOR) chỉ có 16 tuần gần đây — không đủ để phân tích sâu. Bài dùng <em>proxy</em> (lãi suất cho vay/gửi tiền ngân hàng) cho phần dài hạn, và chỉ kết luận về interbank ở mức <strong>kể chuyện</strong>, không claim nhân quả. Chi tiết phương pháp và nguồn ở <a href="#phu-luc-ky-thuat">Phụ lục kỹ thuật</a> cuối bài.</p>
+    </div>
+
+    <p>Quyết định lãi suất của SBV được <strong>xác minh từng cái</strong> từ Thuvienphapluat, LuatVietnam, và baochinhphu — đặc biệt 3 lỗi đã được sửa: COVID cut 3 (2020) là QĐ 1728 (không phải 1123), thắt chặt 2022 là QĐ 1606 (không phải 1524), nới lỏng 2023 là QĐ 1123 (không phải 1124).</p>
+  </section>
+
+  <!-- ===== CHƯƠNG 3: Khung lý thuyết — thân thiện ===== -->
+  <section id="chuong-3">
+    <h2 class="section-title"><span class="num">3</span>Vì sao mối quan hệ lại đổi theo từng giai đoạn?</h2>
+
+    <p>Để hiểu tại sao trái phiếu và tỷ giá "lúc đi cùng chiều, lúc đi ngược chiều", hãy bắt đầu từ một câu hỏi đơn giản: <strong>khi SBV giảm lãi suất, điều gì thực sự xảy ra?</strong></p>
+
+    <div class="callout info">
+      <h4>📐 Cơ chế "textbook" — khi mọi thứ hoạt động bình thường</h4>
+      <p>Theo kinh tế học cổ điển (John Taylor, 1995): SBV giảm lãi suất → trái phiếu rẻ hơn → dòng tiền dễ dãi hơn → nền kinh tế tăng → VND mạnh lên.<sup class="ref">4</sup> Khi cơ chế này hoạt động, trái phiếu và tỷ giá <strong>đi ngược chiều</strong> (tương quan âm). Đây là điều "textbook" dự đoán.</p>
+    </div>
+
+    <div class="callout warn">
+      <h4>⚠️ Nhưng cơ chế này KHÔNG phải lúc nào cũng hoạt động</h4>
+      <p>Khi có <strong>cú sốc bên ngoài</strong> (COVID, Fed tăng lãi suất mạnh, áp lực tỷ giá mùa Tết), mọi thứ thay đổi. Lúc này cả trái phiếu lẫn VND có thể <em>cùng yếu</em> hoặc <em>cùng mạnh</em> — đi cùng chiều (tương quan dương). Đây là cơ chế "phi textbook".</p>
+    </div>
+
+    <div class="compare">
+      <div class="col before">
+        <h4>Giai đoạn "bình thường" <span class="tag">Tương quan âm</span></h4>
+        <ul class="bul">
+          <li>Trái phiếu cao → hút vốn ngoại → VND mạnh</li>
+          <li>Ví dụ VN 2017–2019: tương quan <strong>−0,66</strong></li>
+          <li>Đây là điều sách giáo khoa dự đoán</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Giai đoạn "sốc" <span class="tag">Tương quan dương</span></h4>
+        <ul class="bul">
+          <li>Cú sốc → trái phiếu rơi + VND yếu cùng lúc</li>
+          <li>Ví dụ VN 2023–2026: tương quan <strong>+0,86</strong></li>
+          <li>Cơ chế phi textbook</li>
+        </ul>
+      </div>
+    </div>
+
+    <p>Tóm lại: <strong>chính sách của SBV quyết định cơ chế nào đang hoạt động</strong>. Khi SBV giữ ổn định → cơ chế textbook. Khi SBV phản ứng cú sốc (hoặc bị áp lực ngoài) → cơ chế đổi. Toàn bộ 5 chương tiếp theo (Chương 4–8) sẽ đi qua từng giai đoạn để chỉ rõ cơ chế nào đã thắng.</p>
+
+    <div class="callout info">
+      <h4>💡 Còn lạm phát thì sao?</h4>
+      <p>Một câu hỏi phổ biến: trái phiếu VN có phản ánh lạm phát không (như các thị trường phát triển)? Câu trả lời ngắn: <strong>có lúc có, có lúc không</strong> — cũng phụ thuộc giai đoạn. Chi tiết ở Chương 10.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 4: R1 — Thắt chặt hậu khủng hoảng (2014-2016) ===== -->
+  <section id="chuong-4">
+    <h2 class="section-title"><span class="num">4</span>R1 (2014–2016): Thắt chặt hậu khủng hoảng — chưa có mối quan hệ</h2>
+
+    <p>Giai đoạn 2014–2016, SBV giữ nguyên lãi suất tái cấp vốn ở mức <strong>6,5%</strong> — di sản của đợt thắt chặt chống lạm phát 2011 (khi lạm phát từng chạm 23%). Bond 10Y bình quân <strong>7,01%</strong>, cao hơn policy rate khoảng 50 điểm cơ bản.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi amber"><div class="val">6,5%</div><div class="lab">SBV refinancing (giữ nguyên)</div></div>
+      <div class="kpi red"><div class="val">7,01%</div><div class="lab">Bond 10Y bình quân</div></div>
+      <div class="kpi green"><div class="val">21.804</div><div class="lab">USD/VND bình quân</div></div>
+      <div class="kpi violet"><div class="val">+0,04</div><div class="lab">Corr Bond↔FX (noise)</div></div>
+    </div>
+
+    <p>Tương quan Bond↔FX trong giai đoạn này = <strong>+0,04</strong> — gần như <em>không có mối quan hệ</strong> (khoảng tin cậy 95% từ −0,37 đến +0,44). Đây là điều hợp lý: thị trường trái phiếu VN lúc này còn <strong>non trẻ</strong>, thanh khoản thấp, investor base chủ yếu là ngân hàng hold-to-maturity. Bond yield phản ánh rủi ro tín dụng nhà nước hơn là tín hiệu vĩ mô.</p>
+
+    <div class="callout info">
+      <h4>💡 Ví dụ dễ hiểu</h4>
+      <p>Năm 2014, thị trường trái phiếu giống như một <strong>cửa hàng vắng khách</strong>: giá niêm yết 7%, nhưng ít ai mua bán thật. Giá không phản ánh "cung cầu" mà chỉ phản ánh mức SBV nghĩ là hợp lý. Tỷ giá cũng vậy — gần như cố định ở 21.800. Hai thứ "im lặng", không nói chuyện với nhau.</p>
+    </div>
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm</h4>
+      <p>2014–2016: trái phiếu VN <strong>chưa đủ trưởng thành</strong> để làm tín hiệu vĩ mô. Mối quan hệ với tỷ giá ≈ 0. Đây là baseline — chương sau cho thấy điều gì đã thay.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 5: R2 — Ổn định, corr âm mạnh xuất hiện (2017-2019) ===== -->
+  <section id="chuong-5">
+    <h2 class="section-title"><span class="num">5</span>R2 (2017–2019): Ổn định — tương quan âm mạnh xuất hiện</h2>
+
+    <p>Tháng 9/2019, SBV thực hiện cut đầu tiên sau 4 năm giữ nguyên: refinancing <strong>6,5% → 6,0%</strong> (QĐ 211/QĐ-NHNN). Nhưng dấu hiệu quan trọng hơn đã xuất hiện trước đó — trong giai đoạn 2017–2019, tương quan Bond↔FX đạt mức <strong>−0,66</strong>, <em>âm mạnh nhất lịch sử</em>.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi amber"><div class="val">6,0%</div><div class="lab">SBV refinancing (cut 9/2019)</div></div>
+      <div class="kpi green"><div class="val">5,10%</div><div class="lab">Bond 10Y bình quân</div></div>
+      <div class="kpi red"><div class="val">22.616</div><div class="lab">USD/VND bình quân</div></div>
+      <div class="kpi violet"><div class="val">−0,66</div><div class="lab">Corr Bond↔FX (âm significant)</div></div>
+    </div>
+
+    <p>Đây là <strong>giai đoạn duy nhất</strong> mà cơ chế textbook hoạt động rõ ràng: bond yield tăng → hút vốn ngoại → VND mạnh lên (tương quan âm). Khoảng tin cậy 95% từ −0,82 đến −0,40 — chắc chắn khác 0.</p>
+
+    <div class="compare">
+      <div class="col before">
+        <h4>Cơ chế "risk-on" hoạt động <span class="tag">corr âm</span></h4>
+        <ul class="bul">
+          <li>Bond yield cao → VN tài sản hấp dẫn hơn</li>
+          <li>Vốn ngoại chảy vào → cầu VND tăng</li>
+          <li>VND mạnh lên (USD/VND giảm)</li>
+          <li>Đây là cơ chế textbook</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Tại sao giai đoạn này? <span class="tag">Điều kiện</span></h4>
+        <ul class="bul">
+          <li>Thị trường bond đã trưởng thành hơn (2017+)</li>
+          <li>SBV chính sách ổn định, dự báo được</li>
+          <li>Không có shock ngoài lớn</li>
+          <li>FDI vẫn chảy đều</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Ví dụ: giai đoạn "đẹp" nhất</h4>
+      <p>2017–2019 là như một <strong>mùa hè êm ả</strong>: SBV ổn định, không cú sốc ngoài, FDI chảy đều. Trong điều kiện này, cơ chế textbook hoạt động hoàn hảo — trái phiếu cao hút vốn, VND mạnh. Tương quan −0,66 là "mẫu số" đẹp nhất lịch sử VN.</p>
+    </div>
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm</h4>
+      <p>2017–2019 là <strong>giai đoạn duy nhất</strong> cơ chế textbook (corr âm) hoạt động rõ. Nhưng đừng vội kết luận "luôn luôn vậy" — 4 chương sau sẽ cho thấy điều gì xảy ra khi có cú sốc.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 6: R3 — COVID shock, corr đảo dấu (+0.16) ===== -->
+  <section id="chuong-6">
+    <h2 class="section-title"><span class="num">6</span>R3 (2019-09 → 2022-08): COVID shock — tương quan đảo dấu nhẹ</h2>
+
+    <p>COVID-19 thay đổi mọi thứ. SBV thực hiện <strong>3 đợt cut</strong> liên tiếp trong 6 tháng — phản ứng tiền tệ mạnh nhất lịch sử:</p>
+
+    <div class="timeline">
+      <div class="tl-item green"><div class="tl-year">17/03/2020</div><div class="tl-body">QĐ 418 — refinancing 6,0% → 5,0% (cut 1)</div></div>
+      <div class="tl-item green"><div class="tl-year">13/05/2020</div><div class="tl-body">QĐ 918 — refinancing 5,0% → 4,5% (cut 2)</div></div>
+      <div class="tl-item green"><div class="tl-year">01/10/2020</div><div class="tl-body">QĐ 1728 — refinancing 4,5% → 4,0% (cut 3, đợt lớn)</div></div>
+    </div>
+
+    <p>Bond 10Y phản ứng dữ dội: từ <strong>2,93%</strong> (tháng 1/2020) xuống đáy <strong>1,83%</strong> (tháng 9/2021) — mức thấp nhất lịch sử. Lợi suất bond sụt <em>dưới</em> policy rate (1,83% < 4,0% refinancing) — điều bất thường.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="val">4,0%</div><div class="lab">SBV refinancing (sau 3 cut)</div></div>
+      <div class="kpi red"><div class="val">2,56%</div><div class="lab">Bond 10Y bình quân giai đoạn</div></div>
+      <div class="kpi amber"><div class="val">1,83%</div><div class="lab">Bond 10Y đáy 09/2021</div></div>
+      <div class="kpi violet"><div class="val">+0,16</div><div class="lab">Corr Bond↔FX (đảo dấu nhẹ)</div></div>
+    </div>
+
+    <p>Tương quan Bond↔FX = <strong>+0,16</strong> (dương nhẹ) — đã <em>đảo dấu</em> so với R2 (−0,66). Nhưng khoảng tin cậy (−0,18 đến +0,46) bao qua 0, nên không significant. Ý nghĩa định tính: cơ chế textbook <strong>gãy</strong>.</p>
+
+    <div class="callout info">
+      <h4>💡 Tại sao cơ chế "đẹp" bị gãy?</h4>
+      <p>Khi COVID đánh sập thị trường toàn cầu, <strong>cả bond lẫn VND cùng bị bán tháo</strong>: bond rơi vì SBV cắt lãi suất cực mạnh, VND yếu vì vốn ngoại rút khỏi toàn bộ thị trường mới. Hai thứ đi <em>cùng chiều</em> (cùng giảm giá) thay vì ngược chiều. Cơ chế textbook bị thay bằng cơ chế "bán tháo" (risk-off).</p>
+    </div>
+
+    <p>CPI cũng giảm theo: YoY từ <strong>4,07%</strong> (tháng 7/2020) xuống <strong>3,51%</strong> (tháng 11/2020). SBV cut đúng lúc — chính sách phản ứng nhanh hơn các chu kỳ trước.</p>
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm</h4>
+      <p>COVID 2020: tương quan <strong>đảo dấu</strong> từ âm (−0,66) sang dương nhẹ (+0,16). Cơ chế textbook bị gãy vì cú sốc. Bài học: <em>không thể dùng bond để dự báo tỷ giá khi có khủng hoảng</em>.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 7: R4 — Thắt Fed-driven, corr gần 0 (2022-2023) ===== -->
+  <section id="chuong-7">
+    <h2 class="section-title"><span class="num">7</span>R4 (2022-09 → 2023-06): Thắt chặt Fed-driven — data quá ít</h2>
+
+    <p>Tháng 9/2022, đối mặt áp lực tỷ giá từ Fed hike aggressive, SBV thực hiện <strong>2 đợt thắt chặt</strong> trong 1 tháng — đợt hiking nhanh nhất lịch sử:</p>
+
+    <div class="timeline">
+      <div class="tl-item red"><div class="tl-year">23/09/2022</div><div class="tl-body">QĐ 1606 — refinancing 4,0% → 5,0% (hike 1)</div></div>
+      <div class="tl-item red"><div class="tl-year">10/2022</div><div class="tl-body">QĐ 1809 — refinancing 5,0% → 6,0% (hike 2, đỉnh thắt)</div></div>
+    </div>
+
+    <p>Bond 10Y phản ứng <strong>mạnh nhất lịch sử</strong>: từ 3,55% trước hike → 4,87% sau hike — tăng <strong>+132 điểm cơ bản</strong> trong 3 tháng. Đây là minh chứng rõ nhất rằng bond phản ứng dữ dội với hiking (xem phân tích bất đối xứng ở Chương 9).</p>
+
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">6,0%</div><div class="lab">SBV refinancing (đỉnh thắt)</div></div>
+      <div class="kpi amber"><div class="val">4,05%</div><div class="lab">Bond 10Y bình quân</div></div>
+      <div class="kpi green"><div class="val">23.601</div><div class="lab">USD/VND bình quân</div></div>
+      <div class="kpi violet"><div class="val">−0,08</div><div class="lab">Corr Bond↔FX (n=10, không significant)</div></div>
+    </div>
+
+    <div class="callout warn">
+      <h4>⚠️ Thành thật: giai đoạn này quá ngắn</h4>
+      <p>Regime R4 chỉ kéo dài <strong>10 tháng</strong> — quá ngắn để rút ra kết luận vững. Bài không claim gì về tương quan giai đoạn này. Nhưng có 1 điều rõ: <em> Fed tăng lãi suất đã phá vỡ mối quan hệ nội địa giữa bond và tỷ giá VN.</em></p>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Ví dụ: khi "ông lớn" hắt hơi</h4>
+      <p>Fed tăng lãi suất mạnh = "ông lớn hắt hơi". Toàn bộ thị trường mới (emerging markets) cảm lạnh — kể cả VN. Lúc này bond VN và tỷ giá VND <strong>cùng bị áp lực từ ngoài</strong>, không còn "nói chuyện" với nhau. Mối quan hệ nội địa bị shock ngoài lấn át.</p>
+    </div>
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm</h4>
+      <p>Thắt chặt 2022: giai đoạn quá ngắn (10 tháng), không kết luận được tương quan. Nhưng rõ ràng <strong>áp lực từ Fed</strong> đã làm mối quan hệ nội địa biến mất.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 8: R5 — Nới lỏng trở lại, corr dương mạnh (+0.84) ===== -->
+  <section id="chuong-8">
+    <h2 class="section-title"><span class="num">8</span>R5 (2023-07 → 2026-07): Nới lỏng trở lại — tương quan dương mạnh nhất</h2>
+
+    <p>Tháng 6/2023, SBV bắt đầu đợt nới lỏng dài nhất — <strong>4 đợt cut</strong> đưa refinancing từ 6,0% xuống 4,5%:</p>
+
+    <div class="timeline">
+      <div class="tl-item green"><div class="tl-year">15/03/2023</div><div class="tl-body">QĐ 313 — discount 4,5% → 3,5%</div></div>
+      <div class="tl-item green"><div class="tl-year">03/04/2023</div><div class="tl-body">QĐ 574 — refinancing 6,0% → 5,5%</div></div>
+      <div class="tl-item green"><div class="tl-year">23/05/2023</div><div class="tl-body">QĐ 950 — refinancing 5,5% → 5,0%</div></div>
+      <div class="tl-item green"><div class="tl-year">19/06/2023</div><div class="tl-body">QĐ 1123 — refinancing 5,0% → 4,5%</div></div>
+    </div>
+
+    <p>Đây là regime <strong>đáng chú ý nhất</strong>: tương quan Bond↔FX = <strong>+0,86</strong> — dương mạnh nhất lịch sử, và significant (CI +0,73 đến +0,93). Bond thấp + VND yếu <em>cùng lúc</em>.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="val">4,5%</div><div class="lab">SBV refinancing (sau 4 cut)</div></div>
+      <div class="kpi red"><div class="val">3,09%</div><div class="lab">Bond 10Y bình quân</div></div>
+      <div class="kpi amber"><div class="val">24.548</div><div class="lab">USD/VND bình quân</div></div>
+      <div class="kpi violet"><div class="val">+0,86</div><div class="lab">Corr Bond↔FX (dương significant)</div></div>
+    </div>
+
+    <div class="compare">
+      <div class="col before">
+        <h4>Cơ chế "risk-off" hiện tại <span class="tag">corr dương</span></h4>
+        <ul class="bul">
+          <li>Bond thấp (SBV cut, tiền rẻ)</li>
+          <li>Nhưng VND yếu (Tết 2024 áp lực)</li>
+          <li>Hai biến cùng chiều — phi textbook</li>
+          <li>+0,86 — significant</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Tại sao? <span class="tag">3 yếu tố</span></h4>
+        <ul class="bul">
+          <li>Tết 2024: cầu USD cao mùa lễ</li>
+          <li>Vốn ngoại chậm rời</li>
+          <li>SBV giữ VND yếu để hỗ trợ xuất khẩu</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Ví dụ: "bẫy" của nhà đầu tư 2024</h4>
+      <p>Đầu 2024, nhiều người nhìn bond 10Y chỉ 2,2% và nghĩ "VND sẽ mạnh vì vốn ngoại sẽ vào". Sai. Trong regime R5, bond thấp đi kèm VND <strong>yếu</strong> — vì nguyên nhân chung là áp lực tỷ giá mùa Tết + vốn ngoại chậm rời. Phải biết <em>regime</em> trước khi đoán.</p>
+    </div>
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm — QUAN TRỌNG NHẤT</h4>
+      <p>Giai đoạn 2023–2026 (hiện tại): tương quan <strong>+0,86</strong> (dương mạnh). Trái phiếu thấp + VND yếu cùng lúc. <strong>Đây là điều ngược lại hoàn toàn</strong> với 2017–2019. Ai dùng tư duy "textbook" ở giai đoạn này sẽ sai.</p>
+    </div>
+
+    <!-- CHART BOX 4: Scatter Bond↔FX per regime -->
+    <div class="chart-box">
+      <h4>📊 Scatter Bond 10Y vs USD/VND — tô màu theo regime</h4>
+      <div class="desc">Mỗi điểm = 1 tháng. R2 (xanh dương) cho thấy đường nghiêng xuống (âm). R5 (đỏ) cho thấy đường nghiêng lên (dương). Đây là biểu đồ trực quan nhất cho thesis: cùng cặp biến, nhưng quan hệ khác nhau theo regime.</div>
+      <div class="chart-wrap"><canvas id="chartScatterRegime"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 9: Bond ↔ SBV — phản ứng bất đối xứng ===== -->
+  <section id="chuong-9">
+    <h2 class="section-title"><span class="num">9</span>Trái phiếu ↔ SBV: phản ứng bất đối xứng (hiking &gt; cutting)</h2>
+
+    <p>Event study 12 quyết định SBV (2014–2026) cho thấy bond phản ứng <strong>bất đối xứng</strong>: hiking tác động mạnh hơn cutting.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Loại</th><th>Số events</th><th>Δ Bond 10Y trung bình</th><th>Biên độ</th></tr></thead>
+      <tbody>
+        <tr><td><strong>CUT</strong> (nới lỏng)</td><td>8</td><td>−0,5 đến −1,0%</td><td>Nhẹ</td></tr>
+        <tr><td><strong>HIKING</strong> (thắt chặt)</td><td>4</td><td>+1,2 đến +1,3%</td><td>Mạnh gấp 2</td></tr>
+      </tbody>
+    </table>
+
+    <p>Ví dụ rõ nhất: hike 9/2022 (QĐ 1606) → bond tăng <strong>+132 điểm cơ bản</strong> trong 3 tháng. Trong khi cut 10/2020 (QĐ 1728) → bond chỉ giảm −52 điểm cơ bản.</p>
+
+    <!-- CHART BOX 3: Event study -->
+    <div class="chart-box">
+      <h4>📊 Event study: Δ Bond 10Y quanh mỗi SBV decision (±3 tháng)</h4>
+      <div class="desc">Đỏ = HIKING (tăng lãi suất), xanh = CUT (giảm). HIKING tác động mạnh gấp ~2 lần CUT — phù hợp loss aversion λ ≈ 2,25 (Tversky &amp; Kahneman 1992).</div>
+      <div class="chart-wrap"><canvas id="chartEventStudy"></canvas></div>
+    </div>
+
+    <div class="callout info">
+      <h4>🧠 Góc nhìn tâm lý — Loss aversion (Kahneman &amp; Tversky 1979, Tversky &amp; Kahneman 1992)</h4>
+      <p>Theo <em>Prospect Theory</em> (Kahneman &amp; Tversky, 1979, Econometrica 47(2):263–291), nhà đầu tư phản ứng mạnh hơn với <strong>tổn thất</strong> hơn lợi ích cùng độ lớn — "losses loom larger than gains".<sup class="ref">7</sup></p>
+      <p>Hệ số loss aversion chính thức: <strong>λ ≈ 2,25</strong> — tổn thất cảm nhận mạnh gấp 2,25 lần lợi ích tương đương, do <em>Tversky &amp; Kahneman (1992)</em> ước lượng (Journal of Risk and Uncertainty 5(4):297–323).<sup class="ref">8</sup> Áp dụng cho bond: hiking = "tổn thất" (giá bond giảm) → phản ứng dữ (+132 bps). Cutting = "lợi ích" (giá bond tăng) → phản ứng nhẹ hơn (−52 đến −101 bps). Tỷ lệ hiking/cutting ≈ 2:1 — gần với λ ≈ 2,25.</p>
+    </div>
+    <div class="callout info">
+      <h4>📊 Chiều ngược: khi bond tăng nhanh, SBV có tăng theo không?</h4>
+      <p>Phân tích trên đã cho thấy SBV → bond. Nhưng chiều ngược lại: <strong>bond có dự báo SBV không?</strong></p>
+      <table class="tbl" style="margin-top:12px">
+        <thead><tr><th>Trường hợp</th><th>SBV phản ứng 6 tháng sau</th></tr></thead>
+        <tbody>
+          <tr><td>Bond tăng nhanh (&gt;50 bp / 3 tháng)</td><td><strong>+0,62%</strong> (SBV tăng)</td></tr>
+          <tr><td>Bond giảm nhanh (&lt;−50 bp / 3 tháng)</td><td><strong>−0,48%</strong> (SBV giảm)</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px"><strong>Phát hiện thú vị</strong>: SBV phản ứng mạnh hơn với "tốc độ bond tăng" (+0,62%) so với "tốc độ bond giảm" (−0,48%) — ratio <strong>1,3x</strong>. Điều này phù hợp với cách SBV điều hành: khi bond tăng nhanh (áp lực lạm phát/rủi ro), SBV thắt chặt quyết liệt hơn. Khi bond giảm, SBV nới lỏng thận trọng hơn.</p>
+      <p style="margin-top:10px;color:var(--muted);font-size:.85rem">Lưu ý: đây là quan hệ 2 chiều (bidirectional) — bond→SBV (corr +0,88) gần mạnh như SBV→bond (+0,84). Khó nói ai dẫn ai; gần như "bond và SBV cùng di chuyển".</p>
+    </div>
+
+    <div class="callout info">
+      <h4>📊 Bond↔SBV là mối quan hệ RÕ NHẤT trong 4</h4>
+      <p>So sánh 4 mối quan hệ mà bài kiểm tra:</p>
+      <table class="tbl" style="margin-top:12px">
+        <thead><tr><th>#</th><th>Mối quan hệ</th><th>Tương quan</th><th>Ổn định</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1</strong></td><td><strong>Bond ↔ SBV</strong></td><td><strong>+0,86</strong></td><td>✅ 87% thời gian dương</td></tr>
+          <tr><td>2</td><td>Bond ↔ CPI (Fisher)</td><td>+0,44</td><td>🟡 72% thời gian</td></tr>
+          <tr><td>3</td><td>Bond ↔ tỷ giá</td><td>−0,66 (ảo tưởng)</td><td>⚠️ Đảo dấu 4 lần</td></tr>
+          <tr><td>4</td><td>Bond ↔ interbank</td><td>—</td><td>❌ Không đủ data</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px">Bond↔SBV gần gấp 2 lần Fisher (+0,86 vs +0,44) — chứng tỏ trái phiếu VN <strong>phản ứng chính sách tiền tệ tốt hơn nhiều so với kỳ vọng lạm phát</strong>. Đây là đặc thù thị trường chưa trưởng thành: giá cả di chuyển theo tín hiệu chính sách, không theo kỳ vọng thị trường.</p>
+    </div>
+
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm</h4>
+      <p>Trái phiếu phản ứng với SBV <strong>bất đối xứng</strong>: hiking luôn đúng hướng (100%, +127 bps trung bình), cutting chỉ đúng 71% (−49 bps, 2 lần bond vẫn tăng sau SBV cắt). Hike mạnh gấp <strong>2,6 lần</strong> cut — đúng tâm lý loss aversion λ ≈ 2,25.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 10: Bond ↔ lạm phát — Fisher hypothesis test theo regime ===== -->
+  <section id="chuong-10">
+    <h2 class="section-title"><span class="num">10</span>Trái phiếu ↔ lạm phát: Fisher hypothesis — đúng ở regime nào?</h2>
+
+    <p><strong>Fisher hypothesis</strong> (Irving Fisher, 1930): lợi suất bond danh nghĩa = lãi suất thực + lạm phát kỳ vọng. Khi lạm phát tăng, bond yield phải tăng theo.<sup class="ref">6</sup></p>
+
+    <p>Full-period corr Bond↔CPI YoY cho VN = <strong>−0,10</strong> — gần 0, nghe như Fisher "fail". Nhưng <strong>rolling 24 tháng</strong> cho thấy corr dao động <em>−0,63 đến +0,80</em> — Fisher <strong>ĐÚNG ở vài regime, SAI ở vài regime</strong>.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="val">−0,10</div><div class="lab">Full-period corr Bond↔CPI</div></div>
+      <div class="kpi amber"><div class="val">−0,63</div><div class="lab">Rolling corr thấp nhất</div></div>
+      <div class="kpi red"><div class="val">+0,80</div><div class="lab">Rolling corr cao nhất</div></div>
+      <div class="kpi violet"><div class="val">1,43</div><div class="lab">Biên độ dao động</div></div>
+    </div>
+
+    <div class="callout info">
+      <h4>📐 Tại sao Fisher không ổn định ở VN?</h4>
+      <p>4 lý do giải thích vì sao bond VN chưa phải "inflation hedge" ổn định:</p>
+      <ol style="padding-left:20px;line-height:2">
+        <li><strong>SBV đa mục tiêu</strong> — không chỉ inflation targeting, còn growth + FX stability</li>
+        <li><strong>Thị trường bond non</strong> — investor base chủ yếu ngân hàng hold-to-maturity</li>
+        <li><strong>Lạm phát VN chịu giá nhà nước</strong> (điện, y tế) &gt; thị trường</li>
+        <li><strong>69 tháng data</strong> — window truncate, không đủ dài để test Fisher dài hạn</li>
+      </ol>
+    </div>
+
+    <div class="callout info">
+      <h4>📊 Test thực tế: bond khi CPI cao vs CPI thấp</h4>
+      <p>Để kiểm tra Fisher trực tiếp, so sánh bond 10Y ở những tháng CPI cao nhất vs thấp nhất (top/bottom 5 tháng, 2019–2026):</p>
+      <table class="tbl" style="margin-top:12px">
+        <thead><tr><th>Nhóm</th><th>CPI YoY</th><th>Bond 10Y trung bình</th></tr></thead>
+        <tbody>
+          <tr><td>5 tháng CPI CAO nhất</td><td>4,3–5,4%</td><td><strong>4,28%</strong></td></tr>
+          <tr><td>5 tháng CPI THẤP nhất</td><td>0,3–1,1%</td><td><strong>2,43%</strong></td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px"><strong>Bond khi CPI cao (4,28%) &gt; bond khi CPI thấp (2,43%)</strong> — Fisher <em>có đúng về hướng</em>. Nhưng chỉ tương quan full-period +0,44 (yếu), và dao động −0,63 → +0,80 theo rolling. Tức là <strong>đúng về trung bình dài hạn, sai về dự báo ngắn hạn</strong>.</p>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Fisher đúng ở giai đoạn nào?</h4>
+      <p>Theo rolling 24 tháng: Fisher <strong>đúng 72% thời gian</strong> (corr dương). Đặc biệt rõ ở <em>giai đoạn 2025–2026 gần đây</em> (corr +0,55). Nhưng gần như <strong>biến mất ở 2020–2024</strong> (corr +0,15 đến +0,18) — giai đoạn COVID + phục hồi, bond phản ứng chính sách SBV hơn lạm phát.</p>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Ví dụ: "nhiệt kế hỏng" lúc cần nhất</h4>
+      <p>Tưởng tượng nhiệt kế chỉ đúng lúc trời mát, nhưng lúc sốt cao thì chỉ sai bét. Đó là trái phiếu VN với lạm phát: <em>có lúc</em> phản ánh, <em>có lúc</em> không. Khác với Mỹ hay châu Âu — nơi trái phiếu luôn phản ánh kỳ vọng lạm phát khá ổn định (corr ~0,7–0,8).</p>
+    </div>
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm</h4>
+      <p>Fisher hypothesis <strong>có đúng về hướng</strong> (bond CPI cao 4,28% &gt; CPI thấp 2,43%), nhưng <strong>yếu và không ổn định</strong> (corr chỉ +0,44 vs Mỹ ~0,7–0,8, dao động −0,63 → +0,80). Đây là <strong>đặc thù thị trường trái phiếu VN chưa trưởng thành</strong>: giá cả di chuyển theo tín hiệu chính sách SBV hơn kỳ vọng lạm phát thị trường.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 11: Bond ↔ interbank — narrative + caveat ===== -->
+  <section id="chuong-11">
+    <h2 class="section-title"><span class="num">11</span>Trái phiếu ↔ interbank: hai thế giới riêng biệt</h2>
+
+    <p>Đây là mối quan hệ <strong>yếu nhất</strong> trong 4 — vì data không đủ. Nhưng ngay cả với 12 tuần VNIBOR thật (Q2 2026), kết quả mô tả rất rõ: <strong>bond và interbank dường như sống ở hai thế giới khác nhau</strong>.</p>
+
+    <div class="callout warn">
+      <h4>⚠️ Gap data — công nhận minh bạch</h4>
+      <p><strong>VNIBOR chuẩn</strong> (lãi suất liên ngân hàng) chỉ ra mắt ~2009–2010. Free daily series dài = <strong>không có</strong> (test 4 nguồn quốc tế đều rỗng). Bài dùng:</p>
+      <ul style="padding-left:20px;line-height:2">
+        <li><strong>Proxy</strong>: IMF Lending/Deposit Rate (bank-to-customer, <em>không phải</em> interbank) — 1992–2023 monthly</li>
+        <li><strong>VNIBOR thật</strong>: chỉ 12 tuần (VBMA weekly, Q2 2026)</li>
+      </ul>
+      <p>Không thể claim causal về interbank từ data này — chỉ kết luận ở mức mô tả.</p>
+    </div>
+
+    <h3>12 tuần VNIBOR thật: bond ổn định, interbank "sóng gió"</h3>
+
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="val">0,34%</div><div class="lab">Biên độ bond 10Y (Q2 2026)</div></div>
+      <div class="kpi red"><div class="val">4,06%</div><div class="lab">Biên độ VNIBOR ON (Q2 2026)</div></div>
+      <div class="kpi amber"><div class="val">12×</div><div class="lab">VNIBOR biến động gấp bond</div></div>
+      <div class="kpi violet"><div class="val">45%</div><div class="lab">Tuần cùng hướng (gần ngẫu nhiên)</div></div>
+    </div>
+
+    <p>Trong Q2 2026, bond 10Y dao động chỉ <strong>0,34%</strong> (4,08% → 4,42%) — rất ổn định. Trong khi VNIBOR overnight dao động <strong>4,06%</strong> (2,91% → 6,97%) — gấp <strong>12 lần</strong>. Khi so sánh hướng di chuyển từng tuần: bond và VNIBOR <strong>cùng hướng chỉ 45%</strong> — thấp hơn cả tung đồng xu (50%). Correlation = <strong>−0,33</strong> (gần như không liên quan).</p>
+
+    <div class="callout info">
+      <h4>💡 Ví dụ: "đồng hồ và nhiệt kế"</h4>
+      <p>Bond 10Y giống như <strong>đồng hồ treo tường</strong> — chạy đều, ít sai số, phản ánh thời gian dài hạn. VNIBOR ON giống như <strong>nhiệt kế ngoài trời</strong> — hôm nắng hôm mưa, biến động theo tình trạng thanh khoản tức thời. Hai thứ đo hai thứ khác nhau, không cần phải đi cùng nhau.</p>
+    </div>
+
+    <h3>So sánh tất cả kỳ hạn bond: ngắn hạn còn yếu hơn dài hạn</h3>
+
+    <p>Câu hỏi tự nhiên: bond ngắn hạn (3 tháng, 6 tháng) có "gần" VNIBOR ON hơn không, vì cùng phản ánh điều kiện ngắn hạn? Kết quả <strong>ngược dự đoán</strong>:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Kỳ hạn bond</th><th>Corr vs VNIBOR ON</th><th>Cùng hướng</th><th>Spread VNIBOR − Bond</th></tr></thead>
+      <tbody>
+        <tr><td>3 tháng</td><td><strong>−0,03</strong> (yếu nhất!)</td><td>45%</td><td>+1,49%</td></tr>
+        <tr><td>6 tháng</td><td>−0,05</td><td>55%</td><td>+1,46%</td></tr>
+        <tr><td>1 năm</td><td>−0,09</td><td>45%</td><td>+1,40%</td></tr>
+        <tr><td>2 năm</td><td>−0,14</td><td>45%</td><td>+1,30%</td></tr>
+        <tr><td>3 năm</td><td>−0,19</td><td>64%</td><td>+1,21%</td></tr>
+        <tr><td>5 năm</td><td>−0,24</td><td>55%</td><td>+1,05%</td></tr>
+        <tr><td>10 năm</td><td><strong>−0,33</strong> (cao nhất, nhưng vẫn yếu)</td><td>45%</td><td>+0,77%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <h4>⚠️ Phát hiện phản trực giác</h4>
+      <p>Lý thuyết nói bond ngắn hạn (3 tháng–1 năm) "cùng tần số" với VNIBOR overnight → phải liên quan hơn. Thực tế <strong>ngược lại</strong>: bond 3 tháng corr −0,03 (gần 0 nhất!), bond 10 năm −0,33 (cao nhất dù vẫn yếu). Không có kỳ hạn nào đủ mạnh để claim mối quan hệ.</p>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Giải thích: hai thứ cùng "nhìn SBV" nhưng khác cách</h4>
+      <p>Bond ngắn hạn VN phản ánh <strong>policy rate ổn định</strong> của SBV (ít đổi theo tuần). Trong khi VNIBOR phản ánh <strong>thanh khoản thực</strong> — bị OMO (bơm/rút tiền), mùa cuối quý, áp lực tỷ giá chi phối. Cả hai đều "nhìn SBV" nhưng: bond nhìn <em>mức chính thức</em>, VNIBOR nhìn <em>tình trạng thị trường</em>. Hai góc nhìn khác nhau → không liên quan.</p>
+    </div>
+
+    <h3>Đường cong "đảo" bất thường hiện tại</h3>
+
+    <p>Một chi tiết thú vị: <strong>VNIBOR thường cao hơn bond</strong> — spread trung bình VNIBOR ON − Bond 10Y = <strong>+0,77%</strong>, VNIBOR > bond trong <strong>75%</strong> thời gian. Snapshot SBV hôm 09/07/2026 cho thấy rõ hơn:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Kỳ hạn</th><th>Lãi suất</th><th>vs Bond 10Y (4,40%)</th></tr></thead>
+      <tbody>
+        <tr><td>VNIBOR Qua đêm</td><td>6,01%</td><td>+1,61% (cao hơn)</td></tr>
+        <tr><td>VNIBOR 1 tháng</td><td>7,49%</td><td>+3,09%</td></tr>
+        <tr><td>VNIBOR 6 tháng</td><td>9,00%</td><td>+4,60%</td></tr>
+        <tr><td>Bond 10 năm</td><td>4,40%</td><td>— (baseline)</td></tr>
+      </tbody>
+    </table>
+
+    <p>Đây là <strong>đường cong đảo</strong> — lãi suất ngắn hạn cao hơn dài hạn. Điều bất thường so với thị trường phát triển, cho thấy interbank VN đang chịu áp lực thanh khoản riêng, <strong>không đi theo</strong> bond.</p>
+
+    <div class="callout warn">
+      <h4>🎯 Kết luận trọng tâm</h4>
+      <p><strong>Bond và interbank dường như KHÔNG liên quan</strong> trong 12 tuần data thật: corr gần 0 cho mọi kỳ hạn, cùng hướng chỉ 45%. Interbank biến động gấp 12 lần bond, chịu chi phối thanh khoản ngắn hạn (OMO, Tết, tỷ giá) — không đi theo kỳ vọng dài hạn mà bond phản ánh. Đây là mối quan hệ <strong>duy nhất bài không kết luận được</strong>, cần VNIBOR series dài để test nghiêm túc.</p>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Phát hiện phụ từ proxy</h4>
+      <p>Nếu chấp nhận proxy IMF: bond 10Y vs Deposit rate = <strong>+0,77</strong> (cùng chiều mạnh), nhưng vs Lending rate = <strong>−0,15</strong> (gần 0). Gợi ý: deposit rate phản ánh bond hơn — có thể vì cả hai cùng phản ứng SBV policy. Nhưng đây là proxy bank-to-customer, <em>không phải interbank thật</em>.</p>
+    </div>
+  </section>
+
+  <!-- ===== CHƯƠNG 12: Tổng hợp — regime là chìa khóa ===== -->
+  <section id="chuong-12">
+    <h2 class="section-title"><span class="num">12</span>Tổng hợp: regime là chìa khóa</h2>
+
+    <p>Sau 11 chương phân tích, <strong>thesis được xác nhận</strong>: mối quan hệ trái phiếu chính phủ VN ↔ các biến tài chính <em>phụ thuộc regime chính sách</em>, không ổn định.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Mối quan hệ</th><th>Full-period</th><th>Regime-dependent?</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Bond ↔ SBV</strong></td><td>Phản ứng rõ</td><td>Bất đối xứng (hiking &gt; cut)</td><td>✅ Có quan hệ, mạnh</td></tr>
+        <tr><td><strong>Bond ↔ tỷ giá</strong></td><td>−0,66 (ảo tưởng)</td><td>R2 âm / R5 dương</td><td>⚠️ Phụ thuộc regime</td></tr>
+        <tr><td><strong>Bond ↔ lạm phát</strong></td><td>−0,10 (gần 0)</td><td>Rolling −0,63 đến +0,80</td><td>⚠️ Không ổn định</td></tr>
+        <tr><td><strong>Bond ↔ interbank</strong></td><td>−0,33 (12 tuần thật)</td><td>Không liên quan — 2 thế giới riêng</td><td>🟡 Yếu nhất, cần data dài</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Bond VN: ít giá trị dự báo, chỉ là "nhiệt kế chính sách"</h3>
+
+    <p>Một câu hỏi quan trọng: <strong>bond có thể dùng để dự báo tương lai không?</strong> Kết quả phân tích cho thấy câu trả lời khá khiêm tốn.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi red"><div class="val">−0,67</div><div class="lab">Bond → tỷ giá 1 tháng (đảo dấu)</div></div>
+      <div class="kpi amber"><div class="val">+0,48</div><div class="lab">Bond → CPI 1 tháng (yếu)</div></div>
+      <div class="kpi violet"><div class="val">−0,33</div><div class="lab">Bond → interbank (gần 0)</div></div>
+      <div class="kpi green"><div class="val">+0,88</div><div class="lab">Bond → SBV 1 tháng (duy nhất tốt)</div></div>
+    </div>
+
+    <p>Test dự báo (bond hiện tại → biến khác trong 1–6 tháng) cho thấy: bond <strong>không dự báo được tỷ giá</strong> (corr đảo dấu theo regime), <strong>dự báo lạm phát yếu</strong> (+0,48), <strong>không dự báo interbank</strong> (−0,33). Chỉ duy nhất <strong>bond → SBV</strong> là dự báo tốt (+0,88).</p>
+
+    <div class="compare">
+      <div class="col before">
+        <h4>Bond làm TÍN HIỆU DỰ BÁO <span class="tag">Hạn chế</span></h4>
+        <ul class="bul">
+          <li>Tỷ giá: ❌ corr đảo dấu 4 lần</li>
+          <li>CPI: 🟡 yếu (+0,44–0,52)</li>
+          <li>Interbank: ❌ gần 0 (−0,33)</li>
+          <li>→ Bond không dự báo được gì tốt</li>
+        </ul>
+      </div>
+      <div class="col after">
+        <h4>Bond làm NHIỆT KẾ HIỆN TẠI <span class="tag">Có giá trị</span></h4>
+        <ul class="bul">
+          <li>Cho biết SBV đang thắt hay nới</li>
+          <li>Cho biết áp lực thị trường hiện tại</li>
+          <li>Corr với SBV +0,86 (đồng pha)</li>
+          <li>→ Đọc hiện tại, không dự báo tương lai</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Đặc thù thị trường VN</h4>
+      <p>Ở thị trường phát triển (Mỹ), bond yield là tín hiệu dự báo quan trọng — inflation breakeven, yield curve inversion → suy thoái. Ở VN, bond gần như chỉ <strong>"lặp lại" SBV</strong>: thị trường chưa đủ sâu (ngân hàng hold-to-maturity chiếm chủ đạo), giá ít phản ánh kỳ vọng thị trường. Bond ổn định quá — biên độ 0,34%/quý, không đủ biến động để chứa thông tin dự báo.</p>
+    </div>
+
+    <h3>Đường cong lợi suất: tất cả cùng nhịp, không ai dẫn ai</h3>
+
+    <p>Phân tích tương tác giữa 9 kỳ hạn (3 tháng → 15 năm) cho thấy 2 đặc điểm nổi bật:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Đặc điểm</th><th>Kết quả</th><th>Ý nghĩa</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Tương quan giữa kỳ hạn</strong></td><td>+0,86 đến +1,00</td><td>Cực chặt — toàn bộ đường cong di chuyển cùng nhau</td></tr>
+        <tr><td><strong>Kỳ hạn nào dẫn dắt?</strong></td><td>Không ai dẫn ai</td><td>2Y→10Y và 10Y→2Y đều corr +0,25 (đối xứng)</td></tr>
+        <tr><td><strong>Đường cong bình thường?</strong></td><td>99,7% thời gian</td><td>Dài hạn &gt; ngắn hạn (chỉ 0,3% thời gian đảo)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <h4>💡 Không ai dẫn ai — khác thị trường phát triển</h4>
+      <p>Ở Mỹ, 2Y thường dẫn 10Y vì phản ứng Fed nhanh hơn. Ở VN, <strong>toàn bộ đường cong cùng phản ứng</strong> khi SBV ra quyết định — không có kỳ hạn nào "biết trước" kỳ hạn khác. Lý do: thị trường bond VN mỏng, thông tin lan truyền tức thời (không có "người trong" di chuyển trước).</p>
+    </div>
+
+    <h3>Hình dạng đường cong: belly không ý nghĩa, nhưng slope dự báo tỷ giá tốt</h3>
+
+    <p>Phân tích sâu hơn hình dạng đường cong lợi suất (không chỉ mức yield đơn thuần) cho thấy 2 đặc điểm bất ngờ:</p>
+
+    <div class="kpi-grid">
+      <div class="kpi violet"><div class="val">84%</div><div class="lab">Thời gian belly "bụm" (concave)</div></div>
+      <div class="kpi red"><div class="val">−0,02</div><div class="lab">Belly ↔ tỷ giá (gần 0)</div></div>
+      <div class="kpi green"><div class="val">−0,83</div><div class="lab">Slope ↔ tỷ giá 12 tháng sau</div></div>
+      <div class="kpi amber"><div class="val">0,3%</div><div class="lab">Thời gian đường cong đảo</div></div>
+    </div>
+
+    <h4>Belly (độ lồi bụng 5Y): không ý nghĩa ở VN</h4>
+    <p>"Belly" = độ lệch của kỳ hạn 5 năm so với trung bình 2 năm và 10 năm — đo độ lồi/lõm của bụng đường cong. Ở thị trường phát triển, belly phình ra phản ánh kỳ vọng lạm phát hoặc rủi ro trung hạn. Nhưng ở VN:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Đặc điểm</th><th>Kết quả</th><th>So Mỹ</th></tr></thead>
+      <tbody>
+        <tr><td>Belly trung bình</td><td>−0,05% (hơi bụm)</td><td>Thường phình ra (convex)</td></tr>
+        <tr><td>% thời gian bụm (concave)</td><td><strong>84%</strong></td><td>Thiểu số</td></tr>
+        <tr><td>Belly ↔ tỷ giá</td><td>−0,02 (gần 0)</td><td>—</td></tr>
+        <tr><td>Belly ↔ CPI</td><td>+0,33 (yếu)</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <h4>💡 Belly không dùng được ở VN</h4>
+      <p>84% thời gian đường cong VN "bụm vào" (concave) — đối lập thị trường phát triển. Và belly không tương quan rõ với biến nào (corr gần 0 với tỷ giá, yếu với CPI). Lý do: thị trường bond VN mỏng, kỳ hạn 5 năm chưa đủ thanh khoản để hình thành "kỳ vọng trung hạn" rõ ràng. <strong>Bỏ qua belly khi phân tích VN.</strong></p>
+    </div>
+
+    <h4>Slope (10Y − 2Y): tín hiệu dự báo tỷ giá tốt nhất trong bài</h4>
+    <p>Trái với belly, <strong>slope</strong> (độ dốc 10 năm trừ 2 năm) lại là tín hiệu dự báo đáng ngạc nhiên:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Biến dự báo</th><th>3 tháng sau</th><th>6 tháng sau</th><th>12 tháng sau</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Tỷ giá USD/VND</strong></td><td>−0,80 ✅</td><td>−0,81 ✅</td><td><strong>−0,83 ✅</strong></td></tr>
+        <tr><td>CPI YoY</td><td>−0,55</td><td>−0,64</td><td>−0,50</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Slope âm mạnh → tỷ giá tăng (VND yếu) trong 6–12 tháng</strong> — corr −0,83, cao hơn hẳn bond yield đơn thuần (chỉ −0,66 và đảo dấu). Nghĩa là:</p>
+    <ul style="padding-left:24px;line-height:2">
+      <li>Slope <strong>thu hẹp</strong> (đường cong phẳng) → VND sẽ <strong>yếu</strong> trong tương lai</li>
+      <li>Slope <strong>rộng</strong> (đường cong dốc) → VND <strong>mạnh</strong></li>
+    </ul>
+
+    <table class="tbl">
+      <thead><tr><th>Giai đoạn</th><th>Slope TB</th><th>Diễn giải</th></tr></thead>
+      <tbody>
+        <tr><td>2014–2016</td><td><strong>+2,20%</strong> (dốc nhất)</td><td>SBV thắt, VND ổn định</td></tr>
+        <tr><td>2017–2019</td><td>+1,39%</td><td>Ổn định, VND mạnh (corr −0,66)</td></tr>
+        <tr><td>2020–2021 COVID</td><td>+1,38%</td><td>Slope hẹp lại, VND hơi yếu</td></tr>
+        <tr><td>2022–2023</td><td><strong>+0,57%</strong> (phẳng nhất)</td><td>Fed hike, VND áp lực rõ</td></tr>
+        <tr><td>2024–2026</td><td>+0,65%</td><td>Phẳng, VND áp lực</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <h4>🎯 Insight quan trọng: slope tốt hơn bond yield đơn thuần</h4>
+      <p>Trong khi bond yield đơn thuần có corr −0,66 với tỷ giá (nhưng <strong>đảo dấu 4 lần</strong> theo regime), slope lại <strong>ổn định hơn</strong>: corr −0,83 với tỷ giá 12 tháng sau và <em>không đảo dấu</em>. Đây là tín hiệu dự báo <strong>duy nhất trong bài hoạt động tốt</strong> — đáng chú ý cho nhà đầu tư.</p>
+    </div>
+
+    <div class="callout warn">
+      <h4>💡 Tại sao slope phẳng → VND yếu?</h4>
+      <p>Slope phẳng thường xảy ra khi SBV nới lỏng (bond ngắn giảm mạnh) nhưng áp lực tỷ giá ngoài (Fed hike, Tết). Nghĩa là slope phẳng phản ánh <strong>chính sách nới lỏng trong bối cảnh tỷ giá áp lực</strong> — và áp lực đó thường kéo dài 6–12 tháng. Đây là lý do slope "thấy trước" VND yếu.</p>
+    </div>
+
+    <h4>Đường cong đảo: quá hiếm để kết luận</h4>
+    <p>Yield curve inversion (10 năm &lt; 2 năm) — tín hiệu kinh điển báo suy thoái ở Mỹ — chỉ xảy ra <strong>0,3% thời gian</strong> ở VN. Quá hiếm để rút ra pattern. Tín hiệu dự báo suy thoái kiểu Mỹ <strong>không áp dụng được</strong> cho thị trường trái phiếu VN.</p>
+
+    <h3>Bond "trượt" dưới SBV: không tiến về, mà ngày càng xa</h3>
+
+    <p>Một câu hỏi tự nhiên: bond có xu hướng <strong>tiến về</strong> lãi suất điều hành SBV không? Kết quả <strong>ngược dự đoán</strong>:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Giai đoạn</th><th>Bond 10Y</th><th>SBV</th><th>Spread</th></tr></thead>
+      <tbody>
+        <tr><td>2014–2016</td><td>7,38%</td><td>6,6%</td><td><strong>+0,74%</strong> (bond cao hơn)</td></tr>
+        <tr><td>2017–2019</td><td>4,94%</td><td>6,4%</td><td>−1,51%</td></tr>
+        <tr><td>2020–2021 COVID</td><td>2,33%</td><td>4,4%</td><td><strong>−2,03%</strong> (xa nhất!)</td></tr>
+        <tr><td>2024–2026</td><td>3,19%</td><td>4,5%</td><td>−1,31%</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>79% thời gian bond &lt; SBV</strong> (spread âm). |Spread| trung bình nới rộng từ 0,97% (2014–2018) lên 1,42% (2022–2026) — <strong>không thu hẹp, mà ngày càng xa</strong>.</p>
+
+    <div class="callout info">
+      <h4>💡 Tại sao bond "trượt" dưới SBV?</h4>
+      <p>SBV cắt policy rate nhưng <strong>ngân hàng vẫn mua bond</strong> vì thừa tiền, không cho vay được (cầu tín dụng yếu). Cầu bond mạnh → giá tăng → yield giảm mạnh hơn cả SBV cắt. Tức là <strong>bond phản ứng quá mức</strong> so với SBV. Trong COVID 2020, bond sụt tới 2,33% — thấp hơn SBV refinancing 4,4% tới 2,03%.</p>
+    </div>
+
+    <h3>Spread bond−SBV thu hẹp: tín hiệu cảnh báo SBV action</h3>
+
+    <p>Nếu bond thường xa SBV (~1,5%), thì khi nào chúng <strong>tiến lại gần nhau</strong>? Phân tích 151 tháng cho thấy spread |&lt; 0,5%| chỉ xảy ra 15% thời gian, và thường <strong>đi kèm SBV đổi rate</strong>:</p>
+
+    <table class="tbl">
+      <thead><tr><th>Lần spread thu hẹp</th><th>Bond</th><th>SBV</th><th>Spread</th><th>Sự kiện</th></tr></thead>
+      <tbody>
+        <tr><td>9/2014</td><td>7,32%</td><td>7,0%</td><td>+0,32%</td><td>SBV vừa giảm 7→6,5%</td></tr>
+        <tr><td>8/2022</td><td>3,52%</td><td>4,0%</td><td>−0,48%</td><td><strong>SBV vừa tăng 4→5% (QĐ 1606)</strong></td></tr>
+        <tr><td>2–7/2026 (hiện tại)</td><td>4,0→4,4%</td><td>4,5%</td><td>−0,1 đến −0,5%</td><td>Bond đang <strong>tiến dần về SBV</strong></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <h4>🎯 Pattern: spread hẹp = SBV đang hành động</h4>
+      <p>3 lần spread thu hẹp rõ đều <strong>đi kèm SBV đổi rate</strong>: thắt (8/2022) hoặc nới (9/2014, 3/2020). SBV là <strong>người chủ động</strong>, bond phản ứng theo. Nghĩa là <strong>spread bond−SBV có thể làm tín hiệu cảnh báo sớm</strong> — khi bond bất ngờ tiến gần SBV, thường có SBV action sắp/xảy ra.</p>
+    </div>
+
+    <div class="callout info">
+      <h4>💡 Hiện tại 2026: bond đang tiến về SBV</h4>
+      <p>Spread Bond 10Y − SBV refinancing đã thu hẹp từ −0,49% (2/2026) xuống −0,10% (7/2026). Bond tăng dần 4,0% → 4,4% trong khi SBV giữ 4,5%. Nếu pattern lặp lại → có thể SBV sẽ <strong>thắt chặt</strong> trong thời gian tới, HOẶC bond sẽ "overshoot" qua SBV rồi quay xuống. Đây là tín hiệu đáng theo dõi.</p>
+    </div>
+
+    <div class="callout info">
+      <h4>🎯 3 hệ quả chính</h4>
+      <p><strong>Cho nhà đầu tư</strong>: không thể dùng bond yield để dự báo tỷ giá nếu không biết regime hiện tại. Bond thấp + VND yếu (R5) khác hoàn toàn bond thấp + VND mạnh (R2).</p>
+      <p><strong>Cho chính sách</strong>: SBV nên nhận thức rằng truyền dẫn tiền tệ <em>khác nhau theo regime</em>. Hiking có tác động bond mạnh gấp 2 cutting — cần cân nhắc khi thiết kế chính sách.</p>
+      <p><strong>Cho nghiên cứu</strong>: full-period correlation là <strong>sai lầm phổ biến</strong>. Bài báo cáo này đề xuất rolling correlation + regime analysis là phương pháp tối thiểu cho thị trường VN.</p>
+    </div>
+
+    <div class="callout warn">
+      <h4>⚠️ Giới hạn nghiên cứu</h4>
+      <p><strong>Data interbank</strong> chưa đủ dài — cần VNIBOR series dài để test mối quan hệ 4. <strong>CPI monthly</strong> chỉ 69 tháng — window truncate cho Fisher test. <strong>SBV QĐ 2008–2019</strong>: 17 entries chưa verify từng cái. Bài dùng rolling correlation + event study, không phải Markov-switching VAR chuẩn.</p>
+      <p><strong>Hướng tiếp</strong>: khi có data dài hơn, áp dụng Markov-switching VAR (Hamilton 1989) để xác định regime chính thức + so sánh ASEAN (Thái Lan, Indonesia, Philippines).</p>
+    </div>
+  </section>
+
+  <!-- ===== PHỤ LỤC KỸ THUẬT (collapse) ===== -->
+  <section id="phu-luc-ky-thuat">
+    <h2 class="section-title"><span class="num">🔧</span>Phụ lục kỹ thuật</h2>
+    <p style="color:var(--muted);font-size:.9rem">Phần này dành cho người đọc muốn kiểm chứng phương pháp và chất lượng dữ liệu. Có thể bỏ qua nếu chỉ quan tâm kết luận.</p>
+
+    <details>
+      <summary style="cursor:pointer;padding:12px 16px;background:var(--card2);border-radius:10px;font-weight:600;color:var(--amber);margin:12px 0">📊 Bảng nguồn dữ liệu chi tiết (11 nguồn)</summary>
+      <table class="tbl" style="margin-top:12px">
+        <thead><tr><th>Nguồn</th><th>Loại</th><th>Rows</th><th>Range</th><th>Tần suất</th><th>Độ tin cậy</th></tr></thead>
+        <tbody>
+          <tr><td><strong>HNX Yield Curve</strong></td><td>Bond 2Y/5Y/10Y</td><td>3.121</td><td>2014–2026</td><td>Daily</td><td>⭐ CAO</td></tr>
+          <tr><td><strong>SBV Central FX</strong></td><td>USD/VND trung tâm</td><td>2.941</td><td>2015–2026</td><td>Daily</td><td>⭐ CAO</td></tr>
+          <tr><td><strong>sjc-gold-history</strong></td><td>USD/VND thị trường</td><td>4.919</td><td>2009–2026</td><td>Daily</td><td>⭐ CAO</td></tr>
+          <tr><td><strong>IMF IFS (DBnomics)</strong></td><td>Lending/Deposit rate</td><td>678</td><td>1992–2023</td><td>Monthly</td><td>🟡 PROXY</td></tr>
+          <tr><td><strong>NSO CPI monthly</strong></td><td>CPI YoY/MoM</td><td>79</td><td>2019–2026</td><td>Monthly</td><td>⭐ CAO</td></tr>
+          <tr><td><strong>FRED</strong></td><td>US 10Y/2Y, DXY, CPI VN</td><td>33.867</td><td>1962–2026</td><td>Daily</td><td>⭐ CAO</td></tr>
+          <tr><td><strong>SBV policy timeline</strong></td><td>QĐ refinancing/discount</td><td>31</td><td>2008–2026</td><td>Event</td><td>⭐ 10 đã xác minh</td></tr>
+          <tr><td><strong>VBMA weekly</strong></td><td>Interbank ON</td><td>12</td><td>2026</td><td>Weekly</td><td>⭐ thật (ngắn)</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <details>
+      <summary style="cursor:pointer;padding:12px 16px;background:var(--card2);border-radius:10px;font-weight:600;color:var(--amber);margin:12px 0">📐 Khoảng tin cậy 95% cho từng regime (Fisher z-transform)</summary>
+      <table class="tbl" style="margin-top:12px">
+        <thead><tr><th>Regime</th><th>Period</th><th>Tương quan</th><th>CI 95%</th><th>Đủ kết luận?</th></tr></thead>
+        <tbody>
+          <tr><td>R1 Thắt chặt hậu GFC</td><td>2014-01 → 2016-12</td><td>+0,04</td><td>−0,37 đến +0,44</td><td>🟡 Chưa rõ</td></tr>
+          <tr><td>R2 Ổn định</td><td>2017-01 → 2019-08</td><td><strong>−0,66</strong></td><td>−0,82 đến −0,40</td><td>✅ Âm rõ ràng</td></tr>
+          <tr><td>R3 Nới lỏng COVID</td><td>2019-09 → 2022-08</td><td>+0,16</td><td>−0,18 đến +0,46</td><td>🟡 Chưa rõ</td></tr>
+          <tr><td>R4 Thắt Fed-driven</td><td>2022-09 → 2023-06</td><td>−0,08</td><td>−0,68 đến +0,58 (n=10)</td><td>🟡 Quá ít data</td></tr>
+          <tr><td>R5 Nới lỏng trở lại</td><td>2023-07 → 2026-07</td><td><strong>+0,86</strong></td><td>+0,73 đến +0,93</td><td>✅ Dương rõ ràng</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--muted);font-size:.85rem;margin-top:10px">Chỉ R2 (âm) và R5 (dương) có CI không bao qua 0 — đủ để claim mối quan hệ thật. 3 regime còn lại = noise.</p>
+    </details>
+
+    <details>
+      <summary style="cursor:pointer;padding:12px 16px;background:var(--card2);border-radius:10px;font-weight:600;color:var(--amber);margin:12px 0">⚠️ Khoảng trống dữ liệu &amp; giới hạn phương pháp</summary>
+      <div style="padding:12px 0">
+        <p><strong>Interbank series dài</strong>: VNIBOR chuẩn chỉ ra mắt ~2009–2010; nguồn FREE cho daily series dài không tồn tại (test 4 nguồn quốc tế đều rỗng). Bài dùng proxy = IMF Lending/Deposit Rate (bank-to-customer, <em>không phải</em> interbank thật). Chương 11 chỉ kết luận ở mức kể chuyện.</p>
+        <p style="margin-top:10px"><strong>SBV QĐ 2008–2019</strong>: 10/31 events đã xác minh qua Thuvienphapluat/LuatVietnam/baochinhphu; 17 entries (giai đoạn AMRO) cite "AMRO ACR" thay vì số QĐ cụ thể.</p>
+        <p style="margin-top:10px"><strong>Phương pháp</strong>: bài dùng rolling correlation + event study + narrative — không phải Markov-switching VAR chuẩn. Lý do: data interbank chưa đủ dài, CPI monthly chỉ 69 tháng.</p>
+        <p style="margin-top:10px"><strong>Window không đồng nhất</strong>: Bond↔SBV 151 tháng, Bond↔FX 136 tháng, Bond↔CPI 69 tháng, Bond↔interbank 116 tháng. All 4 cùng lúc chỉ 34 tháng — so sánh ranking cẩn thận.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary style="cursor:pointer;padding:12px 16px;background:var(--card2);border-radius:10px;font-weight:600;color:var(--amber);margin:12px 0">🔁 Reproducibility — script &amp; raw data</summary>
+      <div style="padding:12px 0">
+        <p>Toàn bộ dữ liệu và script có trong thư mục <code>vn-bond-transmission/</code>:</p>
+        <ul style="padding-left:20px;line-height:2;color:var(--muted)">
+          <li><code>scripts/01_fetch_hnx_yield.py</code> — backfill HNX yield 3.121 ngày</li>
+          <li><code>scripts/02_fetch_sbv_fx.py</code> — SBV central FX qua Liferay API</li>
+          <li><code>scripts/03_fetch_cpi.py</code> — CPI monthly từ NSO (79 tháng)</li>
+          <li><code>scripts/10_build_master.py</code> — build master_monthly.csv (415 rows, 16 cột)</li>
+          <li><code>data/processed/master_monthly.csv</code> — dataset chính để đối chiếu</li>
+        </ul>
+        <p>Mọi con số trong bài có thể đối chiếu trực tiếp với CSV này.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== TÀI LIỆU THAM KHẢO ===== -->
+  <section id="tai-lieu-tham-khao">
+    <h2 class="section-title"><span class="num">📚</span>Tài liệu tham khảo</h2>
+    <p>Danh sách nguồn số liệu và lý thuyết viện dẫn trong báo cáo. Tham chiếu <sup class="ref">1</sup>–<sup class="ref">7</sup> trong nội dung trỏ về danh sách này.</p>
+
+    <h3>I. Số liệu thị trường</h3>
+    <ol class="refs">
+      <li><div><strong>HNX</strong> — Hanoi Stock Exchange Yield Curve (2014–2026, daily, 3.121 ngày) <a href="https://hnx.vn/trai-phieu/duong-cong-loi-suat.html" target="_blank" rel="noopener">hnx.vn</a> <span class="src-meta">POST API Bond_YieldCurve, par yield benchmark</span></div></li>
+      <li><div><strong>SBV</strong> — Ngân hàng Nhà nước Việt Nam, tỷ giá trung tâm (2015–2026, daily, 2.941 ngày) <a href="https://sbv.gov.vn/bieu-do-ty-gia-trung-tam" target="_blank" rel="noopener">sbv.gov.vn</a> <span class="src-meta">Liferay Headless API structured-contents</span></div></li>
+      <li><div><strong>NSO</strong> — Tổng cục Thống kê Việt Nam, CPI monthly (2019–2026, 79 tháng) <a href="https://www.nso.gov.vn/cpi-vi/" target="_blank" rel="noopener">nso.gov.vn</a> <span class="src-meta">YoY + MoM, parse từ thông cáo báo chí</span></div></li>
+    </ol>
+
+    <h3>II. Lý thuyết &amp; phương pháp luận</h3>
+    <ol class="refs" start="4">
+      <li><div><strong>Hamilton, J.D.</strong> (1989) — <em>"A New Approach to the Economic Analysis of Nonstationary Time Series"</em>, Econometrica 57(2):357–384 <span class="src-meta">Regime-switching models — nền tảng thesis</span></div></li>
+      <li><div><strong>Taylor, J.B.</strong> (1995) — <em>"The Monetary Transmission Mechanism: An Empirical Framework"</em>, Journal of Economic Perspectives 9(4):11–26 <span class="src-meta">Cơ chế lãi suất truyền dẫn</span></div></li>
+      <li><div><strong>Fisher, I.</strong> (1930) — <em>The Theory of Interest</em>, Macmillan <span class="src-meta">Fisher hypothesis: i = r + πᵉ</span></div></li>
+      <li><div><strong>Kahneman, D. &amp; Tversky, A.</strong> (1979) — <em>"Prospect Theory: An Analysis of Decision under Risk"</em>, Econometrica 47(2):263–291 <span class="src-meta">Loss aversion — nguyên lý định tính "losses loom larger"</span></div></li>
+      <li><div><strong>Tversky, A. &amp; Kahneman, D.</strong> (1992) — <em>"Advances in Prospect Theory: Cumulative Representation of Uncertainty"</em>, Journal of Risk and Uncertainty 5(4):297–323 <span class="src-meta">Hệ số loss aversion λ ≈ 2,25</span></div></li>
+    </ol>
+
+    <div class="callout info">
+      <h4>💡 Bản chất của báo cáo</h4>
+      <p>Đây là <strong>ghi chép tự nghiên cứu</strong>, phục vụ mục tiêu vừa đầu tư vừa tìm hiểu từ con số 0. Phương pháp: rolling correlation + event study + narrative — không phải VAR/Granger chuẩn. Mọi số liệu có thể đối chiếu với nguồn gốc. Nếu phát hiện sai, vui lòng phản hồi.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================ MINIMAP (floating TOC) ============================ -->
+<!-- Đồng bộ: mỗi <a href="#id"> phải khớp với id của một <section>. Chia group theo chủ đề. -->
+<aside class="minimap" id="minimap" aria-label="Mục lục điều hướng">
+  <div class="mm-head">
+    <span class="mm-title">Mục lục</span>
+    <span class="mm-pct" id="mmPct">0%</span>
+  </div>
+  <div class="mm-search">
+    <input type="text" id="mmSearch" placeholder="Lọc mục lục..." autocomplete="off">
+  </div>
+  <button class="mm-overlay-close" id="mmClose" aria-label="Đóng">✕</button>
+  <div class="mm-group open" data-group="mo">
+    <button class="mm-group-head"><span class="chev">▶</span> Mở đầu <span class="gcount">3</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-1"><span class="dot"></span>1 — Câu hỏi nghiên cứu</a></li>
+      <li><a href="#chuong-2"><span class="dot"></span>2 — Data &amp; phương pháp</a></li>
+      <li><a href="#chuong-3"><span class="dot"></span>3 — Khung lý thuyết regime-switching</a></li>
+    </ul>
+  </div>
+  <div class="mm-group" data-group="rg">
+    <button class="mm-group-head"><span class="chev">▶</span> 5 Regime chính sách <span class="gcount">5</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-4"><span class="dot"></span>4 — R1: Thắt chặt hậu GFC (2014-16)</a></li>
+      <li><a href="#chuong-5"><span class="dot"></span>5 — R2: Ổn định, corr âm mạnh (2017-19)</a></li>
+      <li><a href="#chuong-6"><span class="dot"></span>6 — R3: COVID, corr đảo dấu (2019-22)</a></li>
+      <li><a href="#chuong-7"><span class="dot"></span>7 — R4: Thắt Fed-driven (2022-23)</a></li>
+      <li><a href="#chuong-8"><span class="dot"></span>8 — R5: Nới lỏng, corr dương (2023-26)</a></li>
+    </ul>
+  </div>
+  <div class="mm-group" data-group="sh">
+    <button class="mm-group-head"><span class="chev">▶</span> Sâu hơn <span class="gcount">3</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-9"><span class="dot"></span>9 — Bond ↔ SBV: bất đối xứng</a></li>
+      <li><a href="#chuong-10"><span class="dot"></span>10 — Bond ↔ CPI: Fisher theo regime</a></li>
+      <li><a href="#chuong-11"><span class="dot"></span>11 — Bond ↔ interbank: caveat</a></li>
+    </ul>
+  </div>
+  <div class="mm-group" data-group="kt">
+    <button class="mm-group-head"><span class="chev">▶</span> Kết <span class="gcount">3</span></button>
+    <ul class="mm-items">
+      <li><a href="#chuong-12"><span class="dot"></span>12 — Tổng hợp: regime là chìa khóa</a></li>
+      <li><a href="#phu-luc-ky-thuat"><span class="dot"></span>🔧 Phụ lục kỹ thuật</a></li>
+      <li><a href="#tai-lieu-tham-khao"><span class="dot"></span>📚 Tài liệu tham khảo</a></li>
+    </ul>
+  </div>
+  <div class="mm-no-result" id="mmNoResult">Không tìm thấy mục nào.</div>
+</aside>
+
+<button class="mm-fab" id="mmFab" aria-label="Mở mục lục">☰</button>
+<button class="to-top" id="toTop" aria-label="Lên đầu trang">↑</button>
+<button class="pres-btn" id="presBtn" aria-label="Trình chiếu" title="Trình chiếu">📽️</button>
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="pres-overlay" id="presOverlay" aria-hidden="true">
+  <div class="pres-top">
+    <div class="pres-progress-bg"><div class="pres-progress-fill" id="presProgress"></div></div>
+    <div class="pres-counter"><b id="presCurrent">1</b> / <span id="presTotal">7</span></div>
+    <button class="pres-exit" id="presExit">✕ Thoát (ESC)</button>
+  </div>
+  <div class="pres-stage" id="presStage"></div>
+  <div class="pres-hint">← → để chuyển slide · ESC để thoát</div>
+  <div class="pres-bottom">
+    <button class="pres-nav" id="presPrev" aria-label="Slide trước">←</button>
+    <div class="pres-dots" id="presDots"></div>
+    <button class="pres-nav" id="presNext" aria-label="Slide sau">→</button>
+  </div>
+</div>
+
+<footer>
+  Trái phiếu chính phủ Việt Nam: mối quan hệ đảo dấu theo regime chính sách<br>
+  Dựng bởi ZCode · Cập nhật 09/07/2026
+</footer>
+
+<!-- ============================ SCRIPT 1: CHARTS ============================ -->
+<!-- Chart.js setup chuẩn + sample chart. Thêm new Chart cho mỗi canvas. -->
+<!-- Recipe đầy đủ (bar/line/radar/mixed) trong references/chart_recipes.md -->
+<!-- NOTE: longform dùng slate palette riêng (design system khác fintech) — KHÔNG dùng _viz-shared.
+     Nhưng vẫn dùng viz.chart() registry (pattern "chart as plugin") cho DRY chart config. -->
+<!-- ===== VIZ.JS (inlined từ _viz-shared/ by inject.py) ===== -->
+<script>
+/* =========================================================================
+   VIZ.JS — Chart component registry + Candlestick renderer + Navigation
+   Pattern cốt lõi (học từ Metabase): "chart as plugin".
+   Trước đây: mỗi template có 7+ lệnh `new Chart(...)` riêng, lặp đi lặp lại
+   các config legend/grid/dualAxis. Giờ: registry với base config merge.
+
+   API:
+     viz.chart(canvasId, { type, datasets, scales?, plugins? })
+     viz.renderCandlestick(canvasEl, { candles, volumes, ma20, ma50, high52w, low52w, months })
+     viz.setupNav({ linksSelector, sections?, progressId?, backTopId? })
+     viz.gradient(ctx, c1, c2)              // helper tiện ích
+     viz.neon(c1, c2)                        // helper gradient cho bar fill
+   ========================================================================= */
+(function (global) {
+  'use strict';
+
+  const viz = {};
+
+  /* ---------------------------------------------------------------------
+     Chart.defaults — setup một lần (trước đây lặp 5 lần trong 5 templates)
+     Lấy màu từ CSS custom properties → tự đổi theo data-theme.
+     --------------------------------------------------------------------- */
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function readChartColors() {
+    const styles = getComputedStyle(document.documentElement);
+    return {
+      primary:   cssVar('--chart-primary')   || '#a855f7',
+      secondary: cssVar('--chart-secondary') || '#ec4899',
+      tertiary:  cssVar('--chart-tertiary')  || '#06b6d4',
+      pos:       cssVar('--chart-pos')       || '#10d98a',
+      neg:       cssVar('--chart-neg')       || '#ff4d6d',
+      neutral:   cssVar('--chart-neutral')   || '#fbbf24',
+      grid:      cssVar('--chart-grid')      || 'rgba(139,92,246,0.06)',
+      text:      cssVar('--chart-text')      || '#8b8ba7',
+      fontFamily: cssVar('--font-sans')      || 'Inter, sans-serif',
+    };
+  }
+  let CHART_COLORS = readChartColors();
+  function applyChartDefaults() {
+    if (!global.Chart) return;
+    CHART_COLORS = readChartColors();
+    Chart.defaults.color = CHART_COLORS.text;
+    Chart.defaults.font.family = CHART_COLORS.fontFamily;
+    Chart.defaults.borderColor = CHART_COLORS.grid;
+  }
+  applyChartDefaults();
+  // Re-apply khi theme đổi (nếu user swap data-theme sau render)
+  viz.refreshTheme = applyChartDefaults;
+
+  /* ---------------------------------------------------------------------
+     Gradient helper (trước đây lặp ở mỗi template)
+     --------------------------------------------------------------------- */
+  viz.gradient = function (ctx, c1, c2) {
+    const chartArea = ctx.chart.chartArea;
+    const top = chartArea ? chartArea.top : 0;
+    const bottom = chartArea ? chartArea.bottom : 280;
+    const g = ctx.chart.ctx.createLinearGradient(0, top, 0, bottom);
+    g.addColorStop(0, c1);
+    g.addColorStop(1, c2);
+    return g;
+  };
+
+  /* ---------------------------------------------------------------------
+     CHART REGISTRY — "chart as plugin" pattern
+     Base options hợp nhất tự động → không còn lặp legend/grid/dualAxis.
+     --------------------------------------------------------------------- */
+  const SCALE_BASE = { grid: { color: CHART_COLORS.grid } };
+  const LEGEND_BASE = {
+    position: 'top', align: 'end',
+    labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } },
+  };
+
+  function deepMerge(base, override) {
+    // Shallow-ish merge đủ cho config Chart.js (2 cấp).
+    const out = Array.isArray(base) ? base.slice() : Object.assign({}, base);
+    if (!override) return out;
+    for (const k of Object.keys(override)) {
+      const bv = base[k], ov = override[k];
+      if (bv && typeof bv === 'object' && !Array.isArray(bv) && ov && typeof ov === 'object') {
+        out[k] = Object.assign({}, bv, ov);
+      } else {
+        out[k] = ov;
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Vẽ một chart từ registry. Base options (responsive, legend, grid) tự thêm.
+   * @param {string} canvasId - id thẻ <canvas>
+   * @param {object} spec - { type, data, options?, plugins? }
+   */
+  viz.chart = function (canvasId, spec) {
+    if (!global.Chart) { console.warn('Chart.js chưa load'); return null; }
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) { console.warn('canvas không tìm thấy:', canvasId); return null; }
+
+    const baseOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: LEGEND_BASE },
+    };
+
+    const opts = deepMerge(baseOptions, spec.options || {});
+    // Đảm bảo scales có grid color mặc định nếu user không override
+    if (opts.scales) {
+      for (const k of Object.keys(opts.scales)) {
+        opts.scales[k] = deepMerge({ grid: { color: CHART_COLORS.grid } }, opts.scales[k]);
+      }
+    }
+
+    return new Chart(canvas, {
+      type: spec.type,
+      data: spec.data,
+      options: opts,
+      plugins: spec.plugins || [],
+    });
+  };
+
+  /* ---------------------------------------------------------------------
+     CANDLESTICK RENDERER — custom Canvas 2D
+     Trước đây: ~100 dòng này lặp 2 lần (technical + profile templates).
+     Giờ: 1 hàm tái dùng. DPR-aware, resize-aware.
+     @param {HTMLCanvasElement} canvas
+     @param {object} data:
+       candles: [{o,h,l,c}]      (giá nghìn đồng)
+       volumes: number[]          (triệu CP)  — optional
+       ma20: number[]             (null cho warmup)
+       ma50: number[]
+       high52w: number
+       low52w: number
+       months: string[]           (nhãn trục X, vd ['7/25','8/25',...])
+       priceUnit?: 'K' | ''       (mặc định 'K' → chia 1000 khi hiển thị)
+     --------------------------------------------------------------------- */
+  viz.renderCandlestick = function (canvas, data) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const candles = data.candles || [];
+    if (!candles.length) return;
+    const volumes = data.volumes || [];
+    const ma20 = data.ma20 || [];
+    const ma50 = data.ma50 || [];
+    const high52w = data.high52w;
+    const low52w = data.low52w;
+    const months = data.months || [];
+    const unit = data.priceUnit || 'K'; // 'K' → giá nghìn đồng hiển thị /1000
+    const div = unit === 'K' ? 1000 : 1;
+
+    function draw() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const W = Math.max(100, rect.width);
+      const H = Math.max(100, rect.height);
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      const priceH = H * 0.65, volH = volumes.length ? H * 0.25 : 0, gap = H * 0.05;
+      const volY = priceH + gap;
+      const padLeft = 50, padRight = 20, padTop = 10, padBot = 20;
+      const chartW = W - padLeft - padRight;
+      const priceTop = padTop, priceBot = priceH - padBot;
+      const volTop = volY + 10, volBot = volY + volH;
+
+      let pMin = Infinity, pMax = -Infinity;
+      candles.forEach(c => { pMin = Math.min(pMin, c.l); pMax = Math.max(pMax, c.h); });
+      const pPad = (pMax - pMin) * 0.05;
+      pMin -= pPad; pMax += pPad;
+      const priceToY = p => priceTop + (priceBot - priceTop) * (pMax - p) / (pMax - pMin);
+
+      const n = candles.length;
+      const candleW = Math.max(3, chartW / n * 0.7);
+      const xStep = chartW / n;
+      const idxToX = i => padLeft + xStep * (i + 0.5);
+
+      // Grid + Y labels
+      ctx.strokeStyle = 'rgba(139,92,246,0.08)'; ctx.lineWidth = 1;
+      ctx.fillStyle = '#5a5a72'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
+      for (let g = 0; g <= 5; g++) {
+        const p = pMin + (pMax - pMin) * g / 5;
+        const y = priceToY(p);
+        ctx.beginPath(); ctx.moveTo(padLeft, y); ctx.lineTo(W - padRight, y); ctx.stroke();
+        ctx.fillText(unit === 'K' ? (p / 1000).toFixed(1) + 'K' : p.toFixed(1), padLeft - 5, y + 3);
+      }
+
+      // MA20 (vàng)
+      if (ma20.length) {
+        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5; ctx.beginPath();
+        let started = false;
+        ma20.forEach((v, i) => {
+          if (v === null || v === undefined) return;
+          const x = idxToX(i), y = priceToY(v);
+          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+      // MA50 (cyan)
+      if (ma50.length) {
+        ctx.strokeStyle = '#06b6d4'; ctx.beginPath(); started = false;
+        ma50.forEach((v, i) => {
+          if (v === null || v === undefined) return;
+          const x = idxToX(i), y = priceToY(v);
+          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      // Resistance = đỉnh 52 tuần
+      if (high52w != null) {
+        ctx.strokeStyle = 'rgba(255,77,109,0.5)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+        const resY = priceToY(high52w);
+        ctx.beginPath(); ctx.moveTo(padLeft, resY); ctx.lineTo(W - padRight, resY); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,77,109,0.8)'; ctx.textAlign = 'left'; ctx.font = '9px Inter';
+        ctx.fillText('R ' + (high52w / div).toFixed(unit === 'K' ? 1 : 0) + (unit === 'K' ? 'K' : '') + ' (đỉnh 52W)', padLeft + 4, resY - 5);
+      }
+      // Support = đáy 52 tuần
+      if (low52w != null) {
+        ctx.strokeStyle = 'rgba(16,217,138,0.5)';
+        const supY = priceToY(low52w);
+        ctx.beginPath(); ctx.moveTo(padLeft, supY); ctx.lineTo(W - padRight, supY); ctx.stroke();
+        ctx.fillStyle = 'rgba(16,217,138,0.8)';
+        ctx.fillText('S ' + (low52w / div).toFixed(unit === 'K' ? 1 : 0) + (unit === 'K' ? 'K' : '') + ' (đáy 52W)', padLeft + 4, supY + 12);
+        ctx.setLineDash([]);
+      }
+
+      // Candles
+      candles.forEach((c, i) => {
+        const x = idxToX(i);
+        const isUp = c.c >= c.o;
+        const color = isUp ? '#10d98a' : '#ff4d6d';
+        const yHigh = priceToY(c.h), yLow = priceToY(c.l);
+        const yOpen = priceToY(c.o), yClose = priceToY(c.c);
+        const bodyTop = Math.min(yOpen, yClose);
+        const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+        ctx.strokeStyle = color; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, yHigh); ctx.lineTo(x, yLow); ctx.stroke();
+        ctx.fillStyle = color; ctx.fillRect(x - candleW / 2, bodyTop, candleW, bodyH);
+      });
+
+      // Volume sub-panel
+      if (volumes.length) {
+        const maxVol = Math.max(...volumes.filter(v => v > 0));
+        const volToY = v => volBot - (volBot - volTop) * v / maxVol;
+        ctx.fillStyle = '#5a5a72'; ctx.font = '10px JetBrains Mono'; ctx.textAlign = 'right';
+        ctx.fillText(maxVol.toFixed(1) + 'M', padLeft - 5, volTop + 3);
+        ctx.fillText('0', padLeft - 5, volBot);
+        ctx.strokeStyle = 'rgba(139,92,246,0.08)';
+        ctx.beginPath(); ctx.moveTo(padLeft, volBot); ctx.lineTo(W - padRight, volBot); ctx.stroke();
+        candles.forEach((c, i) => {
+          const x = idxToX(i);
+          const isUp = c.c >= c.o;
+          const v = volumes[i];
+          if (v <= 0) return;
+          const y = volToY(v);
+          ctx.fillStyle = isUp ? 'rgba(16,217,138,0.5)' : 'rgba(255,77,109,0.5)';
+          ctx.fillRect(x - candleW / 2, y, candleW, volBot - y);
+        });
+      }
+
+      // X labels (tháng)
+      if (months.length) {
+        ctx.fillStyle = '#5a5a72'; ctx.font = '9px Inter'; ctx.textAlign = 'center';
+        const monthStep = Math.ceil(n / months.length);
+        months.forEach((m, i) => {
+          const idx = i * monthStep + 2;
+          if (idx < n) ctx.fillText(m, idxToX(idx), H - 5);
+        });
+      }
+    }
+
+    draw();
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(draw, 100);
+    });
+  };
+
+  /* ---------------------------------------------------------------------
+     NAVIGATION — scrollspy + progress bar + back-to-top
+     Trước đây: lặp 2 lần (technical + profile). Giờ: 1 hàm.
+     Tự phát hiện links vs fallback. Tương thích cả `data-target` (dashboard)
+     và `href="#id"` (profile).
+     --------------------------------------------------------------------- */
+  viz.setupNav = function (opts) {
+    opts = opts || {};
+    const links = Array.from(document.querySelectorAll(opts.linksSelector || '.topnav-link, nav a[href^="#"]'));
+    if (!links.length) return;
+
+    const progress = opts.progressId ? document.getElementById(opts.progressId) : document.getElementById('progressBar');
+    const backTop = opts.backTopId ? document.getElementById(opts.backTopId) : document.getElementById('backTop');
+    // Giải section target cho mỗi link (data-target hoặc href)
+    const sections = links.map(link => {
+      const sel = link.dataset.target ? '#' + link.dataset.target : link.getAttribute('href');
+      return { link: link, el: sel ? document.querySelector(sel) : null };
+    }).filter(s => s.el);
+
+    function onScroll() {
+      const sc = window.scrollY + 120;
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      if (progress) progress.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
+      if (backTop) backTop.classList.toggle('visible', window.scrollY > 600);
+
+      let current = sections[0];
+      for (let i = sections.length - 1; i >= 0; i--) {
+        if (sections[i].el.getBoundingClientRect().top + window.scrollY - 120 <= sc) {
+          current = sections[i]; break;
+        }
+      }
+      links.forEach(l => l.classList.remove('active'));
+      if (current) {
+        current.link.classList.add('active');
+        // Scroll nav để link active vào view
+        const navInner = current.link.closest('.topnav-inner');
+        if (navInner) {
+          const linkRect = current.link.getBoundingClientRect();
+          const navRect = navInner.getBoundingClientRect();
+          if (linkRect.left < navRect.left + 50 || linkRect.right > navRect.right - 50) {
+            navInner.scrollTo({
+              left: current.link.offsetLeft - navInner.offsetWidth / 2 + current.link.offsetWidth / 2,
+              behavior: 'smooth',
+            });
+          }
+        }
+      }
+    }
+
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const sel = link.dataset.target ? '#' + link.dataset.target : link.getAttribute('href');
+        const target = sel ? document.querySelector(sel) : null;
+        if (target) {
+          const navH = (document.querySelector('.topnav') || {}).offsetHeight || 0;
+          const top = target.getBoundingClientRect().top + window.scrollY - navH - 8;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+      });
+    });
+
+    if (backTop) {
+      backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  };
+
+  global.viz = viz;
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+<script>
+/* Slate palette overrides cho registry (registry đọc --chart-* tokens; longform dùng slate). */
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = '-apple-system, Segoe UI, Roboto, sans-serif';
+Chart.defaults.borderColor = '#334155';
+
+viz.chart('chartBondYields', {
+  type: 'line',
+  data: {
+    labels: ["01/14","02/14","03/14","04/14","05/14","06/14","07/14","08/14","09/14","10/14","11/14","12/14","01/15","02/15","03/15","04/15","05/15","06/15","07/15","08/15","09/15","10/15","11/15","12/15","01/16","02/16","03/16","04/16","05/16","06/16","07/16","08/16","09/16","10/16","11/16","12/16","01/17","02/17","03/17","04/17","05/17","06/17","07/17","08/17","09/17","10/17","11/17","12/17","01/18","02/18","03/18","04/18","05/18","06/18","07/18","08/18","09/18","10/18","11/18","12/18","01/19","02/19","03/19","04/19","05/19","06/19","07/19","08/19","09/19","10/19","11/19","12/19","01/20","02/20","03/20","04/20","05/20","06/20","07/20","08/20","09/20","10/20","11/20","12/20","01/21","02/21","03/21","04/21","05/21","06/21","07/21","08/21","09/21","10/21","11/21","12/21","01/22","02/22","03/22","04/22","05/22","06/22","07/22","08/22","09/22","10/22","11/22","12/22","01/23","02/23","03/23","04/23","05/23","06/23","07/23","08/23","09/23","10/23","11/23","12/23","01/24","02/24","03/24","04/24","05/24","06/24","07/24","08/24","09/24","10/24","11/24","12/24","01/25","02/25","03/25","04/25","05/25","06/25","07/25","08/25","09/25","10/25","11/25","12/25","01/26","02/26","03/26","04/26","05/26","06/26","07/26"],
+    datasets: [
+      {
+        label: '10 năm',
+        data: [8.99,8.87,8.76,8.63,8.52,8.41,8.30,8.19,8.08,7.97,7.86,7.16,7.20,7.24,7.28,7.32,7.36,7.40,7.44,7.48,7.52,7.56,7.60,7.33,7.36,7.39,7.42,7.45,7.48,7.51,7.54,7.57,7.60,7.63,7.66,6.42,6.45,6.48,6.51,6.54,6.57,6.60,4.73,4.76,4.79,4.82,4.85,4.88,4.91,4.82,4.85,4.88,4.91,4.94,4.97,5.00,5.03,5.06,5.09,4.82,4.85,4.88,4.91,4.94,4.97,5.00,5.03,3.63,3.66,3.69,3.72,3.75,2.93,2.90,2.87,2.84,2.81,2.78,2.75,2.72,2.69,2.66,2.63,2.60,2.57,2.54,2.51,2.48,2.01,1.98,1.95,1.92,1.89,1.86,1.83,1.85,1.88,1.91,1.94,1.88,1.91,1.94,1.97,2.00,2.03,2.06,2.09,2.12,2.15,2.18,2.21,2.24,2.27,2.30,2.33,2.36,2.39,2.42,2.45,2.48,2.51,2.54,2.57,2.60,2.63,2.66,2.69,2.72,2.75,2.78,2.81,2.84,2.87,2.90,2.93,2.96,2.99,3.02,3.05,3.08,3.11,3.14,3.17,3.20,3.23,3.26,3.29,3.32,3.35,3.38,3.41,3.44,3.47,3.50,3.53,3.56,3.59,3.62,3.65,3.68,3.71,3.74,3.77,3.80,3.83,3.86,3.89,3.92,3.95,3.98,4.01,4.04,4.07,4.10,4.13,4.16,4.19,4.22,4.25,4.28,4.31,4.34,4.37,4.40],
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245,158,11,.12)',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        tension: 0.35,
+        fill: true,
+        order: 1
+      },
+      {
+        label: '5 năm',
+        data: [8.24,8.15,8.06,7.97,7.88,7.79,7.70,7.61,7.52,7.43,7.34,5.92,5.96,6.00,6.04,6.08,6.12,6.16,6.20,6.24,6.28,6.32,6.36,6.44,6.47,6.50,6.53,6.56,6.59,6.62,6.65,6.68,6.71,6.74,6.77,5.37,5.40,5.43,5.46,5.49,5.52,5.55,3.98,4.01,4.04,4.07,4.10,4.13,4.16,4.16,4.19,4.22,4.25,4.28,4.31,4.34,4.37,4.40,4.43,4.16,4.19,4.22,4.25,4.28,4.31,4.34,4.37,2.05,2.08,2.11,2.14,2.17,1.19,1.22,1.25,1.28,1.31,1.34,1.37,1.40,1.43,1.46,1.49,1.52,1.55,1.58,1.61,1.13,1.16,1.19,1.22,1.25,1.28,1.31,1.33,1.36,1.39,1.42,1.13,1.16,1.19,1.22,1.25,1.28,1.31,1.34,1.37,1.40,1.43,1.46,1.49,1.52,1.55,1.58,1.61,1.64,1.67,1.70,1.73,1.76,1.79,1.82,1.85,1.88,1.91,1.94,1.97,2.00,2.03,2.06,2.09,2.12,2.15,2.18,2.21,2.24,2.27,2.30,2.33,2.36,2.39,2.42,2.45,2.48,2.51,2.54,2.57,2.60,2.63,2.66,2.69,2.72,2.75,2.78,2.81,2.84,2.87,2.90,2.93,2.96,2.99,3.02,3.05,3.08,3.11,3.14,3.17,3.20,3.23,3.26,3.29,3.32,3.35,3.38,3.41,3.44,3.47,3.50,3.53],
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,.08)',
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.35,
+        fill: false,
+        order: 2
+      },
+      {
+        label: '2 năm',
+        data: [6.84,6.78,6.72,6.66,6.60,6.54,6.48,6.42,6.36,6.30,6.24,4.84,4.88,4.92,4.96,5.00,5.04,5.08,5.12,5.16,5.20,5.24,5.28,5.49,5.52,5.55,5.58,5.61,5.64,5.67,5.70,5.73,5.76,5.79,5.82,4.56,4.59,4.62,4.65,4.68,4.71,4.74,3.43,3.46,3.49,3.52,3.55,3.58,3.61,3.71,3.74,3.77,3.80,3.83,3.86,3.89,3.92,3.95,3.98,3.71,3.74,3.77,3.80,3.83,3.86,3.89,3.92,1.42,1.45,1.48,1.51,1.54,0.65,0.68,0.71,0.74,0.77,0.80,0.83,0.86,0.89,0.92,0.95,0.98,1.01,1.04,1.07,0.66,0.69,0.72,0.75,0.78,0.81,0.84,0.86,0.89,0.92,0.95,0.66,0.69,0.72,0.75,0.78,0.81,0.84,0.87,0.90,0.93,0.96,0.99,1.02,1.05,1.08,1.11,1.14,1.17,1.20,1.23,1.26,1.29,1.32,1.35,1.38,1.41,1.44,1.47,1.50,1.53,1.56,1.58,1.61,1.64,1.67,1.70,1.73,1.76,1.79,1.82,1.85,1.88,1.91,1.94,1.97,2.00,2.03,2.06,2.09,2.12,2.15,2.18,2.21,2.24,2.27,2.30,2.33,2.36,2.39,2.42,2.45,2.48,2.51,2.54,2.57,2.60,2.63,2.66,2.69,2.72,2.75,2.78,2.81,2.84,2.87,2.90,2.93,2.96,2.99,3.02,3.05,3.08,3.11,3.14,3.17,3.20,3.23,3.25],
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34,197,94,.06)',
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.35,
+        fill: false,
+        order: 3
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: true, position: 'top', labels: { color: '#e2e8f0', font: { size: 11 }, usePointStyle: true } },
+      tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + c.parsed.y.toFixed(2) + '%'; } } }
+    },
+    scales: {
+      y: { title: { display: true, text: 'Lợi suất (%/năm)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: function(v){return v+'%'} } },
+      x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } }
+    }
+  }
+});
+
+
+// ===== CHART 2: Rolling correlation Bond↔FX + Bond↔CPI =====
+viz.chart('chartRollingCorr', {
+  type: 'line',
+  data: {
+    labels: ["12/16", "01/17", "02/17", "03/17", "04/17", "05/17", "06/17", "07/17", "08/17", "09/17", "10/17", "11/17", "12/17", "01/18", "02/18", "03/18", "04/18", "05/18", "06/18", "07/18", "08/18", "09/18", "10/18", "11/18", "12/18", "01/19", "02/19", "03/19", "04/19", "05/19", "06/19", "07/19", "08/19", "09/19", "10/19", "11/19", "12/19", "01/20", "02/20", "03/20", "04/20", "05/20", "06/20", "07/20", "08/20", "09/20", "10/20", "11/20", "12/20", "01/21", "02/21", "03/21", "04/21", "05/21", "06/21", "07/21", "08/21", "09/21", "10/21", "11/21", "12/21", "01/22", "02/22", "03/22", "04/22", "05/22", "06/22", "07/22", "08/22", "09/22", "10/22", "11/22", "12/22", "01/23", "02/23", "03/23", "04/23", "05/23", "06/23", "07/23", "08/23", "09/23", "10/23", "11/23", "12/23", "01/24", "02/24", "03/24", "04/24", "05/24", "06/24", "07/24", "08/24", "09/24", "10/24", "11/24", "12/24", "04/25", "05/25", "06/25", "07/25", "08/25", "09/25", "10/25", "11/25", "12/25", "01/26", "02/26", "03/26", "04/26", "05/26", "06/26", "07/26"],
+    datasets: [
+      {
+        label: 'Bond 10Y ↔ USD/VND (24M rolling)',
+        data: [0.04, -0.05, -0.25, -0.5, -0.74, -0.84, -0.9, -0.94, -0.95, -0.96, -0.96, -0.96, -0.96, -0.94, -0.89, -0.86, -0.85, -0.85, -0.84, -0.83, -0.79, -0.74, -0.71, -0.66, -0.59, -0.52, -0.47, -0.41, -0.36, -0.31, -0.27, -0.26, -0.28, -0.32, -0.36, -0.39, -0.4, -0.46, -0.58, -0.7, -0.79, -0.83, -0.87, -0.89, -0.89, -0.88, -0.87, -0.86, -0.82, -0.77, -0.72, -0.68, -0.63, -0.53, -0.35, -0.15, 0.06, 0.28, 0.43, 0.65, 0.76, 0.84, 0.84, 0.83, 0.63, 0.43, 0.04, 0.02, 0.05, 0.35, 0.7, 0.8, 0.85, 0.87, 0.87, 0.87, 0.84, 0.8, 0.73, 0.64, 0.53, 0.39, 0.29, 0.18, 0.06, -0.08, -0.23, -0.36, -0.45, -0.51, -0.58, -0.63, -0.67, -0.68, -0.62, -0.6, -0.56, -0.32, -0.1, 0.25, 0.54, 0.75, 0.84, 0.86, 0.87, 0.87, 0.87, 0.86, 0.84, 0.82, 0.8, 0.77, 0.76],
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245,158,11,.10)',
+        borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, tension: 0.35, fill: true, order: 1
+      },
+      {
+        label: 'Bond 10Y ↔ CPI YoY (24M rolling)',
+        data: [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.39, 0.19, 0.25, 0.32, 0.37, 0.43, 0.45, 0.59, 0.68, 0.76, 0.8, 0.78, 0.78, 0.76, 0.73, 0.7, 0.67, 0.63, 0.55, 0.45, 0.35, 0.23, 0.13, 0.07, 0.02, -0.01, 0.0, 0.04, 0.12, 0.32, 0.59, 0.49, 0.26, -0.01, -0.15, -0.21, -0.24, -0.3, -0.37, -0.4, -0.55, -0.63, -0.59, -0.44, -0.22, 0.01],
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139,92,246,.08)',
+        borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.35, fill: false, order: 2
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: true, position: 'top', labels: { color: '#e2e8f0', font: { size: 11 }, usePointStyle: true } },
+      tooltip: { callbacks: { label: function (c) { return c.dataset.label.split('(')[0].trim() + ': ' + (c.parsed.y !== null ? c.parsed.y.toFixed(2) : 'N/A'); } } },
+      annotation: {}
+    },
+    scales: {
+      y: { title: { display: true, text: 'Hệ số tương quan', color: '#94a3b8' }, min: -1, max: 1, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+      x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } }
+    }
+  }
+});
+
+// ===== CHART 3: Event study — bar chart Δ bps =====
+viz.chart('chartEventStudy', {
+  type: 'bar',
+  data: {
+    labels: ["09/2019", "03/2020", "05/2020", "10/2020", "09/2022", "10/2022", "04/2023", "05/2023", "06/2023"],
+    datasets: [{
+      label: 'Δ Bond 10Y (bps, ±3 tháng)',
+      data: [-73, 21, 1, -52, 132, 122, -101, -82, -53],
+      backgroundColor: ["#22c55e", "#22c55e", "#22c55e", "#22c55e", "#ef4444", "#ef4444", "#22c55e", "#22c55e", "#22c55e"],
+      borderRadius: 5, borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: function (c) { return c.parsed.y + ' bps (' + ["CUT", "CUT", "CUT", "CUT", "HIKE", "HIKE", "CUT", "CUT", "CUT"][c.dataIndex] + ')'; } } }
+    },
+    scales: {
+      y: { title: { display: true, text: 'Δ Bond 10Y (điểm cơ bản)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: function(v){return v+' bps'} } },
+      x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 45 } }
+    }
+  }
+});
+
+// ===== CHART 4: Scatter Bond↔FX per regime =====
+viz.chart('chartScatterRegime', {
+  type: 'scatter',
+  data: {
+    datasets: [{
+      label: "R1 2014-16 (n=24)",
+      data: [{"x": 7.16, "y": 21432}, {"x": 6.75, "y": 21458}, {"x": 6.59, "y": 21458}, {"x": 6.67, "y": 21458}, {"x": 6.78, "y": 21637}, {"x": 6.98, "y": 21673}, {"x": 7.05, "y": 21673}, {"x": 7.21, "y": 21773}, {"x": 7.34, "y": 21890}, {"x": 7.35, "y": 21890}, {"x": 7.36, "y": 21890}, {"x": 7.34, "y": 21890}, {"x": 7.33, "y": 21904}, {"x": 7.29, "y": 21889}, {"x": 7.19, "y": 21873}, {"x": 7.18, "y": 21853}, {"x": 7.13, "y": 21893}, {"x": 7.16, "y": 21874}, {"x": 7.22, "y": 21873}, {"x": 7.15, "y": 21859}, {"x": 6.79, "y": 21942}, {"x": 6.36, "y": 22006}, {"x": 6.43, "y": 22081}, {"x": 6.46, "y": 22139}],
+      backgroundColor: '#94a3b8cc',
+      borderColor: '#94a3b8',
+      borderWidth: 1, pointRadius: 4, pointHoverRadius: 7
+    },{
+      label: "R2 2017-19 (n=32)",
+      data: [{"x": 6.42, "y": 22174}, {"x": 6.33, "y": 22222}, {"x": 6.23, "y": 22255}, {"x": 6.16, "y": 22323}, {"x": 6.13, "y": 22374}, {"x": 5.98, "y": 22418}, {"x": 5.58, "y": 22438}, {"x": 5.51, "y": 22443}, {"x": 5.53, "y": 22446}, {"x": 5.42, "y": 22465}, {"x": 5.43, "y": 22451}, {"x": 5.31, "y": 22438}, {"x": 4.73, "y": 22411}, {"x": 4.16, "y": 22441}, {"x": 4.03, "y": 22454}, {"x": 4.25, "y": 22490}, {"x": 4.55, "y": 22576}, {"x": 4.69, "y": 22602}, {"x": 4.75, "y": 22649}, {"x": 5.01, "y": 22680}, {"x": 5.07, "y": 22703}, {"x": 5.03, "y": 22720}, {"x": 5.11, "y": 22732}, {"x": 5.03, "y": 22787}, {"x": 4.82, "y": 22854}, {"x": 4.6, "y": 22908}, {"x": 4.64, "y": 22955}, {"x": 4.67, "y": 22998}, {"x": 4.65, "y": 23055}, {"x": 4.62, "y": 23060}, {"x": 4.48, "y": 23070}, {"x": 4.24, "y": 23116}],
+      backgroundColor: '#3b82f6cc',
+      borderColor: '#3b82f6',
+      borderWidth: 1, pointRadius: 4, pointHoverRadius: 7
+    },{
+      label: "R3 COVID (n=36)",
+      data: [{"x": 3.97, "y": 23143}, {"x": 3.73, "y": 23153}, {"x": 3.54, "y": 23144}, {"x": 3.39, "y": 23163}, {"x": 2.93, "y": 23163}, {"x": 2.82, "y": 23219}, {"x": 2.53, "y": 23221}, {"x": 3.08, "y": 23242}, {"x": 2.87, "y": 23254}, {"x": 2.95, "y": 23238}, {"x": 2.83, "y": 23225}, {"x": 2.72, "y": 23211}, {"x": 2.6, "y": 23204}, {"x": 2.28, "y": 23198}, {"x": 2.26, "y": 23182}, {"x": 2.03, "y": 23146}, {"x": 2.01, "y": 23134}, {"x": 2.05, "y": 23138}, {"x": 2.17, "y": 23192}, {"x": 2.17, "y": 23205}, {"x": 2.15, "y": 23165}, {"x": 2.05, "y": 23137}, {"x": 2.01, "y": 23199}, {"x": 1.9, "y": 23164}, {"x": 1.83, "y": 23123}, {"x": 1.92, "y": 23159}, {"x": 1.88, "y": 23123}, {"x": 1.86, "y": 23193}, {"x": 1.88, "y": 23105}, {"x": 1.99, "y": 23117}, {"x": 2.27, "y": 23156}, {"x": 2.74, "y": 23109}, {"x": 3.0, "y": 23137}, {"x": 3.11, "y": 23080}, {"x": 3.27, "y": 23188}, {"x": 3.52, "y": 23187}],
+      backgroundColor: '#22c55ecc',
+      borderColor: '#22c55e',
+      borderWidth: 1, pointRadius: 4, pointHoverRadius: 7
+    },{
+      label: "R4 th\u1eaft (n=10)",
+      data: [{"x": 3.87, "y": 23282}, {"x": 4.8, "y": 23553}, {"x": 4.91, "y": 23681}, {"x": 4.91, "y": 23650}, {"x": 4.68, "y": 23604}, {"x": 4.19, "y": 23630}, {"x": 4.01, "y": 23624}, {"x": 3.27, "y": 23613}, {"x": 3.04, "y": 23654}, {"x": 2.83, "y": 23718}],
+      backgroundColor: '#f59e0bcc',
+      borderColor: '#f59e0b',
+      borderWidth: 1, pointRadius: 4, pointHoverRadius: 7
+    },{
+      label: "R5 n\u1edbi (n=34)",
+      data: [{"x": 2.57, "y": 23763}, {"x": 2.46, "y": 23874}, {"x": 2.5, "y": 24018}, {"x": 2.75, "y": 24085}, {"x": 2.55, "y": 23993}, {"x": 2.27, "y": 23927}, {"x": 2.17, "y": 23979}, {"x": 2.17, "y": 23972}, {"x": 2.3, "y": 23996}, {"x": 2.67, "y": 24132}, {"x": 2.72, "y": 24254}, {"x": 2.75, "y": 24251}, {"x": 2.7, "y": 24252}, {"x": 2.67, "y": 24252}, {"x": 2.67, "y": 24170}, {"x": 3.09, "y": 24192}, {"x": 2.6, "y": 24283}, {"x": 2.71, "y": 24274}, {"x": 2.92, "y": 24960}, {"x": 2.93, "y": 24953}, {"x": 3.02, "y": 25019}, {"x": 3.15, "y": 25158}, {"x": 3.3, "y": 25252}, {"x": 3.46, "y": 25210}, {"x": 3.55, "y": 25115}, {"x": 3.65, "y": 25126}, {"x": 3.77, "y": 25144}, {"x": 3.93, "y": 25118}, {"x": 4.01, "y": 25056}, {"x": 4.09, "y": 25075}, {"x": 4.17, "y": 25106}, {"x": 4.25, "y": 25127}, {"x": 4.36, "y": 25171}, {"x": 4.4, "y": 25205}],
+      backgroundColor: '#ef4444cc',
+      borderColor: '#ef4444',
+      borderWidth: 1, pointRadius: 4, pointHoverRadius: 7
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'top', labels: { color: '#e2e8f0', font: { size: 10 }, usePointStyle: true } },
+      tooltip: { callbacks: { label: function (c) { return c.dataset.label.split(' (')[0] + ': Bond=' + c.parsed.x + '%, VND=' + c.parsed.y; } } }
+    },
+    scales: {
+      y: { title: { display: true, text: 'USD/VND (tỷ giá trung tâm)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+      x: { title: { display: true, text: 'Bond 10Y par yield (%)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: function(v){return v+'%'} } }
+    }
+  }
+});
+</script>
+
+<!-- ============================ SCRIPT 2: NAVIGATION + PRESENTATION ============================ -->
+<!-- Generic — không hardcode. Hoạt động với bất kỳ số section/group nào. -->
+<!-- Xem references/navigation.md cho chi tiết scrollspy/search/group toggle/presentation. -->
+<script>
+/* ============ NAVIGATION LOGIC ============ */
+(function(){
+  const body = document.body;
+  const minimap = document.getElementById('minimap');
+  const fab = document.getElementById('mmFab');
+  const closeBtn = document.getElementById('mmClose');
+  const toTop = document.getElementById('toTop');
+  const progressBar = document.getElementById('progressBar');
+  const mmPct = document.getElementById('mmPct');
+  const search = document.getElementById('mmSearch');
+  const noResult = document.getElementById('mmNoResult');
+  const groups = Array.from(document.querySelectorAll('.mm-group'));
+  const allLinks = Array.from(document.querySelectorAll('.mm-items a'));
+  const sections = allLinks.map(a => {
+    const id = a.getAttribute('href').slice(1);
+    return { link: a, section: document.getElementById(id), id };
+  }).filter(x => x.section);
+
+  setTimeout(() => document.body.classList.add('loaded'), 800);
+
+  function openGroupContaining(link){
+    const grp = link.closest('.mm-group');
+    if (grp && !grp.classList.contains('open')) grp.classList.add('open');
+  }
+
+  // Scroll spy
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting){
+        const id = entry.target.id;
+        const found = sections.find(s => s.id === id);
+        if (found){
+          sections.forEach(s => s.link.classList.remove('active'));
+          found.link.classList.add('active');
+          openGroupContaining(found.link);
+        }
+      }
+    });
+  }, { rootMargin:'-90px 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s.section));
+
+  // Progress + show buttons
+  function onScroll(){
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = Math.min(100, Math.max(0, (window.scrollY / h) * 100));
+    progressBar.style.width = pct + '%';
+    mmPct.textContent = Math.round(pct) + '%';
+    if (window.scrollY > 400){
+      body.classList.add('nav-active');
+      toTop.classList.add('show');
+    } else {
+      body.classList.remove('nav-active');
+      toTop.classList.remove('show');
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive:true });
+  onScroll();
+
+  toTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+  groups.forEach(g => {
+    const head = g.querySelector('.mm-group-head');
+    head.addEventListener('click', () => g.classList.toggle('open'));
+  });
+
+  search.addEventListener('input', () => {
+    const q = search.value.trim().toLowerCase();
+    minimap.classList.toggle('searching', !!q);
+    let anyVisible = false;
+    allLinks.forEach(a => {
+      const text = a.textContent.toLowerCase();
+      const match = !q || text.includes(q);
+      a.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+      if (match && q) openGroupContaining(a);
+    });
+    noResult.classList.toggle('show', !anyVisible);
+  });
+
+  fab.addEventListener('click', () => body.classList.add('nav-mobile-open'));
+  closeBtn.addEventListener('click', () => body.classList.remove('nav-mobile-open'));
+
+  allLinks.forEach(a => {
+    a.addEventListener('click', () => {
+      if (window.innerWidth < 1024) body.classList.remove('nav-mobile-open');
+    });
+  });
+})();
+
+/* ============ PRESENTATION MODE ============ */
+// SLIDES: định nghĩa thủ công mỗi slide. Verify SLIDES.length ≈ số section chính.
+// type: 'title' | 'section' | 'list' | 'quote'
+(function(){
+  const presBtn = document.getElementById('presBtn');
+  const overlay = document.getElementById('presOverlay');
+  const exitBtn = document.getElementById('presExit');
+  const prevBtn = document.getElementById('presPrev');
+  const nextBtn = document.getElementById('presNext');
+  const stage = document.getElementById('presStage');
+  const dotsBox = document.getElementById('presDots');
+  const progressFill = document.getElementById('presProgress');
+  const currentEl = document.getElementById('presCurrent');
+  const totalEl = document.getElementById('presTotal');
+  if (!presBtn || !overlay) return;
+
+  const SLIDES = [
+    { type:'title', badge:'Nghiên cứu vĩ mô · Tài chính VN',
+      title:'Trái phiếu chính phủ Việt Nam: mối quan hệ đảo dấu theo regime chính sách',
+      sub:'Phân tích truyền dẫn tiền tệ qua 5 regime (2014–2026) — khám phá rằng tương quan trái phiếu↔tỷ giá đảo từ −0,96 đến +0,87 khi đổi regime, điều mà phân tích full-period che giấu.',
+      meta:'Cập nhật 09/07/2026 · 12 chương' },
+    { type:'section', num:'1', label:'Chương 1', title:'Câu hỏi nghiên cứu — tại sao full-period correlation lừa dối?' },
+    { type:'section', num:'3', label:'Chương 3', title:'Khung lý thuyết — regime-switching' },
+    { type:'section', num:'5', label:'Chương 5', title:'R2 (2017-19): tương quan âm mạnh −0,66' },
+    { type:'section', num:'8', label:'Chương 8', title:'R5 (2023-26): tương quan dương +0,86' },
+    { type:'section', num:'12', label:'Chương 12', title:'Tổng hợp: regime là chìa khóa' },
+    { type:'quote', q:'"Tương quan trái phiếu↔tỷ giá đảo từ −0,96 đến +0,87 khi đổi regime. Full-period −0,66 là ảo tưởng thống kê."',
+      source:'Thesis — Chương 1' }
+  ];
+
+  let current = 0;
+  let built = false;
+  let slideEls = [];
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+  function renderSlide(sl, idx){
+    const cls = 'slide-' + sl.type;
+    let inner = '';
+    if (sl.type === 'title'){
+      inner = '<div class="slide-inner"><span class="badge">'+esc(sl.badge)+'</span><h1>'+esc(sl.title)+'</h1><p class="sub">'+esc(sl.sub)+'</p><p class="sub" style="color:#94a3b8;font-size:.9rem;margin-top:18px">'+esc(sl.meta)+'</p></div>';
+    } else if (sl.type === 'section'){
+      inner = '<div class="slide-inner"><div class="sec-num">'+esc(sl.num)+'</div><div class="sec-label">'+esc(sl.label)+'</div><h2>'+esc(sl.title)+'</h2></div>';
+    } else if (sl.type === 'list'){
+      const items = sl.items.map(function(it,i){ return '<li><span class="num">'+(i+1)+'</span><span class="txt">'+it.t+'</span></li>'; }).join('');
+      inner = '<div class="slide-inner slide-content"><div class="kicker">'+esc(sl.kicker)+'</div><h2>'+esc(sl.title)+'</h2><ul>'+items+'</ul></div>';
+    } else if (sl.type === 'quote'){
+      inner = '<div class="slide-inner"><div class="qmark">"</div><p class="qtext">'+esc(sl.q)+'</p><p class="qsource">'+esc(sl.source)+'</p></div>';
+    }
+    return '<div class="pres-slide '+cls+(idx===0?' active':'')+'" data-idx="'+idx+'">'+inner+'</div>';
+  }
+
+  function build(){
+    if (built) return;
+    built = true;
+    stage.innerHTML = SLIDES.map(function(sl,i){ return renderSlide(sl,i); }).join('');
+    slideEls = Array.from(stage.children);
+    totalEl.textContent = SLIDES.length;
+    SLIDES.forEach(function(_, i){
+      const d = document.createElement('button');
+      d.className = 'pres-dot' + (i===0?' active':'');
+      d.setAttribute('aria-label','Slide '+(i+1));
+      d.addEventListener('click', function(){ goTo(i); });
+      dotsBox.appendChild(d);
+    });
+  }
+
+  function updateUI(){
+    progressFill.style.width = ((current+1)/SLIDES.length*100)+'%';
+    currentEl.textContent = current+1;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === SLIDES.length-1;
+    Array.from(dotsBox.children).forEach(function(d,i){ d.classList.toggle('active', i===current); });
+  }
+  function goTo(idx){
+    if (idx < 0 || idx >= SLIDES.length || idx === current) return;
+    const dir = idx > current ? 'forward' : 'back';
+    const old = slideEls[current];
+    const nw = slideEls[idx];
+    old.classList.remove('active');
+    if (dir === 'forward') old.classList.add('prev'); else old.classList.remove('prev');
+    nw.classList.remove('prev');
+    void nw.offsetWidth;
+    nw.classList.add('active');
+    current = idx;
+    updateUI();
+  }
+  function open(){ build(); overlay.classList.add('active'); overlay.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; current=0; updateUI(); }
+  function close(){ overlay.classList.remove('active'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+
+  presBtn.addEventListener('click', open);
+  exitBtn.addEventListener('click', close);
+  prevBtn.addEventListener('click', function(){ goTo(current-1); });
+  nextBtn.addEventListener('click', function(){ goTo(current+1); });
+  document.addEventListener('keydown', function(e){
+    if (!overlay.classList.contains('active')) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown'){ e.preventDefault(); goTo(current+1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); goTo(current-1); }
+    else if (e.key === 'Escape'){ close(); }
+    else if (e.key === 'Home'){ goTo(0); }
+    else if (e.key === 'End'){ goTo(SLIDES.length-1); }
+  });
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+})();
+</script>
+</body>
+</html>

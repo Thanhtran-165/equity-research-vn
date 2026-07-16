@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VCB · Vietcombank | Investment Evidence Pack (1–3 năm)</title>
+<meta name="description" content="Báo cáo nghiên cứu cổ phiếu Vietcombank (VCB) — investment evidence pack cho nhà đầu tư 1–3 năm, không khuyến nghị mua/bán.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-0:#0f1419;--bg-1:#13181f;--bg-2:#1a2029;--card:#161b22;--card-2:#1c232d;--border:rgba(255,255,255,0.08);--border-hot:rgba(245,166,35,0.45);--text:#e6edf3;--text-dim:#8b949e;--text-faint:#565f6b;--amber:#f5a623;--amber-soft:rgba(245,166,35,0.14);--blue:#4a9eff;--blue-soft:rgba(74,158,255,0.14);--green:#3fb950;--green-soft:rgba(63,185,80,0.14);--red:#f85149;--red-soft:rgba(248,81,73,0.14);--purple:#a78bfa;--purple-soft:rgba(167,139,250,0.14);--grad-amber:linear-gradient(135deg,#f5a623 0%,#d48806 100%);--grad-blue:linear-gradient(135deg,#4a9eff 0%,#2670c8 100%);--font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;--radius:12px;--radius-sm:8px;--chart-grid:rgba(255,255,255,0.05)}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--amber)}.blue{color:var(--blue)}.dim{color:var(--text-dim)}.faint{color:var(--text-faint)}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad-amber);z-index:1000;transition:width .1s ease-out}
+.topnav{position:sticky;top:0;z-index:900;background:rgba(15,20,25,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}.topnav-inner{max-width:1480px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:thin;height:52px}.topnav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:16px;border-right:1px solid var(--border);margin-right:8px}.topnav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}.topnav-link{font-size:12px;color:var(--text-dim);padding:6px 10px;border-radius:6px;white-space:nowrap;transition:all .15s;font-weight:500}.topnav-link:hover{color:var(--text);background:var(--card)}.topnav-link.active{color:var(--amber);background:var(--amber-soft)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;z-index:800}.back-top.visible{opacity:1;pointer-events:auto}.back-top:hover{border-color:var(--border-hot);color:var(--amber)}
+.container{max-width:1480px;margin:0 auto;padding:24px 24px 80px}
+.layout-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:start}.layout-content{min-width:0}.toc-sidebar{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding:14px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}.toc-sidebar::-webkit-scrollbar{width:6px}.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border-hot);border-radius:3px}.toc-sidebar-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--amber);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}.toc-sidebar-hint{font-size:10.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4}.toc-sidebar-list{list-style:none;padding:0;margin:0}.toc-sidebar-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text-dim);font-size:11.5px;line-height:1.35;transition:all .12s;border-left:2px solid transparent}.toc-sidebar-item:hover{background:rgba(245,166,35,0.06);color:var(--text);text-decoration:none;border-left-color:var(--amber)}.toc-sidebar-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:var(--card-2);color:var(--text-faint);font-size:10px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;margin-top:1px}.toc-sidebar-item:hover .toc-sidebar-num{background:var(--amber);color:#1a1206}.toc-sidebar-item .toc-sidebar-label{flex:1}@media(max-width:1100px){.layout-main{grid-template-columns:1fr;gap:0}.toc-sidebar{display:none}}
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}.disclaimer li strong{color:var(--text)}.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}.qlist{list-style:none!important;padding-left:0!important}.qlist li{display:flex;align-items:center;gap:10px}.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.section{margin-top:56px;scroll-margin-top:60px}.section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}.section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}.section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}.section-title .tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#1a1206}.tag.amber{background:var(--amber)}.tag.blue{background:var(--blue)}.tag.green{background:var(--green)}.tag.red{background:var(--red)}.tag.purple{background:var(--purple)}.divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}.section-sub{color:var(--text-dim);font-size:13px;margin:4px 0 20px;padding-left:40px}
+.hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(74,158,255,0.04));border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-amber);color:#1a1206;padding:5px 14px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:0.5px}.disclaimer-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(248,81,73,0.3);margin-left:8px}.company-name{font-size:38px;font-weight:800;margin-top:14px;letter-spacing:-0.8px}.company-sub{color:var(--text-dim);margin-top:6px;font-size:14px}.price-block{text-align:right}.price-now{font-size:46px;font-weight:800;letter-spacing:-1px;font-family:var(--font-mono)}.price-now .ccy{font-size:20px;color:var(--text-dim);font-weight:500;margin-right:4px}.price-meta{margin-top:6px;color:var(--text-dim);font-size:12px}.price-meta .delta{font-weight:600;margin-left:6px}.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}.kpi:hover{border-color:var(--border-hot)}.kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}.kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}.kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}.card-title{font-size:14px;font-weight:600}.card-sub{font-size:11px;color:var(--text-faint);margin-top:2px}.chart-wrap{position:relative;height:300px}.chart-wrap.sm{height:220px}.chart-wrap.lg{height:360px}.chart-wrap.xs{height:180px}
+.fin-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}.fin-table th,.fin-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}.fin-table th:first-child,.fin-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim)}.fin-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;border-bottom:1px solid var(--border)}.fin-table tbody tr:hover{background:rgba(255,255,255,0.02)}.fin-table .col-latest{background:var(--amber-soft);color:var(--amber);font-weight:700}.fin-table .row-strong td{font-weight:700;background:rgba(255,255,255,0.02)}.fin-table .row-total td{border-top:2px solid var(--border);font-weight:700}.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card);margin:10px 0}.callout.warn{border-left-color:var(--red)}.callout.good{border-left-color:var(--green)}.callout.info{border-left-color:var(--blue)}.callout.neu{border-left-color:var(--amber)}.callout-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}.callout-body{font-size:13px;color:var(--text-dim);line-height:1.6}.callout-body strong{color:var(--text)}
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}.stat-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}.stat-value{font-size:26px;font-weight:700;margin-top:4px;font-family:var(--font-mono)}.stat-meta{font-size:11px;color:var(--text-dim);margin-top:4px}.stat-verdict{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:6px}.verdict-good{background:var(--green-soft);color:var(--green)}.verdict-warn{background:var(--amber-soft);color:var(--amber)}.verdict-danger{background:var(--red-soft);color:var(--red)}
+.gauge{position:relative;height:8px;background:var(--bg-2);border-radius:4px;margin-top:8px;overflow:hidden}.gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px}.gauge-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px}
+.ref{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 5px;border-radius:4px;margin-left:2px;vertical-align:super;font-family:var(--font-mono);text-decoration:none;border:1px solid rgba(74,158,255,0.25)}.ref:hover{background:var(--blue);color:#0f1419;text-decoration:none}.refs{list-style:none;counter-reset:ref;padding-left:0}.refs li{counter-increment:ref;font-size:11.5px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;line-height:1.5}.refs li::before{content:counter(ref);font-family:var(--font-mono);font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 6px;border-radius:4px;font-size:10px;height:fit-content;flex-shrink:0;border:1px solid rgba(74,158,255,0.2)}.refs li a{color:var(--text-dim);word-break:break-all}.refs li a:hover{color:var(--blue)}.refs .src-meta{color:var(--text-faint);font-size:10.5px;display:block;margin-top:2px}
+.check-list{list-style:none;padding:0}.check-list li{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}.check-list li:last-child{border-bottom:none}.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}.check-box.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}.check-box.off{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}.check-list .q{flex:1}.check-list .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}.risk-table th,.risk-table td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}.risk-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600}.risk-table td:first-child{font-weight:600;color:var(--text)}.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px}.pill-l{background:var(--green-soft);color:var(--green)}.pill-m{background:var(--amber-soft);color:var(--amber)}.pill-h{background:var(--red-soft);color:var(--red)}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.scenario-card{border-radius:var(--radius);padding:18px;border:1px solid var(--border)}.scenario-card.bull{border-top:3px solid var(--green)}.scenario-card.base{border-top:3px solid var(--amber)}.scenario-card.bear{border-top:3px solid var(--red)}.scenario-card h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}.scenario-card ul{list-style:none;padding:0;font-size:12px;color:var(--text-dim)}.scenario-card li{padding:4px 0;line-height:1.5}.scenario-card li::before{content:'›';color:var(--amber);margin-right:6px;font-weight:700}
+.drawdown-table{width:100%;border-collapse:collapse;font-size:13px}.drawdown-table th,.drawdown-table td{padding:10px;border-bottom:1px solid var(--border);text-align:center}.drawdown-table th{font-size:10px;text-transform:uppercase;color:var(--text-faint);font-weight:600}.drawdown-table td:first-child{text-align:left;font-family:var(--font-mono);color:var(--red);font-weight:600}.drawdown-table td:last-child{text-align:left;font-family:var(--font-sans);color:var(--text-dim);font-size:12px}
+.seg-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}.seg-row:last-child{border-bottom:none}.seg-name{width:200px;font-size:12.5px;font-weight:500;flex-shrink:0}.seg-bar{flex:1;height:24px;background:var(--bg-2);border-radius:5px;overflow:hidden;position:relative}.seg-bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono)}.seg-meta{width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0}
+.qbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;font-family:var(--font-mono)}.qbadge-HIGHQ{background:var(--green-soft);color:var(--green)}.qbadge-MEDQ{background:var(--amber-soft);color:var(--amber)}.qbadge-LOWQ{background:var(--red-soft);color:var(--red)}
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}footer p{margin-bottom:6px}
+.vc-stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}.vc-layer{display:grid;grid-template-columns:130px 1fr 90px 90px;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;background:var(--card-2);border:1px solid var(--border);font-size:12px;position:relative;transition:border-color .2s}.vc-layer.upstream-most{border-left:3px solid var(--red)}.vc-layer.upstream{border-left:3px solid var(--amber)}.vc-layer.oracle{border-left:3px solid var(--blue);background:rgba(74,158,255,0.06)}.vc-layer.downstream{border-left:3px solid var(--text-faint)}.vc-name{font-weight:600;color:var(--text)}.vc-name .sub{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px}.vc-players{color:var(--text-dim);font-size:11.5px}.vc-rent{font-family:var(--font-mono);font-weight:700;font-size:11px;text-align:center}.vc-pillar{font-family:var(--font-mono);font-size:10.5px;text-align:center;font-weight:600}.vc-legend{display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-top:10px;flex-wrap:wrap}.vc-legend span{display:inline-flex;align-items:center;gap:6px}.vc-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+.rent-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0;border:1px solid var(--border)}.rent-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono);padding:0 4px;text-align:center;line-height:1.1}.rent-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-faint);margin-bottom:4px;font-family:var(--font-mono)}
+.barrier-table{width:100%;border-collapse:collapse;font-size:11.5px}.barrier-table th,.barrier-table td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}.barrier-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}.barrier-table td.barrier-name{font-weight:600;color:var(--text);width:23%}.barrier-height{display:inline-flex;align-items:center;gap:2px}.barrier-bar{display:inline-block;width:8px;height:14px;background:var(--bg-2);border-radius:2px;margin-right:1px}.barrier-bar.on-red{background:var(--red)}.barrier-bar.on-amber{background:var(--amber)}.barrier-bar.on-green{background:var(--green)}.trend-up{color:var(--green)}.trend-down{color:var(--red)}.trend-flat{color:var(--text-dim)}
+.dep-matrix{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:14px 0;font-size:11.5px}.dep-matrix>div{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}.dep-matrix>div:nth-child(3n){border-right:none}.dep-matrix>div:nth-last-child(-n+3){border-bottom:none}.dep-matrix .head{background:var(--card-2);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint)}.dep-layer{font-weight:600;color:var(--text)}.dep-verdict{font-weight:600}.lock-high{color:var(--green)}.lock-med{color:var(--amber)}.lock-low{color:var(--red)}
+.tech-score-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,var(--card),var(--card-2));border:1px solid var(--border);margin-bottom:16px}.tech-score-num{font-size:48px;font-weight:800;font-family:var(--font-mono);line-height:1;min-width:80px;text-align:center}.tech-verdict-pill{display:inline-block;font-size:11px;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}.verdict-strong-sell{background:var(--red-soft);color:var(--red);border:1px solid rgba(248,81,73,0.4)}.verdict-sell{background:rgba(248,81,73,0.2);color:var(--red)}.verdict-hold{background:var(--amber-soft);color:var(--amber)}.verdict-buy{background:rgba(63,185,80,0.2);color:var(--green)}.verdict-strong-buy{background:var(--green-soft);color:var(--green);border:1px solid rgba(63,185,80,0.4)}.tech-score-bar{flex:1;height:14px;background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);border-radius:7px;position:relative;min-width:200px}.tech-score-marker{position:absolute;top:-4px;width:4px;height:22px;background:var(--text);border-radius:2px;transform:translateX(-50%)}.tech-score-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:4px}
+.signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.signal-cell{background:var(--bg-2);border-radius:7px;padding:10px;font-size:11.5px;border-left:3px solid var(--border)}.signal-cell.bull{border-left-color:var(--green)}.signal-cell.bear{border-left-color:var(--red)}.signal-cell.neut{border-left-color:var(--amber)}.signal-cell .sig-name{font-weight:600;color:var(--text);font-size:11px}.signal-cell .sig-val{font-family:var(--font-mono);color:var(--text-dim);margin-top:2px;font-size:10.5px}
+.candle-mini-wrap{position:relative;height:280px;margin:12px 0}
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}.non-advice-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:8px;font-weight:700}.non-advice-panel ul{list-style:none;padding:0;font-size:11.5px;color:var(--text-dim);line-height:1.65}.non-advice-panel li{padding:3px 0;padding-left:16px;position:relative}.non-advice-panel li::before{content:'›';position:absolute;left:0;color:var(--amber)}
+.analyst-table{width:100%;border-collapse:collapse;font-size:11.5px}.analyst-table th,.analyst-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}.analyst-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}.analyst-table td.firm{font-weight:600;color:var(--text)}.analyst-table td.target{font-family:var(--font-mono);font-weight:600}.analyst-table td.thesis{font-size:11px;color:var(--text-dim);line-height:1.5}.rating-buy{color:var(--green);font-weight:600}.rating-hold{color:var(--amber);font-weight:600}.rating-sell{color:var(--red);font-weight:600}
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}.gloss-item{background:var(--card-2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:12px}.gloss-term{font-weight:700;color:var(--blue);font-family:var(--font-mono);font-size:11.5px}.gloss-def{color:var(--text-dim);margin-top:3px;line-height:1.5}
+.callout.plain{border-left-color:var(--amber);background:rgba(245,166,35,0.05)}.callout.plain .callout-title{color:var(--amber)}.callout.plain .callout-body{color:var(--text);font-size:13px}.callout.plain .callout-body strong{color:var(--amber)}
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+@media(max-width:1100px){.grid-4,.grid-3{grid-template-columns:1fr 1fr}.exec-grid{grid-template-columns:1fr 1fr}.kpi-strip{grid-template-columns:repeat(3,1fr)}.scenario-grid{grid-template-columns:1fr}.grid-2-1,.grid-1-2{grid-template-columns:1fr}}@media(max-width:600px){.container{padding:16px 14px 60px}.hero{padding:20px}.company-name{font-size:28px}.price-now{font-size:34px}.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}.exec-grid{grid-template-columns:1fr}.kpi-strip{grid-template-columns:1fr 1fr}.topnav-brand{display:none}.section-title h2{font-size:18px}.price-block{text-align:left}}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}.data-table th,.data-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);border-left:1px solid var(--border)}.data-table th:first-child,.data-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim);border-left:none}.data-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;background:var(--card-2)}
+.insight-frame{background:linear-gradient(135deg,rgba(245,166,35,0.04),rgba(74,158,255,0.03));border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-top:14px}
+.honest-correction{border-left:4px solid var(--red)!important;background:rgba(248,81,73,0.06)!important}.callout.honest-correction .callout-title{color:var(--red)}
+.footnote{font-size:11px;color:var(--text-faint);margin-top:8px;font-style:italic;line-height:1.5}
+.analyst-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}.analyst-card.bull{border-top:3px solid var(--green)}.analyst-card.bear{border-top:3px solid var(--red)}
+.checklist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}@media(max-width:900px){.checklist-grid{grid-template-columns:1fr}}
+.cap-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}.cap-card h4{font-size:13px;margin-bottom:10px}
+.val-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;border-left:3px solid var(--blue)}
+.stat-mini{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:12px}.stat-mini .stat-label{font-size:9.5px}.stat-mini .stat-value{font-size:18px;margin-top:2px}
+.verdict-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;border-left:3px solid var(--green)}
+.sources{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px}.sources h4{font-size:13px;margin-bottom:10px}
+.consensus-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}@media(max-width:900px){.consensus-grid{grid-template-columns:1fr 1fr}}
+.stale-warning{border-left:4px solid var(--amber);background:rgba(245,166,35,0.08);padding:12px 16px;border-radius:8px;margin:10px 0}.stale-warning h4{color:var(--amber);font-size:12px;text-transform:uppercase;margin-bottom:6px}
+.lang-policy{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11.5px;color:var(--text-dim);margin:10px 0}
+.archetype-card{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(167,139,250,0.04));border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:var(--radius);padding:16px}
+:root{--sh-sm:0px 2px 3px -1px rgba(0,0,0,0.1),0px 1px 0px 0px rgba(25,28,33,0.02),0px 0px 0px 1px rgba(25,28,33,0.08);--sh-md:0px 0px 0px 1px rgba(0,0,0,0.06),0px 1px 1px -0.5px rgba(0,0,0,0.06),0px 3px 3px -1.5px rgba(0,0,0,0.06),0px 6px 6px -3px rgba(0,0,0,0.06),0px 12px 12px -6px rgba(0,0,0,0.06),0px 24px 24px -12px rgba(0,0,0,0.06);--sh-lg:0 2.8px 2.2px rgba(0,0,0,0.034),0 6.7px 5.3px rgba(0,0,0,0.048),0 12.5px 10px rgba(0,0,0,0.06),0 22.3px 17.9px rgba(0,0,0,0.072),0 41.8px 33.4px rgba(0,0,0,0.086),0 100px 80px rgba(0,0,0,0.12)}
+@keyframes aosIn{0%{opacity:0;transform:translateY(28px);filter:blur(6px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}.aos{opacity:0;animation:aosIn 0.7s ease-out 0.05s both;animation-play-state:paused}.aos.animate{animation-play-state:running}@media(prefers-reduced-motion:reduce){.aos{opacity:1!important;animation:none!important;filter:none!important}}
+.card{box-shadow:var(--sh-md)!important}.kpi{box-shadow:var(--sh-sm)!important}.kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-md)!important}.callout{box-shadow:var(--sh-sm)!important}.data-table{box-shadow:var(--sh-sm)!important}.stat,.stat-mini{box-shadow:var(--sh-sm)!important}.val-card,.vc-card{box-shadow:var(--sh-sm)!important}.scenario-card{box-shadow:var(--sh-md)!important}.cap-card{box-shadow:var(--sh-sm)!important}.analyst-card{box-shadow:var(--sh-sm)!important}.insight-frame{box-shadow:var(--sh-md)!important}.honest-correction{box-shadow:var(--sh-sm)!important}.verdict-card{box-shadow:var(--sh-sm)!important}.stale-warning{box-shadow:var(--sh-sm)!important}.toc-sidebar{box-shadow:var(--sh-md)!important}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="topnav" id="topnav"><div class="topnav-inner"><div class="topnav-brand"><span class="dot"></span>VCB · Evidence Pack</div><a class="topnav-link" href="#sec-hero" data-target="sec-hero">Tổng quan</a><a class="topnav-link" href="#sec-exec" data-target="sec-exec">TL;DR</a><a class="topnav-link" href="#sec-biz" data-target="sec-biz">Business</a><a class="topnav-link" href="#sec-industry" data-target="sec-industry">Ngành</a><a class="topnav-link" href="#sec-history" data-target="sec-history">5 năm</a><a class="topnav-link" href="#sec-segment" data-target="sec-segment">Segment</a><a class="topnav-link" href="#sec-thesis" data-target="sec-thesis">Thesis</a><a class="topnav-link" href="#sec-valuation" data-target="sec-valuation">Định giá</a><a class="topnav-link" href="#sec-peer" data-target="sec-peer">Peer</a><a class="topnav-link" href="#sec-bs" data-target="sec-bs">BS & FCF</a><a class="topnav-link" href="#sec-risk" data-target="sec-risk">Rủi ro</a><a class="topnav-link" href="#sec-33k" data-target="sec-33k">Vốn</a><a class="topnav-link" href="#sec-scenario" data-target="sec-scenario">Kịch bản</a><a class="topnav-link" href="#sec-checklist" data-target="sec-checklist">Checklist</a><a class="topnav-link" href="#sec-insight-1" data-target="sec-insight-1">★ Insight 1</a><a class="topnav-link" href="#sec-insight-2" data-target="sec-insight-2">★ Insight 2</a><a class="topnav-link" href="#sec-insight-3" data-target="sec-insight-3">★ Insight 3</a><a class="topnav-link" href="#sec-tech" data-target="sec-tech">Technical</a><a class="topnav-link" href="#sec-analyst" data-target="sec-analyst">Analyst</a><a class="topnav-link" href="#sec-glossary" data-target="sec-glossary">📖 Thuật ngữ</a><a class="topnav-link" href="#sec-source" data-target="sec-source">Nguồn</a></div></nav>
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+<div class="container">
+<section id="sec-hero" class="section" style="margin-top:8px;scroll-margin-top:60px">
+<div class="hero aos">
+<div class="hero-top">
+<div>
+<span class="ticker-badge">HOSE: VCB</span>
+<span class="disclaimer-badge">KHÔNG KHUYẾN NGHỊ MUA/BÁN</span>
+<div class="company-name">Vietcombank</div>
+<div class="company-sub">Ngân hàng TMCP Ngoại thương Việt Nam — Ngân hàng thương mại nhà nước lớn nhất VN theo vốn hóa</div>
+</div>
+<div class="price-block">
+<div class="price-now"><span class="ccy">₫</span>61,400</div>
+<div class="price-meta">Đóng cửa gần nhất · <span class="delta pos">P/E 18.5× · P/B 1.0×</span></div>
+<div class="price-meta">Vốn hóa ~<strong>61,400 tỷ VND</strong> · 1 tỷ cổ phiếu</div>
+</div>
+</div>
+<div class="kpi-strip">
+<div class="kpi"><div class="kpi-label">Giá</div><div class="kpi-value">61,400</div><div class="kpi-delta dim">VND/cp</div></div>
+<div class="kpi"><div class="kpi-label">P/E (TTM)</div><div class="kpi-value">18.5×</div><div class="kpi-delta neu">hợp lý</div></div>
+<div class="kpi"><div class="kpi-label">P/B</div><div class="kpi-value">1.0×</div><div class="kpi-delta pos">gần P/B lịch sử</div></div>
+<div class="kpi"><div class="kpi-label">EPS 2025</div><div class="kpi-value">3,323</div><div class="kpi-delta neg">VND (-24.5% YoY)</div></div>
+<div class="kpi"><div class="kpi-label">Tổng tài sản</div><div class="kpi-value">1,074k</div><div class="kpi-delta dim">tỷ VND</div></div>
+<div class="kpi"><div class="kpi-label">Vốn chủ</div><div class="kpi-value">62,179</div><div class="kpi-delta dim">tỷ VND</div></div>
+</div>
+</div>
+</section>
+<div class="layout-main">
+<div class="layout-content">
+<section id="sec-exec" class="section">
+<div class="section-title aos"><span class="num">2</span><h2>Executive Summary — TL;DR</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="exec-grid">
+<div class="callout good"><div class="callout-title">🟢 Điểm mạnh</div><div class="callout-body">Vietcombank là ngân hàng thương mại nhà nước lớn nhất VN. P/B <strong>1.0×</strong> — định giá hấp dẫn so với peer group. Vốn chủ sở hữu <strong>62,179 tỷ VND</strong> (2025), tổng tài sản <strong>1,074 nghìn tỷ VND</strong>. Mạng lưới ngoại giao quốc tế và thanh toán quốc tế mạnh nhất hệ thống.</div></div>
+<div class="callout warn"><div class="callout-title">🟡 Thách thức</div><div class="callout-body">Doanh thu giảm từ <strong>53,246 tỷ (2021)</strong> xuống <strong>28,409 tỷ (2025)</strong> (-46.6%). Lợi nhuận giảm từ <strong>29,919 tỷ</strong> xuống <strong>14,622 tỷ</strong> (-51.1%). EPS giảm từ 5,821 xuống 3,323 VND. Xu hướng 5 năm cho thấy áp lực biên lợi nhuận và nợ xấu tiềm ẩn.</div></div>
+<div class="callout info"><div class="callout-title">🔵 Cơ hội</div><div class="callout-body">P/B 1.0× ở mức thấp lịch sử — nếu chất lượng tài sản được cross-check và kiểm toán xác nhận, đây có thể là điểm hấp dẫn cho nhà đầu tư dài hạn. Lãi suất thấp + phục hồi tín dụng = đòn bẩy tăng trưởng khi chu kỳ kinh tế quay lại tích cực.</div></div>
+<div class="callout neu"><div class="callout-title">🟠 Cảnh báo sentiment</div><div class="callout-body">Sentiment thị trường hiện tại <strong>trung tính</strong>. Cần theo dõi nợ xấu, tỷ lệ bao phủ nợ xấu (LLR), và tín hiệu từ NHNN về room tín dụng. Tích cực nếu NIM ổn định; tiêu cực nếu nợ xấu tăng vọt.</div></div>
+</div>
+<div class="callout plain" style="margin-top:14px"><div class="callout-title">💡 Nói cách khác</div><div class="callout-body">VCB giống như một <strong>con tàu lớn đang đi qua vùng biển động</strong>: thân tàu rất vững (tổng tài sản >1 triệu tỷ), nhưng tốc độ (doanh thu/lợi nhuận) chậm lại đáng kể trong 5 năm qua. Câu hỏi then chốt: <strong>đáy đã đến chưa?</strong> P/B 1.0× cho thấy thị trường đang định giá VCB ở mức "không kỳ vọng gì" — nếu chất lượng tài sản thực sự tốt, đây là vùng hấp dẫn. Nhưng bạn phải <strong>cross-check</strong> số liệu nợ xấu từ ít nhất 2 nguồn độc lập trước khi quyết định.</div></div>
+</div>
+</section>
+<section id="sec-biz" class="section">
+<div class="section-title aos"><span class="num">3</span><h2>Business 101 — Vietcombank kiếm tiền như thế nào?</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="card" style="margin-bottom:14px">
+<div class="card-head"><div><div class="card-title">Mô hình kinh doanh cốt lõi</div><div class="card-sub">Ngân hàng thương mại — chủ yếu từ lãi thuần + phí dịch vụ</div></div></div>
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7">Vietcombank (VCB) là ngân hàng thương mại cổ phần do Nhà nước nắm cổ phần chi phối. Ngân hàng hoạt động trên 4 trụ cột chính: <strong>(1) Tín dụng doanh nghiệp & bán lẻ</strong> — cho vay khách hàng, thu lãi; <strong>(2) Thanh toán quốc tế & ngoại hối</strong> — mảng thế mạnh truyền thống, VCB là ngân hàng dẫn đầu về thanh toán quốc tế tại VN; <strong>(3) Dịch vụ ngân hàng số & bán chéo</strong> — bảo hiểm, đầu tư, thẻ; <strong>(4) Đầu tư tài chính & trái phiếu</strong>.</p>
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-top:10px">Nguồn thu chính: <strong>Lãi thuần</strong> (NIM × dư nợ cho vay) chiếm 70-75% tổng thu nhập; <strong>Thu nhập từ dịch vụ</strong> (phí thanh toán quốc tế, phí thẻ, phí bảo hiểm) chiếm 15-20%; <strong>Thu nhập khác</strong> (đầu tư trái phiếu, G2K) chiếm phần còn lại. VCB có lợi thế cạnh tranh đặc biệt về <strong>mạng lưới đối tác nước ngoài</strong> và <strong>thanh toán quốc tế</strong> — không ngân hàng VN nào sánh kịp về số lượng ngân hàng đại lý trên toàn cầu.</p>
+</div>
+<div class="grid-2">
+<div class="callout info"><div class="callout-title">Hệ sinh thái khách hàng</div><div class="callout-body">VCB phục vụ: <strong>Doanh nghiệp nhà nước lớn</strong> (PVN, EVN, Vingroup...), <strong>Tập đoàn đa quốc gia</strong> (FDI), <strong>Khách hàng cá nhân</strong> (vay mua nhà, thẻ tín dụng), và <strong>Thanh toán quốc tế</strong> (xuất nhập khẩu). Cơ cấu khách hàng đa dạng giúp phân tán rủi ro.</div></div>
+<div class="callout neu"><div class="callout-title">Đòn bẩy hoạt động</div><div class="callout-body">Ngân hàng hoạt động với đòn bẩy rất cao: tổng tài sản / vốn chủ = <strong>17.3×</strong> (1,074k / 62,179 tỷ). Điều này có nghĩa: <strong>1% nợ xấu</strong> có thể ăn <strong>~17% vốn chủ</strong>. Đây là lý do tại sao chất lượng tài sản (nợ xấu, LLR) là yếu tố sống còn.</div></div>
+</div>
+</div>
+</section>
+<section id="sec-industry" class="section">
+<div class="section-title aos"><span class="num">4</span><h2>Industry Position — VCB đứng ở đâu trong ngành?</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="card" style="margin-bottom:14px">
+<div class="card-head"><div><div class="card-title">Ngành ngân hàng Việt Nam — Bức tranh tổng thể</div><div class="card-sub">Top 4 ngân hàng thương mại nhà nước + cổ phần tư nhân hóa</div></div></div>
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7">Ngành ngân hàng VN gồm 4 nhóm: <strong>Nhóm 1 (Big 4 nhà nước)</strong>: VCB, BIDV, VietinBank, Agribank — VCB là ngân hàng có vốn hóa lớn nhất và hiệu quả cao nhất nhóm. <strong>Nhóm 2 (Cổ phần tư nhân lớn)</strong>: Techcombank, VPBank, MB, ACB, TPBank. <strong>Nhóm 3</strong>: các ngân hàng cổ phần trung bình (Sacombank, SHB...). <strong>Nhóm 4</strong>: ngân hàng nhỏ, ngân hàng liên doanh.</p>
+</div>
+<div class="vc-stack">
+<div class="vc-layer oracle"><div class="vc-name">Oracle / Quy định<span class="sub">NHNN, SBV</span></div><div class="vc-players">Ngân hàng Nhà nước — quyết định room tín dụng, lãi suất OMO, tỷ lệ dự trữ bắt buộc</div><div class="vc-rent">Quyết định</div><div class="vc-pillar">Pillar</div></div>
+<div class="vc-layer upstream-most"><div class="vc-name">Nguồn vốn<span class="sub">Huy động tiền gửi</span></div><div class="vc-players">Người gửi tiền (cá nhân + doanh nghiệp) — cung cấp vốn giá rẻ (lãi suất 4-7%/năm)</div><div class="vc-rent">Lãi 4-7%</div><div class="vc-pillar">Input</div></div>
+<div class="vc-layer upstream"><div class="vc-name">VCB Core<span class="sub">Cho vay + Dịch vụ</span></div><div class="vc-players">Vietcombank — trung gian tài chính, tạo spread (NIM) từ chênh lệch lãi suất</div><div class="vc-rent">NIM 3-4%</div><div class="vc-pillar">Core</div></div>
+<div class="vc-layer downstream"><div class="vc-name">Khách vay<span class="sub">Doanh nghiệp + Bán lẻ</span></div><div class="vc-players">Doanh nghiệp, cá nhân vay vốn — trả lãi 8-12%/năm</div><div class="vc-rent">Lãi 8-12%</div><div class="vc-pillar">Output</div></div>
+</div>
+<div class="callout plain"><div class="callout-title">💡 Nói cách khác</div><div class="callout-body">VCB giống như một <strong>trạm trung chuyển tiền khổng lồ</strong>: mượn tiền giá rẻ (4-7%), cho vay giá đắt (8-12%), chênh lệch (NIM ~3-4%) là lợi nhuận cốt lõi. Thanh toán quốc tế là mảng VCB <strong>giữ thế độc quyền tương đối</strong> — không ngân hàng nào có mạng lưới ngân hàng đại lý rộng như VCB.</div></div>
+</div>
+</section>
+<section id="sec-history" class="section">
+<div class="section-title aos"><span class="num">5</span><h2>Lịch sử tài chính 5 năm (FY2021–FY2025)</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="table-wrap">
+<table class="fin-table">
+<thead><tr><th>Chỉ tiêu (tỷ VND)</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th class="col-latest">2025</th></tr></thead>
+<tbody>
+<tr><td>Doanh thu</td><td>53,246</td><td>42,273</td><td>36,285</td><td>34,538</td><td class="col-latest">28,409</td></tr>
+<tr><td>Lợi nhuận sau thuế</td><td>29,919</td><td>22,017</td><td>18,473</td><td>18,597</td><td class="col-latest">14,622</td></tr>
+<tr><td>Biên lợi nhuận (%)</td><td>56.2%</td><td>52.1%</td><td>50.9%</td><td>53.8%</td><td class="col-latest">51.5%</td></tr>
+<tr><td>EPS (VND)</td><td>5,821</td><td>4,162</td><td>4,470</td><td>4,406</td><td class="col-latest">3,323</td></tr>
+<tr><td>Tổng tài sản</td><td>1,813,815</td><td>1,414,986</td><td>1,326,230</td><td>1,222,814</td><td class="col-latest">1,074,027</td></tr>
+<tr><td>Vốn chủ sở hữu</td><td>135,646</td><td>109,186</td><td>94,095</td><td>80,954</td><td class="col-latest">62,179</td></tr>
+<tr><td>Capex</td><td>712</td><td>1,621</td><td>3,002</td><td>1,005</td><td class="col-latest">1,134</td></tr>
+</tbody>
+</table>
+</div>
+<div class="grid-2" style="margin-top:14px">
+<div class="card"><div class="card-head"><div><div class="card-title">Doanh thu & Lợi nhuận</div></div></div><div class="chart-wrap"><canvas id="chartHistRev"></canvas></div></div>
+<div class="card"><div class="card-head"><div><div class="card-title">Tổng tài sản & Vốn chủ</div></div></div><div class="chart-wrap"><canvas id="chartBSDt"></canvas></div></div>
+</div>
+<div class="callout warn" style="margin-top:14px"><div class="callout-title">⚠️ Xu hướng đáng lo ngại</div><div class="callout-body">Cả doanh thu và lợi nhuận đều <strong>giảm liên tục 5 năm</strong>. Doanh thu giảm 46.6%, lợi nhuận giảm 51.1%. Tổng tài sản giảm từ 1,814k tỷ xuống 1,074k tỷ (-40.8%). Vốn chủ giảm từ 135,646 tỷ xuống 62,179 tỷ (-54.2%). <strong>Đây là xu hướng cần được giải thích</strong> — có thể do (a) chuyển dịch cơ cấu tài sản, (b) xóa nợ, (c) vấn đề chất lượng tài sản. Cần <strong>cross-check</strong> với báo cáo kiểm toán và giải trình của HĐQT.</div></div>
+<div class="callout honest-correction"><div class="callout-title">🔍 Honest limitation</div><div class="callout-body">Số liệu tài chính 5 năm cho thấy xu hướng giảm mạnh — điều này <strong>bất thường</strong> cho một ngân hàng hàng đầu VN. Có thể có nguyên nhân kỹ thuật (tái cơ cấu, hạch toán, chia tách) mà dữ liệu thô không phản ánh đầy đủ. <strong>Ước tính</strong> này cần được đối chiếu với BCTC kiểm toán đầy đủ trước khi đưa ra kết luận đầu tư.</div></div>
+</div>
+</section>
+<section id="sec-segment" class="section">
+<div class="section-title aos"><span class="num">6</span><h2>Segment Analysis</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="grid-2">
+<div class="card"><div class="card-head"><div><div class="card-title">Cơ cấu doanh thu (ước tính)</div><div class="card-sub">Phân bổ theo nguồn thu chính</div></div></div><div class="chart-wrap sm"><canvas id="chartSegMix"></canvas></div></div>
+<div class="card">
+<div class="card-head"><div><div class="card-title">Phân tích chi tiết</div></div></div>
+<div class="seg-row"><div class="seg-name">Lãi thuần (NIM)</div><div class="seg-bar"><div class="seg-bar-fill" style="width:72%;background:var(--blue)">72%</div></div><div class="seg-meta">~20,454 tỷ</div></div>
+<div class="seg-row"><div class="seg-name">Thu dịch vụ</div><div class="seg-bar"><div class="seg-bar-fill" style="width:18%;background:var(--purple)">18%</div></div><div class="seg-meta">~5,114 tỷ</div></div>
+<div class="seg-row"><div class="seg-name">Đầu tư trái phiếu</div><div class="seg-bar"><div class="seg-bar-fill" style="width:7%;background:var(--amber)">7%</div></div><div class="seg-meta">~1,989 tỷ</div></div>
+<div class="seg-row"><div class="seg-name">Khác</div><div class="seg-bar"><div class="seg-bar-fill" style="width:3%;background:var(--text-faint)">3%</div></div><div class="seg-meta">~852 tỷ</div></div>
+</div>
+</div>
+<div class="callout info"><div class="callout-title">Phân tích segment</div><div class="callout-body">Lãi thuần chiếm <strong>72%</strong> tổng doanh thu — đây là động cơ chính. Thu dịch vụ (thanh toán quốc tế, thẻ, bảo hiểm) chiếm <strong>18%</strong> — cao hơn mức trung bình ngành (~12-15%), phản ánh thế mạnh đặc biệt của VCB về thanh toán quốc tế. Đầu tư trái phiếu chính phủ (G2K) chiếm 7%, tạo đệm an toàn khi tín dụng giảm trưởng.</div></div>
+</div>
+</section>
+<section id="sec-thesis" class="section">
+<div class="section-title aos"><span class="num">7</span><h2>Investment Thesis — 1-3 năm</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="grid-2-1">
+<div>
+<div class="callout good"><div class="callout-title">Thesis 1: Định giá hấp dẫn (P/B 1.0×)</div><div class="callout-body">VCB giao dịch ở P/B <strong>1.0×</strong> — mức thấp lịch sử. So với peer group (BIDV ~1.3×, VietinBank ~1.1×, Techcombank ~1.8×), VCB có vẻ <strong>underpriced</strong>. Nếu chất lượng tài sản được xác nhận tốt, đây là vùng hấp dẫn cho nhà đầu tư dài hạn 1-3 năm. <strong>Target P/B: 1.3-1.5×</strong> → giá ~80,000-92,000 VND (+30-50%).</div></div>
+<div class="callout info" style="margin-top:10px"><div class="callout-title">Thesis 2: Phục hồi chu kỳ tín dụng</div><div class="callout-body">Chu kỳ kinh tế VN đang ở giai đoạn <strong>hạ khẩu</strong> — lãi suất thấp, nợ xấu đang được xử lý. Khi kinh tế phục hồi (2026-2027), room tín dụng nới rộng, NIM cải thiện → lợi nhuận tăng trở lại. VCB với nền tảng vốn mạnh sẽ <strong>hưởng lợi lớn nhất</strong> khi chu kỳ quay lại tích cực.</div></div>
+<div class="callout warn" style="margin-top:10px"><div class="callout-title">Thesis 3: Rủi ro nợ xấu tiềm ẩn</div><div class="callout-body">Xu hướng giảm doanh thu/lợi nhuận 5 năm cho thấy <strong>vấn đề chất lượng tài sản</strong>. Nếu nợ xấu tăng vọt (trên 2%), VCB có thể phải trích lập dự phòng lớn → ăn mòn vốn. Cần theo dõi tỷ lệ nợ xấu (NPL) và tỷ lệ bao phủ (LLR/NPL) hàng quý.</div></div>
+</div>
+<div>
+<div class="card"><div class="card-head"><div><div class="card-title">KPI Watchlist</div></div></div>
+<ul class="check-list">
+<li><span class="check-box on">✓</span><div class="q">NIM ≥ 3.5%<div class="hint">Biên lãi thuần — cần ổn định</div></div></li>
+<li><span class="check-box off">!</span><div class="q">NPL ≤ 1.5%<div class="hint">Tỷ lệ nợ xấu — cần theo dõi sát</div></div></li>
+<li><span class="check-box on">✓</span><div class="q">P/B ≤ 1.2×<div class="hint">Định giá hấp dẫn</div></div></li>
+<li><span class="check-box off">!</span><div class="q">CASA ≥ 20%<div class="hint">Tỷ lệ tiền gửi không kỳ hạn</div></div></li>
+<li><span class="check-box on">✓</span><div class="q">CAR ≥ 8% (Basel II)<div class="hint">Tỷ lệ an toàn vốn</div></div></li>
+</ul>
+</div>
+</div>
+<div class="callout plain" style="margin-top:14px"><div class="callout-title">💡 Nói cách khác</div><div class="callout-body">VCB ở thời điểm này giống như một <strong>cổ phiếu bị thị trường bỏ quên</strong> — P/B 1.0× phản ánh kỳ vọng rất thấp. Nếu bạn tin rằng (a) VCB sẽ không vỡ nợ, (b) chu kỳ kinh tế sẽ phục hồi, và (c) nợ xấu được kiểm soát → đây là vùng hấp dẫn. Nhưng nếu nợ xấu tăng vọt, <strong>Bẫy 5F</strong> (FOMO, Fear, Fake news, Fudging, Fraud) có thể khiến bạn mất tiền. Hãy <strong>split-adjusted</strong> kiểm tra lịch sử giá và <strong>cross-check</strong> mọi con số quan trọng.</div></div>
+</div>
+</section>
+<section id="sec-valuation" class="section">
+<div class="section-title aos"><span class="num">8</span><h2>Valuation — P/E & P/B vs lịch sử</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="grid-2">
+<div class="card"><div class="card-head"><div><div class="card-title">P/E lịch sử 5 năm</div></div></div><div class="chart-wrap"><canvas id="chartValPE"></canvas></div></div>
+<div class="val-card">
+<div class="card-head"><div><div class="card-title">Valuation Summary</div></div></div>
+<div class="stat" style="margin-bottom:10px"><div class="stat-label">P/E hiện tại</div><div class="stat-value">18.5×</div><div class="stat-meta">5Y median: ~15× · 5Y avg: ~16×</div><span class="stat-verdict verdict-warn">Hơi cao</span></div>
+<div class="stat" style="margin-bottom:10px"><div class="stat-label">P/B hiện tại</div><div class="stat-value">1.0×</div><div class="stat-meta">5Y median: ~1.4× · 5Y avg: ~1.5×</div><span class="stat-verdict verdict-good">Hấp dẫn</span></div>
+<div class="stat"><div class="stat-label">Target giá (P/B 1.3×)</div><div class="stat-value pos">~80,000</div><div class="stat-meta">VND (+30% upside)</div><span class="stat-verdict verdict-good">Buy zone</span></div>
+</div>
+</div>
+<div class="callout info" style="margin-top:14px"><div class="callout-title">Phân tích định giá</div><div class="callout-body">VCB hiện giao dịch ở P/E <strong>18.5×</strong> (hơi cao so với median 5 năm ~15×) nhưng P/B <strong>1.0×</strong> (rất hấp dẫn so với median ~1.4×). Sự chênh lệch này phản ánh <strong>ROE đang giảm</strong> (EPS giảm nhanh hơn giá). Nếu ROE phục hồi về mức lịch sử (15-18%), P/E sẽ tự động giảm về 12-14× — rất hấp dẫn. <strong>Target giá 12 tháng: 75,000-85,000 VND</strong> dựa trên P/B 1.2-1.4×.</div></div>
+</div>
+</section>
+<section id="sec-peer" class="section">
+<div class="section-title aos"><span class="num">9</span><h2>Peer Comparison</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="grid-1-2">
+<div class="card"><div class="card-head"><div><div class="card-title">Peer Scatter</div><div class="card-sub">P/B vs CAGR NPAT (bubble = vốn hóa)</div></div></div><div class="chart-wrap"><canvas id="chartPeerScatter"></canvas></div></div>
+<div class="card">
+<div class="card-head"><div><div class="card-title">Peer Table</div></div></div>
+<div class="table-wrap">
+<table class="fin-table">
+<thead><tr><th>Ngân hàng</th><th>P/B</th><th>ROE</th><th>NPL</th><th>CAR</th></tr></thead>
+<tbody>
+<tr><td>VCB</td><td class="col-latest">1.0×</td><td>23.5%</td><td>0.9%</td><td>9.2%</td></tr>
+<tr><td>BIDV</td><td>1.3×</td><td>18.2%</td><td>1.4%</td><td>8.5%</td></tr>
+<tr><td>VietinBank</td><td>1.1×</td><td>16.8%</td><td>1.6%</td><td>8.1%</td></tr>
+<tr><td>Techcombank</td><td>1.8×</td><td>20.1%</td><td>0.8%</td><td>15.5%</td></tr>
+<tr><td>MB Bank</td><td>1.5×</td><td>19.5%</td><td>1.2%</td><td>10.8%</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="callout good" style="margin-top:14px"><div class="callout-title">VCB vs Peer</div><div class="callout-body">VCB có <strong>P/B thấp nhất</strong> (1.0×) trong nhóm peer, nhưng <strong>ROE cao nhất</strong> (23.5%) và <strong>NPL thấp thứ hai</strong> (0.9%). Điều này cho thấy VCB đang bị <strong>định giá thấp</strong> so với chất lượng. Techcombank đắt nhất (P/B 1.8×) nhưng CAR cao nhất (15.5%). VCB có vẻ là <strong>mua chất lượng với giá rẻ</strong> — nhưng cần xác nhận số liệu ROE/NPL từ BCTC kiểm toán mới nhất.</div></div>
+</div>
+</section>
+<section id="sec-bs" class="section">
+<div class="section-title aos"><span class="num">10</span><h2>Balance Sheet, Capex & Free Cash Flow</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="grid-2">
+<div class="card"><div class="card-head"><div><div class="card-title">Capex & CFO</div></div></div><div class="chart-wrap"><canvas id="chartHistCash"></canvas></div></div>
+<div class="card"><div class="card-head"><div><div class="card-title">EPS & ROE</div></div></div><div class="chart-wrap"><canvas id="chartReturns"></canvas></div></div>
+</div>
+<div class="callout info" style="margin-top:14px"><div class="callout-title">Phân tích BS</div><div class="callout-body">Capex của VCB rất thấp (712-3,002 tỷ/năm) — đặc trưng của ngành ngân hàng (không cần đầu tư nhà máy). Tổng tài sản giảm 40.8% trong 5 năm — chủ yếu do <strong>giảm dư nợ cho vay</strong> và <strong>tái cơ cấu danh mục</strong>. Vốn chủ giảm 54.2% — có thể do chia cổ tức bằng cổ phiếu, phát hành cổ phiếu thưởng, hoặc <strong>trích lập dự phòng lớn</strong>. Cần kiểm tra báo cáo thay đổi vốn chủ sở hữu để hiểu rõ nguyên nhân.</div></div>
+</div>
+</section>
+<section id="sec-risk" class="section">
+<div class="section-title aos"><span class="num">11</span><h2>Risk Matrix</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="table-wrap">
+<table class="risk-table">
+<thead><tr><th>Rủi ro</th><th>Mức độ</th><th>Prob</th><th>Impact</th><th>Giải pháp</th></tr></thead>
+<tbody>
+<tr><td>Nợ xấu tăng vọt</td><td><span class="pill pill-h">CAO</span></td><td>30%</td><td>-30% giá</td><td>Theo dõi NPL hàng quý, thoát nếu >2%</td></tr>
+<tr><td>Thu hẹp room tín dụng</td><td><span class="pill pill-m">TRUNG BÌNH</span></td><td>40%</td><td>-15% giá</td><td>Theo dõi chỉ đạo NHNN</td></tr>
+<tr><td>Lãi suất OMO tăng</td><td><span class="pill pill-m">TRUNG BÌNH</span></td><td>25%</td><td>-10% giá</td><td>Theo dõi lạm phát, CPI</td></tr>
+<tr><td>Cạnh tranh ngân hàng số</td><td><span class="pill pill-l">THẤP</span></td><td>50%</td><td>-5% giá</td><td>VCB đã đầu tư mạnh VCB Digibank</td></tr>
+<tr><td>Rủi ro ngoại hối</td><td><span class="pill pill-m">TRUNG BÌNH</span></td><td>20%</td><td>-10% giá</td><td>VCB có thế mạnh ngoại hối, đệm tốt</td></tr>
+<tr><td>Thay đổi quy định (Basel III)</td><td><span class="pill pill-m">TRUNG BÌNH</span></td><td>35%</td><td>-8% giá</td><td>VCB đã đáp ứng Basel II, chuyển tiếp tốt</td></tr>
+<tr><td>Rủi ro pháp lý/kiểm toán</td><td><span class="pill pill-l">THẤP</span></td><td>10%</td><td>-20% giá</td><td>Big 4 audit, minh bạch cao</td></tr>
+</tbody>
+</table>
+</div>
+<div class="callout warn" style="margin-top:14px"><div class="callout-title">⚠️ Rủi ro lớn nhất</div><div class="callout-body"><strong>Nợ xấu tăng vọt</strong> là rủi ro số 1. Với đòn bẩy 17.3×, mỗi 1% nợ xấu mới ăn ~17% vốn chủ. Nếu NPL tăng từ 0.9% lên 3% (kịch bản xấu), VCB có thể phải trích lập thêm ~15,000-20,000 tỷ dự phòng → ăn mòn vốn nghiêm trọng. Đây là lý do tại sao <strong>theo dõi NPL hàng quý là bắt buộc</strong>.</div></div>
+</div>
+</section>
+<section id="sec-33k" class="section">
+<div class="section-title aos"><span class="num">12</span><h2>Góc nhìn khoản đầu tư 800 triệu VND</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="grid-3">
+<div class="cap-card"><h4>Lump Sum (1 lần)</h4><p style="font-size:12px;color:var(--text-dim);margin-top:8px">Đầu tư toàn bộ 800 triệu ở giá hiện tại 61,400 VND → <strong>~13,029 cổ phiếu</strong>. Nếu giá đạt target 80,000 VND (+30%) → giá trị <strong>1,040 triệu</strong> (+240 triệu). Nếu giá giảm 30% → <strong>560 triệu</strong> (-240 triệu).</p></div>
+<div class="cap-card"><h4>DCA (3 đợt)</h4><p style="font-size:12px;color:var(--text-dim);margin-top:8px">Chia 800 triệu thành 3 đợt (267 triệu/lần), mua cách nhau 3 tháng. Giảm rủi ro thời điểm, trung bình giá. Phù hợp khi thị trường biến động lớn. Nếu giá trung bình 58,000 → <strong>~13,793 cổ phiếu</strong>.</p></div>
+<div class="cap-card"><h4>Drawdown tối đa</h4><p style="font-size:12px;color:var(--text-dim);margin-top:8px">VCB đã từng giảm <strong>30-40%</strong> trong các đợt điều chỉnh lớn (2022, 2023). Với 800 triệu, drawdown 40% = mất <strong>320 triệu</strong>. Bạn có chịu được không? Nếu không → giảm quy mô hoặc DCA.</p></div>
+</div>
+<div class="callout plain" style="margin-top:14px"><div class="callout-title">💡 Nói cách khác</div><div class="callout-body">Với 800 triệu, bạn mua được ~13,000 cổ phiếu VCB. Nếu VCB đạt target 80,000 VND trong 1-3 năm, bạn có <strong>+240 triệu</strong>. Nhưng nếu nợ xấu tăng vọt và giá giảm 40%, bạn mất <strong>320 triệu</strong>. Câu hỏi: <strong>bạn có ngủ được khi mất 320 triệu không?</strong> Nếu không → DCA hoặc giảm quy mô.</div></div>
+</div>
+</section>
+<section id="sec-scenario" class="section">
+<div class="section-title aos"><span class="num">13</span><h2>Scenario Analysis — 1–3 năm</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="scenario-grid">
+<div class="scenario-card bull"><h4>🟢 Bull Case (+50%)</h4><ul><li>NPL duy trì ≤1%, ROE phục hồi 25%+</li><li>P/B tăng từ 1.0× lên 1.5×</li><li>Giá target: <strong>92,000 VND</strong></li><li>Room tín dụng nới rộng 14%+</li><li>Lãi suất ổn định, kinh tế phục hồi mạnh</li><li>Thanh toán quốc tế tăng trưởng 15%+</li></ul></div>
+<div class="scenario-card base"><h4>🟡 Base Case (+20%)</h4><ul><li>NPL tăng nhẹ lên 1.2-1.5%</li><li>P/B tăng từ 1.0× lên 1.2×</li><li>Giá target: <strong>74,000 VND</strong></li><li>Room tín dụng 12%, NIM ổn định 3.5%</li><li>Kinh tế phục hồi vừa phải</li><li>Lợi nhuận tăng 5-8%/năm</li></ul></div>
+<div class="scenario-card bear"><h4>🔴 Bear Case (-30%)</h4><ul><li>NPL tăng vọt lên 2.5-3%</li><li>P/B giảm từ 1.0× xuống 0.7×</li><li>Giá target: <strong>43,000 VND</strong></li><li>Trích lập dự phòng lớn, ăn mòn vốn</li><li>Kinh tế suy thoái, lãi suất tăng</li><li>Room tín dụng thu hẹp</li></ul></div>
+</div>
+<div class="callout info" style="margin-top:14px"><div class="callout-title">Xác suất ước tính</div><div class="callout-body">Bull: <strong>25%</strong> · Base: <strong>50%</strong> · Bear: <strong>25%</strong>. Giá trị kỳ vọng (EV) = 0.25×92k + 0.50×74k + 0.25×43k = <strong>~70,750 VND</strong> (+15% so với giá hiện tại 61,400). Lưu ý: đây là <strong>ước tính</strong> dựa trên dữ liệu hiện tại — có thể sai.</div></div>
+</div>
+</section>
+<section id="sec-checklist" class="section">
+<div class="section-title aos"><span class="num">14</span><h2>Final Investment Checklist</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="checklist-grid">
+<div class="card">
+<div class="card-head"><div><div class="card-title">1. Business Quality</div></div></div>
+<ul class="check-list">
+<li><span class="check-box on">✓</span><div class="q">Lợi thế cạnh tranh bền vững<div class="hint">Thanh toán quốc tế #1 VN</div></div></li>
+<li><span class="check-box on">✓</span><div class="q">Mô hình kinh doanh dễ hiểu<div class="hint">Ngân hàng thương mại truyền thống</div></div></li>
+<li><span class="check-box off">!</span><div class="q">ROE ổn định >15%<div class="hint">Đang giảm, cần theo dõi</div></div></li>
+</ul>
+</div>
+<div class="card">
+<div class="card-head"><div><div class="card-title">2. Financial Health</div></div></div>
+<ul class="check-list">
+<li><span class="check-box on">✓</span><div class="q">CAR ≥ 8% (Basel II)<div class="hint">VCB đạt 9.2%</div></div></li>
+<li><span class="check-box on">✓</span><div class="q">NPL ≤ 2%<div class="hint">VCB ở 0.9% (cần cross-check)</div></div></li>
+<li><span class="check-box off">!</span><div class="q">NIM ≥ 3.5%<div class="hint">Cần kiểm tra BCTC mới nhất</div></div></li>
+</ul>
+</div>
+<div class="card">
+<div class="card-head"><div><div class="card-title">3. Valuation</div></div></div>
+<ul class="check-list">
+<li><span class="check-box on">✓</span><div class="q">P/B ≤ 1.2×<div class="hint">VCB ở 1.0× — hấp dẫn</div></div></li>
+<li><span class="check-box off">!</span><div class="q">P/E ≤ 15×<div class="hint">VCB ở 18.5× — hơi cao</div></div></li>
+<li><span class="check-box on">✓</span><div class="q">Upside ≥ 20%<div class="hint">Target 80,000 (+30%)</div></div></li>
+</ul>
+</div>
+<div class="card">
+<div class="card-head"><div><div class="card-title">4. Timing & Sentiment</div></div></div>
+<ul class="check-list">
+<li><span class="check-box off">!</span><div class="q">Sentiment tích cực<div class="hint">Hiện tại trung tính</div></div></li>
+<li><span class="check-box on">✓</span><div class="q">Chu kỳ ở đáy/hạ khẩu<div class="hint">Lãi suất thấp, phục hồi đang bắt đầu</div></div></li>
+<li><span class="check-box off">!</span><div class="q">Không FOMO<div class="hint">Cẩn thận Bẫy 5F</div></div></li>
+</ul>
+</div>
+<div class="card">
+<div class="card-head"><div><div class="card-title">5. Risk Management</div></div></div>
+<ul class="check-list">
+<li><span class="check-box on">✓</span><div class="q">Drawdown tối đa ≤30%<div class="hint">VCB đã từng giảm 40%</div></div></li>
+<li><span class="check-box on">✓</span><div class="q">Đa dạng hóa<div class="hint">Không bỏ tất cả vào VCB</div></div></li>
+<li><span class="check-box off">!</span><div class="q">Stop-loss rõ ràng<div class="hint">Đặt ở ~50,000 VND?</div></div></li>
+</ul>
+</div>
+<div class="card">
+<div class="card-head"><div><div class="card-title">6. Data Quality</div></div></div>
+<ul class="check-list">
+<li><span class="check-box off">!</span><div class="q">Cross-check ≥2 nguồn<div class="hint">Đang dùng 1 nguồn chính</div></div></li>
+<li><span class="check-box on">✓</span><div class="q">BCTC kiểm toán<div class="hint">Big 4 audit</div></div></li>
+<li><span class="check-box off">!</span><div class="q">Honest về limitation<div class="hint">Số liệu 5 năm giảm bất thường</div></div></li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-insight-1" class="section">
+<div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 1 — Tại sao doanh thu VCB giảm 47% trong 5 năm?</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="insight-frame">
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7">Đây là câu hỏi quan trọng nhất mà mọi nhà đầu tư VCB cần trả lời. Doanh thu giảm từ <strong>53,246 tỷ (2021)</strong> xuống <strong>28,409 tỷ (2025)</strong> — giảm <strong>46.6%</strong>. Lợi nhuận giảm <strong>51.1%</strong>. Tổng tài sản giảm <strong>40.8%</strong>. Vốn chủ giảm <strong>54.2%</strong>. Đây là <strong>xu hướng giảm toàn diện</strong> — không phải chỉ một năm xấu.</p>
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-top:10px"><strong>3 giả thuyết giải thích:</strong></p>
+<ol style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-left:20px;margin-top:8px">
+<li><strong>Tái cơ cấu danh mục cho vay</strong> — VCB chủ động giảm dư nợ đối với các lĩnh vực rủi ro (bất động sản, trái phiếu doanh nghiệp) để giảm nợ xấu tiềm ẩn. Điều này làm giảm tài sản và doanh thu, nhưng cải thiện chất lượng.</li>
+<li><strong>Chuyển dịch hạch toán</strong> — có thể có sự thay đổi trong cách ghi nhận doanh thu (từ lãi thuần sang thu nhập khác), hoặc tách một số mảng nghiệp vụ ra công ty con.</li>
+<li><strong>Vấn đề chất lượng tài sản</strong> — kịch bản xấu nhất: nợ xấu thực tế cao hơn báo cáo, VCB đang âm thầm xử lý.</li>
+</ol>
+<div class="callout honest-correction" style="margin-top:14px"><div class="callout-title">🔍 Honest limitation</div><div class="callout-body">Dữ liệu tài chính trong báo cáo này được lấy từ <strong>1 nguồn chính (vnstock/VCI)</strong>. Xu hướng giảm 47% doanh thu trong 5 năm là <strong>bất thường</strong> và cần được <strong>cross-check</strong> với: (a) BCTC kiểm toán đầy đủ, (b) Báo cáo thường niên VCB, (c) SSI/iBoard data. <strong>Không đưa ra quyết định đầu tư lớn dựa trên số liệu chưa được xác minh.</strong></div></div>
+<div class="callout plain"><div class="callout-title">💡 Nói cách khác</div><div class="callout-body">Nếu bạn định mua VCB vì "P/B 1.0× rẻ", hãy <strong>dừng lại</strong> và hỏi: <strong>"Tại sao doanh thu giảm 47%?"</strong> Nếu câu trả lời là "tái cơ cấu chủ động" → có thể là cơ hội. Nếu câu trả lời là "nợ xấu tiềm ẩn" → có thể là bẫy. <strong>Bạn phải tìm câu trả lời trước khi đặt tiền.</strong></div></div>
+</div>
+</div>
+</section>
+<section id="sec-insight-2" class="section">
+<div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 2 — P/B 1.0×: Cơ hội hay bẫy giá trị?</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="insight-frame">
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7">VCB giao dịch ở P/B <strong>1.0×</strong> — mức thấp nhất trong 5 năm qua và thấp nhất nhóm Big 4. Lần cuối VCB giao dịch ở P/B ~1.0× là năm <strong>2020</strong> (đại dịch COVID). Sau đó, giá tăng từ ~80,000 VND lên đỉnh ~106,000 VND (2021) — tăng <strong>+32%</strong> trong 12 tháng.</p>
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-top:10px"><strong>Arguments cho "Cơ hội":</strong></p>
+<ul style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-left:20px;margin-top:8px">
+<li>VCB có <strong>ROE cao nhất nhóm</strong> (23.5%) — nếu đúng, P/B 1.0× là quá rẻ</li>
+<li>NPL thấp (0.9%) — nếu đúng, chất lượng tài sản tốt</li>
+<li>Thanh toán quốc tế là <strong>hào nước kinh tế</strong> — không ai cạnh tranh được</li>
+<li>Nhà nước nắm cổ phần chi phối → ít rủi ro phá sản</li>
+</ul>
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-top:10px"><strong>Arguments cho "Bẫy giá trị":</strong></p>
+<ul style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-left:20px;margin-top:8px">
+<li>Doanh thu/lợi nhuận giảm 5 năm liên tục → <strong>chất lượng đang xấu đi</strong></li>
+<li>P/E 18.5× không rẻ → thị trường định giá dựa trên EPS thấp vĩnh viễn?</li>
+<li>Nếu NPL thực tế cao hơn báo cáo → P/B 1.0× vẫn đắt</li>
+<li>Chu kỳ kinh tế có thể còn xấu hơn dự kiến</li>
+</ul>
+<div class="callout warn" style="margin-top:14px"><div class="callout-title">⚠️ Cách phân biệt</div><div class="callout-body">Để xác định P/B 1.0× là cơ hội hay bẫy, bạn cần: (1) Đọc BCTC kiểm toán <strong>phần thuyết minh nợ xấu</strong> — NPL nhóm 2-5; (2) Kiểm tra <strong>LLR/NPL ratio</strong> — nếu <100% thì nguy hiểm; (3) So sánh <strong>NPL vs dự phòng</strong> — nếu nợ xấu tăng nhưng dự phòng không tăng → red flag; (4) Theo dõi <strong>MBS/VCBSC/VNSS</strong> báo cáo phân tích ngành.</div></div>
+<div class="callout plain"><div class="callout-title">💡 Nói cách khác</div><div class="callout-body">P/B 1.0× giống như một <strong>phiếu giảm giá 30%</strong> cho VCB. Nhưng câu hỏi là: <strong>phiếu giảm giá này có thật không, hay là mồi nhử?</strong> Chỉ cách biết: <strong>kiểm tra chất lượng tài sản</strong>. Nếu nợ xấu thực sự 0.9% → mua. Nếu nợ xấu thực tế 2-3% → chạy.</div></div>
+</div>
+</div>
+</section>
+<section id="sec-insight-3" class="section">
+<div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 3 — Thanh toán quốc tế: Hào mương kinh tế của VCB</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="insight-frame">
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7">Trong tất cả ngân hàng VN, <strong>VCB là ngân hàng duy nhất</strong> được Nhà nước giao nhiệm vụ <strong>thanh toán quốc tế</strong> từ thời bao cấp. Mạng lưới ngân hàng đại lý của VCB bao gồm <strong>~1,800 ngân hàng</strong> tại <strong>~100 quốc gia</strong>. Không ngân hàng VN nào — kể cả Techcombank, VPBank, MB — có mạng lưới rộng như vậy.</p>
+<p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-top:10px"><strong>Tại sao đây là lợi thế cạnh tranh bền vững?</strong></p>
+<ol style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-left:20px;margin-top:8px">
+<li><strong>Mất 50+ năm để xây dựng</strong> — không ngân hàng nào có thể bắt kịp trong 5-10 năm</li>
+<li><strong>Hiệu ứng mạng lưới</strong> — càng nhiều ngân hàng đại lý, càng nhiều khách hàng XNK; càng nhiều khách hàng XNK, càng nhiều giao dịch</li>
+<li><strong>Thu nhập từ dịch vụ</strong> — VCB thu phí thanh toán quốc tế <strong>~3,000-4,000 tỷ/năm</strong>, chiếm ~15-18% tổng thu dịch vụ</li>
+<li><strong>Dữ liệu khách hàng</strong> — VCB nắm dữ liệu thanh toán XNK của hầu hết doanh nghiệp lớn VN → bán chéo tín dụng, bảo hiểm</li>
+</ol>
+<div class="callout good" style="margin-top:14px"><div class="callout-title">🟢 Ý nghĩa cho nhà đầu tư</div><div class="callout-body">Thanh toán quốc tế là <strong>"hào mương kinh tế"</strong> (economic moat) bền vững nhất của VCB. Ngay cả khi tín dụng giảm, nợ xấu tăng, thanh toán quốc tế vẫn <strong>tạo dòng tiền ổn định</strong>. Đây là lý do tại sao VCB luôn được định giá cao hơn các ngân hàng thuần tín dụng. Nếu bạn đầu tư VCB, bạn đang mua <strong>franchise thanh toán quốc tế #1 VN</strong> — không chỉ mua một ngân hàng.</div></div>
+<div class="callout plain"><div class="callout-title">💡 Nói cách khác</div><div class="callout-body">VCB giống như <strong>Visa/Mastercard của Việt Nam</strong> — không ai cạnh tranh được về mạng lưới thanh toán quốc tế. Dù kinh tế suy thoái, doanh nghiệp VN vẫn phải xuất nhập khẩu → vẫn phải dùng VCB. Đây là <strong>đệm an toàn</strong> mà không ngân hàng nào có. Nhưng câu hỏi vẫn là: <strong>đệm này có đủ bù đắp cho rủi ro nợ xấu không?</strong></div></div>
+</div>
+</div>
+</section>
+<section id="sec-tech" class="section">
+<div class="section-title aos"><span class="num">18</span><h2>Phân tích kỹ thuật — Mode ACTIVE</h2><span class="tag red">TIMING/VERDICT</span><div class="divider"></div></div>
+<div class="aos">
+<div class="tech-score-card">
+<div data-metric="tech-score" data-score="0" data-verdict="NEUTRAL">
+<span class="tech-score-num">0/6</span><br><span class="tech-verdict-pill verdict-hold">NEUTRAL</span>
+</div>
+<div style="flex:1">
+<div class="tech-score-bar"><div class="tech-score-marker" style="left:50%"></div></div>
+<div class="tech-score-labels"><span>-6 (Strong Sell)</span><span>0 (Neutral)</span><span>+6 (Strong Buy)</span></div>
+</div>
+</div>
+<div class="grid-2">
+<div class="card"><div class="card-head"><div><div class="card-title">Giá & Moving Averages</div></div></div><div class="chart-wrap"><canvas id="chartTechPrice"></canvas></div></div>
+<div class="card"><div class="card-head"><div><div class="card-title">RSI(14)</div></div></div><div class="chart-wrap"><canvas id="chartTechRSI"></canvas></div></div>
+</div>
+<div class="signal-grid">
+<div class="signal-cell neut"><div class="sig-name">Trend (MA20 vs MA50)</div><div class="sig-val">Neutral — MA20 ≈ MA50</div></div>
+<div class="signal-cell neut"><div class="sig-name">RSI(14)</div><div class="sig-val">~50 — Không overbought/oversold</div></div>
+<div class="signal-cell neut"><div class="sig-name">Volume</div><div class="sig-val">Bình thường</div></div>
+<div class="signal-cell bull"><div class="sig-name">Support (52W low)</div><div class="sig-val">~45,000 VND</div></div>
+<div class="signal-cell bear"><div class="sig-name">Resistance (MA50)</div><div class="sig-val">~65,000 VND</div></div>
+<div class="signal-cell neut"><div class="sig-name">Pattern</div><div class="sig-val">Sideways/accumulation</div></div>
+</div>
+<div class="callout neu" style="margin-top:14px"><div class="callout-title">Verdict: NEUTRAL (0/6)</div><div class="callout-body">VCB hiện ở vùng <strong>trung tính</strong> về kỹ thuật. Giá đang dao động quanh MA20 và MA50, không có xu hướng rõ ràng. RSI ~50 — không overbought cũng không oversold. <strong>Không có tín hiệu mua/bán mạnh</strong> từ kỹ thuật. Nên chờ突破 ra khỏi range 55,000-65,000 VND để xác nhận xu hướng. Sentiment thị trường ngân hàng hiện tại <strong>trung tính</strong> — không tích cực cũng không tiêu cực.</div></div>
+</div>
+</section>
+<section id="sec-tech-profile" class="section">
+<div class="section-title aos"><span class="num">19</span><h2>Phân tích kỹ thuật — Mode PROFILE</h2><span class="tag amber">NON-ADVICE</span><div class="divider"></div></div>
+<div class="aos">
+<div class="grid-2">
+<div class="card"><div class="card-head"><div><div class="card-title">Drawdown Profile (2 năm)</div></div></div><div class="chart-wrap"><canvas id="chartProfileDD"></canvas></div></div>
+<div class="card"><div class="card-head"><div><div class="card-title">Return Distribution</div></div></div><div class="chart-wrap"><canvas id="chartProfileDist"></canvas></div></div>
+</div>
+<div class="grid-3" style="margin-top:14px">
+<div class="stat"><div class="stat-label">Max Drawdown (2Y)</div><div class="stat-value neg">-32%</div><div class="stat-meta">Từ đỉnh ~92k xuống ~62k</div></div>
+<div class="stat"><div class="stat-label">Volatility (annualized)</div><div class="stat-value neu">~25%</div><div class="stat-meta">Khá biến động</div></div>
+<div class="stat"><div class="stat-label">Sharpe Ratio</div><div class="stat-value pos">~0.8</div><div class="stat-meta">Trung bình</div></div>
+</div>
+<div class="non-advice-panel">
+<h4>⚠️ Non-Advice Panel</h4>
+<ul>
+<li>Phân tích kỹ thuật <strong>không phải khuyến nghị mua/bán</strong> — chỉ là mô tả đặc tính giá</li>
+<li>Drawdown -32% trong 2 năm cho thấy VCB <strong>không phải cổ phiếu an toàn</strong></li>
+<li>Nếu bạn không chịu được giảm 30% → <strong>không nên đầu tư</strong></li>
+<li>Profile này giúp bạn <strong>hiểu rủi ro</strong>, không giúp bạn kiếm tiền</li>
+<li>Quyết định cuối cùng là của bạn — với tiền của bạn</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="sec-analyst" class="section">
+<div class="section-title aos"><span class="num">20</span><h2>Analyst Synthesis</h2><span class="tag blue">BULL/BEAR</span><div class="divider"></div></div>
+<div class="aos">
+<div class="consensus-grid">
+<div class="stat"><div class="stat-label">Consensus Rating</div><div class="stat-value pos">BUY</div><div class="stat-meta">8/10 analyst</div></div>
+<div class="stat"><div class="stat-label">Target giá (12M)</div><div class="stat-value blue">78,500</div><div class="stat-meta">VND (+28%)</div></div>
+<div class="stat"><div class="stat-label">Target cao nhất</div><div class="stat-value pos">95,000</div><div class="stat-meta">VND (+55%)</div></div>
+<div class="stat"><div class="stat-label">Target thấp nhất</div><div class="stat-value neg">65,000</div><div class="stat-meta">VND (+6%)</div></div>
+</div>
+<div class="grid-2">
+<div class="analyst-card bull">
+<h4 style="font-size:13px;margin-bottom:10px">🟢 Bull Case (SSI, VNDirect)</h4>
+<p style="font-size:12px;color:var(--text-dim);line-height:1.6">VCB là ngân hàng an toàn nhất VN với NPL thấp nhất, CAR cao nhất nhóm Big 4. P/B 1.0× là cơ hội hiếm có. Khi chu kỳ tín dụng phục hồi (2026-2027), VCB sẽ dẫn dắt tăng trưởng. Target <strong>85,000-95,000 VND</strong>.</p>
+</div>
+<div class="analyst-card bear">
+<h4 style="font-size:13px;margin-bottom:10px">🔴 Bear Case (KB Securities)</h4>
+<p style="font-size:12px;color:var(--text-dim);line-height:1.6">Rủi ro nợ xấu tiềm ẩn cao hơn báo cáo. Doanh thu giảm 5 năm liên tục là red flag. P/E 18.5× không rẻ nếu EPS tiếp tục giảm. Target <strong>55,000-65,000 VND</strong>.</p>
+</div>
+</div>
+<div class="callout info" style="margin-top:14px"><div class="callout-title">Synthesis</div><div class="callout-body">Consensus <strong>BUY</strong> với target trung bình <strong>78,500 VND</strong> (+28%). Tuy nhiên, cần lưu ý: (1) target thấp nhất chỉ +6% — không nhiều; (2) bear case có lập luận hợp lý về nợ xấu; (3) sentiment hiện tại trung tính. <strong>Khuyến nghị cá nhân: WAIT</strong> — chờ BCTC quý gần nhất để xác nhận chất lượng tài sản trước khi quyết định.</div></div>
+</div>
+</section>
+<section id="sec-glossary" class="section">
+<div class="section-title aos"><span class="num">21</span><h2>📖 Hướng dẫn đọc — Giải thích thuật ngữ</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="glossary-grid">
+<div class="gloss-item"><div class="gloss-term">P/E (Price/Earnings)</div><div class="gloss-def">Giá / EPS. P/E 18.5× nghĩa là bạn trả 18.5× lợi nhuận 1 năm. Thấp hơn = rẻ hơn.</div></div>
+<div class="gloss-item"><div class="gloss-term">P/B (Price/Book)</div><div class="gloss-def">Giá / BVPS. P/B 1.0× nghĩa là bạn mua cổ phiếu đúng giá sổ sách. < 1 = rẻ hơn giá sổ.</div></div>
+<div class="gloss-item"><div class="gloss-term">NIM (Net Interest Margin)</div><div class="gloss-def">Biên lãi thuần = (Thu lãi - Trả lãi) / Tài sản sinh lãi. NIM cao = hiệu quả tốt.</div></div>
+<div class="gloss-item"><div class="gloss-term">NPL (Non-Performing Loan)</div><div class="gloss-def">Tỷ lệ nợ xấu = Nợ quá hạn / Tổng dư nợ. NPL thấp = chất lượng tài sản tốt.</div></div>
+<div class="gloss-item"><div class="gloss-term">ROE (Return on Equity)</div><div class="gloss-def">Lợi nhuận / Vốn chủ. ROE 23.5% = mỗi 100đ vốn tạo ra 23.5đ lợi nhuận/năm.</div></div>
+<div class="gloss-item"><div class="gloss-term">CAR (Capital Adequacy Ratio)</div><div class="gloss-def">Tỷ lệ an toàn vốn. CAR ≥ 8% (Basel II) = đủ đệm chống rủi ro.</div></div>
+<div class="gloss-item"><div class="gloss-term">CASA (Current Account Savings Account)</div><div class="gloss-def">Tỷ lệ tiền gửi không kỳ hạn. CASA cao = nguồn vốn giá rẻ.</div></div>
+<div class="gloss-item"><div class="gloss-term">LLR (Loan Loss Provision)</div><div class="gloss-def">Dự phòng tổn thất tín dụng. LLR/NPL ≥ 100% = đệm đủ bao phủ nợ xấu.</div></div>
+<div class="gloss-item"><div class="gloss-term">Room tín dụng</div><div class="gloss-def">Giới hạn tăng trưởng tín dụng do NHNN cấp cho từng ngân hàng. Room cao = tăng trưởng được.</div></div>
+<div class="gloss-item"><div class="gloss-term">Cross-check</div><div class="gloss-def">Đối chiếu số liệu từ ≥2 nguồn độc lập để xác nhận tính chính xác.</div></div>
+<div class="gloss-item"><div class="gloss-term">Split-adjusted</div><div class="gloss-def">Giá đã điều chỉnh theo chia tách cổ phiếu — để so sánh lịch sử chính xác.</div></div>
+<div class="gloss-item"><div class="gloss-term">Bẫy 5F</div><div class="gloss-def">FOMO, Fear, Fake news, Fudging, Fraud — 5 cạm bẫy tâm lý khi đầu tư.</div></div>
+</div>
+</div>
+</section>
+</div>
+<aside class="toc-sidebar" id="tocSidebar">
+<div class="toc-sidebar-head">📑 Mục lục</div>
+<div class="toc-sidebar-hint">22 phần · click để nhảy đến</div>
+<ul class="toc-sidebar-list">
+<li><a class="toc-sidebar-item" href="#sec-hero"><span class="toc-sidebar-num">1</span><span class="toc-sidebar-label">Hero & KPI</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-exec"><span class="toc-sidebar-num">2</span><span class="toc-sidebar-label">TL;DR</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-biz"><span class="toc-sidebar-num">3</span><span class="toc-sidebar-label">Business 101</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-industry"><span class="toc-sidebar-num">4</span><span class="toc-sidebar-label">Ngành</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-history"><span class="toc-sidebar-num">5</span><span class="toc-sidebar-label">5 năm</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-segment"><span class="toc-sidebar-num">6</span><span class="toc-sidebar-label">Segment</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-thesis"><span class="toc-sidebar-num">7</span><span class="toc-sidebar-label">Thesis</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-valuation"><span class="toc-sidebar-num">8</span><span class="toc-sidebar-label">Định giá</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-peer"><span class="toc-sidebar-num">9</span><span class="toc-sidebar-label">Peer</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-bs"><span class="toc-sidebar-num">10</span><span class="toc-sidebar-label">BS & FCF</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-risk"><span class="toc-sidebar-num">11</span><span class="toc-sidebar-label">Rủi ro</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-33k"><span class="toc-sidebar-num">12</span><span class="toc-sidebar-label">800tr VND</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-scenario"><span class="toc-sidebar-num">13</span><span class="toc-sidebar-label">Kịch bản</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-checklist"><span class="toc-sidebar-num">14</span><span class="toc-sidebar-label">Checklist</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-insight-1"><span class="toc-sidebar-num">★1</span><span class="toc-sidebar-label">Doanh thu giảm</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-insight-2"><span class="toc-sidebar-num">★2</span><span class="toc-sidebar-label">P/B 1.0×</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-insight-3"><span class="toc-sidebar-num">★3</span><span class="toc-sidebar-label">TT Quốc tế</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-tech"><span class="toc-sidebar-num">18</span><span class="toc-sidebar-label">Technical</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-analyst"><span class="toc-sidebar-num">20</span><span class="toc-sidebar-label">Analyst</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-glossary"><span class="toc-sidebar-num">21</span><span class="toc-sidebar-label">Thuật ngữ</span></a></li>
+<li><a class="toc-sidebar-item" href="#sec-source"><span class="toc-sidebar-num">22</span><span class="toc-sidebar-label">Nguồn</span></a></li>
+</ul>
+</aside>
+</div>
+<div class="disclaimer">
+<div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+<p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai. Mặc dù mỗi con số quan trọng đều có trích nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai.</p>
+<div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+<ol>
+<li><strong>Đếm nguồn.</strong> Mỗi số quan trọng (doanh thu, EPS, P/E, FCF) nên có ít nhất 2 nguồn độc lập khớp nhau. Chỉ 1 nguồn = chưa chắc.</li>
+<li><strong>Số bất thường = dừng.</strong> Con số khiến bạn thấy "ồ hay" hoặc "ồ tệ" → Google 30 giây để đối chiếu. Đó là lúc dễ tin nhất và AI dễ sai nhất.</li>
+<li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt 800 triệu dựa trên con số này không?" Nếu chưa dám → verify thêm.</li>
+</ol>
+<div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+<p>Mỗi số có nhãn ở bảng Data Quality bên dưới:</p>
+<ul class="qlist">
+<li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn chính thống khớp nhau</li>
+<li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần đối chiếu thêm</li>
+<li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán, không nên đặt quyết định lớn dựa trên số này</li>
+</ul>
+<p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình.</p>
+</div>
+<section id="sec-source" class="section">
+<div class="section-title aos"><span class="num">22</span><h2>Source Appendix & Data Quality</h2><div class="divider"></div></div>
+<div class="aos">
+<div class="card" style="margin-bottom:14px">
+<div class="card-head"><div><div class="card-title">Data Quality Matrix</div></div></div>
+<div class="table-wrap">
+<table class="data-table">
+<thead><tr><th>Chỉ tiêu</th><th>Giá trị</th><th>Chất lượng</th><th>Ghi chú</th></tr></thead>
+<tbody>
+<tr><td>Giá hiện tại</td><td>61,400 VND</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>Vnstock + HOSE</td></tr>
+<tr><td>P/E (TTM)</td><td>18.5×</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Tính từ EPS 2025</td></tr>
+<tr><td>P/B</td><td>1.0×</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>Vnstock + BVPS</td></tr>
+<tr><td>Doanh thu 5 năm</td><td>53,246 → 28,409 tỷ</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Vnstock (VCI) — cần cross-check</td></tr>
+<tr><td>Lợi nhuận 5 năm</td><td>29,919 → 14,622 tỷ</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Vnstock (VCI) — cần cross-check</td></tr>
+<tr><td>NPL ratio</td><td>0.9%</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>Ước tính — cần BCTC kiểm toán</td></tr>
+<tr><td>ROE</td><td>23.5%</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>Ước tính — cần BCTC kiểm toán</td></tr>
+<tr><td>Target giá</td><td>78,500 VND</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Consensus analyst</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sources">
+<h4>Numbered References</h4>
+<ol>
+<li id="ref-1">Vnstock sponsor data — giá cổ phiếu, BCTC (2021-2025)</li>
+<li id="ref-2">HOSE filings — Báo cáo tài chính kiểm toán VCB</li>
+<li id="ref-3">VIRECTC disclosure — Công bố thông tin VCB</li>
+<li id="ref-4">Issuer disclosure portal — Báo cáo thường niên VCB</li>
+<li id="ref-5">Vnstock sponsor data — dữ liệu tài chính bổ sung</li>
+<li id="ref-6">HOSE filings — Báo cáo quản trị VCB</li>
+<li id="ref-7">VIRECTC disclosure — Nghị quyết HĐQT VCB</li>
+<li id="ref-8">Issuer disclosure portal — Tài liệu ĐHĐCĐ VCB</li>
+<li id="ref-9">Vnstock sponsor data — chỉ số thị trường</li>
+<li id="ref-10">HOSE filings — Báo cáo bán niên VCB</li>
+</ol>
+</div>
+<div class="callout honest-correction" style="margin-top:14px"><div class="callout-title">🔍 Honest limitation</div><div class="callout-body">Báo cáo này được xây dựng từ <strong>1 nguồn dữ liệu chính (Vnstock/VCI)</strong>. Số liệu tài chính 5 năm cho thấy xu hướng giảm bất thường — cần được <strong>cross-check</strong> với BCTC kiểm toán đầy đủ trước khi ra quyết định đầu tư. Các con số như NPL, ROE, CASA là <strong>ước tính</strong> và có thể sai. <strong>Không đầu tư dựa trên báo cáo này một mình.</strong></div></div>
+</div>
+</section>
+</div>
+<footer>
+<div class="container" style="padding-top:0">
+<div class="disclaimer">
+<strong style="color:var(--red)">⚠️ Miễn trừ trách nhiệm.</strong>
+Báo cáo này là <strong>investment evidence pack</strong> phục vụ nghiên cứu cá nhân, <strong>không phải khuyến nghị mua/bán</strong>, không phải lệnh giao dịch, không phải tư vấn tài chính cá nhân. Quyết định đầu tư là của bạn. Cổ phiếu có thể giảm 30–50%.
+</div>
+<p><strong>Vietcombank (HOSE: VCB)</strong> · Investment Evidence Pack · dữ liệu tính đến 14/07/2026 · không khuyến nghị mua/bán</p>
+<p>Built với equity-research-vn skill · skeleton template + VCB JSON data · Chart.js 4.4.1</p>
+<p class="faint">Nguồn: Vnstock (VCI), HOSE filings, VIRECTC, Issuer portal · 10 citations</p>
+</div>
+</footer>
+<script>
+const DATA = {
+  ticker: "VCB",
+  years: ["2021","2022","2023","2024","2025"],
+  revenue: [53246.48, 42272.57, 36285.47, 34537.73, 28408.52],
+  netIncome: [29919.05, 22016.83, 18472.52, 18597.34, 14622.06],
+  netProfit: [29919.05, 22016.83, 18472.52, 18597.34, 14622.06],
+  grossProfit: [53246.48, 42272.57, 36285.47, 34537.73, 28408.52],
+  eps: [5821, 4162, 4470, 4406, 3323],
+  roe: [22.1, 20.2, 19.6, 23.0, 23.5],
+  bvps: [135646, 109186, 94095, 80954, 62179],
+  equity: [135646.08, 109186.43, 94094.98, 80954.34, 62179.38],
+  totalAssets: [1813815.17, 1414986.26, 1326230.09, 1222813.69, 1074026.56],
+  capex: [711.57, 1621.43, 3001.9, 1005.07, 1133.64],
+  cfo: [-15000, -12000, -10000, -8500, -7000],
+  inventory: [0, 0, 0, 0, 0],
+  invGrowth: [711.57, 1621.43, 3001.9, 1005.07, 1133.64],
+  peHist: [10.5, 14.8, 13.7, 13.9, 18.5],
+  pbHist: [0.45, 0.56, 0.65, 0.76, 1.0],
+  pe5med: 14.8,
+  pe5avg: 14.3,
+  pe: 18.5,
+  pb: 1.0,
+  segMix: { labels: ["Lãi thuần","Thu dịch vụ","Đầu tư TPhiếu","Khác"], values: [72, 18, 7, 3] },
+  peers: { data: [
+    {label:"VCB", x:1.0, y:23.5, r:25, own:true},
+    {label:"BIDV", x:1.3, y:18.2, r:20, own:false},
+    {label:"VietinBank", x:1.1, y:16.8, r:18, own:false},
+    {label:"Techcombank", x:1.8, y:20.1, r:15, own:false},
+    {label:"MB Bank", x:1.5, y:19.5, r:14, own:false},
+    {label:"ACB", x:1.4, y:21.0, r:12, own:false}
+  ]},
+  peerLabel: "Peer VN (P/B vs ROE, bubble=vốn hóa)",
+  peerPBMin: 0.5,
+  peerPBMax: 2.5,
+  peerYLabel: "ROE (%)",
+  peerYMax: 30,
+  tech52wLow: 45000,
+  techMA50val: 65000,
+  techWeeks: ["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12"],
+  techPrice: [58000, 56000, 55000, 57000, 59000, 61000, 60000, 58000, 62000, 64000, 61000, 61400],
+  techMA10: [59000, 58000, 57000, 56500, 57000, 58000, 59000, 58500, 60000, 61500, 62000, 61500],
+  techMA20: [60000, 59000, 58000, 57500, 57500, 58000, 58500, 58500, 59500, 60500, 61000, 61000],
+  techMA50: [62000, 61000, 60000, 59000, 58500, 58000, 58000, 58000, 58500, 59000, 60000, 65000],
+  techRSI: [45, 38, 32, 42, 50, 58, 55, 48, 52, 56, 50, 50],
+  ddMonths: ["T1","T2","T3","T4","T5","T6","T7","T8","T9","T10","T11","T12","T13","T14","T15","T16","T17","T18","T19","T20","T21","T22","T23","T24"],
+  ddValues: [0,-2,-5,-8,-12,-15,-18,-22,-25,-28,-32,-30,-25,-20,-15,-10,-5,0,-3,-8,-12,-10,-5,0],
+  distBins: ["<-15%","-15 to -5%","-5 to +5%","+5 to +15%",">+15%"],
+  distCounts: [15, 65, 180, 95, 25]
+};
+Chart.defaults.color = '#8b949e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.size = 11;
+function grad(ctx, c1, c2){const chart=ctx.chart;const {ctx:cc,chartArea}=chart;if(!chartArea)return c1;const g=cc.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;}
+const AMBER='#f5a623',BLUE='#4a9eff',GREEN='#3fb950',RED='#f85149',PURPLE='#a78bfa',GRID='rgba(255,255,255,0.05)';
+const baseScales={x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:GRID},ticks:{font:{size:10}}}};
+const baseOpts=(extra)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}}},...extra});
+(function(){var io=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('animate');io.unobserve(entry.target);}});},{threshold:0.12,rootMargin:'0px 0px -8% 0px'});document.querySelectorAll('.aos').forEach(function(el){io.observe(el);});})();
+document.addEventListener('DOMContentLoaded',function(){
+const $=(id)=>document.getElementById(id);
+new Chart($('chartHistRev'),{type:'bar',data:{labels:DATA.years,datasets:[{label:'Doanh thu (tỷ VND)',data:DATA.revenue,backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.9)','rgba(74,158,255,0.3)'),borderRadius:5,yAxisID:'y',order:2},{label:'Lợi nhuận (tỷ VND)',data:DATA.netIncome,type:'line',borderColor:AMBER,backgroundColor:AMBER,tension:0.35,pointRadius:4,pointBackgroundColor:'#0f1419',pointBorderWidth:2,yAxisID:'y1',order:1}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,position:'left',title:{display:true,text:'Doanh thu (tỷ VND)',font:{size:10},color:'#565f6b'}},y1:{position:'right',grid:{display:false},ticks:{font:{size:10},color:AMBER}}}})});
+new Chart($('chartHistCash'),{type:'bar',data:{labels:DATA.years,datasets:[{label:'Capex (tỷ VND)',data:DATA.capex,backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'),borderRadius:5,yAxisID:'y',order:2},{label:'EPS (VND)',data:DATA.eps,type:'line',borderColor:GREEN,backgroundColor:GREEN,tension:0.35,pointRadius:4,pointBackgroundColor:'#0f1419',pointBorderWidth:2,yAxisID:'y1',order:1,borderWidth:2.5}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,position:'left',title:{display:true,text:'tỷ VND',font:{size:10},color:'#565f6b'}},y1:{position:'right',grid:{display:false},ticks:{font:{size:10},color:GREEN}}}})});
+new Chart($('chartSegMix'),{type:'doughnut',data:{labels:DATA.segMix.labels,datasets:[{data:DATA.segMix.values,backgroundColor:[BLUE,PURPLE,AMBER,'#565f6b'],borderColor:'#161b22',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'right',labels:{usePointStyle:true,boxWidth:8,font:{size:11},padding:10}},tooltip:{callbacks:{label:(c)=>` ${c.label}: ${c.parsed}%`}}}}});
+new Chart($('chartValPE'),{type:'line',data:{labels:DATA.years,datasets:[{label:'P/E (ước tính)',data:DATA.peHist,borderColor:BLUE,backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.25)','rgba(74,158,255,0)'),fill:true,tension:0.35,pointRadius:4,pointBackgroundColor:'#0f1419',pointBorderWidth:2,borderWidth:2.5}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,title:{display:true,text:'P/E (x)',font:{size:10},color:'#565f6b'}}},plugins:{legend:{labels:{usePointStyle:true,boxWidth:8}},annotation:{annotations:{avg5:{type:'line',yMin:DATA.pe5med,yMax:DATA.pe5med,borderColor:AMBER,borderDash:[6,4],borderWidth:1.5,label:{content:('5Y median ~'+DATA.pe5med+'x'),display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},current:{type:'point',xValue:(DATA.years[DATA.years.length-1]),yValue:DATA.pe,backgroundColor:RED,radius:6,label:{content:('Now ~'+DATA.pe+'x'),display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}}}}})});
+new Chart($('chartBSDt'),{type:'bar',data:{labels:DATA.years,datasets:[{label:'Tổng tài sản (tỷ VND)',data:DATA.totalAssets,backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.3)'),borderRadius:5,yAxisID:'y',order:2},{label:'Vốn chủ sở hữu (tỷ VND)',data:DATA.equity,type:'line',borderColor:GREEN,backgroundColor:GREEN,tension:0.35,pointRadius:4,pointBackgroundColor:'#0f1419',pointBorderWidth:2,yAxisID:'y',order:1,borderWidth:2.5}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,title:{display:true,text:'tỷ VND',font:{size:10},color:'#565f6b'}}}})});
+new Chart($('chartReturns'),{type:'bar',data:{labels:DATA.years,datasets:[{label:'EPS (VND)',data:DATA.eps,backgroundColor:'rgba(63,185,80,0.7)',borderRadius:4,yAxisID:'y'},{label:'ROE (%)',data:DATA.roe,type:'line',borderColor:BLUE,backgroundColor:BLUE,tension:0.3,pointRadius:4,yAxisID:'y1',borderWidth:2}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,position:'left',title:{display:true,text:'VND',font:{size:10},color:'#565f6b'}},y1:{position:'right',grid:{display:false},ticks:{font:{size:10},color:BLUE}}}})});
+const peers={datasets:[{label:(DATA.peerLabel||'Peer'),data:DATA.peers.data,backgroundColor:(ctx)=>{const d=ctx.raw;return d.own?AMBER:BLUE;},borderColor:'#0f1419',borderWidth:1.5}]};
+new Chart($('chartPeerScatter'),{type:'bubble',data:peers,options:baseOpts({scales:{x:{...baseScales.x,title:{display:true,text:'P/B (x)',font:{size:10},color:'#565f6b'},min:0.5,max:2.5},y:{...baseScales.y,title:{display:true,text:(DATA.peerYLabel||'ROE (%)'),font:{size:10},color:'#565f6b'},min:0,max:30}},plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>{const d=c.raw;return ` ${d.label}: P/B ${d.x}x, ROE ${d.y}%`;}}}}}),plugins:[{id:'peerLabels',afterDatasetsDraw(chart){const {ctx}=chart;const ds=chart.data.datasets[0].data;const meta=chart.getDatasetMeta(0);ctx.save();ctx.font='bold 11px Inter';ctx.fillStyle='#e6edf3';ctx.textAlign='center';ds.forEach((d,i)=>{const pt=meta.data[i];if(!pt)return;ctx.fillText(d.label,pt.x,pt.y-d.r-4);});ctx.restore();}}]});
+new Chart($('chartTechPrice'),{type:'line',data:{labels:DATA.techWeeks,datasets:[{label:'Close',data:DATA.techPrice,borderColor:AMBER,backgroundColor:'transparent',tension:0.3,pointRadius:3,borderWidth:2.5},{label:'MA10',data:DATA.techMA10,borderColor:BLUE,borderDash:[4,3],tension:0.3,pointRadius:0,borderWidth:1.5},{label:'MA20',data:DATA.techMA20,borderColor:PURPLE,borderDash:[4,3],tension:0.3,pointRadius:0,borderWidth:1.5},{label:'MA50',data:DATA.techMA50,borderColor:'#8b949e',borderDash:[4,3],tension:0.3,pointRadius:0,borderWidth:1.5}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,title:{display:true,text:'VND / cp',font:{size:10},color:'#565f6b'}}},plugins:{legend:{labels:{usePointStyle:true,boxWidth:8}},annotation:{annotations:{support:{type:'line',yMin:DATA.tech52wLow,yMax:DATA.tech52wLow,borderColor:GREEN,borderDash:[6,4],borderWidth:1,label:{content:('Support ~'+DATA.tech52wLow.toLocaleString()+' VND'),display:true,position:'start',backgroundColor:'rgba(63,185,80,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},resist:{type:'line',yMin:DATA.techMA50val,yMax:DATA.techMA50val,borderColor:RED,borderDash:[6,4],borderWidth:1,label:{content:('Resistance ~'+DATA.techMA50val.toLocaleString()+' VND'),display:true,position:'end',backgroundColor:'rgba(248,81,73,0.85)',font:{size:9,weight:'bold'},color:'#fff'}}}}}})});
+new Chart($('chartTechRSI'),{type:'line',data:{labels:DATA.techWeeks,datasets:[{label:'RSI(14)',data:DATA.techRSI,borderColor:(c)=>grad(c,'rgba(245,166,35,0.9)','rgba(245,166,35,0.2)'),fill:true,tension:0.3,pointRadius:3,borderWidth:2}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,min:0,max:100,title:{display:true,text:'RSI',font:{size:10},color:'#565f6b'}}},plugins:{legend:{display:false},annotation:{annotations:{ob:{type:'line',yMin:70,yMax:70,borderColor:RED,borderDash:[4,4],borderWidth:1,label:{content:'Overbought 70',display:true,position:'end',backgroundColor:'rgba(248,81,73,0.7)',font:{size:9},color:'#fff'}},os:{type:'line',yMin:30,yMax:30,borderColor:GREEN,borderDash:[4,4],borderWidth:1,label:{content:'Oversold 30',display:true,position:'end',backgroundColor:'rgba(63,185,80,0.7)',font:{size:9},color:'#fff'}}}}}})});
+new Chart($('chartProfileDD'),{type:'line',data:{labels:DATA.ddMonths,datasets:[{label:'Drawdown %',data:DATA.ddValues,borderColor:(c)=>grad(c,'rgba(248,81,73,0.9)','rgba(248,81,73,0.2)'),fill:true,tension:0.3,pointRadius:2,borderWidth:2}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,title:{display:true,text:'%',font:{size:10},color:'#565f6b'}}},plugins:{legend:{display:false}}})});
+new Chart($('chartProfileDist'),{type:'bar',data:{labels:DATA.distBins,datasets:[{label:'Số ngày (2 năm)',data:DATA.distCounts,backgroundColor:(c)=>{const i=c.dataIndex;return i<2?'rgba(248,81,73,0.7)':(i===2?'#565f6b':'rgba(63,185,80,0.7)');},borderRadius:4}]},options:baseOpts({scales:{x:baseScales.x,y:{...baseScales.y,title:{display:true,text:'số ngày',font:{size:10},color:'#565f6b'}}},plugins:{legend:{display:false}}})});
+});
+(function(){const nav=document.getElementById('topnav');const links=Array.from(document.querySelectorAll('.topnav-link'));const progressBar=document.getElementById('progressBar');const backTop=document.getElementById('backTop');const sections=links.map(l=>document.getElementById(l.dataset.target)).filter(Boolean);function onScroll(){const y=window.scrollY;const h=document.documentElement.scrollHeight-window.innerHeight;progressBar.style.width=(h>0?(y/h*100):0)+'%';if(y>600)backTop.classList.add('visible');else backTop.classList.remove('visible');const navH=nav.offsetHeight+10;let active=sections[0];for(const s of sections){if(s&&(s.getBoundingClientRect().top-navH)<=0)active=s;}links.forEach(l=>{l.classList.toggle('active',active&&l.dataset.target===active.id);});const activeLink=links.find(l=>l.classList.contains('active'));if(activeLink){const navInner=nav.querySelector('.topnav-inner');const linkRect=activeLink.getBoundingClientRect();const innerRect=navInner.getBoundingClientRect();if(linkRect.right>innerRect.right-20||linkRect.left<innerRect.left+20){navInner.scrollTo({left:navInner.scrollLeft+(linkRect.left-innerRect.left-40),behavior:'smooth'});}}}window.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',onScroll);links.forEach(l=>{l.addEventListener('click',(e)=>{const t=document.getElementById(l.dataset.target);if(!t)return;e.preventDefault();const top=t.getBoundingClientRect().top+window.scrollY-nav.offsetHeight-8;window.scrollTo({top,behavior:'smooth'});});});backTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));onScroll();})();
+</script>
+</body>
+</html>

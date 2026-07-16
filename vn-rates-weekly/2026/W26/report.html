@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VN Rates Weekly · Thị trường Lãi suất & Tiền tệ</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#0a0a14; --bg-1:#10101f; --card:rgba(28,28,48,0.55); --card-solid:#1a1a2e;
+  --border:rgba(139,92,246,0.18); --border-hot:rgba(236,72,153,0.35);
+  --text:#f0f0ff; --text-dim:#8b8ba7; --text-faint:#5a5a72;
+  --purple:#a855f7; --pink:#ec4899; --cyan:#06b6d4;
+  --green:#10d98a; --red:#ff4d6d; --amber:#fbbf24;
+  --grad-main:linear-gradient(135deg,#a855f7 0%,#ec4899 100%);
+  --radius-card:18px; --radius-pill:999px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg-0);color:var(--text);font-family:'Inter',-apple-system,sans-serif;line-height:1.5;min-height:100vh}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)}
+.container{max-width:1280px;margin:0 auto;padding:32px 24px 80px}
+
+/* HERO */
+.hero{background:var(--grad-main);padding:0;border-radius:var(--radius-card);overflow:hidden;margin-bottom:24px;position:relative}
+.hero-inner{background:rgba(10,10,20,0.78);padding:32px 36px;backdrop-filter:blur(8px)}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-main);color:#fff;padding:6px 14px;border-radius:var(--radius-pill);font-size:12px;font-weight:700;letter-spacing:0.04em}
+.update-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,0.2);color:var(--purple);border:1px solid rgba(168,85,247,0.3);padding:6px 12px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;margin-left:8px}
+.report-title{font-size:34px;font-weight:800;margin-top:14px;letter-spacing:-0.5px;background:var(--grad-main);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.report-sub{color:var(--text-dim);margin-top:6px;font-size:13px}
+.verdict-block{text-align:right;min-width:260px}
+.verdict-badge{display:inline-block;padding:10px 22px;border-radius:var(--radius-pill);font-weight:800;font-size:15px;background:var(--red);color:#0a0a14;letter-spacing:0.02em}
+.verdict-reason{margin-top:10px;color:var(--text-dim);font-size:13px;line-height:1.5;max-width:340px}
+
+/* STANCE GAUGE */
+.stance-gauge{display:flex;align-items:center;gap:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 24px;margin-top:20px}
+.stance-gauge .gauge-track{flex:1;height:12px;border-radius:var(--radius-pill);background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);position:relative}
+.stance-gauge .gauge-needle{position:absolute;top:-6px;width:4px;height:24px;background:var(--text);border-radius:2px;transform:translateX(-50%);box-shadow:0 0 10px rgba(255,255,255,0.6);transition:left 0.4s}
+.stance-gauge .gauge-label{font-size:11px;text-transform:uppercase;letter-spacing:0.06em;min-width:80px;font-weight:700}
+.stance-gauge .gauge-label.left{text-align:right;color:var(--red)}
+.stance-gauge .gauge-label.right{color:var(--green)}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.kpi-label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+.flag-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.flag-red{background:var(--red)} .flag-green{background:var(--green)} .flag-amber{background:var(--amber)}
+.kpi-value{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;margin-top:8px;font-variant-numeric:tabular-nums}
+.kpi-value .unit{font-size:14px;color:var(--text-dim);font-weight:500;margin-left:2px}
+.kpi-delta{font-size:11px;margin-top:6px;color:var(--text-faint)}
+
+/* NAV */
+.nav-tabs{position:sticky;top:0;z-index:50;display:flex;gap:6px;background:rgba(10,10,20,0.9);backdrop-filter:blur(12px);padding:12px 0;border-radius:12px;margin:24px 0;border:1px solid var(--border)}
+.nav-tab{background:transparent;border:1px solid transparent;color:var(--text-dim);padding:9px 16px;border-radius:var(--radius-pill);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.nav-tab:hover{color:var(--text);border-color:var(--border)}
+.nav-tab.active{background:var(--grad-main);color:#fff;border-color:transparent}
+
+/* GROUP SECTION */
+.group-section{display:none;animation:fadeIn 0.3s}
+.group-section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.group-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.group-header .tag{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff}
+.tag.g1{background:var(--purple)} .tag.g2{background:var(--pink)} .tag.g3{background:var(--cyan)} .tag.g5{background:var(--grad-main)}
+.group-header h2{font-size:20px;font-weight:700}
+.group-header .src{font-size:11px;color:var(--text-faint);margin-left:auto}
+
+/* CHART CARD */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-card);padding:22px;margin-bottom:18px}
+.chart-card h3{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.chart-card .chart-sub{font-size:12px;color:var(--text-faint);margin-bottom:14px}
+.chart-canvas-wrap{position:relative;height:240px}
+.chart-canvas-wrap.tall{height:300px}
+
+/* DATA CARD */
+.data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:18px}
+.data-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:transform 0.2s,border-color 0.2s}
+.data-card:hover{transform:translateY(-2px);border-color:var(--border-hot)}
+.data-card.signal-red{border-left:3px solid var(--red)}
+.data-card.signal-green{border-left:3px solid var(--green)}
+.data-card.signal-amber{border-left:3px solid var(--amber)}
+.dc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.dc-name{font-size:14px;font-weight:600;color:var(--text)}
+.dc-flag{font-size:16px}
+.dc-value{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.dc-unit{font-size:12px;color:var(--text-dim);margin-left:4px}
+.dc-meta{display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--text-faint)}
+.dc-meta strong{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.wow-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0;padding:10px 8px;background:rgba(168,85,247,0.06);border-radius:10px}
+.wow-cell{text-align:center;padding:4px 2px}
+.wow-cell .wow-week{font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.05em}
+.wow-cell .wow-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;display:block;margin-top:3px}
+.wow-cell.latest .wow-val{color:var(--purple)}
+.wow-cell.latest .wow-week{color:var(--purple)}
+.streak-badge{grid-column:1/-1;text-align:center;font-size:10px;padding:4px;font-weight:600;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em}
+.streak-badge.up{color:var(--red);background:rgba(255,77,109,0.12)}
+.streak-badge.down{color:var(--green);background:rgba(16,217,138,0.12)}
+.dc-narrative{font-size:12px;color:var(--text-dim);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.dc-source{font-size:10px;color:var(--text-faint);margin-top:8px;font-style:italic}
+
+/* YIELD TABLE */
+.yield-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.yield-table th,.yield-table td{text-align:right;padding:10px 12px;border-bottom:1px solid var(--border)}
+.yield-table th{color:var(--text-faint);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.04em}
+.yield-table td:first-child,.yield-table th:first-child{text-align:left;color:var(--text-dim)}
+.yield-table .num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.yield-table .latest{color:var(--purple);font-weight:700}
+.yield-table tr:hover td{background:rgba(168,85,247,0.04)}
+
+/* RC GRID + TAKEAWAYS */
+.rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+.rc-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.rc-title{font-size:13px;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.04em}
+.rc-box.risks .rc-title{color:var(--red)}
+.rc-box.catalysts .rc-title{color:var(--green)}
+.rc-item{font-size:13px;color:var(--text-dim);padding:8px 0;border-bottom:1px solid rgba(139,92,246,0.08);line-height:1.5}
+.rc-item:last-child{border-bottom:none}
+.rc-level{display:inline-block;padding:2px 8px;border-radius:var(--radius-pill);font-size:10px;font-weight:700;margin-right:8px;text-transform:uppercase}
+.rc-level.high{background:rgba(255,77,109,0.15);color:var(--red)}
+.rc-level.medium{background:rgba(251,191,36,0.15);color:var(--amber)}
+
+.takeaways{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin:18px 0}
+.takeaways h3{font-size:15px;font-weight:700;margin-bottom:14px}
+.takeaways ol{list-style:none;counter-reset:tk}
+.takeaways li{counter-increment:tk;padding:10px 0 10px 40px;position:relative;font-size:13px;color:var(--text-dim);line-height:1.6;border-bottom:1px solid rgba(139,92,246,0.08)}
+.takeaways li:last-child{border-bottom:none}
+.takeaways li::before{content:counter(tk);position:absolute;left:0;top:8px;width:28px;height:28px;border-radius:50%;background:var(--grad-main);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:'JetBrains Mono',monospace}
+.takeaways li:first-child::before{background:var(--amber);color:#0a0a14}
+
+.disclaimer{margin-top:32px;padding:16px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:12px;font-size:11px;color:var(--text-faint);line-height:1.6}
+
+@media(max-width:768px){
+  .kpi-strip{grid-template-columns:repeat(2,1fr)}
+  .rc-grid{grid-template-columns:1fr}
+  .report-title{font-size:26px}
+  .hero-top{flex-direction:column}
+  .verdict-block{text-align:left}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-top">
+        <div>
+          <div>
+            <span class="ticker-badge">📊 VN RATES WEEKLY</span>
+            <span class="update-badge">✦ Tuần 26/2026</span>
+          </div>
+          <div class="report-title">Thị trường Lãi suất & Tiền tệ</div>
+          <div class="report-sub">Kỳ báo cáo: 2026-W26 · Chốt dữ liệu: 26/06/2026 · 3 nguồn: SBV · VBMA · VNBA</div>
+        </div>
+        <div class="verdict-block">
+          <div class="verdict-badge">⚖️ THẮN CHẶT</div>
+          <div class="verdict-reason">LNH ON giảm mạnh 4 tuần nhưng LSTP 10Y tăng 3 tuần liên tiếp — giá tiền dài hạn đắt lên trong khi ngắn hạn đang rẻ lại.</div>
+        </div>
+      </div>
+      <div class="stance-gauge">
+        <span class="gauge-label left">HAWKISH</span>
+        <div class="gauge-track">
+          <div class="gauge-needle" id="stanceNeedle" style="left: 25%;"></div>
+        </div>
+        <span class="gauge-label right">DOVISH</span>
+      </div>
+      <div class="kpi-strip">
+        <div class="kpi">
+          <div class="kpi-label"><span class="flag-dot flag-red"></span>LSTP 10 năm</div>
+          <div class="kpi-value mono neg">4.40<span class="unit">%</span></div>
+          <div class="kpi-delta">▲ +3 tuần tăng · +7bp / 4 tuần</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><span class="flag-dot flag-green"></span>LNH Overnight</div>
+          <div class="kpi-value mono pos">4.26<span class="unit">%</span></div>
+          <div class="kpi-delta">▼ -37% / 4 tuần · hồi nhẹ W26</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><span class="flag-dot flag-amber"></span>Tỷ giá TM USD/VND</div>
+          <div class="kpi-value mono">26.284</div>
+          <div class="kpi-delta">±0.1% vs trung tâm · ổn định</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><span class="flag-dot flag-amber"></span>DXY / US 10Y</div>
+          <div class="kpi-value mono">101.4 <span class="unit">/</span> 4.37%</div>
+          <div class="kpi-delta">Fed hawkish nhẹ · US 10Y -7bp</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav-tabs">
+    <button class="nav-tab active" data-target="group1">💰 Tiền tệ</button>
+    <button class="nav-tab" data-target="group2">📜 Trái phiếu</button>
+    <button class="nav-tab" data-target="group3">🌍 Ngoại hối & TG</button>
+    <button class="nav-tab" data-target="group5">📊 Tổng hợp</button>
+  </nav>
+
+  <section class="group-section active" id="group1">
+    <div class="group-header">
+      <span class="tag g1">01</span>
+      <h2>Thị trường Tiền tệ — Liên ngân hàng & OMO</h2>
+      <span class="src">Nguồn: SBV</span>
+    </div>
+    <div class="chart-card">
+      <h3>📉 Lãi suất Liên ngân hàng 4 tuần (VND)</h3>
+      <div class="chart-sub">ON · 1 tuần · 1 tháng — WoN comparison</div>
+      <div class="chart-canvas-wrap tall"><canvas id="chartInterbank"></canvas></div>
+    </div>
+    <div class="data-grid" id="moneyCards"></div>
+  </section>
+
+  <section class="group-section" id="group2">
+    <div class="group-header">
+      <span class="tag g2">02</span>
+      <h2>Thị trường Trái phiếu — LSTP & Đường cong lợi suất</h2>
+      <span class="src">Nguồn: VBMA</span>
+    </div>
+    <div class="chart-card">
+      <h3>📈 Lợi suất TPCP 4 tuần (2Y · 5Y · 10Y)</h3>
+      <div class="chart-sub">Curve dịch lên đều — tăng +5-7bp toàn kỳ hạn</div>
+      <div class="chart-canvas-wrap tall"><canvas id="chartYields"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>🏖️ Đường cong lợi suất TPCP — W26 vs W23</h3>
+      <div class="chart-sub">So sánh curve đầu kỳ vs cuối kỳ 4 tuần</div>
+      <div class="chart-canvas-wrap"><canvas id="chartCurve"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>📋 Bảng LSTP theo kỳ hạn (theo VBMA)</h3>
+      <table class="yield-table">
+        <thead><tr><th>Kỳ hạn</th><th>W23 (05/6)</th><th>W24 (12/6)</th><th>W25 (19/6)</th><th>W26 (26/6)</th><th>WoW (bp)</th><th>4w (bp)</th></tr></thead>
+        <tbody id="yieldTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="group-section" id="group3">
+    <div class="group-header">
+      <span class="tag g3">03</span>
+      <h2>Ngoại hối & Bối cảnh Toàn cầu</h2>
+      <span class="src">Nguồn: SBV + VNBA</span>
+    </div>
+    <div class="chart-card">
+      <h3>💱 Tỷ giá TM USD/VND 4 tuần (mid)</h3>
+      <div class="chart-sub">Biến động ±0.08% — ổn định trong range hẹp</div>
+      <div class="chart-canvas-wrap"><canvas id="chartFx"></canvas></div>
+    </div>
+    <div class="data-grid" id="fxCards"></div>
+  </section>
+
+  <section class="group-section" id="group5">
+    <div class="group-header">
+      <span class="tag g5">📊</span>
+      <h2>Tổng hợp — Stance · Rủi ro · Động lực</h2>
+    </div>
+    <div class="rc-grid">
+      <div class="rc-box risks">
+        <div class="rc-title">⚠️ Rủi ro (hawkish)</div>
+        <div class="rc-item"><span class="rc-level high">Cao</span>LSTP 10Y +7bp / 4 tuần — giá tiền dài hạn đắt lên, áp lực chi phí vốn DN</div>
+        <div class="rc-item"><span class="rc-level medium">TB</span>DXY 101.4 + US 10Y 4.37% (Fed hawkish nhẹ) → áp lực tỷ giá VND</div>
+        <div class="rc-item"><span class="rc-level medium">TB</span>LNH ON hồi nhẹ W26 (+9% WoW) — có thể đảo chiều xu hướng giảm</div>
+      </div>
+      <div class="rc-box catalysts">
+        <div class="rc-title">🚀 Động lực (dovish)</div>
+        <div class="rc-item"><span class="rc-level high">Cao</span>LNH ON -37% / 4 tuần (6.81% → 4.26%) — NHNN bơm tiền dồi dào</div>
+        <div class="rc-item"><span class="rc-level medium">TB</span>Tỷ giá TM sát trung tâm (±0.1%) — NHNN kiểm soát tốt</div>
+        <div class="rc-item"><span class="rc-level medium">TB</span>Slope 10Y-2Y = 92bp — curve bình thường, không inversion</div>
+      </div>
+    </div>
+    <div class="takeaways">
+      <h3>⭐ Điểm chính tuần 26/2026</h3>
+      <ol>
+        <li><strong>⭐ Stance: THẮN CHẶT.</strong> LNH ON giảm mạnh 4 tuần (dovish) nhưng LSTP 10Y tăng 3 tuần liên tiếp (hawkish) — hai đầu câu chuyện tiền tệ đi ngược chiều nhau.</li>
+        <li><strong>Curve dốc lên:</strong> LSTP 10Y-2Y = 92bp (4.40% - 3.48%) — thị trường định giá kỳ vọng tăng dài hạn trong khi ngắn hạn vẫn rẻ.</li>
+        <li><strong>LNH ON hồi nhẹ W26</strong> (+9% WoW sau 3 tuần giảm) — theo dõi xem có đảo chiều xu hướng dovish hay không.</li>
+        <li><strong>Tỷ giá ổn định</strong> (±0.08% / 4 tuần) — NHNN kiểm soát tốt, không áp lực ngoại hạng.</li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    ⚠️ <strong>Miễn trừ trách nhiệm:</strong> Báo cáo lãi suất & tiền tệ tham khảo cá nhân. Số liệu từ 3 nguồn chính thức (SBV, VBMA, VNBA). Áp nguyên tắc Nhất quán thời gian (chốt dữ liệu 26/06/2026). <strong>Không phải lời khuyên đầu tư</strong>.
+  </div>
+</div>
+
+<script>
+
+const REPORT = {
+  week_labels: ['W23', 'W24', 'W25', 'W26'],
+  date_labels: ['05/6', '12/6', '19/6', '26/6'],
+  interbank_on: [6.81, 5.58, 3.90, 4.26],
+  interbank_1w: [6.59, 5.68, 5.14, 7.34],
+  interbank_1m: [7.01, 7.37, 7.93, 7.32],
+  gov_2y: [3.42, 3.45, 3.46, 3.48],
+  gov_5y: [4.13, 4.14, 4.17, 4.19],
+  gov_10y: [4.33, 4.34, 4.37, 4.40],
+  fx_mid: [26264, 26267, 26280, 26284],
+  us_10y: 4.37,
+  dxy: 101.357,
+};
+
+Chart.defaults.color = '#8b8ba7';
+Chart.defaults.borderColor = 'rgba(139,92,246,0.1)';
+Chart.defaults.font.family = "'Inter', sans-serif";
+const gridStyle = { color: 'rgba(139,92,246,0.06)' };
+const legendStyle = { labels: { usePointStyle: true, boxWidth: 8, padding: 16, font: { size: 11 } } };
+
+// Lazy chart registry — render khi tab chứa chart được active lần đầu
+const chartConfigs = {
+  chartInterbank: { type: 'line', data: { labels: REPORT.date_labels, datasets: [
+    { label: 'ON', data: REPORT.interbank_on, borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,0.1)', tension: 0.3, fill: true, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#a855f7' },
+    { label: '1 tuần', data: REPORT.interbank_1w, borderColor: '#ec4899', tension: 0.3, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#ec4899' },
+    { label: '1 tháng', data: REPORT.interbank_1m, borderColor: '#06b6d4', tension: 0.3, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#06b6d4' },
+  ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendStyle, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}%` } } }, scales: { y: { grid: gridStyle, ticks: { callback: v => v + '%' } } } } },
+  chartYields: { type: 'line', data: { labels: REPORT.date_labels, datasets: [
+    { label: '2 năm', data: REPORT.gov_2y, borderColor: '#10d98a', tension: 0.3, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#10d98a' },
+    { label: '5 năm', data: REPORT.gov_5y, borderColor: '#fbbf24', tension: 0.3, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#fbbf24' },
+    { label: '10 năm', data: REPORT.gov_10y, borderColor: '#ff4d6d', tension: 0.3, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#ff4d6d' },
+  ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendStyle, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}%` } } }, scales: { y: { grid: gridStyle, ticks: { callback: v => v + '%' }, min: 3.0, max: 4.8 } } } },
+  chartCurve: { type: 'line', data: { labels: ['2 năm', '5 năm', '10 năm'], datasets: [
+    { label: 'W23 (05/6)', data: [REPORT.gov_2y[0], REPORT.gov_5y[0], REPORT.gov_10y[0]], borderColor: '#8b8ba7', borderDash: [6,4], tension: 0.3, borderWidth: 2, pointRadius: 5, pointBackgroundColor: '#8b8ba7' },
+    { label: 'W26 (26/6)', data: [REPORT.gov_2y[3], REPORT.gov_5y[3], REPORT.gov_10y[3]], borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,0.12)', tension: 0.3, fill: true, borderWidth: 2.5, pointRadius: 6, pointBackgroundColor: '#a855f7' },
+  ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendStyle }, scales: { y: { grid: gridStyle, ticks: { callback: v => v + '%' }, min: 3.0, max: 4.8 } } } },
+  chartFx: { type: 'line', data: { labels: REPORT.date_labels, datasets: [
+    { label: 'Tỷ giá TM (mid)', data: REPORT.fx_mid, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.1)', tension: 0.3, fill: true, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#06b6d4' }
+  ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendStyle, tooltip: { callbacks: { label: c => c.parsed.y.toLocaleString('vi-VN') + ' VND' } } }, scales: { y: { grid: gridStyle, ticks: { callback: v => v.toLocaleString('vi-VN') } } } } },
+};
+
+const chartsRendered = {};
+function renderChart(id) {
+  if (chartsRendered[id]) return;
+  const el = document.getElementById(id);
+  if (!el || el.clientWidth === 0) return;
+  new Chart(el, chartConfigs[id]);
+  chartsRendered[id] = true;
+}
+
+// Tab switching + lazy render
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.group-section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    const target = document.getElementById(tab.dataset.target);
+    if (target) {
+      target.classList.add('active');
+      // Render charts trong tab này sau khi display:block
+      setTimeout(() => {
+        target.querySelectorAll('canvas').forEach(c => renderChart(c.id));
+      }, 50);
+    }
+  });
+});
+
+// Render chart tab active ban đầu (group1)
+renderChart('chartInterbank');
+
+function renderWowStrip(values) {
+  return values.map((v, i) => `<div class="wow-cell ${i === values.length - 1 ? 'latest' : ''}"><div class="wow-week">${REPORT.week_labels[i]}</div><div class="wow-val">${v}</div></div>`).join('');
+}
+function renderCard(name, flag, signal, values, unit, wowStr, streakText, streakCls, narrative, source) {
+  const latest = values[values.length - 1];
+  const wowCls = signal === 'green' ? 'pos' : signal === 'red' ? 'neg' : 'neu';
+  return `<div class="data-card signal-${signal}">
+    <div class="dc-head"><span class="dc-name">${name}</span><span class="dc-flag">${flag}</span></div>
+    <div class="dc-value mono">${latest}<span class="dc-unit">${unit}</span></div>
+    <div class="dc-meta"><span>WoW <strong class="${wowCls}">${wowStr}</strong></span></div>
+    <div class="wow-strip">${renderWowStrip(values)}<div class="streak-badge ${streakCls}">${streakText}</div></div>
+    <div class="dc-narrative">${narrative}</div>
+    <div class="dc-source">${source}</div></div>`;
+}
+
+document.getElementById('moneyCards').innerHTML =
+  renderCard('LNH Overnight (VND)', '🟢', 'green', REPORT.interbank_on, '%/năm', '-18.1%', '▼ Hồi nhẹ W26 sau 2 tuần giảm', 'down', 'LNH ON giảm mạnh từ 6.81% (W23) xuống 3.90% (W25) rồi hồi nhẹ 4.26% (W26). NHNN bơm tiền dồi dào.', 'SBV — Diễn biến TT ngoại tệ & LNH tuần') +
+  renderCard('LNH 1 tuần (VND)', '🔴', 'red', REPORT.interbank_1w, '%/năm', '+42.8%', '▲ Tăng vọt W26 (+2.20pp)', 'up', 'LNH 1W tăng vọt từ 5.14% lên 7.34% tuần cuối — thanh khoản 1 tuần căng hơn dù ON giảm.', 'SBV — Diễn biến TT ngoại tệ & LNH tuần') +
+  renderCard('LNH 1 tháng (VND)', '⚪', 'amber', REPORT.interbank_1m, '%/năm', '-7.7%', '▼ Giảm nhẹ W26', 'down', 'LNH 1M dao động 7.01-7.93%, đóng W26 ở 7.32% — trung bình 4 tuần ổn định.', 'SBV — Diễn biến TT ngoại tệ & LNH tuần');
+
+document.getElementById('fxCards').innerHTML =
+  renderCard('Tỷ giá TM USD/VND (mid)', '🟡', 'amber', REPORT.fx_mid, ' VND', '+0.02%', '▲ Tăng chậm +20đ / 4 tuần', 'up', 'Tỷ giá TM tăng chậm đều 26.264 → 26.284, dao động trong range hẹp ±0.08% — NHNN kiểm soát tốt.', 'SBV') +
+  `<div class="data-card signal-amber"><div class="dc-head"><span class="dc-name">US 10Y yield</span><span class="dc-flag">🟡</span></div><div class="dc-value mono">${REPORT.us_10y}<span class="dc-unit">%</span></div><div class="dc-meta"><span>W26 · giảm 7bp tuần</span></div><div class="dc-narrative">US 10Y đóng cửa 4.37% — giảm nhẹ sau báo cáo PCE lõi Mỹ đúng dự báo.</div><div class="dc-source">VNBA tuần 4 tháng 6/2026</div></div>` +
+  `<div class="data-card signal-amber"><div class="dc-head"><span class="dc-name">DXY (chỉ số USD)</span><span class="dc-flag">🟡</span></div><div class="dc-value mono">${REPORT.dxy}<span class="dc-unit">điểm</span></div><div class="dc-meta"><span>W26 · giảm nhẹ -0.5%</span></div><div class="dc-narrative">DXY 101.4 — USD suy yếu nhẹ sau dữ liệu PCE, giảm áp lực tỷ giá VND.</div><div class="dc-source">VNBA tuần 4 tháng 6/2026</div></div>`;
+
+function bpChange(curr, prev) {
+  const bp = (curr - prev) * 100;
+  const sign = bp >= 0 ? '+' : '';
+  const cls = bp >= 0 ? 'neg' : 'pos';
+  return `<span class="${cls}">${sign}${bp.toFixed(0)}</span>`;
+}
+document.getElementById('yieldTableBody').innerHTML = [
+  ['2 năm', REPORT.gov_2y], ['5 năm', REPORT.gov_5y], ['10 năm', REPORT.gov_10y],
+].map(([label, vals]) => `<tr><td>${label}</td><td class="num">${vals[0].toFixed(2)}%</td><td class="num">${vals[1].toFixed(2)}%</td><td class="num">${vals[2].toFixed(2)}%</td><td class="num latest">${vals[3].toFixed(2)}%</td><td class="num">${bpChange(vals[3], vals[2])}</td><td class="num">${bpChange(vals[3], vals[0])}</td></tr>`).join('');
+</script>
+</body>
+</html>

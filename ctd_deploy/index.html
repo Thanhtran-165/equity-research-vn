@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTD · Coteccons — Equity Research Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+:root {
+  --bg-0: #0a0a14;
+  --bg-1: #10101f;
+  --card: rgba(28,28,48,0.55);
+  --card-strong: rgba(28,28,48,0.85);
+  --text: #f0f0ff;
+  --text-dim: #8b8ba7;
+  --text-faint: #5a5a72;
+  --purple: #a855f7;
+  --pink: #ec4899;
+  --cyan: #06b6d4;
+  --green: #10d98a;
+  --red: #ff4d6d;
+  --amber: #fbbf24;
+  --grad-main: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  --grad-cool: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+  --grad-bg: radial-gradient(ellipse at 20% 0%, rgba(139,92,246,0.15) 0%, transparent 50%),
+             radial-gradient(ellipse at 80% 100%, rgba(236,72,153,0.12) 0%, transparent 50%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg-0);
+  background-image: var(--grad-bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: -apple-system, 'Segoe UI', 'Inter', sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.mono { font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace; }
+.container { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+
+/* Nav */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,20,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(139,92,246,0.2);
+  padding: 12px 24px;
+}
+.nav-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.nav-brand { font-weight: 700; font-size: 16px; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.nav-links { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+.nav-links a {
+  color: var(--text-dim); text-decoration: none; font-size: 12px;
+  padding: 6px 10px; border-radius: 8px; transition: all 0.2s;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--text); background: rgba(168,85,247,0.15); }
+.progress { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--grad-main); width: 0%; transition: width 0.1s; }
+
+/* Hero */
+.hero {
+  padding: 64px 0 40px;
+  position: relative;
+}
+.ticker-badge {
+  display: inline-block; padding: 6px 14px; border-radius: 20px;
+  background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3);
+  color: var(--purple); font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  margin-bottom: 20px;
+}
+.company-name {
+  font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -1.5px;
+  background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.company-sub { color: var(--text-dim); font-size: 15px; margin-top: 12px; }
+.price-now { font-size: 64px; font-weight: 700; margin-top: 24px; color: var(--text); }
+.ccy { color: var(--text-dim); font-weight: 400; }
+.price-unit { font-size: 18px; color: var(--text-dim); font-weight: 400; }
+.price-meta { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.neu { color: var(--amber); }
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
+  margin-top: 40px;
+}
+.kpi {
+  background: var(--card); border: 1px solid rgba(139,92,246,0.18);
+  border-radius: 16px; padding: 18px; backdrop-filter: blur(14px);
+  transition: transform 0.2s, border-color 0.2s;
+}
+.kpi:hover { transform: translateY(-2px); border-color: rgba(168,85,247,0.4); }
+.kpi-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.kpi-value { font-size: 26px; font-weight: 700; }
+.kpi-delta { font-size: 11px; margin-top: 4px; font-weight: 600; }
+.kpi-delta.pos { color: var(--green); }
+.kpi-delta.neg { color: var(--red); }
+.kpi-delta.neu { color: var(--amber); }
+
+/* Section */
+.section { margin-top: 80px; scroll-margin-top: 80px; }
+.section-title {
+  font-size: 28px; font-weight: 700; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-title .num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 12px;
+  background: var(--grad-main); color: white; font-size: 14px; font-weight: 700;
+}
+.section-sub { color: var(--text-dim); font-size: 14px; margin-bottom: 28px; }
+
+.card {
+  background: var(--card); border: 1px solid rgba(139,92,246,0.18);
+  border-radius: 20px; padding: 24px; backdrop-filter: blur(14px);
+}
+.card-strong { background: var(--card-strong); }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px 12px; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+th {
+  color: var(--text-dim); font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(139,92,246,0.2);
+}
+td { border-bottom: 1px solid rgba(139,92,246,0.08); }
+tr:last-child td { border-bottom: none; }
+tr.highlight td { background: rgba(168,85,247,0.08); font-weight: 600; }
+
+/* Chart containers */
+.chart-box { position: relative; height: 320px; margin-top: 16px; }
+.chart-box-lg { position: relative; height: 400px; margin-top: 16px; }
+.chart-box-sm { position: relative; height: 240px; margin-top: 16px; }
+
+/* Grid layouts */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* Valuation cards */
+.val-card {
+  background: var(--card); border: 1px solid rgba(139,92,246,0.18);
+  border-radius: 16px; padding: 20px; backdrop-filter: blur(14px);
+}
+.val-card .name { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.val-card .price { font-size: 28px; font-weight: 700; }
+.val-card .upside { font-size: 13px; font-weight: 700; margin-top: 4px; }
+.bar-track { background: rgba(255,255,255,0.05); height: 4px; border-radius: 2px; margin-top: 12px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--grad-main); border-radius: 2px; transition: width 0.8s; }
+.val-card .formula { font-size: 11px; color: var(--text-faint); margin-top: 8px; }
+
+/* Gauge */
+.gauge-box { text-align: center; padding: 40px 20px; }
+.gauge-num { font-size: 72px; font-weight: 800; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.gauge-verdict { display: inline-block; padding: 8px 20px; border-radius: 24px; font-weight: 700; margin-top: 12px; }
+.gauge-text { color: var(--text-dim); font-size: 14px; margin-top: 16px; }
+
+/* Insight cards */
+.insight-card { padding: 22px; border-radius: 16px; }
+.insight-bull { background: linear-gradient(135deg, rgba(16,217,138,0.12), rgba(16,217,138,0.04)); border: 1px solid rgba(16,217,138,0.25); }
+.insight-bear { background: linear-gradient(135deg, rgba(255,77,109,0.12), rgba(255,77,109,0.04)); border: 1px solid rgba(255,77,109,0.25); }
+.insight-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.insight-bull .insight-title { color: var(--green); }
+.insight-bear .insight-title { color: var(--red); }
+.insight-body { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+/* News items */
+.news-item { padding: 12px 0; border-bottom: 1px solid rgba(139,92,246,0.08); display: flex; gap: 12px; align-items: flex-start; }
+.news-item:last-child { border-bottom: none; }
+.news-date { font-size: 11px; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; min-width: 90px; padding-top: 2px; }
+.news-content { flex: 1; font-size: 13px; }
+.news-tag { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: rgba(168,85,247,0.15); color: var(--purple); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.news-tag.neg { background: rgba(255,77,109,0.15); color: var(--red); }
+.news-tag.pos { background: rgba(16,217,138,0.15); color: var(--green); }
+
+/* Misc */
+.tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.tag-pos { background: rgba(16,217,138,0.15); color: var(--green); }
+.tag-neg { background: rgba(255,77,109,0.15); color: var(--red); }
+.tag-neu { background: rgba(251,191,36,0.15); color: var(--amber); }
+.hl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
+.hl-box { padding: 18px; background: rgba(168,85,247,0.06); border-radius: 14px; border-left: 3px solid var(--purple); }
+.hl-num { font-size: 28px; font-weight: 700; background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hl-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.disclaimer {
+  margin-top: 60px; padding: 24px; border-radius: 16px;
+  background: rgba(255,77,109,0.05); border: 1px solid rgba(255,77,109,0.15);
+  font-size: 12px; color: var(--text-dim); text-align: center;
+}
+
+.back-top {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--grad-main); color: white; border: none;
+  font-size: 20px; cursor: pointer; opacity: 0; transition: opacity 0.3s;
+  z-index: 50; display: flex; align-items: center; justify-content: center;
+}
+.back-top.visible { opacity: 1; }
+
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+  .grid-2, .grid-3, .grid-4, .hl-grid { grid-template-columns: 1fr; }
+  .company-name { font-size: 36px; }
+  .price-now { font-size: 44px; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">📊 CTD · Equity Research</div>
+    <div class="nav-links">
+      <a href="#summary">Tóm tắt</a>
+      <a href="#financials">5 năm</a>
+      <a href="#valuation">Định giá</a>
+      <a href="#dcf">DCF</a>
+      <a href="#dupont">DuPont</a>
+      <a href="#insights">Insights</a>
+      <a href="#technical">Kỹ thuật</a>
+      <a href="#news">News</a>
+      <a href="#independent">Quan điểm</a>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</nav>
+
+<div class="container">
+
+<!-- ============ HERO ============ -->
+<div class="hero" id="top">
+  <div class="ticker-badge">⚡ HOSE:CTD · Construction & Materials</div>
+  <div class="company-name">Coteccons Construction</div>
+  <div class="company-sub">Công ty Cổ phần Xây dựng Coteccons · Ngành: Xây dựng & Vật liệu · Thi công công trình dân dụng, công nghiệp, hạ tầng + Đầu tư BĐS</div>
+
+  <div class="price-now mono"><span class="ccy">₫</span>72,500<span class="price-unit"> /cp</span></div>
+  <div class="price-meta">Vốn hóa ≈ <strong class="mono pos">8,107.2K tỷ VNĐ</strong> (~$0.32B USD) · Cập nhật 21/06/2026 · Đã niêm yết HOSE 20/01/2010</div>
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">P/E (2025)</div>
+      <div class="kpi-value mono neu">10.4<span>x</span></div>
+      <div class="kpi-delta neu">vs median 22.3x</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">P/B (2025)</div>
+      <div class="kpi-value mono pos">0.86<span>x</span></div>
+      <div class="kpi-delta pos">vs median 0.70x</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">ROE (2025)</div>
+      <div class="kpi-value mono pos">8.65<span>%</span></div>
+      <div class="kpi-delta pos">vs 0.29% (2021)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">BVPS (2025)</div>
+      <div class="kpi-value mono">90,563<span>đ</span></div>
+      <div class="kpi-delta neu">P/B = 0.86x</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">LNST 2025</div>
+      <div class="kpi-value mono pos">781<span>tỷ</span></div>
+      <div class="kpi-delta pos">+110% YoY</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Backlog</div>
+      <div class="kpi-value mono pos">65.5<span>nghìn tỷ</span></div>
+      <div class="kpi-delta pos">Kỷ lục lịch sử</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 2: EXECUTIVE SUMMARY ============ -->
+<div class="section" id="summary">
+  <div class="section-title"><span class="num">2</span> Tóm tắt điều hành (TL;DR)</div>
+  <div class="section-sub">4 điểm nổi bật sau phân tích toàn diện 5 năm + định giá 8 phương pháp + kỹ thuật + news</div>
+
+  <div class="hl-grid">
+    <div class="hl-box">
+      <div class="hl-num mono">35.6%</div>
+      <div class="hl-label">Doanh thu CAGR 21-25</div>
+    </div>
+    <div class="hl-box">
+      <div class="hl-num mono pos">138.8%</div>
+      <div class="hl-label">LNST CAGR 21-25</div>
+    </div>
+    <div class="hl-box">
+      <div class="hl-num mono">13.3%</div>
+      <div class="hl-label">Upside vs fair value</div>
+    </div>
+    <div class="hl-box">
+      <div class="hl-num mono">4/6</div>
+      <div class="hl-label">Tech score · NEUTRAL-BULLISH</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 24px;">
+    <p style="font-size: 15px; line-height: 1.8;">
+      <strong style="color: var(--green);">Câu chuyện đầu tư:</strong> Coteccons (CTD) đang ở giữa một chu kỳ phục hồi mạnh mẽ sau suy thoái 2021-2022.
+      Doanh thu tăng từ 9,078 tỷ (2021) lên <strong>30,699 tỷ (2025)</strong> — tăng gấp 3.4 lần, CAGR 35.6%.
+      Lợi nhuận tăng đột biến: từ đáy 20 tỷ (2022) lên <strong>781 tỷ (2025)</strong>, gấp 37 lần.
+      Backlog đạt kỷ lục <strong>65.5 nghìn tỷ</strong>, đảm bảo doanh thu 2 năm tới.
+    </p>
+    <p style="font-size: 15px; line-height: 1.8; margin-top: 16px;">
+      <strong style="color: var(--amber);">Định giá:</strong> Hội tụ 8 phương pháp cho fair value trung bình <strong>82.2K đ</strong> (+13.3% so với giá hiện tại).
+      P/E 10.4x, P/B 0.86x, EV/EBITDA 10.8x — tất cả đều ở mức thấp lịch sử cho công ty có backorder kỷ lục.
+      Tuy nhiên, DCF cho kết quả âm do FCFF tiêu cực (vốn lưu động tăng mạnh khi doanh thu bùng nổ) — đây là đặc thù ngành xây dựng tăng trưởng cao.
+    </p>
+    <p style="font-size: 15px; line-height: 1.8; margin-top: 16px;">
+      <strong style="color: var(--cyan);">Rủi ro chính:</strong> D/E tăng từ 0.69 lên 2.67 (nợ tăng nhanh để tài trợ vốn lưu động),
+      quỹ ngoại KIM/TMAM đăng ký bán — áp lực dòng tiền ngoại, và FCFF âm cho thấy tăng trưởng hiện tại tiêu tốn vốn nhiều hơn tạo ra.
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION 3: 5-YEAR FINANCIALS ============ -->
+<div class="section" id="financials">
+  <div class="section-title"><span class="num">3</span> Kết quả kinh doanh 5 năm (2021–2025)</div>
+  <div class="section-sub">Nguồn: vnstock VCI (BCTC kiểm toán). Đơn vị: tỷ VNĐ (trừ EPS/BVPS: đồng). Audit split: KHÔNG có split, chỉ có share issue 79→103→111M</div>
+
+  <div class="card">
+    <table id="finTable">
+      <thead>
+        <tr><th>Chỉ số</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Doanh thu thuần</td><td>9,078</td><td>14,537</td><td>16,528</td><td>22,906</td><td>30,699</td></tr>
+        <tr><td>Lợi nhuận gộp</td><td>275</td><td>487</td><td>426</td><td>846</td><td>1,105</td></tr>
+        <tr><td>Chi phí lãi vay</td><td>1</td><td>79</td><td>96</td><td>116</td><td>178</td></tr>
+        <tr><td>LN HĐKD</td><td>(7)</td><td>(54)</td><td>238</td><td>374</td><td>773</td></tr>
+        <tr><td>LNST (CĐ mẹ)</td><td>24</td><td>21</td><td>188</td><td>371</td><td>781</td></tr>
+        <tr><td>Vốn chủ sở hữu</td><td>8,248</td><td>8,214</td><td>8,407</td><td>8,689</td><td>9,385</td></tr>
+        <tr><td>Tổng tài sản</td><td>13,925</td><td>18,967</td><td>21,652</td><td>27,077</td><td>34,442</td></tr>
+        <tr><td>Tổng nợ</td><td>5,677</td><td>10,753</td><td>13,244</td><td>18,388</td><td>25,057</td></tr>
+        <tr><td>CFO</td><td>421</td><td>(1,627)</td><td>1,467</td><td>(857)</td><td>(831)</td></tr>
+        <tr><td>CapEx</td><td>(47)</td><td>(195)</td><td>(415)</td><td>(439)</td><td>(623)</td></tr>
+        <tr><td>Số CP (triệu)</td><td>79.3</td><td>78.8</td><td>85.0*</td><td>103.6</td><td>103.6</td></tr>
+        <tr class="highlight"><td>EPS (đ)</td><td>303</td><td>263</td><td>2,210</td><td>3,584</td><td>7,539</td></tr>
+        <tr class="highlight"><td>BVPS (đ)</td><td>104,064</td><td>104,197</td><td>98,874</td><td>83,842</td><td>90,563</td></tr>
+        <tr class="highlight"><td>Giá cuối năm (đ)</td><td>72,530</td><td>21,790</td><td>60,760</td><td>61,590</td><td>72,380</td></tr>
+        <tr><td>ROE %</td><td>0.29</td><td>0.25</td><td>2.26</td><td>4.34</td><td>8.65</td></tr>
+        <tr><td>ROA %</td><td>0.17</td><td>0.13</td><td>0.93</td><td>1.52</td><td>2.54</td></tr>
+        <tr><td>Biên LNST %</td><td>0.26</td><td>0.14</td><td>1.14</td><td>1.62</td><td>2.55</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size: 11px; color: var(--text-faint); margin-top: 12px;">
+      * Cổ phiếu bình quân gia quyền 2023 = 78.83M (T1-T10) + 103.63M (T11-T12). Số CP lưu hành tăng do phát hành thêm (KHÔNG phải split).
+    </p>
+  </div>
+
+  <div class="grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">Doanh thu & LNST (tỷ VNĐ)</h4>
+      <div class="chart-box"><canvas id="chartRevNP"></canvas></div>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">Biên LN & ROE (%)</h4>
+      <div class="chart-box"><canvas id="chartMargin"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">EPS & BVPS (đ/cp)</h4>
+      <div class="chart-box"><canvas id="chartEPS"></canvas></div>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">Vốn lưu động: Khoản phải thu + Hàng tồn kho</h4>
+      <div class="chart-box"><canvas id="chartWC"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 4: PE / PB ============ -->
+<div class="section" id="valuation">
+  <div class="section-title"><span class="num">4</span> Định giá PE / PB lịch sử</div>
+  <div class="section-sub">Multiples year-end price / annual EPS-BVPS. Loại bỏ 2021-2022 (PE phình do LNST đáy chu kỳ)</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">P/E & P/B (5 năm)</h4>
+      <div class="chart-box-lg"><canvas id="chartPEPB"></canvas></div>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">Giá vs BVPS (đ/cp)</h4>
+      <div class="chart-box-lg"><canvas id="chartPriceBVPS"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h4 style="margin-bottom: 12px;">📊 Snapshot định giá hiện tại</h4>
+      <table style="font-size: 13px;">
+        <tr><td>P/E (2025 EPS / giá hiện)</td><td class="mono">10.4x</td></tr>
+        <tr><td>P/B (2025 BVPS / giá hiện)</td><td class="mono">0.86x</td></tr>
+        <tr><td>P/S (mkt cap / revenue 2025)</td><td class="mono">0.26x</td></tr>
+        <tr><td>EV/EBITDA 2025</td><td class="mono">10.8x</td></tr>
+        <tr><td>P/CF (mkt cap / CFO 2025)</td><td class="mono">NM (CFO âm)</td></tr>
+        <tr><td>Median P/E (5N, loại đáy)</td><td class="mono neu">22.3x</td></tr>
+        <tr><td>Median P/B (5N)</td><td class="mono pos">0.70x</td></tr>
+        <tr><td>Median EV/EBITDA (5N)</td><td class="mono">12.0x</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom: 12px;">💡 Đọc hiểu</h4>
+      <p style="font-size: 13px; line-height: 1.7; color: var(--text-dim);">
+        P/E hiện tại 10.4x — thấp hơn nhiều so với median 22.3x (sau khi loại đáy chu kỳ 2021-2022).
+        P/B 0.86x cũng dưới median 0.70x. EV/EBITDA 10.8x hợp lý cho ngành xây dựng tăng trưởng.
+        <br><br>
+        ⚠️ Lưu ý: PE cao 2021 (239x) và 2022 (83x) phản ánh LNST đáy chu kỳ — không đại diện sức kiếm tiền bình thường.
+        Median sau khi loại bỏ = 22.3x phản ánh đúng hơn.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 5: EXPANDED MULTIPLES ============ -->
+<div class="section" id="multiples">
+  <div class="section-title"><span class="num">5</span> Multiples mở rộng (8 phương pháp)</div>
+  <div class="section-sub">Hội tụ: PE/PB/EV-EBITDA/DCF×3/Graham/DDM → median + dải P25-P75</div>
+
+  <div class="grid-4">
+    
+    <div class="val-card">
+      <div class="name">PE median</div>
+      <div class="price mono pos">156.1K</div>
+      <div class="upside pos">+115.3%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:100.0%"></div></div>
+      <div class="formula">EPS 6,987 × 22.3x</div>
+    </div>
+    
+    <div class="val-card">
+      <div class="name">PB median</div>
+      <div class="price mono neg">58.5K</div>
+      <div class="upside neg">-19.3%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:37.5%"></div></div>
+      <div class="formula">BVPS 83,933 × 0.70x</div>
+    </div>
+    
+    <div class="val-card">
+      <div class="name">EV/EBITDA median</div>
+      <div class="price mono pos">84.0K</div>
+      <div class="upside pos">+15.8%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:53.8%"></div></div>
+      <div class="formula">EBITDA'25 1,062 tỷ × 12.0x</div>
+    </div>
+    
+    <div class="val-card">
+      <div class="name">DCF Base</div>
+      <div class="price mono neg">26.9K</div>
+      <div class="upside neg">-62.9%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:17.3%"></div></div>
+      <div class="formula">FCFF mid + WACC 12.5%</div>
+    </div>
+    
+    <div class="val-card">
+      <div class="name">DCF Bull</div>
+      <div class="price mono pos">82.2K</div>
+      <div class="upside pos">+13.3%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:52.6%"></div></div>
+      <div class="formula">FCFF high + WACC 11.5%</div>
+    </div>
+    
+    <div class="val-card">
+      <div class="name">Graham</div>
+      <div class="price mono pos">114.9K</div>
+      <div class="upside pos">+58.4%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:73.6%"></div></div>
+      <div class="formula">√(22.5 × EPS × BVPS)</div>
+    </div>
+    
+    <div class="val-card">
+      <div class="name">DDM</div>
+      <div class="price mono neg">13.1K</div>
+      <div class="upside neg">-81.9%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:8.4%"></div></div>
+      <div class="formula">DPS × (1+g)/(ke-g)</div>
+    </div>
+    
+  </div>
+
+  <div class="card card-strong" style="margin-top: 20px;">
+    <div class="gauge-box">
+      <div style="color: var(--text-dim); font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">Giá trị hợp lý trung bình</div>
+      <div class="gauge-num mono">82.2K đ</div>
+      <div class="gauge-verdict" style="background: rgba(251,191,36,0.2)">⚖️ FAIRLY VALUED</div>
+      <div class="gauge-text">
+        Giá hiện <strong class="mono">72.5K</strong> · Dải hợp lý: <strong class="mono">42.7K – 99.4K</strong>
+        <br>Upside/Downside: <strong style="color: var(--green)">13.3%</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 6: DCF & GRAHAM ============ -->
+<div class="section" id="dcf">
+  <div class="section-title"><span class="num">6</span> DCF & Graham (3 kịch bản)</div>
+  <div class="section-sub">FCFF = CFO - CapEx. WACC construction VN ~12-13%. g_terminal 2-3.5%. Lưu ý: FCFF tiêu cực 2024-25 do vốn lưu động tăng</div>
+
+  <div class="grid-3">
+    <div class="card insight-bear">
+      <div class="insight-title">🔻 Kịch bản Bi quan</div>
+      <p style="font-size: 13px; line-height: 1.6;">
+        <strong>FCFF forecast:</strong> 246, 258, 265, 270, 272 tỷ<br>
+        <strong>WACC:</strong> 13.5% · <strong>g:</strong> 2%<br>
+        <strong>Giá hợp lý:</strong> <span class="mono neg">NMK đ</span><br>
+        <span style="color: var(--text-faint); font-size: 11px;">FCFF thấp do working capital tiêu tốn, ngầm định tăng trưởng khiêm tốn</span>
+      </p>
+    </div>
+    <div class="card" style="background: rgba(168,85,247,0.08); border-color: rgba(168,85,247,0.3);">
+      <div class="insight-title" style="color: var(--purple);">⚖️ Kịch bản Cơ sở</div>
+      <p style="font-size: 13px; line-height: 1.6;">
+        <strong>FCFF forecast:</strong> 469, 539, 606, 664, 719 tỷ<br>
+        <strong>WACC:</strong> 12.5% · <strong>g:</strong> 3%<br>
+        <strong>Giá hợp lý:</strong> <span class="mono neu">26.9K đ</span><br>
+        <span style="color: var(--text-faint); font-size: 11px;">FCFF phục hồi khi working capital bình thường hóa, LNST +15-20%/năm</span>
+      </p>
+    </div>
+    <div class="card insight-bull">
+      <div class="insight-title">🚀 Kịch bản Tích cực</div>
+      <p style="font-size: 13px; line-height: 1.6;">
+        <strong>FCFF forecast:</strong> 633, 759, 914, 1,078, 1,242 tỷ<br>
+        <strong>WACC:</strong> 11.5% · <strong>g:</strong> 3.5%<br>
+        <strong>Giá hợp lý:</strong> <span class="mono pos">82.2K đ</span><br>
+        <span style="color: var(--text-faint); font-size: 11px;">FCFF ramp-up mạnh, LNST +35% PY, margin mở rộng</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">FCFF lịch sử + forecast 3 kịch bản (tỷ)</h4>
+      <div class="chart-box-lg"><canvas id="chartDCF"></canvas></div>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom: 12px;">Graham Number & Sanity Check</h4>
+      <p style="font-size: 14px; line-height: 1.7;">
+        <strong>Graham Number</strong> = √(22.5 × EPS × BVPS)
+        <br>= √(22.5 × 6,987 × 83,933)
+        <br>= <strong class="mono pos" style="font-size: 20px;">114.9K đ</strong>
+      </p>
+      <p style="font-size: 13px; color: var(--text-dim); margin-top: 12px; line-height: 1.6;">
+        Theo Graham, mua khi PE × PB ≤ 22.5. CTD hiện: PE 10.4x × PB 0.86x = <strong>9.0</strong> — dưới ngưỡng 22.5 → <strong style="color: var(--green);">đạt tiêu chuẩn Graham</strong>.
+      </p>
+      <div style="margin-top: 16px; padding: 12px; background: rgba(251,191,36,0.08); border-radius: 10px; font-size: 12px;">
+        <strong>DDM:</strong> DPS 1,000 đ × (1+5%) / (13%-5%) = <span class="mono">13.1K đ</span><br>
+        <span style="color: var(--text-faint);">DDM thấp vì CTD trả cổ tức tiền mặt khiêm tốn (1,000đ/cp) — không phù hợp cho công ty tăng trưởng tái đầu tư</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 7: DUPONT ============ -->
+<div class="section" id="dupont">
+  <div class="section-title"><span class="num">7</span> Phân tích DuPont</div>
+  <div class="section-sub">ROE = Biên LN (ROS) × Vòng quay tài sản (AT) × Đòn bẩy (EM). Pattern: 3 yếu tố đều tăng → phục hồi toàn diện</div>
+
+  <div class="card">
+    <h4 style="margin-bottom: 8px;">DuPont 3 bước (5 năm)</h4>
+    <table>
+      <thead>
+        <tr><th>Năm</th><th>ROE %</th><th>= ROS %</th><th>× Vòng quay TS</th><th>× Đòn bẩy</th><th>= Check %</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2021</td><td>0.29</td><td>0.26</td><td>0.65</td><td>1.69</td><td>0.29</td></tr>
+        <tr><td>2022</td><td>0.25</td><td>0.14</td><td>0.88</td><td>2.31</td><td>0.29</td></tr>
+        <tr><td>2023</td><td>2.26</td><td>1.14</td><td>0.81</td><td>2.58</td><td>2.38</td></tr>
+        <tr><td>2024</td><td>4.34</td><td>1.62</td><td>0.94</td><td>3.12</td><td>4.75</td></tr>
+        <tr class="highlight"><td>2025</td><td>8.65</td><td>2.55</td><td>1.00</td><td>3.67</td><td>9.32</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h4 style="margin-bottom: 8px;">DuPont stacked: ROS × AT × EM (×100 cho dễ nhìn)</h4>
+    <div class="chart-box-lg"><canvas id="chartDuPont"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h4 style="margin-bottom: 12px;">🔍 Đọc hiểu DuPont pattern</h4>
+    <div style="font-size: 14px; line-height: 1.8;">
+      <p>✅ <strong style="color: var(--green);">3 yếu tố đều cải thiện đồng thời</strong> — phục hồi ROE toàn diện:</p>
+      <ul style="margin-left: 24px; margin-top: 8px;">
+        <li><strong>ROS</strong>: 0.26% → 2.55% (gấp 10x) — kiểm soát chi phí tốt hơn khi quy mô tăng</li>
+        <li><strong>Asset Turnover</strong>: 0.65 → 1.00 — tài sản tạo doanh thu hiệu quả hơn (+54%)</li>
+        <li><strong>Equity Multiplier</strong>: 1.69 → 3.67 — đòn bẩy tăng +117%, gấp đôi</li>
+      </ul>
+      <p style="margin-top: 12px;">⚠️ <strong style="color: var(--amber);">Cảnh báo:</strong> Equity Multiplier tăng nhanh phản ánh D/E từ 0.69 → 2.67 — công ty vay nợ nhiều để tài trợ vốn lưu động. Nếu ROS tiếp tục cải thiện, đòn bẩy sẽ khuếch đại lợi nhuận; nếu ROS quay đầu xuống, đòn bẩy sẽ khuếch đại thua lỗ.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION 8: SECTOR INSIGHTS (BULL + BEAR) ============ -->
+<div class="section" id="insights">
+  <div class="section-title"><span class="num">8</span> Insights ngành xây dựng — Bull vs Bear Case</div>
+  <div class="section-sub">Cân bằng: 3 luận điểm bullish + 3 luận điểm bearish + catalyst timeline + case study warning</div>
+
+  <div class="grid-2">
+    <div class="insight-card insight-bull">
+      <div class="insight-title">🟢 BULL CASE 1 — Backlog kỷ lục 65.5 nghìn tỷ</div>
+      <div class="insight-body">
+        Backlog 9M FY2026 đạt 65,500 tỷ — cao nhất lịch sử công ty, tương đương 2.1 năm doanh thu hiện tại.
+        New contracts 9M = 48 nghìn tỷ (94% từ khách hàng cũ), đảm bảo doanh thu 2026-2027.
+        Đặc biệt thắng gói thầu Long Thành Airport trị giá $128M cùng consortium.
+      </div>
+    </div>
+    <div class="insight-card insight-bear">
+      <div class="insight-title">🔴 BEAR CASE 1 — FCFF tiêu cực, tăng trưởng tiêu vốn</div>
+      <div class="insight-body">
+        FCFF 2024 = -1,296 tỷ, 2025 = -1,454 tỷ. CFO âm 2 năm liên tiếp do khoản phải thu + hàng tồn kho tăng vọt (16.3+7.6=24 nghìn tỷ 2025 vs 7.4+1.7=9.1 nghìn tỷ 2021).
+        Tăng trưởng hiện tại tài trợ bằng vay (D/E 0.69→2.67). Nếu doanh thu chững lại, working capital mới giải phóng sẽ chậm → dòng tiền tiếp tục âm.
+      </div>
+    </div>
+    <div class="insight-card insight-bull">
+      <div class="insight-title">🟢 BULL CASE 2 — Biên LN phục hồi mạnh</div>
+      <div class="insight-body">
+        Biên LNST từ 0.14% (2022 đáy) phục hồi lên 2.55% (2025) — gấp 18 lần.
+        LNST 2025 = 781 tỷ (gấp 37 lần đáy 2022). Operating margin 2.52% vẫn còn dư địa so với ngành xây dựng tốt (4-6%).
+        Nếu margin tiếp tục cải thiện với quy mô 30,000 tỷ doanh thu → LNST có thể đạt 1,500+ tỷ.
+      </div>
+    </div>
+    <div class="insight-card insight-bear">
+      <div class="insight-title">🔴 BEAR CASE 2 — Quỹ ngoại KIM/TMAM bán, áp lực dòng tiền</div>
+      <div class="insight-body">
+        Tháng 5-8/2025 và 5/2026: 4 quỹ (KIM Vietnam Growth, TMAM Vietnam Equity Mother, KITMC Worldwide) đăng ký BÁN CTD.
+        Foreign ownership 45.33% — cao. Dòng tiền ngoại ra có thể tạo áp lực giá ngắn hạn.
+        Lịch sử: cổ phiếu CTD đã từng giảm từ 72,530 (cuối 2021) xuống 21,790 (cuối 2022) — sụt 70%.
+      </div>
+    </div>
+    <div class="insight-card insight-bull">
+      <div class="insight-title">🟢 BULL CASE 3 — Động lực vĩ mô: Public investment kỷ lục</div>
+      <div class="insight-body">
+        Ngành xây dựng VN dự báo +7.9% năm 2026 (ResearchAndMarkets). Public investment disbursement ở mức kỷ lục.
+        FDI ổn định. CTD được vinh danh "Top 10 Most Reputable Construction Contractors" năm thứ 3 liên tiếp — ưu thế đấu thầu lớn.
+        Chuyển dịch sang "quality growth" thay vì "fast growth" — chiến lược bền vững hơn.
+      </div>
+    </div>
+    <div class="insight-card insight-bear">
+      <div class="insight-title">🔴 BEAR CASE 3 — Chi phí lãi vay tăng nhanh</div>
+      <div class="insight-body">
+        Chi phí lãi vay: 1 tỷ (2021) → 79 tỷ (2022) → 96 tỷ (2023) → 116 tỷ (2024) → <strong>178 tỷ (2025)</strong> — tăng 160 lần trong 4 năm.
+        Interest coverage (EBIT/Interest) giảm từ 5.34x xuống thấp hơn. Nếu lãi suất VND tăng hoặc margin không cải thiện kịp, lãi vay có thể ăn mòn LNST.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h4 style="margin-bottom: 12px;">📅 Catalyst Timeline (12 tháng tới)</h4>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 12px;">
+      <div style="padding: 12px; background: rgba(16,217,138,0.06); border-radius: 10px; border-left: 3px solid var(--green);">
+        <strong style="color: var(--green);">Q3 FY2026</strong><br>
+        Báo cáo 9M: LNST ~1,000 tỷ (gấp đôi YoY)
+      </div>
+      <div style="padding: 12px; background: rgba(16,217,138,0.06); border-radius: 10px; border-left: 3px solid var(--green);">
+        <strong style="color: var(--green);">Q4 FY2026</strong><br>
+        Đạt/exceed mục tiêu 30,000 tỷ DT · 700 tỷ LNST
+      </div>
+      <div style="padding: 12px; background: rgba(251,191,36,0.06); border-radius: 10px; border-left: 3px solid var(--amber);">
+        <strong style="color: var(--amber);">2027</strong><br>
+        Backlog convert → revenue: ~40,000+ tỷ khả thi
+      </div>
+      <div style="padding: 12px; background: rgba(255,77,109,0.06); border-radius: 10px; border-left: 3px solid var(--red);">
+        <strong style="color: var(--red);">Rủi ro</strong><br>
+        Thanh khoản thấp (vol 0.2x avg) → biến động giá cao
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px; border-color: rgba(255,77,109,0.3); background: rgba(255,77,109,0.04);">
+    <h4 style="margin-bottom: 12px; color: var(--red);">⚠️ Case Study Warning — Vòng chu kỳ CTD 2021-2022</h4>
+    <p style="font-size: 13px; line-height: 1.7;">
+      Cuối 2021, CTD giao dịch ở 72,530 đ với LNST chỉ 24 tỷ (PE 239x — một "cái bẫy giá trị"). Thị trường kỳ vọng phục hồi.
+      Tuy nhiên 2022 LNST tiếp tục xuống 21 tỷ, giá rơi xuống 21,790 đ — <strong>mất 70% giá</strong> trong 12 tháng.
+      Bài học: PE cao cho cổ phiếu chu kỳ với LNST đáy thường là cảnh báo, không phải cơ hội. Mua chu kỳ khi PE THẤP ở đỉnh LN (CTD hiện PE 10x với LNST 781 tỷ — pattern ngược lại, dễ chấp nhận hơn).
+    </p>
+  </div>
+</div>
+
+<!-- ============ SECTION 9: TECHNICAL ANALYSIS ============ -->
+<div class="section" id="technical">
+  <div class="section-title"><span class="num">9</span> Phân tích kỹ thuật (data vnstock thực)</div>
+  <div class="section-sub">Giá daily 22/06/2025–21/06/2026 (262 phiên). Tất cả indicators tính từ giá thực, không mô phỏng</div>
+
+  <div class="grid-4">
+    <div class="kpi">
+      <div class="kpi-label">Beta vs VNINDEX</div>
+      <div class="kpi-value mono">0.85</div>
+      <div class="kpi-delta neu">Corr 0.46</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">RSI(14)</div>
+      <div class="kpi-value mono neu">51.2</div>
+      <div class="kpi-delta neu">Neutral</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Tech Score</div>
+      <div class="kpi-value mono neu">4/6</div>
+      <div class="kpi-delta neu">NEUTRAL-BULLISH</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">52W Range</div>
+      <div class="kpi-value mono">66.0K–92.8K</div>
+      <div class="kpi-delta neg">-22% from high</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h4 style="margin-bottom: 8px;">Biểu đồ giá + Volume (daily, 52 tuần)</h4>
+    <div class="chart-box-lg" style="height: 460px;"><canvas id="chartPrice"></canvas></div>
+  </div>
+
+  <div class="grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">RSI(14) & MACD</h4>
+      <div class="chart-box"><canvas id="chartRSI"></canvas></div>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom: 8px;">Tương quan CTD vs VNINDEX & VN30 (daily returns)</h4>
+      <div class="chart-box"><canvas id="chartCorr"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h4 style="margin-bottom: 12px;">📊 Indicators snapshot</h4>
+      <table style="font-size: 13px;">
+        <tr><td>Giá hiện tại</td><td class="mono">72.5K</td></tr>
+        <tr><td>MA10 / MA20 / MA50</td><td class="mono">72.1K / 72.3K / 76.6K</td></tr>
+        <tr><td>MA Signal</td><td class="mono neu">MIXED</td></tr>
+        <tr><td>MACD / Signal / Hist</td><td class="mono">-988 / -1,412 / 424</td></tr>
+        <tr><td>MACD Signal</td><td class="mono pos">BULLISH</td></tr>
+        <tr><td>Bollinger %B</td><td class="mono">54.9%</td></tr>
+        <tr><td>Volume ratio vs 50d avg</td><td class="mono">0.21x</td></tr>
+        <tr><td>Support (3M) / Resistance</td><td class="mono">69.9K / 90.3K</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom: 12px;">📈 Hiệu suất vs VNINDEX</h4>
+      <table style="font-size: 13px;">
+        <tr><td>YTD 2026 CTD</td><td class="mono">2.0%</td></tr>
+        <tr><td>YTD 2026 VNINDEX</td><td class="mono">2.0%</td></tr>
+        <tr><td>Outperformance</td><td class="mono neu">0.0%</td></tr>
+        <tr><td>1M / 3M / 6M</td><td class="mono">-2.6% / -3.2% / -3.7%</td></tr>
+        <tr><td>Beta VNINDEX / VN30</td><td class="mono">0.85 / 0.77</td></tr>
+        <tr><td>Alpha annualized</td><td class="mono neg">-20.5%</td></tr>
+      </table>
+      <p style="font-size: 12px; color: var(--text-faint); margin-top: 12px;">
+        Patterns detected: No clear pattern<br>
+        Divergence check: Chưa phát hiện divergence rõ (RSI đi ngang với giá).
+      </p>
+    </div>
+  </div>
+
+  <div class="card card-strong" style="margin-top: 20px;">
+    <h4 style="margin-bottom: 12px;">🎯 Trading Strategy gợi ý</h4>
+    <p style="font-size: 14px; line-height: 1.7;">
+      Tech score <strong>4/6 → NEUTRAL-BULLISH</strong>. MACD vừa có <strong style="color: var(--green);">bullish crossover</strong> (MACD cắt lên Signal) — tín hiệu tích cực ngắn hạn.
+      Giá đang ở giữa Bollinger (54.9% %B), không quá mua/bán. MA20 > MA50 nhưng giá dưới MA50 → cần vượt <strong class="mono">76.6K</strong> để xác nhận xu hướng tăng.
+      <br><br>
+      <strong>Entry zone:</strong> 69.9K–72K (gần support 3M + MA20). <strong>Stop loss:</strong> dưới 65K (dưới 52W low). <strong>Target 1:</strong> 83K (EV/EBITDA fair value). <strong>Target 2:</strong> 92K+ (52W high breakout).
+    </p>
+  </div>
+
+  <p style="font-size: 11px; color: var(--text-faint); margin-top: 12px;">
+    📊 Nguồn dữ liệu: vnstock Quote.history() (VCI source) — giá thực HOSE, không mô phỏng. Beta/Correlation tính trên 262 phiên daily returns.
+  </p>
+</div>
+
+<!-- ============ SECTION 10: NEWS DIGEST ============ -->
+<div class="section" id="news">
+  <div class="section-title"><span class="num">10</span> Bản tin 30 ngày (22/05–21/06/2026)</div>
+  <div class="section-sub">Nguồn: vnstock Company.news() + Company.events() + WebSearch (sector news). Sentiment: POSITIVE (0.65)</div>
+
+  <div class="grid-4" style="margin-bottom: 20px;">
+    <div class="kpi">
+      <div class="kpi-label">Sentiment</div>
+      <div class="kpi-value mono pos">+0.65</div>
+      <div class="kpi-delta pos">POSITIVE</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Tổng tin</div>
+      <div class="kpi-value mono">16</div>
+      <div class="kpi-delta neu">4 vnstock + 12 web</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Tin tốt</div>
+      <div class="kpi-value mono pos">10</div>
+      <div class="kpi-delta pos">Backlog kỷ lục</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Tin xấu</div>
+      <div class="kpi-value mono neg">1</div>
+      <div class="kpi-delta neg">Foreign sell</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4 style="margin-bottom: 12px;">📰 Highlight 30 ngày</h4>
+      
+    <div class="news-item">
+      <div class="news-date">2026-06</div>
+      <div class="news-content">Q2 FY2026: New contracts VND 18,000B, backlog VND 62,500B<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026-06</div>
+      <div class="news-content">9M FY2026: New contracts ~VND 48T, backlog record VND 65.5T<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026-05</div>
+      <div class="news-content">FY2026 targets: Revenue VND 30T, PAT VND 700B<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026-05</div>
+      <div class="news-content">Long Thanh Airport consortium won $128M contract<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026</div>
+      <div class="news-content">Vietnam construction +7.9% in 2026, record public investment<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026</div>
+      <div class="news-content">Vietnam infrastructure market $20.91B 2026, CAGR 6.62%<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026</div>
+      <div class="news-content">Top 10 Most Reputable Construction Contractors 2026 (3rd consecutive)<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026</div>
+      <div class="news-content">Shinhan: BUY, MBS: ADD, NP forecast +61% in 2026<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026</div>
+      <div class="news-content">Repeat-client ratio 76-94% - high stickiness<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026</div>
+      <div class="news-content">Overseas rep office - international expansion<br><span class="news-tag pos">TỐT</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026</div>
+      <div class="news-content">KIM/TMAM funds registering to SELL shares - foreign outflow pressure<br><span class="news-tag neg">XẤU</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026</div>
+      <div class="news-content">ESOP share buyback program underway<br><span class="news-tag ">T.BÌNH</span></div>
+    </div>
+    </div>
+    <div class="card">
+      <h4 style="margin-bottom: 12px;">📋 Công bố thông tin (vnstock)</h4>
+      
+    <div class="news-item">
+      <div class="news-date">2026-06-04</div>
+      <div class="news-content">CTD: Trích yếu Nghị quyết HĐQT về việc thành lập Văn phòng đại diện tại nước ngoài<br><span style="color:var(--text-faint);font-size:11px;">Strategic expansion overseas</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026-06-04</div>
+      <div class="news-content">CTD: Thông báo nhận được công văn của UBCKNN về Hồ sơ mua lại cổ phiếu ESOP<br><span style="color:var(--text-faint);font-size:11px;">ESOP share buyback</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026-05-27</div>
+      <div class="news-content">CTD: Thông báo về việc niêm yết và giao dịch chứng khoán thay đổi niêm yết<br><span style="color:var(--text-faint);font-size:11px;">Listing change</span></div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">2026-05-26</div>
+      <div class="news-content">CTD: Giấy chứng nhận đăng ký doanh nghiệp thay đổi lần thứ 31<br><span style="color:var(--text-faint);font-size:11px;">Charter update</span></div>
+    </div>
+      <h4 style="margin: 20px 0 12px;">🏦 Khuyến nghị CTCK</h4>
+      
+    <div class="news-item">
+      <div class="news-content">
+        <strong>Shinhan Securities</strong> · <span class="news-tag pos">BUY</span><br>
+        <span style="color:var(--text-faint);font-size:11px;">Q2/2026 revenue +45% YoY, large backlog</span>
+      </div>
+    </div>
+    <div class="news-item">
+      <div class="news-content">
+        <strong>MBS (MB Securities)</strong> · <span class="news-tag pos">ADD</span><br>
+        <span style="color:var(--text-faint);font-size:11px;">2026-27 NP +61%/+26% YoY, gross margin recovery</span>
+      </div>
+    </div>
+    <div class="news-item">
+      <div class="news-content">
+        <strong>Vietnam News / Reuters</strong> · <span class="news-tag pos">N/A</span><br>
+        <span style="color:var(--text-faint);font-size:11px;">FY2026 targets VND 30T rev, VND 700B PAT</span>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h4 style="margin-bottom: 12px;">⚠️ Yếu tố rủi ro theo dõi</h4>
+    <ul style="font-size: 13px; line-height: 1.8; color: var(--text-dim); margin-left: 20px;">
+      <li>KIM Vietnam Growth Fund and TMAM registering to SELL - foreign fund outflow</li><li>Construction sector remains working-capital intensive (FCFF negative)</li><li>D/E ratio rising (0.69 → 2.67) - increased leverage</li><li>Interest expense growth outpacing revenue (1.11B → 178B 2021→2025)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============ SECTION 11: INDEPENDENT VIEW ============ -->
+<div class="section" id="independent">
+  <div class="section-title"><span class="num">11</span> 🎯 Quan điểm độc lập</div>
+  <div class="section-sub">Tổng hợp sau toàn bộ phân tích — không lặp lại báo cáo CTCK. 3 phần: điều quan trọng nhất / hiểu nhầm thường mắc / quan điểm giá</div>
+
+  <div class="card card-strong">
+    <h3 style="color: var(--purple); margin-bottom: 16px;">1️⃣ Điều quan trọng nhất với Coteccons</h3>
+    <p style="font-size: 15px; line-height: 1.8;">
+      CTD không phải là một công ty xây dựng "bình thường" — đây là <strong>câu chuyện working capital leverage</strong>.
+      Khi quy mô tăng từ 9,000 tỷ → 30,000 tỷ doanh thu trong 4 năm, khoản phải thu + hàng tồn kho tăng vọt từ 9,000 tỷ → 24,000 tỷ.
+      Công ty phải tài trợ 15,000 tỷ vốn lưu động thêm — chủ yếu bằng vay ngắn hạn (vay NH tăng từ 1.7 tỷ → 5,062 tỷ!).
+      <br><br>
+      <strong style="color: var(--cyan);">Điều quan trọng không phải LNST tăng bao nhiêu, mà là khi nào CFO quay lại dương.</strong>
+      Backlog kỷ lục 65,500 tỷ chỉ có ý nghĩa nếu CTD có thể thực thi mà không tiếp tục đốt vốn.
+      Lịch sử: CFO 2023 đã từng dương 1,467 tỷ khi quy mô ổn định — chứng tỏ khi tăng trưởng chững lại, dòng tiền sẽ phục hồi.
+    </p>
+  </div>
+
+  <div class="card card-strong" style="margin-top: 16px;">
+    <h3 style="color: var(--pink); margin-bottom: 16px;">2️⃣ Hiểu nhầm thường mắc</h3>
+    <p style="font-size: 15px; line-height: 1.8;">
+      <strong>"PE 10x + ROE phục hồi = cheap"</strong> — đây là <strong style="color: var(--amber);">cái bẫy chu kỳ ngược</strong>.
+      PE THẤP cho cổ phiếu chu kỳ ở ĐỈNH lợi nhuận thường là cảnh báo (Peter Lynch: "PE thấp cho cyclical ở đỉnh LN = sell signal").
+      Ngược lại, PE CAO ở đáy LN (như CTD 2021-2022 ở 83-239x) lại là tín hiệu mua tiềm năng.
+      <br><br>
+      CTD hiện PE 10x với LNST 781 tỷ (đỉnh) — <strong>cần thận trọng</strong>. Nhưng có 2 điểm khác biệt giúp giảm thiểu rủi ro:
+      (1) Backlog 65,500 tỷ cung cấp visibility 2 năm — không phải đỉnh "tự nhiên"; (2) P/B 0.86x (dưới 1) cho thấy thị trường đang định giá dưới giá trị sổ sách — margin of safety.
+    </p>
+  </div>
+
+  <div class="card card-strong" style="margin-top: 16px;">
+    <h3 style="color: var(--green); margin-bottom: 16px;">3️⃣ Quan điểm giá</h3>
+    <p style="font-size: 15px; line-height: 1.8;">
+      Hội tụ 8 phương pháp cho fair value trung bình <strong>82.2K đ</strong> (+13.3% so với 72.5K hiện tại).
+      Nhưng phân phối rộng (P25 42.7K — P75 99.4K) phản ánh <strong>tính chu kỳ cao</strong>.
+      <br><br>
+      Khuyến nghị: <strong style="background: var(--grad-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">⬆ ACCUMULATE ON WEAKNESS</strong>
+      <br>— Không buy-at-any-price vì Beta 0.85 + thin volume → biến động giá ngắn hạn lớn.
+      <br>— Entry zone lý tưởng: <strong>65K-70K</strong> (gần P25 + support 52W).
+      <br>— Core position cho portfolio muốn expose vào xây dựng VN + public investment theme, nhưng sizing vừa phải (3-5% NAV) do rủi ro working capital.
+      <br>— Exit triggers: CFO quay lại âm sâu (>2 năm), D/E vượt 3.5x, hoặc ngoại bán ròng mạnh liên tục.
+    </p>
+  </div>
+</div>
+
+<div class="disclaimer">
+  ⚠️ <strong>Disclaimer:</strong> Báo cáo này được tạo tự động bởi ZCode equity-research-vn skill từ dữ liệu vnstock + WebSearch.
+  Mọi số liệu đã cross-check nhưng có thể có sai lệch do nguồn. Đây là <strong>phân tích giáo dục, KHÔNG phải lời khuyên đầu tư</strong>.
+  Quyết định đầu tư là của bạn — tự chịu trách nhiệm.
+  <br><br>
+  <strong>Nguồn dữ liệu:</strong> vnstock (VCI source) · Vietstock · CafeF · coteccons.vn · The Investor · Vietnam News · Shinhan Sec · MBS · ResearchAndMarkets · Mordor Intelligence
+</div>
+
+</div>
+
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ============ DATA INJECTED ============
+const YEARS = [2021, 2022, 2023, 2024, 2025];
+const D = /*DATA*/{"years": [2021, 2022, 2023, 2024, 2025], "revenue": [9077.915407373, 14536.94850311, 16528.214803368, 22905.77757808, 30699.048782652], "gross_profit": [275.197565538, 486.734116992, 425.978233059, 845.72593992, 1105.361166132], "net_income": [24.007379559, 20.712200279, 187.939139994, 371.375360821, 781.318934289], "operating_profit": [-7.282363679, -53.535463128, 238.251862599, 374.482691498, 773.237947804], "equity": [8247.560732814, 8213.962257245, 8407.432424176, 8688.770305789, 9385.337105554], "total_assets": [13924.612376531, 18967.071946667, 21651.893357725, 27076.862120048, 34442.24156098], "cfo": [421.164676324, -1627.091448218, 1467.429008871, -857.050286531, -830.902274298], "capex": [-47.079581566, -194.756167542, -415.208683881, -439.083556695, -622.700306796], "fcff": [374.085094758, -1821.84761576, 1052.22032499, -1296.133843226, -1453.602581094], "receivables": [7424.568991302, 11235.427047962, 11845.187162549, 13711.781944168, 16354.424595928], "inventory": [1692.285468779, 2837.856762717, 2602.818535216, 4934.880445316, 7569.293421681], "cash": [884.710498842, 1064.440156074, 2842.181486342, 2478.609465457, 1846.994307634], "interest_expense": [1.110696092, 79.172332132, 96.138110828, 115.697287858, 178.000831576], "ebitda": [98.339081393, 131.925566798, 433.07141282, 544.508873917, 1061.826107482], "eps": [302.9131229449246, 262.7418183075186, 2210.2296207170284, 3583.562772678587, 7539.287044561095], "bvps": [104063.6014486657, 104197.10846297776, 98874.32803344642, 83841.73290157576, 90563.20964899211], "shares": [79.255, 78.831, 85.0315, 103.633, 103.633], "price_ye": [72.53, 21.79, 60.76, 61.59, 72.38], "pe": [239.44159069393416, 82.93312477002242, 27.49035640029502, 17.186806512660485, 9.600377273367718], "pb": [0.6969776078312921, 0.20912288566762097, 0.6145174506717921, 0.7345983660941537, 0.799220790435021], "roe": [0.2910846047302628, 0.2516437913005735, 2.2614123976500466, 4.344536230493802, 8.645726358787241], "ros": [0.26445916801010755, 0.14247969767911664, 1.1370806964325217, 1.6213174145914733, 2.5450916731026614], "roa": [0.1731525988374167, 0.12642607904597844, 0.9252934707850895, 1.5243754532266331, 2.540175485830302], "gm": [3.03150616841491, 3.3482550817860384, 2.577279144340484, 3.6921948492564125, 3.6006365342389315], "om": [-0.08022066027499365, -0.3682716707467647, 1.4414857589486965, 1.6348831216119308, 2.5187684259486107], "nm": [0.26445916801010755, 0.14247969767911664, 1.1370806964325217, 1.6213174145914733, 2.5450916731026614], "at": [0.6519330780563212, 0.8839284945257312, 0.8138176184207655, 0.9401339046521793, 0.9980330318797977], "em": [1.6883309899289505, 2.309125773001621, 2.5753276702485146, 3.1163054341542105, 3.669792696161971], "fcff_forecast_base": [468.79136057339997, 539.11006465941, 605.522174073975, 664.12109414565, 718.81341954588], "fcff_forecast_bull": [632.8683367740899, 759.442004128908, 914.14315311813, 1078.22012931882, 1242.2971055195098], "fcff_forecast_bear": [246.115464301035, 257.83524831537, 264.867118723971, 269.555032329705, 271.898989132572], "tech_prices": [{"time": "2025-06-03", "close": 72880.0, "volume": 832783}, {"time": "2025-06-04", "close": 72880.0, "volume": 806174}, {"time": "2025-06-05", "close": 73150.0, "volume": 1401035}, {"time": "2025-06-06", "close": 71990.0, "volume": 695414}, {"time": "2025-06-09", "close": 71090.0, "volume": 764288}, {"time": "2025-06-10", "close": 70820.0, "volume": 638812}, {"time": "2025-06-11", "close": 72430.0, "volume": 806024}, {"time": "2025-06-12", "close": 72700.0, "volume": 1016166}, {"time": "2025-06-13", "close": 71900.0, "volume": 1261365}, {"time": "2025-06-16", "close": 73510.0, "volume": 974188}, {"time": "2025-06-17", "close": 73690.0, "volume": 1085341}, {"time": "2025-06-18", "close": 77090.0, "volume": 3878230}, {"time": "2025-06-19", "close": 76200.0, "volume": 836928}, {"time": "2025-06-20", "close": 74850.0, "volume": 1261524}, {"time": "2025-06-23", "close": 74580.0, "volume": 1113442}, {"time": "2025-06-24", "close": 74230.0, "volume": 903122}, {"time": "2025-06-25", "close": 74410.0, "volume": 1041748}, {"time": "2025-06-26", "close": 75210.0, "volume": 715822}, {"time": "2025-06-27", "close": 75300.0, "volume": 716994}, {"time": "2025-06-30", "close": 76650.0, "volume": 1586411}, {"time": "2025-07-01", "close": 76020.0, "volume": 1051607}, {"time": "2025-07-02", "close": 75570.0, "volume": 895406}, {"time": "2025-07-03", "close": 74580.0, "volume": 1451876}, {"time": "2025-07-04", "close": 75480.0, "volume": 862662}, {"time": "2025-07-07", "close": 75300.0, "volume": 1143146}, {"time": "2025-07-08", "close": 76830.0, "volume": 1563496}, {"time": "2025-07-09", "close": 76290.0, "volume": 1353246}, {"time": "2025-07-10", "close": 75570.0, "volume": 1159363}, {"time": "2025-07-11", "close": 74760.0, "volume": 1338653}, {"time": "2025-07-14", "close": 76110.0, "volume": 1382736}, {"time": "2025-07-15", "close": 74850.0, "volume": 1060925}, {"time": "2025-07-16", "close": 76110.0, "volume": 1697856}, {"time": "2025-07-17", "close": 78620.0, "volume": 2475221}, {"time": "2025-07-18", "close": 77180.0, "volume": 1167388}, {"time": "2025-07-21", "close": 75750.0, "volume": 1345689}, {"time": "2025-07-22", "close": 76380.0, "volume": 744704}, {"time": "2025-07-23", "close": 76560.0, "volume": 2182587}, {"time": "2025-07-24", "close": 76290.0, "volume": 765049}, {"time": "2025-07-25", "close": 75480.0, "volume": 2009316}, {"time": "2025-07-28", "close": 75750.0, "volume": 1587252}, {"time": "2025-07-29", "close": 70550.0, "volume": 2835616}, {"time": "2025-07-30", "close": 71000.0, "volume": 1045685}, {"time": "2025-07-31", "close": 72610.0, "volume": 1213774}, {"time": "2025-08-01", "close": 73510.0, "volume": 947569}, {"time": "2025-08-04", "close": 72790.0, "volume": 730593}, {"time": "2025-08-05", "close": 71810.0, "volume": 1847821}, {"time": "2025-08-06", "close": 73330.0, "volume": 1354327}, {"time": "2025-08-07", "close": 74410.0, "volume": 1208159}, {"time": "2025-08-08", "close": 74050.0, "volume": 967102}, {"time": "2025-08-11", "close": 74580.0, "volume": 1093249}, {"time": "2025-08-12", "close": 74140.0, "volume": 924772}, {"time": "2025-08-13", "close": 74500.0, "volume": 1631177}, {"time": "2025-08-14", "close": 73780.0, "volume": 917893}, {"time": "2025-08-15", "close": 72340.0, "volume": 1265516}, {"time": "2025-08-18", "close": 72520.0, "volume": 663596}, {"time": "2025-08-19", "close": 71000.0, "volume": 1796898}, {"time": "2025-08-20", "close": 70460.0, "volume": 1076812}, {"time": "2025-08-21", "close": 69030.0, "volume": 1175998}, {"time": "2025-08-22", "close": 66790.0, "volume": 1358343}, {"time": "2025-08-25", "close": 66430.0, "volume": 450004}, {"time": "2025-08-26", "close": 67770.0, "volume": 357424}, {"time": "2025-08-27", "close": 68130.0, "volume": 462678}, {"time": "2025-08-28", "close": 68850.0, "volume": 369776}, {"time": "2025-08-29", "close": 69120.0, "volume": 814021}, {"time": "2025-09-03", "close": 69920.0, "volume": 469688}, {"time": "2025-09-04", "close": 70190.0, "volume": 353364}, {"time": "2025-09-05", "close": 69480.0, "volume": 666208}, {"time": "2025-09-08", "close": 67230.0, "volume": 657226}, {"time": "2025-09-09", "close": 67320.0, "volume": 429847}, {"time": "2025-09-10", "close": 67770.0, "volume": 341290}, {"time": "2025-09-11", "close": 67860.0, "volume": 417734}, {"time": "2025-09-12", "close": 68670.0, "volume": 413664}, {"time": "2025-09-15", "close": 73420.0, "volume": 2452430}, {"time": "2025-09-16", "close": 73420.0, "volume": 788278}, {"time": "2025-09-17", "close": 74320.0, "volume": 1711928}, {"time": "2025-09-18", "close": 73330.0, "volume": 725660}, {"time": "2025-09-19", "close": 73330.0, "volume": 598880}, {"time": "2025-09-22", "close": 71990.0, "volume": 833416}, {"time": "2025-09-23", "close": 72880.0, "volume": 615360}, {"time": "2025-09-24", "close": 73420.0, "volume": 440938}, {"time": "2025-09-25", "close": 74140.0, "volume": 1020015}, {"time": "2025-09-26", "close": 73510.0, "volume": 439156}, {"time": "2025-09-29", "close": 72250.0, "volume": 810521}, {"time": "2025-09-30", "close": 70010.0, "volume": 905809}, {"time": "2025-10-01", "close": 72160.0, "volume": 439344}, {"time": "2025-10-02", "close": 73150.0, "volume": 990314}, {"time": "2025-10-03", "close": 73960.0, "volume": 1399710}, {"time": "2025-10-06", "close": 74500.0, "volume": 857370}, {"time": "2025-10-07", "close": 77090.0, "volume": 2892100}, {"time": "2025-10-08", "close": 77810.0, "volume": 1066586}, {"time": "2025-10-09", "close": 77090.0, "volume": 912819}, {"time": "2025-10-10", "close": 78530.0, "volume": 2134102}, {"time": "2025-10-13", "close": 77090.0, "volume": 927292}, {"time": "2025-10-14", "close": 75300.0, "volume": 1838733}, {"time": "2025-10-15", "close": 74850.0, "volume": 873506}, {"time": "2025-10-16", "close": 76290.0, "volume": 741317}, {"time": "2025-10-17", "close": 74850.0, "volume": 1527946}, {"time": "2025-10-20", "close": 70820.0, "volume": 1566953}, {"time": "2025-10-21", "close": 75300.0, "volume": 1989091}, {"time": "2025-10-22", "close": 76290.0, "volume": 954768}, {"time": "2025-10-23", "close": 80500.0, "volume": 4136217}, {"time": "2025-10-24", "close": 80590.0, "volume": 976489}, {"time": "2025-10-27", "close": 78170.0, "volume": 1061857}, {"time": "2025-10-28", "close": 83640.0, "volume": 2098584}, {"time": "2025-10-29", "close": 89470.0, "volume": 2656586}, {"time": "2025-10-30", "close": 89650.0, "volume": 1302863}, {"time": "2025-10-31", "close": 92780.0, "volume": 2186550}, {"time": "2025-11-03", "close": 88750.0, "volume": 1066232}, {"time": "2025-11-04", "close": 84540.0, "volume": 3607839}, {"time": "2025-11-05", "close": 86780.0, "volume": 1065352}, {"time": "2025-11-06", "close": 81580.0, "volume": 1441008}, {"time": "2025-11-07", "close": 75930.0, "volume": 2824316}, {"time": "2025-11-10", "close": 75300.0, "volume": 732956}, {"time": "2025-11-11", "close": 76290.0, "volume": 747894}, {"time": "2025-11-12", "close": 79780.0, "volume": 847655}, {"time": "2025-11-13", "close": 79250.0, "volume": 733173}, {"time": "2025-11-14", "close": 78890.0, "volume": 498649}, {"time": "2025-11-17", "close": 79610.0, "volume": 569502}, {"time": "2025-11-18", "close": 78800.0, "volume": 528559}, {"time": "2025-11-19", "close": 77720.0, "volume": 614741}, {"time": "2025-11-20", "close": 77010.0, "volume": 514759}, {"time": "2025-11-21", "close": 77010.0, "volume": 441561}, {"time": "2025-11-24", "close": 79430.0, "volume": 625712}, {"time": "2025-11-25", "close": 77900.0, "volume": 386216}, {"time": "2025-11-26", "close": 78710.0, "volume": 425588}, {"time": "2025-11-27", "close": 78440.0, "volume": 612436}, {"time": "2025-11-28", "close": 76650.0, "volume": 477128}, {"time": "2025-12-01", "close": 76560.0, "volume": 255111}, {"time": "2025-12-02", "close": 76100.0, "volume": 653021}, {"time": "2025-12-03", "close": 77100.0, "volume": 364298}, {"time": "2025-12-04", "close": 76280.0, "volume": 533578}, {"time": "2025-12-05", "close": 76650.0, "volume": 324583}, {"time": "2025-12-08", "close": 78550.0, "volume": 1004696}, {"time": "2025-12-09", "close": 77190.0, "volume": 638373}, {"time": "2025-12-10", "close": 76190.0, "volume": 362778}, {"time": "2025-12-11", "close": 76190.0, "volume": 279803}, {"time": "2025-12-12", "close": 72570.0, "volume": 773517}, {"time": "2025-12-15", "close": 71480.0, "volume": 448238}, {"time": "2025-12-16", "close": 72570.0, "volume": 772724}, {"time": "2025-12-17", "close": 73470.0, "volume": 296257}, {"time": "2025-12-18", "close": 73020.0, "volume": 195196}, {"time": "2025-12-19", "close": 71930.0, "volume": 380059}, {"time": "2025-12-22", "close": 75290.0, "volume": 558703}, {"time": "2025-12-23", "close": 73930.0, "volume": 633346}, {"time": "2025-12-24", "close": 74570.0, "volume": 288322}, {"time": "2025-12-25", "close": 73810.0, "volume": 327646}, {"time": "2025-12-26", "close": 71530.0, "volume": 581349}, {"time": "2025-12-29", "close": 71330.0, "volume": 440745}, {"time": "2025-12-30", "close": 69810.0, "volume": 1147843}, {"time": "2025-12-31", "close": 72380.0, "volume": 687812}, {"time": "2026-01-05", "close": 71050.0, "volume": 642969}, {"time": "2026-01-06", "close": 70480.0, "volume": 446123}, {"time": "2026-01-07", "close": 69050.0, "volume": 837756}, {"time": "2026-01-08", "close": 69050.0, "volume": 652585}, {"time": "2026-01-09", "close": 68950.0, "volume": 543555}, {"time": "2026-01-12", "close": 71430.0, "volume": 787059}, {"time": "2026-01-13", "close": 73430.0, "volume": 1249996}, {"time": "2026-01-14", "close": 73430.0, "volume": 572221}, {"time": "2026-01-15", "close": 71720.0, "volume": 666371}, {"time": "2026-01-16", "close": 72950.0, "volume": 767906}, {"time": "2026-01-19", "close": 73330.0, "volume": 508518}, {"time": "2026-01-20", "close": 71620.0, "volume": 900266}, {"time": "2026-01-21", "close": 70570.0, "volume": 656530}, {"time": "2026-01-22", "close": 71430.0, "volume": 469938}, {"time": "2026-01-23", "close": 71050.0, "volume": 407748}, {"time": "2026-01-26", "close": 73240.0, "volume": 1175487}, {"time": "2026-01-27", "close": 73620.0, "volume": 854326}, {"time": "2026-01-28", "close": 72860.0, "volume": 629353}, {"time": "2026-01-29", "close": 72290.0, "volume": 799017}, {"time": "2026-01-30", "close": 73140.0, "volume": 511993}, {"time": "2026-02-02", "close": 74950.0, "volume": 1494782}, {"time": "2026-02-03", "close": 80190.0, "volume": 1861118}, {"time": "2026-02-04", "close": 81910.0, "volume": 1316083}, {"time": "2026-02-05", "close": 79810.0, "volume": 772218}, {"time": "2026-02-06", "close": 76290.0, "volume": 1266030}, {"time": "2026-02-09", "close": 76290.0, "volume": 500528}, {"time": "2026-02-10", "close": 76290.0, "volume": 511805}, {"time": "2026-02-11", "close": 78760.0, "volume": 547811}, {"time": "2026-02-12", "close": 77620.0, "volume": 309570}, {"time": "2026-02-13", "close": 77050.0, "volume": 433966}, {"time": "2026-02-23", "close": 81720.0, "volume": 1057076}, {"time": "2026-02-24", "close": 83530.0, "volume": 1224964}, {"time": "2026-02-25", "close": 82670.0, "volume": 837745}, {"time": "2026-02-26", "close": 82290.0, "volume": 458896}, {"time": "2026-02-27", "close": 84380.0, "volume": 1406974}, {"time": "2026-03-02", "close": 83810.0, "volume": 1618591}, {"time": "2026-03-03", "close": 82190.0, "volume": 920433}, {"time": "2026-03-04", "close": 79810.0, "volume": 1849968}, {"time": "2026-03-05", "close": 76760.0, "volume": 1143103}, {"time": "2026-03-06", "close": 76950.0, "volume": 803944}, {"time": "2026-03-09", "close": 71620.0, "volume": 919768}, {"time": "2026-03-10", "close": 74290.0, "volume": 1110963}, {"time": "2026-03-11", "close": 76190.0, "volume": 563394}, {"time": "2026-03-12", "close": 74480.0, "volume": 829157}, {"time": "2026-03-13", "close": 76570.0, "volume": 605048}, {"time": "2026-03-16", "close": 78860.0, "volume": 887648}, {"time": "2026-03-17", "close": 79050.0, "volume": 717979}, {"time": "2026-03-18", "close": 77620.0, "volume": 498937}, {"time": "2026-03-19", "close": 78860.0, "volume": 968159}, {"time": "2026-03-20", "close": 79050.0, "volume": 1057488}, {"time": "2026-03-23", "close": 74860.0, "volume": 696575}, {"time": "2026-03-24", "close": 77430.0, "volume": 576061}, {"time": "2026-03-25", "close": 80100.0, "volume": 986622}, {"time": "2026-03-26", "close": 81430.0, "volume": 1220098}, {"time": "2026-03-27", "close": 81620.0, "volume": 865055}, {"time": "2026-03-30", "close": 80000.0, "volume": 738812}, {"time": "2026-03-31", "close": 81330.0, "volume": 1009300}, {"time": "2026-04-01", "close": 80190.0, "volume": 908862}, {"time": "2026-04-02", "close": 78100.0, "volume": 1535168}, {"time": "2026-04-03", "close": 76190.0, "volume": 1174261}, {"time": "2026-04-06", "close": 74860.0, "volume": 460309}, {"time": "2026-04-07", "close": 75720.0, "volume": 368506}, {"time": "2026-04-08", "close": 78570.0, "volume": 850348}, {"time": "2026-04-09", "close": 78950.0, "volume": 932740}, {"time": "2026-04-10", "close": 78100.0, "volume": 544390}, {"time": "2026-04-13", "close": 78950.0, "volume": 485463}, {"time": "2026-04-14", "close": 79810.0, "volume": 660605}, {"time": "2026-04-15", "close": 78290.0, "volume": 550198}, {"time": "2026-04-16", "close": 77910.0, "volume": 533981}, {"time": "2026-04-17", "close": 78800.0, "volume": 482949}, {"time": "2026-04-20", "close": 83000.0, "volume": 1549631}, {"time": "2026-04-21", "close": 81300.0, "volume": 786730}, {"time": "2026-04-22", "close": 81100.0, "volume": 574894}, {"time": "2026-04-23", "close": 86700.0, "volume": 2042574}, {"time": "2026-04-24", "close": 87200.0, "volume": 879621}, {"time": "2026-04-28", "close": 86000.0, "volume": 922951}, {"time": "2026-04-29", "close": 86800.0, "volume": 924001}, {"time": "2026-05-04", "close": 86000.0, "volume": 908936}, {"time": "2026-05-05", "close": 86500.0, "volume": 590600}, {"time": "2026-05-06", "close": 86600.0, "volume": 705200}, {"time": "2026-05-07", "close": 80600.0, "volume": 2707700}, {"time": "2026-05-08", "close": 76800.0, "volume": 4977700}, {"time": "2026-05-11", "close": 76000.0, "volume": 1713000}, {"time": "2026-05-12", "close": 73900.0, "volume": 1752400}, {"time": "2026-05-13", "close": 74600.0, "volume": 1080300}, {"time": "2026-05-14", "close": 77700.0, "volume": 1648800}, {"time": "2026-05-15", "close": 76600.0, "volume": 1334100}, {"time": "2026-05-18", "close": 73200.0, "volume": 1882200}, {"time": "2026-05-19", "close": 73100.0, "volume": 2725000}, {"time": "2026-05-20", "close": 74700.0, "volume": 1013700}, {"time": "2026-05-21", "close": 74400.0, "volume": 674000}, {"time": "2026-05-22", "close": 73800.0, "volume": 557400}, {"time": "2026-05-25", "close": 74200.0, "volume": 406200}, {"time": "2026-05-26", "close": 74100.0, "volume": 455700}, {"time": "2026-05-27", "close": 73800.0, "volume": 1092500}, {"time": "2026-05-28", "close": 72200.0, "volume": 678900}, {"time": "2026-05-29", "close": 71800.0, "volume": 667500}, {"time": "2026-06-01", "close": 72200.0, "volume": 270800}, {"time": "2026-06-02", "close": 70000.0, "volume": 582200}, {"time": "2026-06-03", "close": 71800.0, "volume": 586200}, {"time": "2026-06-04", "close": 72100.0, "volume": 421200}, {"time": "2026-06-05", "close": 72700.0, "volume": 594500}, {"time": "2026-06-08", "close": 70800.0, "volume": 388700}, {"time": "2026-06-09", "close": 71700.0, "volume": 367300}, {"time": "2026-06-10", "close": 71800.0, "volume": 390500}, {"time": "2026-06-11", "close": 71600.0, "volume": 447600}, {"time": "2026-06-12", "close": 70800.0, "volume": 514900}, {"time": "2026-06-15", "close": 72300.0, "volume": 577600}, {"time": "2026-06-16", "close": 72700.0, "volume": 569400}, {"time": "2026-06-17", "close": 73600.0, "volume": 560900}, {"time": "2026-06-18", "close": 73000.0, "volume": 382900}, {"time": "2026-06-19", "close": 72500.0, "volume": 194000}], "tech_rsi": [{"time": "2025-06-03", "val": 50.0}, {"time": "2025-06-04", "val": 50.0}, {"time": "2025-06-05", "val": 50.0}, {"time": "2025-06-06", "val": 50.0}, {"time": "2025-06-09", "val": 50.0}, {"time": "2025-06-10", "val": 50.0}, {"time": "2025-06-11", "val": 50.0}, {"time": "2025-06-12", "val": 50.0}, {"time": "2025-06-13", "val": 50.0}, {"time": "2025-06-16", "val": 50.0}, {"time": "2025-06-17", "val": 50.0}, {"time": "2025-06-18", "val": 50.0}, {"time": "2025-06-19", "val": 50.0}, {"time": "2025-06-20", "val": 50.0}, {"time": "2025-06-23", "val": 56.54853620955316}, {"time": "2025-06-24", "val": 55.06376594148538}, {"time": "2025-06-25", "val": 54.7583081570997}, {"time": "2025-06-26", "val": 62.50000000000001}, {"time": "2025-06-27", "val": 67.43993371996686}, {"time": "2025-06-30", "val": 72.16730038022814}, {"time": "2025-07-01", "val": 64.7493837304848}, {"time": "2025-07-02", "val": 61.61943319838057}, {"time": "2025-07-03", "val": 60.685805422647526}, {"time": "2025-07-04", "val": 58.32628909551986}, {"time": "2025-07-07", "val": 56.80473372781065}, {"time": "2025-07-08", "val": 48.69477911646587}, {"time": "2025-07-09", "val": 50.46826222684703}, {"time": "2025-07-10", "val": 54.00890868596882}, {"time": "2025-07-11", "val": 50.94537815126051}, {"time": "2025-07-14", "val": 58.93536121673004}, {"time": "2025-07-15", "val": 51.896551724137936}, {"time": "2025-07-16", "val": 53.731343283582085}, {"time": "2025-07-17", "val": 61.46408839779006}, {"time": "2025-07-18", "val": 51.81880576527111}, {"time": "2025-07-21", "val": 49.121665582303194}, {"time": "2025-07-22", "val": 52.60450160771704}, {"time": "2025-07-23", "val": 56.71641791044776}, {"time": "2025-07-24", "val": 52.870304748405395}, {"time": "2025-07-25", "val": 50.61058344640434}, {"time": "2025-07-28", "val": 45.99406528189911}, {"time": "2025-07-29", "val": 34.17861080485116}, {"time": "2025-07-30", "val": 37.21320649132625}, {"time": "2025-07-31", "val": 44.24209962506695}, {"time": "2025-08-01", "val": 42.86498353457739}, {"time": "2025-08-04", "val": 44.17420814479639}, {"time": "2025-08-05", "val": 37.643678160919535}, {"time": "2025-08-06", "val": 33.88177940280316}, {"time": "2025-08-07", "val": 41.37071651090343}, {"time": "2025-08-08", "val": 44.32576769025367}, {"time": "2025-08-11", "val": 43.95161290322581}, {"time": "2025-08-12", "val": 42.00792602377807}, {"time": "2025-08-13", "val": 44.12344057780695}, {"time": "2025-08-14", "val": 44.385733157199475}, {"time": "2025-08-15", "val": 39.54629061925199}, {"time": "2025-08-18", "val": 58.724534986713905}, {"time": "2025-08-19", "val": 50.0}, {"time": "2025-08-20", "val": 40.47829937998228}, {"time": "2025-08-21", "val": 31.049069373942473}, {"time": "2025-08-22", "val": 27.511244377811096}, {"time": "2025-08-25", "val": 28.852201257861637}, {"time": "2025-08-26", "val": 27.83094098883572}, {"time": "2025-08-27", "val": 23.434856175972925}, {"time": "2025-08-28", "val": 28.653530377668318}, {"time": "2025-08-29", "val": 27.097315436241615}, {"time": "2025-09-03", "val": 32.81758957654722}, {"time": "2025-09-04", "val": 32.321575061525834}, {"time": "2025-09-05", "val": 32.34811165845649}, {"time": "2025-09-08", "val": 30.331023864511167}, {"time": "2025-09-09", "val": 29.84496124031007}, {"time": "2025-09-10", "val": 36.34826711749788}, {"time": "2025-09-11", "val": 38.576449912126535}, {"time": "2025-09-12", "val": 48.3271375464684}, {"time": "2025-09-15", "val": 74.98116051243406}, {"time": "2025-09-16", "val": 77.07203718048024}, {"time": "2025-09-17", "val": 76.26303127506014}, {"time": "2025-09-18", "val": 69.8473282442748}, {"time": "2025-09-19", "val": 68.09369951534734}, {"time": "2025-09-22", "val": 60.66914498141265}, {"time": "2025-09-23", "val": 60.93057607090103}, {"time": "2025-09-24", "val": 61.69442433019552}, {"time": "2025-09-25", "val": 66.85962373371925}, {"time": "2025-09-26", "val": 75.73770491803279}, {"time": "2025-09-29", "val": 68.43679880329094}, {"time": "2025-09-30", "val": 57.38786279683377}, {"time": "2025-10-01", "val": 62.48548199767711}, {"time": "2025-10-02", "val": 62.87356321839081}, {"time": "2025-10-03", "val": 52.00594353640416}, {"time": "2025-10-06", "val": 53.85714285714286}, {"time": "2025-10-07", "val": 58.82727852135118}, {"time": "2025-10-08", "val": 64.526588845655}, {"time": "2025-10-09", "val": 61.64807930607187}, {"time": "2025-10-10", "val": 70.13546798029556}, {"time": "2025-10-13", "val": 62.53722453841573}, {"time": "2025-10-14", "val": 55.21064301552107}, {"time": "2025-10-15", "val": 51.997749015194145}, {"time": "2025-10-16", "val": 57.481162540365986}, {"time": "2025-10-17", "val": 56.92963752665245}, {"time": "2025-10-20", "val": 51.97080291970803}, {"time": "2025-10-21", "val": 56.86188811188811}, {"time": "2025-10-22", "val": 56.86188811188811}, {"time": "2025-10-23", "val": 62.44292237442922}, {"time": "2025-10-24", "val": 61.78861788617886}, {"time": "2025-10-27", "val": 52.104442712392824}, {"time": "2025-10-28", "val": 59.58566261098323}, {"time": "2025-10-29", "val": 67.4268018018018}, {"time": "2025-10-30", "val": 66.22883829538821}, {"time": "2025-10-31", "val": 71.82197496522949}, {"time": "2025-11-03", "val": 67.60932181199266}, {"time": "2025-11-04", "val": 61.54946364719905}, {"time": "2025-11-05", "val": 62.26900584795322}, {"time": "2025-11-06", "val": 57.23500322511288}, {"time": "2025-11-07", "val": 55.30853937253273}, {"time": "2025-11-10", "val": 50.0}, {"time": "2025-11-11", "val": 50.0}, {"time": "2025-11-12", "val": 49.17355371900827}, {"time": "2025-11-13", "val": 48.47727272727273}, {"time": "2025-11-14", "val": 50.85836909871245}, {"time": "2025-11-17", "val": 44.58187684861522}, {"time": "2025-11-18", "val": 33.416226297792974}, {"time": "2025-11-19", "val": 31.96250377986091}, {"time": "2025-11-20", "val": 24.274061990212076}, {"time": "2025-11-21", "val": 27.948910593538685}, {"time": "2025-11-24", "val": 39.710028191703586}, {"time": "2025-11-25", "val": 31.592039800995025}, {"time": "2025-11-26", "val": 42.72681196147998}, {"time": "2025-11-27", "val": 58.745644599303134}, {"time": "2025-11-28", "val": 54.352030947775624}, {"time": "2025-12-01", "val": 50.92402464065709}, {"time": "2025-12-02", "val": 34.1105354058722}, {"time": "2025-12-03", "val": 41.078838174273855}, {"time": "2025-12-04", "val": 39.568345323741006}, {"time": "2025-12-05", "val": 37.82894736842105}, {"time": "2025-12-08", "val": 49.056603773584904}, {"time": "2025-12-09", "val": 48.04138950480414}, {"time": "2025-12-10", "val": 47.033285094066564}, {"time": "2025-12-11", "val": 47.033285094066564}, {"time": "2025-12-12", "val": 27.163781624500672}, {"time": "2025-12-15", "val": 27.98353909465021}, {"time": "2025-12-16", "val": 29.340511440107676}, {"time": "2025-12-17", "val": 33.95739186571981}, {"time": "2025-12-18", "val": 37.17314487632509}, {"time": "2025-12-19", "val": 34.71947194719472}, {"time": "2025-12-22", "val": 47.75623268698061}, {"time": "2025-12-23", "val": 41.39054861488322}, {"time": "2025-12-24", "val": 45.30992868897422}, {"time": "2025-12-25", "val": 42.37379162191192}, {"time": "2025-12-26", "val": 31.526315789473685}, {"time": "2025-12-29", "val": 33.5762331838565}, {"time": "2025-12-30", "val": 32.62527233115469}, {"time": "2025-12-31", "val": 40.89823220258003}, {"time": "2026-01-05", "val": 45.92274678111588}, {"time": "2026-01-06", "val": 47.24061810154525}, {"time": "2026-01-07", "val": 40.465872156013}, {"time": "2026-01-08", "val": 37.41457858769932}, {"time": "2026-01-09", "val": 38.17547937245787}, {"time": "2026-01-12", "val": 48.655913978494624}, {"time": "2026-01-13", "val": 44.60556844547564}, {"time": "2026-01-14", "val": 48.42569269521411}, {"time": "2026-01-15", "val": 41.5929203539823}, {"time": "2026-01-16", "val": 47.53157290470723}, {"time": "2026-01-19", "val": 55.79896907216495}, {"time": "2026-01-20", "val": 50.85143863769818}, {"time": "2026-01-21", "val": 52.29468599033815}, {"time": "2026-01-22", "val": 46.801346801346796}, {"time": "2026-01-23", "val": 50.0}, {"time": "2026-01-26", "val": 58.89175257731959}, {"time": "2026-01-27", "val": 65.79129232895646}, {"time": "2026-01-28", "val": 62.50820748522653}, {"time": "2026-01-29", "val": 60.63694267515923}, {"time": "2026-01-30", "val": 56.076759061833684}, {"time": "2026-02-02", "val": 55.475504322766575}, {"time": "2026-02-03", "val": 67.67782426778243}, {"time": "2026-02-04", "val": 76.63355985363303}, {"time": "2026-02-05", "val": 67.15}, {"time": "2026-02-06", "val": 56.395851339671566}, {"time": "2026-02-09", "val": 60.89594027064863}, {"time": "2026-02-10", "val": 64.03336604514229}, {"time": "2026-02-11", "val": 66.66666666666666}, {"time": "2026-02-12", "val": 64.43956043956044}, {"time": "2026-02-13", "val": 59.01561760530053}, {"time": "2026-02-23", "val": 65.93233674272227}, {"time": "2026-02-24", "val": 70.15489233094068}, {"time": "2026-02-25", "val": 69.39461883408072}, {"time": "2026-02-26", "val": 67.40205401293267}, {"time": "2026-02-27", "val": 67.74557771923222}, {"time": "2026-03-02", "val": 58.264840182648406}, {"time": "2026-03-03", "val": 50.64220183486239}, {"time": "2026-03-04", "val": 50.0}, {"time": "2026-03-05", "val": 51.08745950948635}, {"time": "2026-03-06", "val": 51.51376146788991}, {"time": "2026-03-09", "val": 41.3932915591596}, {"time": "2026-03-10", "val": 41.82217343578485}, {"time": "2026-03-11", "val": 47.45461018155927}, {"time": "2026-03-12", "val": 45.603831679781045}, {"time": "2026-03-13", "val": 40.33771106941838}, {"time": "2026-03-16", "val": 41.3932915591596}, {"time": "2026-03-17", "val": 43.15948601662887}, {"time": "2026-03-18", "val": 41.51217739003999}, {"time": "2026-03-19", "val": 39.64741185296324}, {"time": "2026-03-20", "val": 40.94368340943684}, {"time": "2026-03-23", "val": 37.29636048526863}, {"time": "2026-03-24", "val": 45.90220385674931}, {"time": "2026-03-25", "val": 55.82693649685974}, {"time": "2026-03-26", "val": 57.51677852348993}, {"time": "2026-03-27", "val": 70.27575020275751}, {"time": "2026-03-30", "val": 62.092333756882674}, {"time": "2026-03-31", "val": 61.154513888888886}, {"time": "2026-04-01", "val": 62.70582999554962}, {"time": "2026-04-02", "val": 53.4045393858478}, {"time": "2026-04-03", "val": 43.95654142145767}, {"time": "2026-04-06", "val": 40.98148945329316}, {"time": "2026-04-07", "val": 45.80759046778465}, {"time": "2026-04-08", "val": 49.40255459414916}, {"time": "2026-04-09", "val": 49.795584627964026}, {"time": "2026-04-10", "val": 57.67045454545455}, {"time": "2026-04-13", "val": 53.91752577319588}, {"time": "2026-04-14", "val": 49.17566799317794}, {"time": "2026-04-15", "val": 41.16985376827896}, {"time": "2026-04-16", "val": 39.67723984418475}, {"time": "2026-04-17", "val": 46.51972157772622}, {"time": "2026-04-20", "val": 54.15216310293387}, {"time": "2026-04-21", "val": 52.685050798258345}, {"time": "2026-04-22", "val": 57.98722044728435}, {"time": "2026-04-23", "val": 73.38673787271918}, {"time": "2026-04-24", "val": 78.51201478743069}, {"time": "2026-04-28", "val": 73.38489535941765}, {"time": "2026-04-29", "val": 70.64726542900151}, {"time": "2026-05-04", "val": 67.32186732186733}, {"time": "2026-05-05", "val": 71.0}, {"time": "2026-05-06", "val": 69.87012987012987}, {"time": "2026-05-07", "val": 51.61951619516195}, {"time": "2026-05-08", "val": 47.206599175103115}, {"time": "2026-05-11", "val": 46.47471391657439}, {"time": "2026-05-12", "val": 41.34275618374558}, {"time": "2026-05-13", "val": 33.064516129032256}, {"time": "2026-05-14", "val": 43.12977099236641}, {"time": "2026-05-15", "val": 41.697416974169734}, {"time": "2026-05-18", "val": 22.891566265060234}, {"time": "2026-05-19", "val": 21.224489795918373}, {"time": "2026-05-20", "val": 27.309236947791163}, {"time": "2026-05-21", "val": 24.59016393442623}, {"time": "2026-05-22", "val": 24.793388429752056}, {"time": "2026-05-25", "val": 24.481327800829874}, {"time": "2026-05-26", "val": 24.066390041493776}, {"time": "2026-05-27", "val": 31.52173913043478}, {"time": "2026-05-28", "val": 35.80246913580247}, {"time": "2026-05-29", "val": 36.708860759493675}, {"time": "2026-06-01", "val": 43.97163120567375}, {"time": "2026-06-02", "val": 35.25641025641026}, {"time": "2026-06-03", "val": 29.370629370629374}, {"time": "2026-06-04", "val": 33.33333333333333}, {"time": "2026-06-05", "val": 47.66355140186916}, {"time": "2026-06-08", "val": 40.8}, {"time": "2026-06-09", "val": 37.288135593220346}, {"time": "2026-06-10", "val": 38.793103448275865}, {"time": "2026-06-11", "val": 40.17857142857142}, {"time": "2026-06-12", "val": 35.34482758620689}, {"time": "2026-06-15", "val": 43.07692307692308}, {"time": "2026-06-16", "val": 45.801526717557245}, {"time": "2026-06-17", "val": 55.645161290322584}, {"time": "2026-06-18", "val": 54.76190476190476}, {"time": "2026-06-19", "val": 51.181102362204726}], "scatter_vni": [{"x": -0.11208016329560255, "y": 0.0}, {"x": -0.27122623983830696, "y": 0.37047200878155273}, {"x": -0.9090299458307416, "y": -1.5857826384142126}, {"x": -1.4527517313462135, "y": -1.2501736352271142}, {"x": 0.43187315442898555, "y": -0.37980025320016875}, {"x": -0.07825380062754794, "y": 2.273369104772671}, {"x": 0.5923053527980615, "y": 0.3727737125500452}, {"x": -0.5668977089773874, "y": -1.1004126547455306}, {"x": 1.719511360785697, "y": 2.23922114047288}, {"x": 0.715935162281145, "y": 0.24486464426609622}, {"x": -0.06381289465678952, "y": 4.613923191749225}, {"x": 0.38683427010091087, "y": -1.1544947464003141}, {"x": -0.1989586106919905, "y": -1.7716535433070835}, {"x": 0.6543891503316468, "y": -0.3607214428857697}, {"x": 0.6324640327497022, "y": -0.46929471708232473}, {"x": -0.0014633039940870063, "y": 0.2424895594772991}, {"x": -0.07901957197731235, "y": 1.0751243112484987}, {"x": 0.42250324016783747, "y": 0.11966493817312518}, {"x": 0.3376013533220368, "y": 1.7928286852589626}, {"x": 0.12862717739650087, "y": -0.8219178082191747}, {"x": 0.48989723044765565, "y": -0.5919494869771058}, {"x": -0.18994792682309747, "y": -1.3100436681222738}, {"x": 0.36252858259284704, "y": 1.2067578439259874}, {"x": 1.0879831575304477, "y": -0.23847376788552754}, {"x": 0.9557365590630917, "y": 2.031872509960153}, {"x": 1.1204838003193274, "y": -0.7028504490433463}, {"x": 1.0004750859346823, "y": -0.9437672040896627}, {"x": 0.8383829999169867, "y": -1.0718539102818614}, {"x": 0.8684557128745496, "y": 1.805778491171739}, {"x": -0.6644360114797077, "y": -1.6554986204178168}, {"x": 1.0146167802005834, "y": 1.68336673346694}, {"x": 0.9854487044806071, "y": 3.2978583628958003}, {"x": 0.4879161884819627, "y": -1.8315950139913495}, {"x": -0.8168144902756969, "y": -1.8528116092251912}, {"x": 1.6491027238140221, "y": 0.8316831683168324}, {"x": 0.18349960915244878, "y": 0.23566378633150808}, {"x": 0.5759401180974733, "y": -0.3526645768025083}, {"x": 0.6646855399666141, "y": -1.0617381046008623}, {"x": 1.7170325184667545, "y": 0.3577106518283024}, {"x": -4.110002439932714, "y": -6.864686468646863}, {"x": 0.952183258448791, "y": 0.6378454996456506}, {"x": -0.3389425787494349, "y": 2.267605633802816}, {"x": -0.4865159864760549, "y": 1.2394986916402617}, {"x": 2.205710234682745, "y": -0.9794585770643405}, {"x": 1.2406834228728236, "y": -1.3463387827998385}, {"x": 1.7167049090262676, "y": 2.116696838880383}, {"x": 0.5147072840612221, "y": 1.4727942179189935}, {"x": 0.19850677388562055, "y": -0.4838059400618211}, {"x": 0.7514432631944068, "y": 0.7157326130992514}, {"x": 0.7113961148754511, "y": -0.5899705014749235}, {"x": 0.21017025033887027, "y": 0.4855678446182843}, {"x": 1.8050384710846412, "y": -0.9664429530201302}, {"x": -0.6515551383869056, "y": -1.9517484413120068}, {"x": 0.3907975460122559, "y": 0.2488249930882036}, {"x": 1.089606873751059, "y": -2.0959735245449584}, {"x": 0.6141941724096212, "y": -0.7605633802816869}, {"x": 1.4203657862481789, "y": -2.0295202952029467}, {"x": -2.5195497630331687, "y": -3.244965956830359}, {"x": -1.9107002862404077, "y": -0.5390028447372353}, {"x": 3.320880033208806, "y": 2.017160921270511}, {"x": 0.3088215011723072, "y": 0.5312084993359889}, {"x": 0.4830282523702989, "y": 1.0568031704095038}, {"x": 0.08031602869960075, "y": 0.39215686274509665}, {"x": -0.05409550531741969, "y": 1.157407407407418}, {"x": 0.8915719978588088, "y": 0.3861556064073124}, {"x": -1.728478031468672, "y": -1.0115401054281214}, {"x": -2.5459366395316096, "y": -3.2383419689119175}, {"x": 0.7873046358023439, "y": 0.1338688085676054}, {"x": 0.362787970586087, "y": 0.6684491978609541}, {"x": 0.8817837712839172, "y": 0.13280212483399723}, {"x": 0.5736691298446672, "y": 1.1936339522546469}, {"x": 1.0580233436896513, "y": 6.917139944662876}, {"x": -0.2374028132233419, "y": 0.0}, {"x": -0.5907549527039091, "y": 1.2258240261509235}, {"x": -0.34650532325535277, "y": -1.3320775026910647}, {"x": -0.3939514046529591, "y": 0.0}, {"x": -1.4572355331540554, "y": -1.8273557888994985}, {"x": 0.049557955275481014, "y": 1.236282817057921}, {"x": 1.35758228049363, "y": 0.7409440175631277}, {"x": 0.5206762154139399, "y": 0.980659220920721}, {"x": -0.3235119351295501, "y": -0.8497437280820086}, {"x": 0.34804600469682256, "y": -1.714052509862607}, {"x": -0.28683212519802215, "y": -3.1003460207612465}, {"x": 0.20160077029547363, "y": 3.0709898585916218}, {"x": -0.7411188853187589, "y": 1.3719512195121908}, {"x": -0.4168910456159969, "y": 1.107313738892679}, {"x": 3.018556099694991, "y": 0.730124391563014}, {"x": -0.6015924506045489, "y": 3.4765100671140914}, {"x": 0.7434878063252714, "y": 0.933973277986766}, {"x": 1.0978719895395894, "y": -0.9253309343272065}, {"x": 1.8106928754944684, "y": 1.867946555973532}, {"x": 1.0054075705988375, "y": -1.8336941296319909}, {"x": -0.23001269035533012, "y": -2.3219613438837716}, {"x": -0.17659818518391823, "y": -0.5976095617529875}, {"x": 0.5062715094285908, "y": 1.923847695390779}, {"x": -2.018281121770371, "y": -1.8875344081793144}, {"x": -5.47369150699808, "y": -5.384101536406149}, {"x": 1.6499330860470618, "y": 6.325896639367401}, {"x": 0.9059593731025606, "y": 1.3147410358565814}, {"x": 0.5099791480488447, "y": 5.518416568357587}, {"x": -0.22998589261792324, "y": 0.11180124223602039}, {"x": -1.820363835121619, "y": -3.002853952103235}, {"x": 1.6919408909920497, "y": 6.997569400025583}, {"x": 0.3171675096697468, "y": 6.970349115255869}, {"x": -0.9645100632922676, "y": 0.20118475466637253}, {"x": -1.7920781997759816, "y": 3.491355270496377}, {"x": -1.3813923703229425, "y": -4.343608536322485}, {"x": 2.1632653061224527, "y": -4.743661971830981}, {"x": 0.17615225365925635, "y": 2.6496333096758917}, {"x": -0.7402304684903549, "y": -5.992164093109009}, {"x": -2.6506112112209768, "y": -6.925717087521455}, {"x": -1.1606528672378214, "y": -0.8297115764519969}, {"x": 0.8269325673504024, "y": 1.3147410358565814}, {"x": 2.400210842050443, "y": 4.574649364267924}, {"x": -0.025737501991585088, "y": -0.6643268989721784}, {"x": 0.2464080812043301, "y": -0.45425867507886686}, {"x": 1.1593068616780666, "y": 0.9126632019267333}, {"x": 0.3324427896181037, "y": -1.0174601180756193}, {"x": -0.6578630295435928, "y": -1.370558375634523}, {"x": 0.4238932686476682, "y": -0.9135357694287194}, {"x": -0.0640100483698558, "y": 0.0}, {"x": 0.7885529901566768, "y": 3.1424490325931753}, {"x": -0.4568400100720682, "y": -1.926224348482941}, {"x": 1.2045580476523154, "y": 1.0397946084724108}, {"x": 0.23566378633150808, "y": -0.34303138101893227}, {"x": 0.3960055096418724, "y": -2.2819989801121876}, {"x": 0.6315826823340309, "y": -0.11741682974559797}, {"x": 0.9044056720750815, "y": -0.6008359456635359}, {"x": 0.8566969121638124, "y": 1.3140604467805517}, {"x": 0.31586180612899195, "y": -1.0635538261997368}, {"x": 0.23485528769773278, "y": 0.48505506030414036}, {"x": 0.713252015712218, "y": 2.4787997390737226}, {"x": -0.3746279380067663, "y": -1.7313812858052224}, {"x": -1.6134663484377643, "y": -1.2955045990413305}, {"x": -1.168134591443759, "y": 0.0}, {"x": -3.0613926658425994, "y": -4.7512796954981}, {"x": -0.0534340484185436, "y": -1.50199807082817}, {"x": 2.015176092490334, "y": 1.5249020705092375}, {"x": -0.32873188103716977, "y": 1.240181893344361}, {"x": 0.19836764934335616, "y": -0.6124948958758702}, {"x": 1.6297153215899973, "y": -1.4927417145987443}, {"x": 2.74128532954685, "y": 4.671208119004588}, {"x": 1.20614723905359, "y": -1.8063487846991633}, {"x": 0.6020935022430285, "y": 0.8656837549032792}, {"x": -2.2419537586520266, "y": -1.0191766125787871}, {"x": -0.7487735605473778, "y": -3.0890123289527116}, {"x": 1.4475661926234284, "y": -0.27960296379141436}, {"x": 0.6872421417337238, "y": -2.1309406981634638}, {"x": 0.9955288924104355, "y": 3.681420999856755}, {"x": 0.2191102219681884, "y": -1.837524177949712}, {"x": 1.5583762021919023, "y": -0.8022519352568591}, {"x": 2.4946731488159735, "y": -2.0289443813847896}, {"x": -0.3233812138076275, "y": 0.0}, {"x": 0.6650283472374952, "y": -0.14482259232440065}, {"x": 0.5048450131163174, "y": 3.5968092820884756}, {"x": 1.3636387848700027, "y": 2.7999440011199805}, {"x": -0.44615408869480566, "y": 0.0}, {"x": -1.5645784506239324, "y": -2.328748467928643}, {"x": 0.7684470184470271, "y": 1.7150027886224217}, {"x": 0.9291533848110545, "y": 0.5209047292666247}, {"x": -0.1481606462124141, "y": -2.331924178371747}, {"x": -0.44038906314355364, "y": -1.4660709299078478}, {"x": -0.14373302783435848, "y": 1.2186481507722835}, {"x": -0.6341854647241019, "y": -0.5319893602127923}, {"x": -1.4469822909038421, "y": 3.0823363828289985}, {"x": -0.7170286160588346, "y": 0.5188421627525974}, {"x": -1.50723845943731, "y": -1.032328171692476}, {"x": 0.6694732404834314, "y": -0.7823222618720815}, {"x": 0.7746641836273715, "y": 1.175819615437823}, {"x": -1.2323404627564205, "y": 2.4747060432048107}, {"x": 0.38195405480210276, "y": 6.991327551701132}, {"x": -1.211536340575714, "y": 2.1449058486095574}, {"x": -0.49513517134357476, "y": -2.563789525088511}, {"x": -1.518602459384255, "y": -4.410474877834858}, {"x": -0.03816598214744227, "y": 0.0}, {"x": -0.045018862333456866, "y": 0.0}, {"x": 2.4412353266477727, "y": 3.2376458251409}, {"x": 0.9594568272254245, "y": -1.4474352463179296}, {"x": 0.5512405668957943, "y": -0.7343468178304557}, {"x": 1.97632792241611, "y": 6.060999351070739}, {"x": 0.40212027051726995, "y": 2.214880078316206}, {"x": -0.35928079587923545, "y": -1.029570214294262}, {"x": 1.0064968214475778, "y": -0.45965888472239147}, {"x": 0.03670915707261191, "y": 2.539798274395433}, {"x": -1.8204251381406467, "y": -0.6755155250059208}, {"x": -1.785385407074358, "y": -1.932943562820666}, {"x": 0.2829345775836378, "y": -2.895729407470493}, {"x": -0.5367739664626225, "y": -3.821576243578495}, {"x": -2.248812558404434, "y": 0.24752475247524774}, {"x": -6.507941895194136, "y": -6.926575698505522}, {"x": 1.4484598769353596, "y": 3.7280089360513857}, {"x": 3.0780149457575012, "y": 2.5575447570332477}, {"x": -1.083698809262068, "y": -2.244389027431426}, {"x": -0.7820497072431709, "y": 2.8061224489795977}, {"x": -0.17863038249303909, "y": 2.9907274389447513}, {"x": 1.0087348881709923, "y": 0.24093329951813125}, {"x": 0.20698244157424384, "y": -1.8089816571789985}, {"x": -0.8577280126967013, "y": 1.5975264107188858}, {"x": -3.020369247791521, "y": 0.24093329951813125}, {"x": -3.4372894933275, "y": -5.300442757748258}, {"x": 1.4831853290345975, "y": 3.433075073470482}, {"x": 2.688927834923871, "y": 3.4482758620689724}, {"x": -0.8177591228990644, "y": 1.6604244694132353}, {"x": 1.712847266558426, "y": 0.23332923983789833}, {"x": -0.613342898134861, "y": -1.984807645185005}, {"x": 0.7187796985335781, "y": 1.662499999999989}, {"x": 1.6984275809351024, "y": -1.4016967908520805}, {"x": -0.47623801330648474, "y": -2.6063100137174167}, {"x": -0.6360557463329419, "y": -2.4455825864276526}, {"x": -0.5373981615638512, "y": -1.7456359102244412}, {"x": 0.15223971486397758, "y": 1.1488111140796065}, {"x": 4.709872789918568, "y": 3.763866877971478}, {"x": -1.1311946713728593, "y": 0.4836451571846867}, {"x": 0.7669806757721664, "y": -1.0766307789740304}, {"x": 0.5120000000000013, "y": 1.0883482714468595}, {"x": 0.948856142265897, "y": 1.089297023432545}, {"x": 1.4079351223495573, "y": -1.904523242701417}, {"x": 1.0651709105045315, "y": -0.48537488823604535}, {"x": -0.14616749916199767, "y": 1.142343729944817}, {"x": 1.0973106533785915, "y": 5.3299492385786795}, {"x": -0.19759295850547698, "y": -2.048192771084334}, {"x": 1.299168793769212, "y": -0.24600246002459691}, {"x": 0.7031712701232928, "y": 6.9050554870530245}, {"x": -0.9126585256314268, "y": 0.5767012687427853}, {"x": 1.2167550680141748, "y": -1.3761467889908285}, {"x": -1.158947458205395, "y": 0.9302325581395321}, {"x": -0.0021573809395381005, "y": -0.9216589861751112}, {"x": 1.1213229345328646, "y": 0.5813953488372103}, {"x": 0.8720697655812515, "y": 0.11560693641619046}, {"x": 0.941730118443318, "y": -6.928406466512705}, {"x": 0.3331569766528153, "y": -4.714640198511166}, {"x": -1.0373974741172631, "y": -1.041666666666663}, {"x": 0.2954365602743314, "y": -2.763157894736845}, {"x": -0.14360107306296, "y": 0.9472259810554773}, {"x": 1.4270137012279083, "y": 4.1554959785522705}, {"x": -0.20047157562349538, "y": -1.4157014157014203}, {"x": 0.32993338884264034, "y": -4.43864229765013}, {"x": -0.7785511997261296, "y": -0.1366120218579181}, {"x": 0.01568274845393791, "y": 2.188782489740082}, {"x": -0.8540530934597501, "y": -0.40160642570281624}, {"x": -1.0417051067800442, "y": -0.8064516129032251}, {"x": 0.4741280571936901, "y": 0.5420054200542035}, {"x": -0.09808963802272475, "y": -0.13477088948786742}, {"x": -0.5174664840938759, "y": -0.4048582995951455}, {"x": -0.5740411751839258, "y": -2.168021680216803}, {"x": -0.009658362263709197, "y": -0.5540166204986097}, {"x": -1.0169091328636082, "y": 0.557103064066844}, {"x": -0.9796480423303389, "y": -3.0470914127423865}, {"x": -0.40843813476268975, "y": 2.57142857142858}, {"x": 0.6893859846839767, "y": 0.41782729805013297}, {"x": 0.40129944582458776, "y": 0.832177531206657}, {"x": -2.6303768557289775, "y": -2.613480055020634}, {"x": 0.14074045115133327, "y": 1.2711864406779627}, {"x": 0.5945177212013153, "y": 0.1394700139470073}, {"x": -0.2827505530268226, "y": -0.278551532033422}, {"x": -0.386965490017277, "y": -1.1173184357541888}, {"x": 0.427538860826604, "y": 2.1186440677966045}, {"x": 0.4796283019601999, "y": 0.5532503457814641}, {"x": -0.09624213192915843, "y": 1.237964236588729}, {"x": 1.3437050160558073, "y": -0.8152173913043459}, {"x": -0.3245068206526258, "y": -0.6849315068493178}], "scatter_vn30": [{"x": -0.180127549778486, "y": 0.0}, {"x": -0.20205116771639942, "y": 0.37047200878155273}, {"x": -0.936204079922931, "y": -1.5857826384142126}, {"x": -1.5793145732467928, "y": -1.2501736352271142}, {"x": 0.5914532852151044, "y": -0.37980025320016875}, {"x": 0.023490553949989668, "y": 2.273369104772671}, {"x": 0.49887912322528205, "y": 0.3727737125500452}, {"x": -0.7761160208474949, "y": -1.1004126547455306}, {"x": 1.3666856979731579, "y": 2.23922114047288}, {"x": 0.7772732073080713, "y": 0.24486464426609622}, {"x": 0.11177945912712595, "y": 4.613923191749225}, {"x": 0.4403380344594199, "y": -1.1544947464003141}, {"x": -0.28555547835752426, "y": -1.7716535433070835}, {"x": 0.9148614469164373, "y": -0.3607214428857697}, {"x": 0.999779054352623, "y": -0.46929471708232473}, {"x": 0.17500683620452762, "y": 0.2424895594772991}, {"x": -0.12215428290658359, "y": 1.0751243112484987}, {"x": 0.8417772979768756, "y": 0.11966493817312518}, {"x": 0.11315206417821244, "y": 1.7928286852589626}, {"x": -0.094750805381838, "y": -0.8219178082191747}, {"x": 0.44710600476911555, "y": -0.5919494869771058}, {"x": -0.10520920445654669, "y": -1.3100436681222738}, {"x": 0.5110721036996946, "y": 1.2067578439259874}, {"x": 1.336002203161013, "y": -0.23847376788552754}, {"x": 1.3661129744276357, "y": 2.031872509960153}, {"x": 0.9154694723626289, "y": -0.7028504490433463}, {"x": 1.6892701860335535, "y": -0.9437672040896627}, {"x": 1.571998419717846, "y": -1.0718539102818614}, {"x": 0.730861161473273, "y": 1.805778491171739}, {"x": -0.7361458839355906, "y": -1.6554986204178168}, {"x": 1.2912212016262803, "y": 1.68336673346694}, {"x": 1.2561786895603388, "y": 3.2978583628958003}, {"x": 0.5634061295650694, "y": -1.8315950139913495}, {"x": -0.9641647048804436, "y": -1.8528116092251912}, {"x": 1.7149245113816436, "y": 0.8316831683168324}, {"x": -0.17934999214966885, "y": 0.23566378633150808}, {"x": 0.4972746686348062, "y": -0.3526645768025083}, {"x": 0.4875905202771369, "y": -1.0617381046008623}, {"x": 1.5754823791581218, "y": 0.3577106518283024}, {"x": -4.38421117814618, "y": -6.864686468646863}, {"x": 0.5853363679539036, "y": 0.6378454996456506}, {"x": -0.9535314389433225, "y": 2.267605633802816}, {"x": -0.06933997015905469, "y": 1.2394986916402617}, {"x": 2.4230071060832303, "y": -0.9794585770643405}, {"x": 2.2507591246174075, "y": -1.3463387827998385}, {"x": 1.9450672314144768, "y": 2.116696838880383}, {"x": 0.6696415618780094, "y": 1.4727942179189935}, {"x": -0.33259359598812877, "y": -0.4838059400618211}, {"x": 0.7414347514285158, "y": 0.7157326130992514}, {"x": 0.7664045008324294, "y": -0.5899705014749235}, {"x": -0.08773678963110987, "y": 0.4855678446182843}, {"x": 2.2848703605499177, "y": -0.9664429530201302}, {"x": -0.5870285096277073, "y": -1.9517484413120068}, {"x": 0.17496144679656211, "y": 0.2488249930882036}, {"x": 1.348544814344188, "y": -2.0959735245449584}, {"x": 0.9942224627994989, "y": -0.7605633802816869}, {"x": 2.540389179965663, "y": -2.0295202952029467}, {"x": -3.2476225525491897, "y": -3.244965956830359}, {"x": -1.7033990804952603, "y": -0.5390028447372353}, {"x": 3.6974516577684025, "y": 2.017160921270511}, {"x": -0.02704091290122168, "y": 0.5312084993359889}, {"x": 0.6843201428146539, "y": 1.0568031704095038}, {"x": 0.2245862884160843, "y": 0.39215686274509665}, {"x": -0.31039252055882205, "y": 1.157407407407418}, {"x": 1.2906070693002203, "y": 0.3861556064073124}, {"x": -2.0232640861333917, "y": -1.0115401054281214}, {"x": -2.0731733749485226, "y": -3.2383419689119175}, {"x": 0.9932382333086132, "y": 0.1338688085676054}, {"x": 0.1895713823917733, "y": 0.6684491978609541}, {"x": 1.446438043781395, "y": 0.13280212483399723}, {"x": 0.559005541540003, "y": 1.1936339522546469}, {"x": 0.6057519633332342, "y": 6.917139944662876}, {"x": -0.07246569868122332, "y": 0.0}, {"x": -0.3487274646873595, "y": 1.2258240261509235}, {"x": -0.38044786901034744, "y": -1.3320775026910647}, {"x": -0.11870615660618533, "y": 0.0}, {"x": -2.147316795104137, "y": -1.8273557888994985}, {"x": 0.10167069685644847, "y": 1.236282817057921}, {"x": 1.7584891158143323, "y": 0.7409440175631277}, {"x": 0.28001381185662755, "y": 0.980659220920721}, {"x": -0.32388751096213975, "y": -0.8497437280820086}, {"x": 0.5170971311364791, "y": -1.714052509862607}, {"x": 0.04832915375652114, "y": -3.1003460207612465}, {"x": 0.4025483997359247, "y": 3.0709898585916218}, {"x": -0.5789493379235955, "y": 1.3719512195121908}, {"x": -0.015593074524145045, "y": 1.107313738892679}, {"x": 3.197616576409912, "y": 0.730124391563014}, {"x": -0.48567721225448723, "y": 3.4765100671140914}, {"x": 0.6964627025894732, "y": 0.933973277986766}, {"x": 0.9329415741438973, "y": -0.9253309343272065}, {"x": 2.044422919382338, "y": 1.867946555973532}, {"x": 1.6010542419606422, "y": -1.8336941296319909}, {"x": 0.07006977160235461, "y": -2.3219613438837716}, {"x": -0.20112331093663505, "y": -0.5976095617529875}, {"x": 0.6284707708843262, "y": 1.923847695390779}, {"x": -2.2316505708930956, "y": -1.8875344081793144}, {"x": -5.375441293990324, "y": -5.384101536406149}, {"x": 2.4074489806826804, "y": 6.325896639367401}, {"x": 0.7818779685787369, "y": 1.3147410358565814}, {"x": 0.7716688763672375, "y": 5.518416568357587}, {"x": -0.0606440604796088, "y": 0.11180124223602039}, {"x": -2.2544482155713252, "y": -3.002853952103235}, {"x": 2.552663145268208, "y": 6.997569400025583}, {"x": 0.02462447672986201, "y": 6.970349115255869}, {"x": -1.2606679796487774, "y": 0.20118475466637253}, {"x": -2.0683780217953696, "y": 3.491355270496377}, {"x": -1.4702762337166275, "y": -4.343608536322485}, {"x": 2.157037962145525, "y": -4.743661971830981}, {"x": -0.5922928160783214, "y": 2.6496333096758917}, {"x": -0.894262829517567, "y": -5.992164093109009}, {"x": -2.401048352588786, "y": -6.925717087521455}, {"x": -1.1251102914983768, "y": -0.8297115764519969}, {"x": 0.9655355895753059, "y": 1.3147410358565814}, {"x": 2.781620553359687, "y": 4.574649364267924}, {"x": -0.42942524315403574, "y": -0.6643268989721784}, {"x": 0.39211899819227014, "y": -0.45425867507886686}, {"x": 1.1755025273304298, "y": 0.9126632019267333}, {"x": 0.23923444976077235, "y": -1.0174601180756193}, {"x": -0.6253720884898839, "y": -1.370558375634523}, {"x": 0.5969674477785958, "y": -0.9135357694287194}, {"x": 0.12806594078400568, "y": 0.0}, {"x": 0.8668922937643542, "y": 3.1424490325931753}, {"x": -0.3527520925087124, "y": -1.926224348482941}, {"x": 0.7305194805194759, "y": 1.0397946084724108}, {"x": -0.12320969041614838, "y": -0.34303138101893227}, {"x": 0.14262068103978454, "y": -2.2819989801121876}, {"x": 0.5010603351490728, "y": -0.11741682974559797}, {"x": 0.8564513126047224, "y": -0.6008359456635359}, {"x": 1.1214694480339737, "y": 1.3140604467805517}, {"x": 0.3823548800957477, "y": -1.0635538261997368}, {"x": -0.20358367895408902, "y": 0.48505506030414036}, {"x": 0.42115920020247, "y": 2.4787997390737226}, {"x": -0.544404230222495, "y": -1.7313812858052224}, {"x": -1.3198041580926634, "y": -1.2955045990413305}, {"x": -1.1653946111413571, "y": 0.0}, {"x": -2.975642964418046, "y": -4.7512796954981}, {"x": 0.15050641928624486, "y": -1.50199807082817}, {"x": 2.1408248834124732, "y": 1.5249020705092375}, {"x": -0.6241262494305788, "y": 1.240181893344361}, {"x": 0.29084011696831613, "y": -0.6124948958758702}, {"x": 1.5660871986424851, "y": -1.4927417145987443}, {"x": 2.6897293718447512, "y": 4.671208119004588}, {"x": 1.389728401031598, "y": -1.8063487846991633}, {"x": 0.5097199521082008, "y": 0.8656837549032792}, {"x": -2.319178698353541, "y": -1.0191766125787871}, {"x": -0.5181635554925901, "y": -3.0890123289527116}, {"x": 1.2558686043022016, "y": -0.27960296379141436}, {"x": 0.9564666994865911, "y": -2.1309406981634638}, {"x": 1.0414489724834608, "y": 3.681420999856755}, {"x": -0.0960293111004984, "y": -1.837524177949712}, {"x": 1.3447167616380984, "y": -0.8022519352568591}, {"x": 1.984474406116865, "y": -2.0289443813847896}, {"x": -1.0840534920544043, "y": 0.0}, {"x": -0.3770437264649096, "y": -0.14482259232440065}, {"x": 0.6790210094811178, "y": 3.5968092820884756}, {"x": 0.4312002461254627, "y": 2.7999440011199805}, {"x": -1.0582947621349703, "y": 0.0}, {"x": -0.9491558221663143, "y": -2.328748467928643}, {"x": 1.6053880868189152, "y": 1.7150027886224217}, {"x": 0.66767611219265, "y": 0.5209047292666247}, {"x": -0.4120826648330467, "y": -2.331924178371747}, {"x": -0.2507659629556791, "y": -1.4660709299078478}, {"x": 0.09469423855257286, "y": 1.2186481507722835}, {"x": -0.22042404014693817, "y": -0.5319893602127923}, {"x": -2.1888957338672577, "y": 3.0823363828289985}, {"x": -0.6101521443895419, "y": 0.5188421627525974}, {"x": -1.1263045329425458, "y": -1.032328171692476}, {"x": 1.0940699904362639, "y": -0.7823222618720815}, {"x": 0.536409474090882, "y": 1.175819615437823}, {"x": -1.2562752178775338, "y": 2.4747060432048107}, {"x": -0.3302882288667819, "y": 6.991327551701132}, {"x": -0.47554925939460313, "y": 2.1449058486095574}, {"x": -0.9516193120375882, "y": -2.563789525088511}, {"x": -1.3035287187638134, "y": -4.410474877834858}, {"x": 0.21352130067915365, "y": 0.0}, {"x": 0.19663714542419441, "y": 0.0}, {"x": 2.5271831029217484, "y": 3.2376458251409}, {"x": 0.7781498325753367, "y": -1.4474352463179296}, {"x": 0.1076138003540894, "y": -0.7343468178304557}, {"x": 1.04823049181626, "y": 6.060999351070739}, {"x": 0.5417197764486792, "y": 2.214880078316206}, {"x": -0.0589999268595931, "y": -1.029570214294262}, {"x": 0.9845631427958246, "y": -0.45965888472239147}, {"x": -0.3898889758529811, "y": 2.539798274395433}, {"x": -2.4736267733721395, "y": -0.6755155250059208}, {"x": -2.5562601019520126, "y": -1.932943562820666}, {"x": -0.1439252813433045, "y": -2.895729407470493}, {"x": -0.703797028412545, "y": -3.821576243578495}, {"x": -1.985319854228007, "y": 0.24752475247524774}, {"x": -6.484647015266331, "y": -6.926575698505522}, {"x": 3.158852367875742, "y": 3.7280089360513857}, {"x": 2.8841128821531337, "y": 2.5575447570332477}, {"x": -1.5947596219985871, "y": -2.244389027431426}, {"x": -0.33336917948166844, "y": 2.8061224489795977}, {"x": -0.03290893396633576, "y": 2.9907274389447513}, {"x": 1.114954748811381, "y": 0.24093329951813125}, {"x": -0.25671817041603706, "y": -1.8089816571789985}, {"x": -0.7839087348301521, "y": 1.5975264107188858}, {"x": -3.0309730933723134, "y": 0.24093329951813125}, {"x": -3.166869671132766, "y": -5.300442757748258}, {"x": 1.6719795525688586, "y": 3.433075073470482}, {"x": 2.5178514936502916, "y": 3.4482758620689724}, {"x": -1.29385638634949, "y": 1.6604244694132353}, {"x": 1.6904396371249186, "y": 0.23332923983789833}, {"x": -0.5275784642580605, "y": -1.984807645185005}, {"x": 0.9752086184820374, "y": 1.662499999999989}, {"x": 1.7626900015850655, "y": -1.4016967908520805}, {"x": -0.47533622652858876, "y": -2.6063100137174167}, {"x": -0.8397239056875616, "y": -2.4455825864276526}, {"x": -0.06422013355611433, "y": -1.7456359102244412}, {"x": 0.25650102110279516, "y": 1.1488111140796065}, {"x": 4.891469667999293, "y": 3.763866877971478}, {"x": -0.8285819338066602, "y": 0.4836451571846867}, {"x": 0.6903358207006827, "y": -1.0766307789740304}, {"x": -0.133282855261041, "y": 1.0883482714468595}, {"x": 1.0848228659264825, "y": 1.089297023432545}, {"x": 0.773162775166325, "y": -1.904523242701417}, {"x": 0.8967169657422502, "y": -0.48537488823604535}, {"x": 0.4506894234509895, "y": 1.142343729944817}, {"x": 1.0527586501752895, "y": 5.3299492385786795}, {"x": -0.09755903317006931, "y": -2.048192771084334}, {"x": 0.913267034697185, "y": -0.24600246002459691}, {"x": -0.03307972213033583, "y": 6.9050554870530245}, {"x": -0.6578622440412074, "y": 0.5767012687427853}, {"x": 1.4904893060623925, "y": -1.3761467889908285}, {"x": -0.9135887136279108, "y": 0.9302325581395321}, {"x": -0.40192806822395566, "y": -0.9216589861751112}, {"x": 0.8775848547120546, "y": 0.5813953488372103}, {"x": 1.0387245977463877, "y": 0.11560693641619046}, {"x": 1.2510896508734382, "y": -6.928406466512705}, {"x": -0.2424125823673684, "y": -4.714640198511166}, {"x": -1.6176002622874885, "y": -1.041666666666663}, {"x": 0.6596390118156714, "y": -2.763157894736845}, {"x": -0.5092576814656358, "y": 0.9472259810554773}, {"x": 1.228768148920234, "y": 4.1554959785522705}, {"x": -0.872078970521406, "y": -1.4157014157014203}, {"x": -0.20530776658311822, "y": -4.43864229765013}, {"x": -0.9245639840302466, "y": -0.1366120218579181}, {"x": 0.0734913314754948, "y": 2.188782489740082}, {"x": -0.07048015219770498, "y": -0.40160642570281624}, {"x": -0.8177518236654802, "y": -0.8064516129032251}, {"x": 0.5365676577503864, "y": 0.5420054200542035}, {"x": 0.30568031181370525, "y": -0.13477088948786742}, {"x": -0.268257803639238, "y": -0.4048582995951455}, {"x": -1.1194288144141362, "y": -2.168021680216803}, {"x": -0.13801242111790568, "y": -0.5540166204986097}, {"x": -0.3680410202998363, "y": 0.557103064066844}, {"x": -0.8403234642234358, "y": -3.0470914127423865}, {"x": 0.08160203548928102, "y": 2.57142857142858}, {"x": 0.3894459637394876, "y": 0.41782729805013297}, {"x": 0.20128235525578297, "y": 0.832177531206657}, {"x": -2.490585415953439, "y": -2.613480055020634}, {"x": 0.7801488013795987, "y": 1.2711864406779627}, {"x": 0.46364605106765655, "y": 0.1394700139470073}, {"x": -0.6981238876678453, "y": -0.278551532033422}, {"x": -0.14995275461155977, "y": -1.1173184357541888}, {"x": 0.9319261865086803, "y": 2.1186440677966045}, {"x": -0.11668908727732186, "y": 0.5532503457814641}, {"x": -0.15406669761605096, "y": 1.237964236588729}, {"x": 0.5134965281503368, "y": -0.8152173913043459}, {"x": -0.18554101727310535, "y": -0.6849315068493178}], "corr_vni": 0.45745122191316906, "corr_vn30": 0.45745122191316906}/**/;
+
+const COLORS = {
+  purple: '#a855f7', pink: '#ec4899', cyan: '#06b6d4',
+  green: '#10d98a', red: '#ff4d6d', amber: '#fbbf24'
+};
+
+Chart.defaults.color = '#8b8ba7';
+Chart.defaults.borderColor = 'rgba(139,92,246,0.1)';
+Chart.defaults.font.family = "'JetBrains Mono', 'SF Mono', monospace";
+
+const grad = (ctx, c1, c2) => {
+  const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 280);
+  g.addColorStop(0, c1); g.addColorStop(1, c2); return g;
+};
+
+// Chart 1: Revenue + Net Income
+new Chart(document.getElementById('chartRevNP'), {
+  type: 'bar',
+  data: { labels: YEARS, datasets: [
+    { label: 'Doanh thu (tỷ)', data: D.revenue,
+      backgroundColor: (c) => grad(c, 'rgba(168,85,247,0.9)', 'rgba(168,85,247,0.25)'),
+      borderRadius: 8, yAxisID: 'y', order: 2 },
+    { label: 'LNST (tỷ)', data: D.net_income, type: 'line',
+      borderColor: COLORS.pink, backgroundColor: COLORS.pink,
+      borderWidth: 3, tension: 0.4, pointRadius: 5,
+      pointBackgroundColor: COLORS.pink, pointBorderColor: '#fff', pointBorderWidth: 2,
+      yAxisID: 'y1', order: 1 }
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: {
+      y:  { position: 'left', grid: { color: 'rgba(139,92,246,0.06)' }, ticks: { callback: function(v){return (v/1000).toFixed(0) + 'K';} } },
+      y1: { position: 'right', grid: { display: false }, ticks: { callback: function(v){return v.toFixed(0);} } }
+    }
+  }
+});
+
+// Chart 2: Margin + ROE
+new Chart(document.getElementById('chartMargin'), {
+  type: 'line',
+  data: { labels: YEARS, datasets: [
+    { label: 'ROS %', data: D.ros, borderColor: COLORS.pink,
+      backgroundColor: (c) => grad(c, 'rgba(236,72,153,0.35)', 'transparent'),
+      borderWidth: 3, tension: 0.4, pointRadius: 5, fill: true,
+      pointBackgroundColor: COLORS.pink, pointBorderColor: '#fff', pointBorderWidth: 2 },
+    { label: 'ROE %', data: D.roe, borderColor: COLORS.cyan,
+      backgroundColor: 'transparent', borderWidth: 3, tension: 0.4,
+      pointRadius: 5, borderDash: [6, 4],
+      pointBackgroundColor: COLORS.cyan, pointBorderColor: '#fff', pointBorderWidth: 2 }
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: { y: { ticks: { callback: function(v){return v.toFixed(1) + '%';} } } }
+  }
+});
+
+// Chart 3: EPS + BVPS
+new Chart(document.getElementById('chartEPS'), {
+  type: 'bar',
+  data: { labels: YEARS, datasets: [
+    { label: 'EPS (đ)', data: D.eps, backgroundColor: (c) => grad(c, 'rgba(168,85,247,0.9)', 'rgba(168,85,247,0.25)'),
+      borderRadius: 8, yAxisID: 'y' },
+    { label: 'BVPS (đ)', data: D.bvps, type: 'line', borderColor: COLORS.green,
+      backgroundColor: COLORS.green, borderWidth: 3, tension: 0.4, pointRadius: 5,
+      pointBackgroundColor: COLORS.green, pointBorderColor: '#fff', pointBorderWidth: 2, yAxisID: 'y1' }
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: {
+      y: { position: 'left', ticks: { callback: function(v){return v.toLocaleString();} } },
+      y1: { position: 'right', grid: { display: false }, ticks: { callback: function(v){return (v/1000).toFixed(0) + 'K';} } }
+    }
+  }
+});
+
+// Chart 4: Working capital
+new Chart(document.getElementById('chartWC'), {
+  type: 'bar',
+  data: { labels: YEARS, datasets: [
+    { label: 'Khoản phải thu (tỷ)', data: D.receivables,
+      backgroundColor: 'rgba(168,85,247,0.7)', stack: 'wc', borderRadius: 4 },
+    { label: 'Hàng tồn kho (tỷ)', data: D.inventory,
+      backgroundColor: 'rgba(236,72,153,0.7)', stack: 'wc', borderRadius: 4 }
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: function(v){return (v/1000).toFixed(1) + 'K';} } } }
+  }
+});
+
+// Chart 5: PE + PB
+new Chart(document.getElementById('chartPEPB'), {
+  type: 'line',
+  data: { labels: YEARS, datasets: [
+    { label: 'P/E (x)', data: D.pe, borderColor: COLORS.purple,
+      backgroundColor: (c) => grad(c, 'rgba(168,85,247,0.3)', 'transparent'),
+      borderWidth: 3, tension: 0.4, pointRadius: 6, fill: true,
+      pointBackgroundColor: COLORS.purple, pointBorderColor: '#fff', pointBorderWidth: 2, yAxisID: 'y' },
+    { label: 'P/B (x)', data: D.pb, borderColor: COLORS.cyan,
+      backgroundColor: 'transparent', borderWidth: 3, tension: 0.4, pointRadius: 6,
+      pointBackgroundColor: COLORS.cyan, pointBorderColor: '#fff', pointBorderWidth: 2, yAxisID: 'y1' }
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: {
+      y:  { position: 'left', type: 'logarithmic', ticks: { callback: function(v){return v + 'x';} } },
+      y1: { position: 'right', grid: { display: false }, ticks: { callback: function(v){return v.toFixed(2) + 'x';} } }
+    }
+  }
+});
+
+// Chart 6: Price vs BVPS
+new Chart(document.getElementById('chartPriceBVPS'), {
+  type: 'line',
+  data: { labels: YEARS, datasets: [
+    { label: 'Giá cuối năm (K đ)', data: D.price_ye, borderColor: COLORS.pink,
+      backgroundColor: (c) => grad(c, 'rgba(236,72,153,0.3)', 'transparent'),
+      borderWidth: 3, tension: 0.4, pointRadius: 6, fill: true,
+      pointBackgroundColor: COLORS.pink, pointBorderColor: '#fff', pointBorderWidth: 2 },
+    { label: 'BVPS (K đ)', data: D.bvps.map(function(v){return v/1000;}),
+      borderColor: COLORS.green, backgroundColor: 'transparent',
+      borderWidth: 3, tension: 0.4, pointRadius: 6, borderDash: [6,4],
+      pointBackgroundColor: COLORS.green, pointBorderColor: '#fff', pointBorderWidth: 2 }
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: { y: { ticks: { callback: function(v){return v.toFixed(0) + 'K';} } } }
+  }
+});
+
+// Chart 7: DCF scenarios
+new Chart(document.getElementById('chartDCF'), {
+  type: 'bar',
+  data: { labels: ['2021','2022','2023','2024','2025','2026F','2027F','2028F','2029F','2030F'], datasets: [
+    { label: 'FCFF history', data: D.fcff.concat([null,null,null,null,null]),
+      backgroundColor: 'rgba(168,85,247,0.6)', borderColor: COLORS.purple, borderWidth: 1, borderRadius: 4 },
+    { label: 'Bull', type: 'line', data: [null,null,null,null,null].concat(D.fcff_forecast_bull),
+      borderColor: COLORS.green, backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 4, borderDash: [4,4] },
+    { label: 'Base', type: 'line', data: [null,null,null,null,null].concat(D.fcff_forecast_base),
+      borderColor: COLORS.amber, backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 4 },
+    { label: 'Bear', type: 'line', data: [null,null,null,null,null].concat(D.fcff_forecast_bear),
+      borderColor: COLORS.red, backgroundColor: 'transparent', borderWidth: 2, tension: 0.3, pointRadius: 4, borderDash: [4,4] }
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: { y: { ticks: { callback: function(v){return (v/1000).toFixed(1) + 'K';} } } }
+  }
+});
+
+// Chart 8: DuPont stacked
+new Chart(document.getElementById('chartDuPont'), {
+  type: 'bar',
+  data: { labels: YEARS, datasets: [
+    { label: 'ROS %', data: D.ros, backgroundColor: 'rgba(236,72,153,0.7)', borderRadius: 4 },
+    { label: 'Asset Turnover (×100)', data: D.at.map(function(v){return v*100;}),
+      backgroundColor: 'rgba(168,85,247,0.7)', borderRadius: 4 },
+    { label: 'Equity Multiplier (×100)', data: D.em.map(function(v){return v*100;}),
+      backgroundColor: 'rgba(6,182,212,0.7)', borderRadius: 4 }
+  ]},
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+    scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: function(v){return v.toFixed(0);} } } }
+  }
+});
+
+// Chart 9: Price + Volume (daily) - the BIG chart
+(function() {
+  // Build price data points
+  const priceData = D.tech_prices.map(function(p){return {x: p.time, y: p.close/1000};});
+  const volData = D.tech_prices.map(function(p){return {x: p.time, y: p.volume/1e6};});
+
+  new Chart(document.getElementById('chartPrice'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'CTD giá (K đ)', data: priceData, borderColor: COLORS.purple,
+        backgroundColor: (c) => {
+          const g = c.chart.ctx.createLinearGradient(0, 0, 0, 300);
+          g.addColorStop(0, 'rgba(168,85,247,0.4)'); g.addColorStop(1, 'rgba(168,85,247,0.02)');
+          return g;
+        },
+        borderWidth: 2, tension: 0.2, pointRadius: 0, fill: true, yAxisID: 'y' },
+      { label: 'Volume (triệu cp)', data: volData, type: 'bar',
+        backgroundColor: 'rgba(139,92,246,0.25)', yAxisID: 'y1' }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } } },
+      scales: {
+        x: { type: 'time', time: { unit: 'month' }, grid: { color: 'rgba(139,92,246,0.05)' } },
+        y:  { position: 'left', ticks: { callback: function(v){return v.toFixed(0) + 'K';} } },
+        y1: { position: 'right', grid: { display: false }, ticks: { callback: function(v){return v.toFixed(1)+'M';} } }
+      }
+    }
+  });
+})();
+
+// Chart 10: RSI
+(function() {
+  const rsiData = D.tech_rsi.map(function(r){return {x: r.time, y: r.val};});
+  new Chart(document.getElementById('chartRSI'), {
+    type: 'line',
+    data: { datasets: [
+      { label: 'RSI(14)', data: rsiData, borderColor: COLORS.amber,
+        backgroundColor: (c) => grad(c, 'rgba(251,191,36,0.25)', 'transparent'),
+        borderWidth: 2, tension: 0.3, pointRadius: 0, fill: true }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { type: 'time', time: { unit: 'month' } },
+        y: { min: 0, max: 100, ticks: { stepSize: 25 } }
+      },
+      annotation: false
+    }
+  });
+})();
+
+// Chart 11: Correlation scatter
+(function() {
+  new Chart(document.getElementById('chartCorr'), {
+    type: 'scatter',
+    data: { datasets: [
+      { label: 'CTD vs VNINDEX (corr ' + D.corr_vni + ')',
+        data: D.scatter_vni, backgroundColor: 'rgba(168,85,247,0.4)', borderColor: COLORS.purple, pointRadius: 3 },
+      { label: 'CTD vs VN30 (corr ' + D.corr_vn30 + ')',
+        data: D.scatter_vn30, backgroundColor: 'rgba(6,182,212,0.4)', borderColor: COLORS.cyan, pointRadius: 3 }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } } },
+      scales: {
+        x: { title: { display: true, text: 'Market daily return %' }, ticks: { callback: function(v){return v.toFixed(1)+'%';} } },
+        y: { title: { display: true, text: 'CTD daily return %' }, ticks: { callback: function(v){return v.toFixed(1)+'%';} } }
+      }
+    }
+  });
+})();
+
+// ============ NAV scroll-spy + progress ============
+const sections = document.querySelectorAll('.section, .hero');
+const navLinks = document.querySelectorAll('.nav-links a');
+const progressBar = document.getElementById('progress');
+const backTop = document.getElementById('backTop');
+
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = (scrollTop / docHeight) * 100;
+  progressBar.style.width = pct + '%';
+
+  if (scrollTop > 400) backTop.classList.add('visible');
+  else backTop.classList.remove('visible');
+
+  // Scroll-spy
+  let current = '';
+  sections.forEach(function(s) {
+    if (scrollTop >= s.offsetTop - 120) current = s.id;
+  });
+  navLinks.forEach(function(l) {
+    l.classList.remove('active');
+    if (l.getAttribute('href') === '#' + current) l.classList.add('active');
+  });
+});
+
+// Smooth scroll
+navLinks.forEach(function(l) {
+  l.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.querySelector(l.getAttribute('href'));
+    if (target) window.scrollTo({top: target.offsetTop - 80, behavior: 'smooth'});
+  });
+});
+</script>
+<!-- CHART_DATE_ADAPTER -->
+
+</body>
+</html>

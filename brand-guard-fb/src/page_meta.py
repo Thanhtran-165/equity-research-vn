@@ -17,7 +17,7 @@ from src.models import PageMeta
 _YEAR_RE = re.compile(r"(?:Page created|Created on|Tham gia|Thành lập).*?(20\d{2})", re.IGNORECASE)
 _RECENT_POST_RE = re.compile(r"data-utime=\"(\d{10,})\"")
 _CACHE_DIR = Path(".cache/page_meta")
-_CACHE_TTL_SECONDS = 24 * 3600
+_CACHE_TTL_SECONDS = 7 * 24 * 3600  # 7 ngày — profiles clean không cần re-check mỗi ngày
 _HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -29,6 +29,17 @@ _HEADERS = {
 
 def _cache_key(url: str) -> str:
     return hashlib.sha1(url.encode("utf-8")).hexdigest()
+
+
+def _slug_from_url(url: str) -> str:
+    """Derive a UNIQUE filename slug from URL.
+
+    BUGFIX (cache collision): Previously used urlparse path's first segment
+    which collapses all /people/* URLs to slug 'people' and all /profile.php
+    to 'profile.php' — causing every profile to overwrite the same avatar file.
+    Now uses short SHA1 hash of full URL to guarantee uniqueness per profile.
+    """
+    return hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
 
 
 def _cache_path(url: str) -> Path:
@@ -50,12 +61,16 @@ def _read_cache(url: str, ttl: int = _CACHE_TTL_SECONDS) -> PageMeta | None:
     meta = _meta_from_dict(url, data)
     # B.1 FIX: If avatar/cover was cleared (CDN URL expired), cache is stale —
     # invalidate so caller re-fetches fresh metadata with new CDN URLs.
+    # C.2 FIX: But don't invalidate for profiles that genuinely have no avatar
+    # (clean profiles without avatar, or FB-restricted profiles). Check a marker
+    # field instead — if "avatar_checked" is True, profile was verified, keep cache.
     if not meta.avatar_url and not meta.cover_url and meta.title:
-        return None
+        if not data.get("avatar_checked", False):
+            return None
     return meta
 
 
-def _write_cache(url: str, meta: PageMeta) -> None:
+def _write_cache(url: str, meta: PageMeta, brand_id: str = "", source: str = "public") -> None:
     p = _cache_path(url)
     # B.1 FIX: Don't cache CDN URLs — they expire after ~6h (signature mismatch).
     # Only cache LOCAL file paths (stable). If avatar_url is a CDN URL, clear it
@@ -67,6 +82,7 @@ def _write_cache(url: str, meta: PageMeta) -> None:
     if cover_to_cache and cover_to_cache.startswith(("http://", "https://")):
         cover_to_cache = ""
     payload = {
+        "url": url,
         "title": meta.title,
         "description": meta.description,
         "avatar_url": avatar_to_cache,
@@ -76,6 +92,14 @@ def _write_cache(url: str, meta: PageMeta) -> None:
         "recent_post_count_30d": meta.recent_post_count_30d,
         "fetched_at": meta.fetched_at,
         "fetched_ts": time.time(),
+        # C.2: Mark that avatar was checked — prevents re-fetch of profiles
+        # that genuinely have no avatar (clean profiles, FB-restricted accounts).
+        "avatar_checked": True,
+        # P3: Cache hardening — brand_id + source for namespace isolation
+        "brand_id": brand_id,
+        "source": source,
+        "has_avatar": bool(avatar_to_cache and Path(avatar_to_cache).exists()),
+        "has_cover": bool(cover_to_cache and Path(cover_to_cache).exists()),
     }
     p.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -92,6 +116,99 @@ def _meta_from_dict(url: str, data: dict) -> PageMeta:
         recent_post_count_30d=data.get("recent_post_count_30d", 0),
         fetched_at=data.get("fetched_at", ""),
     )
+
+
+def list_cached_urls(brand: "Brand | None" = None) -> list[str]:
+    """List tất cả URL hợp lệ trong cache, optionally filter theo brand.
+
+    Dùng cho --no-network mode: thay vì return empty khi không có URLs,
+    đọc tất cả cache JSON files → lấy field "url" → filter official URLs.
+
+    P3: Nếu cache entry có brand_id, chỉ trả URL match brand_id.
+        Nếu cache entry không có brand_id (cache cũ), vẫn trả (backward-compatible).
+
+    Args:
+        brand: nếu truyền vào, loại trừ URL chính chủ của brand này + filter brand_id.
+
+    Returns list of URLs.
+    """
+    urls: list[str] = []
+    if not _CACHE_DIR.exists():
+        return urls
+
+    for f in _CACHE_DIR.glob("*.json"):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            url = data.get("url", "")
+            if not url:
+                continue
+            # Skip stale entries (TTL check)
+            fetched_ts = data.get("fetched_ts", 0)
+            if time.time() - fetched_ts > _CACHE_TTL_SECONDS:
+                continue
+            # P3: brand_id filter — if entry has brand_id and it doesn't match, skip
+            entry_brand_id = data.get("brand_id", "")
+            if brand is not None and entry_brand_id and entry_brand_id != brand.id:
+                continue
+            # Filter official URLs
+            if brand is not None:
+                official_urls = {
+                    brand.official_page_url.rstrip("/").lower(),
+                    f"https://www.facebook.com/{brand.official_username}".rstrip("/").lower(),
+                }
+                if url.rstrip("/").lower() in official_urls:
+                    continue
+            urls.append(url)
+        except (json.JSONDecodeError, OSError):
+            continue
+    return urls
+
+
+def inspect_cache(brand_id: str | None = None) -> dict:
+    """Inspect cache: count entries, stale count, by brand, by source.
+
+    Returns dict with summary stats.
+    """
+    stats: dict = {
+        "total": 0,
+        "stale": 0,
+        "valid": 0,
+        "by_brand": {},
+        "by_source": {},
+        "with_avatar": 0,
+        "with_cover": 0,
+    }
+    if not _CACHE_DIR.exists():
+        return stats
+
+    for f in _CACHE_DIR.glob("*.json"):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        stats["total"] += 1
+
+        fetched_ts = data.get("fetched_ts", 0)
+        is_stale = time.time() - fetched_ts > _CACHE_TTL_SECONDS
+        if is_stale:
+            stats["stale"] += 1
+        else:
+            stats["valid"] += 1
+
+        bid = data.get("brand_id", "(legacy)")
+        if brand_id and bid != brand_id and bid != "(legacy)":
+            continue
+        stats["by_brand"][bid] = stats["by_brand"].get(bid, 0) + 1
+
+        source = data.get("source", "(unknown)")
+        stats["by_source"][source] = stats["by_source"].get(source, 0) + 1
+
+        if data.get("has_avatar"):
+            stats["with_avatar"] += 1
+        if data.get("has_cover"):
+            stats["with_cover"] += 1
+
+    return stats
 
 
 def parse_page_meta(url: str, html: str) -> PageMeta:
@@ -253,11 +370,7 @@ def fetch_page_meta_with_context(
         # Download avatar + cover ngay trong context
         # Giữ CDN URL nếu download fail (sẽ retry pHash via download_to_temp)
         if download_avatar:
-            slug = re.sub(
-                r"[^\w.\-]", "_",
-                urlparse(url).path.strip("/").split("/")[0]
-                or urlparse(url).query.replace("id=", "")
-            )[:50]
+            slug = _slug_from_url(url)
             if meta.avatar_url:
                 avatar_local = _CACHE_DIR / f"{slug}_avatar.jpg"
                 if _download_avatar_via_page(page, meta.avatar_url, avatar_local):
@@ -344,13 +457,13 @@ def fetch_page_meta(url: str, timeout: int = 15, use_playwright_fallback: bool =
     # Quantitative: keep BOTH CDN URL (for fallback pHash via download_to_temp)
     # AND local path (preferred). Avatar local wins if download success.
     if meta.avatar_url:
-        slug = re.sub(r"[^\w.\-]", "_", urlparse(url).path.strip("/").split("/")[0])[:50]
+        slug = _slug_from_url(url)
         avatar_local = _CACHE_DIR / f"{slug}_avatar.jpg"
         if _download_avatar_in_session(session, meta.avatar_url, avatar_local):
             meta.avatar_url = str(avatar_local)
         # else: giữ nguyên CDN URL — _phash_distance sẽ thử download lại
     if meta.cover_url:
-        slug = re.sub(r"[^\w.\-]", "_", urlparse(url).path.strip("/").split("/")[0])[:50]
+        slug = _slug_from_url(url)
         cover_local = _CACHE_DIR / f"{slug}_cover.jpg"
         if _download_avatar_in_session(session, meta.cover_url, cover_local):
             meta.cover_url = str(cover_local)

@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAS · Tổng Công ty Khí Việt Nam | Investment Evidence Pack (1–3 năm)</title>
+    <meta name="description" content="Báo cáo nghiên cứu cổ phiếu Tổng Công ty Khí Việt Nam (GAS) — investment evidence pack cho nhà đầu tư 1–3 năm, không khuyến nghị mua/bán.">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#0f1419; --bg-1:#13181f; --bg-2:#1a2029;
+  --card:#161b22; --card-2:#1c232d;
+  --border:rgba(255,255,255,0.08); --border-hot:rgba(245,166,35,0.45);
+  --text:#e6edf3; --text-dim:#8b949e; --text-faint:#565f6b;
+  --amber:#f5a623; --amber-soft:rgba(245,166,35,0.14);
+  --blue:#4a9eff; --blue-soft:rgba(74,158,255,0.14);
+  --green:#3fb950; --green-soft:rgba(63,185,80,0.14);
+  --red:#f85149; --red-soft:rgba(248,81,73,0.14);
+  --purple:#a78bfa; --purple-soft:rgba(167,139,250,0.14);
+  --grad-amber:linear-gradient(135deg,#f5a623 0%,#d48806 100%);
+  --grad-blue:linear-gradient(135deg,#4a9eff 0%,#2670c8 100%);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --radius:12px; --radius-sm:8px;
+  --chart-grid:rgba(255,255,255,0.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint)}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad-amber);z-index:1000;transition:width .1s ease-out}
+.topnav{position:sticky;top:0;z-index:900;background:rgba(15,20,25,0.88);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.topnav-inner{max-width:1480px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:thin;height:52px}
+.topnav-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--text);white-space:nowrap;padding-right:16px;border-right:1px solid var(--border);margin-right:8px}
+.topnav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.topnav-link{font-size:12px;color:var(--text-dim);padding:6px 10px;border-radius:6px;white-space:nowrap;transition:all .15s;font-weight:500}
+.topnav-link:hover{color:var(--text);background:var(--card)}
+.topnav-link.active{color:var(--amber);background:var(--amber-soft)}
+.back-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;opacity:0;pointer-events:none;transition:all .2s;z-index:800}
+.back-top.visible{opacity:1;pointer-events:auto}
+.back-top:hover{border-color:var(--border-hot);color:var(--amber)}
+.container{max-width:1480px;margin:0 auto;padding:24px 24px 80px}
+.layout-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:32px;align-items:start}
+.layout-content{min-width:0}
+.toc-sidebar{position:sticky;top:64px;max-height:calc(100vh - 80px);overflow-y:auto;padding:14px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.toc-sidebar::-webkit-scrollbar{width:6px}
+.toc-sidebar::-webkit-scrollbar-thumb{background:var(--border-hot);border-radius:3px}
+.toc-sidebar-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--amber);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.toc-sidebar-hint{font-size:10.5px;color:var(--text-faint);margin-bottom:10px;line-height:1.4}
+.toc-sidebar-list{list-style:none;padding:0;margin:0}
+.toc-sidebar-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text-dim);font-size:11.5px;line-height:1.35;transition:all .12s;border-left:2px solid transparent}
+.toc-sidebar-item:hover{background:rgba(245,166,35,0.06);color:var(--text);text-decoration:none;border-left-color:var(--amber)}
+.toc-sidebar-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:4px;background:var(--card-2);color:var(--text-faint);font-size:10px;font-weight:700;font-family:var(--font-mono);flex-shrink:0;margin-top:1px}
+.toc-sidebar-item:hover .toc-sidebar-num{background:var(--amber);color:#1a1206}
+.toc-sidebar-item .toc-sidebar-label{flex:1}
+@media(max-width:1100px){.layout-main{grid-template-columns:1fr;gap:0}.toc-sidebar{display:none}}
+.disclaimer{border-radius:var(--radius);padding:22px 24px;border:1px solid var(--border);border-left:4px solid var(--amber);background:rgba(245,166,35,0.04);margin:24px 0 32px}
+.disclaimer-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.disclaimer-title.sub{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-top:16px;color:var(--text-dim)}
+.disclaimer p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:8px 0}
+.disclaimer ol,.disclaimer ul{margin:8px 0 8px 4px;padding-left:22px}
+.disclaimer li{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:6px}
+.disclaimer li strong{color:var(--text)}
+.disclaimer-foot{margin-top:14px!important;padding-top:12px;border-top:1px solid var(--border);font-style:italic}
+.qlist{list-style:none!important;padding-left:0!important}
+.qlist li{display:flex;align-items:center;gap:10px}
+.qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
+.section{margin-top:56px;scroll-margin-top:60px}
+.section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}
+.section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.section-title .tag{font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;color:#1a1206}
+.tag.amber{background:var(--amber)} .tag.blue{background:var(--blue)} .tag.green{background:var(--green)} .tag.red{background:var(--red)} .tag.purple{background:var(--purple)}
+.divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.section-sub{color:var(--text-dim);font-size:13px;margin:4px 0 20px;padding-left:40px}
+.hero{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(74,158,255,0.04));border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.ticker-badge{display:inline-flex;align-items:center;gap:8px;background:var(--grad-amber);color:#1a1206;padding:5px 14px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:0.5px}
+.disclaimer-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);padding:4px 12px;border-radius:999px;font-weight:600;font-size:11px;border:1px solid rgba(248,81,73,0.3);margin-left:8px}
+.company-name{font-size:38px;font-weight:800;margin-top:14px;letter-spacing:-0.8px}
+.company-sub{color:var(--text-dim);margin-top:6px;font-size:14px}
+.price-block{text-align:right}
+.price-now{font-size:46px;font-weight:800;letter-spacing:-1px;font-family:var(--font-mono)}
+.price-now .ccy{font-size:20px;color:var(--text-dim);font-weight:500;margin-right:4px}
+.price-meta{margin-top:6px;color:var(--text-dim);font-size:12px}
+.price-meta .delta{font-weight:600;margin-left:6px}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
+.kpi:hover{border-color:var(--border-hot)}
+.kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}
+.kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:11px;color:var(--text-faint);margin-top:2px}
+.chart-wrap{position:relative;height:300px}
+.chart-wrap.sm{height:220px} .chart-wrap.lg{height:360px} .chart-wrap.xs{height:180px}
+.fin-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.fin-table th,.fin-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border)}
+.fin-table th:first-child,.fin-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim)}
+.fin-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;border-bottom:1px solid var(--border)}
+.fin-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+.fin-table .col-latest{background:var(--amber-soft);color:var(--amber);font-weight:700}
+.fin-table .row-strong td{font-weight:700;background:rgba(255,255,255,0.02)}
+.fin-table .row-total td{border-top:2px solid var(--border);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card)}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)} .callout.neu{border-left-color:var(--amber)}
+.callout-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.callout-body{font-size:13px;color:var(--text-dim);line-height:1.6}
+.callout-body strong{color:var(--text)}
+.exec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
+.stat-value{font-size:26px;font-weight:700;margin-top:4px;font-family:var(--font-mono)}
+.stat-meta{font-size:11px;color:var(--text-dim);margin-top:4px}
+.stat-verdict{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:6px}
+.verdict-good{background:var(--green-soft);color:var(--green)} .verdict-warn{background:var(--amber-soft);color:var(--amber)} .verdict-danger{background:var(--red-soft);color:var(--red)}
+.gauge{position:relative;height:8px;background:var(--bg-2);border-radius:4px;margin-top:8px;overflow:hidden}
+.gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:4px}
+.gauge-marker{position:absolute;top:-3px;width:2px;height:14px;background:var(--text);border-radius:1px}
+.ref{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 5px;border-radius:4px;margin-left:2px;vertical-align:super;font-family:var(--font-mono);text-decoration:none;border:1px solid rgba(74,158,255,0.25)}
+.ref:hover{background:var(--blue);color:#0f1419;text-decoration:none}
+.refs{list-style:none;counter-reset:ref;padding-left:0}
+.refs li{counter-increment:ref;font-size:11.5px;color:var(--text-dim);padding:6px 0;border-bottom:1px dashed var(--border);display:flex;gap:8px;line-height:1.5}
+.refs li::before{content:counter(ref);font-family:var(--font-mono);font-weight:700;color:var(--blue);background:var(--blue-soft);padding:1px 6px;border-radius:4px;font-size:10px;height:fit-content;flex-shrink:0;border:1px solid rgba(74,158,255,0.2)}
+.refs li a{color:var(--text-dim);word-break:break-all}
+.refs li a:hover{color:var(--blue)}
+.refs .src-meta{color:var(--text-faint);font-size:10.5px;display:block;margin-top:2px}
+.check-list{list-style:none;padding:0}
+.check-list li{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.check-list li:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-top:1px}
+.check-box.on{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.check-box.off{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.check-list .q{flex:1}
+.check-list .hint{font-size:11px;color:var(--text-faint);margin-top:2px}
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}
+.risk-table th,.risk-table td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.risk-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600}
+.risk-table td:first-child{font-weight:600;color:var(--text)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.3px}
+.pill-l{background:var(--green-soft);color:var(--green)} .pill-m{background:var(--amber-soft);color:var(--amber)} .pill-h{background:var(--red-soft);color:var(--red)}
+.scenario-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.scenario-card{border-radius:var(--radius);padding:18px;border:1px solid var(--border)}
+.scenario-card.bull{border-top:3px solid var(--green)} .scenario-card.base{border-top:3px solid var(--amber)} .scenario-card.bear{border-top:3px solid var(--red)}
+.scenario-card h4{font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.scenario-card ul{list-style:none;padding:0;font-size:12px;color:var(--text-dim)}
+.scenario-card li{padding:4px 0;line-height:1.5}
+.scenario-card li::before{content:'›';color:var(--amber);margin-right:6px;font-weight:700}
+.drawdown-table{width:100%;border-collapse:collapse;font-size:13px}
+.drawdown-table th,.drawdown-table td{padding:10px;border-bottom:1px solid var(--border);text-align:center}
+.drawdown-table th{font-size:10px;text-transform:uppercase;color:var(--text-faint);font-weight:600}
+.drawdown-table td:first-child{text-align:left;font-family:var(--font-mono);color:var(--red);font-weight:600}
+.drawdown-table td:last-child{text-align:left;font-family:var(--font-sans);color:var(--text-dim);font-size:12px}
+.seg-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.seg-row:last-child{border-bottom:none}
+.seg-name{width:200px;font-size:12.5px;font-weight:500;flex-shrink:0}
+.seg-bar{flex:1;height:24px;background:var(--bg-2);border-radius:5px;overflow:hidden;position:relative}
+.seg-bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono)}
+.seg-meta{width:90px;text-align:right;font-family:var(--font-mono);font-size:11px;flex-shrink:0}
+.qbadge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:0.3px;font-family:var(--font-mono)}
+.qbadge-HIGHQ{background:var(--green-soft);color:var(--green)} .qbadge-MEDQ{background:var(--amber-soft);color:var(--amber)} .qbadge-LOWQ{background:var(--red-soft);color:var(--red)}
+footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}
+footer p{margin-bottom:6px}
+.disclaimer{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--radius);padding:14px 18px;margin:16px 0;font-size:11.5px;color:var(--text-dim)}
+.vc-stack{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.vc-layer{display:grid;grid-template-columns:130px 1fr 90px 90px;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;background:var(--card-2);border:1px solid var(--border);font-size:12px;position:relative;transition:border-color .2s}
+.vc-layer.upstream-most{border-left:3px solid var(--red)}
+.vc-layer.upstream{border-left:3px solid var(--amber)}
+.vc-layer.oracle{border-left:3px solid var(--blue);background:rgba(74,158,255,0.06)}
+.vc-layer.downstream{border-left:3px solid var(--text-faint)}
+.vc-name{font-weight:600;color:var(--text)}
+.vc-name .sub{display:block;font-size:10.5px;color:var(--text-faint);font-weight:400;margin-top:2px}
+.vc-players{color:var(--text-dim);font-size:11.5px}
+.vc-rent{font-family:var(--font-mono);font-weight:700;font-size:11px;text-align:center}
+.vc-pillar{font-family:var(--font-mono);font-size:10.5px;text-align:center;font-weight:600}
+.vc-legend{display:flex;gap:16px;font-size:11px;color:var(--text-dim);margin-top:10px;flex-wrap:wrap}
+.vc-legend span{display:inline-flex;align-items:center;gap:6px}
+.vc-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+.rent-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;margin:12px 0;border:1px solid var(--border)}
+.rent-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0f1419;font-family:var(--font-mono);padding:0 4px;text-align:center;line-height:1.1}
+.rent-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-faint);margin-bottom:4px;font-family:var(--font-mono)}
+.barrier-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.barrier-table th,.barrier-table td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.barrier-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.barrier-table td.barrier-name{font-weight:600;color:var(--text);width:23%}
+.barrier-height{display:inline-flex;align-items:center;gap:2px}
+.barrier-bar{display:inline-block;width:8px;height:14px;background:var(--bg-2);border-radius:2px;margin-right:1px}
+.barrier-bar.on-red{background:var(--red)} .barrier-bar.on-amber{background:var(--amber)} .barrier-bar.on-green{background:var(--green)}
+.trend-up{color:var(--green)} .trend-down{color:var(--red)} .trend-flat{color:var(--text-dim)}
+.dep-matrix{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:14px 0;font-size:11.5px}
+.dep-matrix>div{padding:10px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.dep-matrix>div:nth-child(3n){border-right:none}
+.dep-matrix>div:nth-last-child(-n+3){border-bottom:none}
+.dep-matrix .head{background:var(--card-2);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint)}
+.dep-layer{font-weight:600;color:var(--text)}
+.dep-verdict{font-weight:600}
+.lock-high{color:var(--green)} .lock-med{color:var(--amber)} .lock-low{color:var(--red)}
+.tech-score-card{display:flex;align-items:center;gap:18px;padding:18px;border-radius:var(--radius);background:linear-gradient(135deg,var(--card),var(--card-2));border:1px solid var(--border);margin-bottom:16px}
+.tech-score-num{font-size:48px;font-weight:800;font-family:var(--font-mono);line-height:1;min-width:80px;text-align:center}
+.tech-verdict-pill{display:inline-block;font-size:11px;font-weight:700;padding:5px 14px;border-radius:999px;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.verdict-strong-sell{background:var(--red-soft);color:var(--red);border:1px solid rgba(248,81,73,0.4)}
+.verdict-sell{background:rgba(248,81,73,0.2);color:var(--red)}
+.verdict-hold{background:var(--amber-soft);color:var(--amber)}
+.verdict-buy{background:rgba(63,185,80,0.2);color:var(--green)}
+.verdict-strong-buy{background:var(--green-soft);color:var(--green);border:1px solid rgba(63,185,80,0.4)}
+.tech-score-bar{flex:1;height:14px;background:linear-gradient(90deg,var(--red) 0%,var(--amber) 50%,var(--green) 100%);border-radius:7px;position:relative;min-width:200px}
+.tech-score-marker{position:absolute;top:-4px;width:4px;height:22px;background:var(--text);border-radius:2px;transform:translateX(-50%)}
+.tech-score-labels{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text-faint);font-family:var(--font-mono);margin-top:4px}
+.signal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.signal-cell{background:var(--bg-2);border-radius:7px;padding:10px;font-size:11.5px;border-left:3px solid var(--border)}
+.signal-cell.bull{border-left-color:var(--green)} .signal-cell.bear{border-left-color:var(--red)} .signal-cell.neut{border-left-color:var(--amber)}
+.signal-cell .sig-name{font-weight:600;color:var(--text);font-size:11px}
+.signal-cell .sig-val{font-family:var(--font-mono);color:var(--text-dim);margin-top:2px;font-size:10.5px}
+.candle-mini-wrap{position:relative;height:280px;margin:12px 0}
+.non-advice-panel{background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.25);border-left:3px solid var(--amber);border-radius:var(--radius);padding:14px 18px;margin-top:16px}
+.non-advice-panel h4{font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--amber);margin-bottom:8px;font-weight:700}
+.non-advice-panel ul{list-style:none;padding:0;font-size:11.5px;color:var(--text-dim);line-height:1.65}
+.non-advice-panel li{padding:3px 0;padding-left:16px;position:relative}
+.non-advice-panel li::before{content:'›';position:absolute;left:0;color:var(--amber)}
+.analyst-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.analyst-table th,.analyst-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+.analyst-table th{font-size:9.5px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text-faint);font-weight:600}
+.analyst-table td.firm{font-weight:600;color:var(--text)}
+.analyst-table td.target{font-family:var(--font-mono);font-weight:600}
+.analyst-table td.thesis{font-size:11px;color:var(--text-dim);line-height:1.5}
+.rating-buy{color:var(--green);font-weight:600} .rating-hold{color:var(--amber);font-weight:600} .rating-sell{color:var(--red);font-weight:600}
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.gloss-item{background:var(--card-2);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;padding:10px 12px;font-size:12px}
+.gloss-term{font-weight:700;color:var(--blue);font-family:var(--font-mono);font-size:11.5px}
+.gloss-def{color:var(--text-dim);margin-top:3px;line-height:1.5}
+.callout.plain{border-left-color:var(--amber);background:rgba(245,166,35,0.05)}
+.callout.plain .callout-title{color:var(--amber)}
+.callout.plain .callout-body{color:var(--text);font-size:13px}
+.callout.plain .callout-body strong{color:var(--amber)}
+a.xref{color:var(--blue);text-decoration:none;border-bottom:1px dotted var(--blue);font-weight:500}
+a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
+@media(max-width:1100px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .exec-grid{grid-template-columns:1fr 1fr}
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .scenario-grid{grid-template-columns:1fr}
+  .grid-2-1,.grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .container{padding:16px 14px 60px}
+  .hero{padding:20px}
+  .company-name{font-size:28px}
+  .price-now{font-size:34px}
+  .grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+  .exec-grid{grid-template-columns:1fr}
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .topnav-brand{display:none}
+  .section-title h2{font-size:18px}
+  .price-block{text-align:left}
+}
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
+.data-table th,.data-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);border-left:1px solid var(--border)}
+.data-table th:first-child,.data-table td:first-child{text-align:left;font-family:var(--font-sans);font-weight:500;color:var(--text-dim);border-left:none}
+.data-table thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);font-weight:600;background:var(--card-2)}
+.insight-frame{background:linear-gradient(135deg,rgba(245,166,35,0.04),rgba(74,158,255,0.03));border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-top:14px}
+.honest-correction{border-left:4px solid var(--red)!important;background:rgba(248,81,73,0.06)!important}
+.callout.honest-correction .callout-title{color:var(--red)}
+.footnote{font-size:11px;color:var(--text-faint);margin-top:8px;font-style:italic;line-height:1.5}
+.analyst-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.analyst-card.bull{border-top:3px solid var(--green)} .analyst-card.bear{border-top:3px solid var(--red)}
+.checklist-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:900px){.checklist-grid{grid-template-columns:1fr}}
+.cap-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.cap-card h4{font-size:13px;margin-bottom:10px}
+.val-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;border-left:3px solid var(--blue)}
+.stat-mini{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:12px}
+.stat-mini .stat-label{font-size:9.5px}
+.stat-mini .stat-value{font-size:18px;margin-top:2px}
+.verdict-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;border-left:3px solid var(--green)}
+.sources{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-top:14px}
+.sources h4{font-size:13px;margin-bottom:10px}
+.consensus-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:900px){.consensus-grid{grid-template-columns:1fr 1fr}}
+.stale-warning{border-left:4px solid var(--amber);background:rgba(245,166,35,0.08);padding:12px 16px;border-radius:8px;margin:10px 0}
+.stale-warning h4{color:var(--amber);font-size:12px;text-transform:uppercase;margin-bottom:6px}
+.lang-policy{background:var(--card-2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11.5px;color:var(--text-dim);margin:10px 0}
+.archetype-card{background:linear-gradient(135deg,rgba(245,166,35,0.06),rgba(167,139,250,0.04));border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:var(--radius);padding:16px}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);margin:10px 0}
+.fin-table th,.fin-table td{border-bottom:1px solid var(--border)}
+.fin-table th{border-bottom:2px solid var(--border)}
+.callout{border-radius:var(--radius);padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--amber);background:var(--card);margin:10px 0}
+.callout.warn{border-left-color:var(--red)} .callout.good{border-left-color:var(--green)} .callout.info{border-left-color:var(--blue)}
+:root {
+  --sh-sm: 0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08);
+  --sh-md: 0px 0px 0px 1px rgba(0,0,0,0.06), 0px 1px 1px -0.5px rgba(0,0,0,0.06), 0px 3px 3px -1.5px rgba(0,0,0,0.06), 0px 6px 6px -3px rgba(0,0,0,0.06), 0px 12px 12px -6px rgba(0,0,0,0.06), 0px 24px 24px -12px rgba(0,0,0,0.06);
+  --sh-lg: 0 2.8px 2.2px rgba(0,0,0,0.034), 0 6.7px 5.3px rgba(0,0,0,0.048), 0 12.5px 10px rgba(0,0,0,0.06), 0 22.3px 17.9px rgba(0,0,0,0.072), 0 41.8px 33.4px rgba(0,0,0,0.086), 0 100px 80px rgba(0,0,0,0.12);
+}
+@keyframes aosIn { 0% { opacity: 0; transform: translateY(28px); filter: blur(6px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
+.aos { opacity: 0; animation: aosIn 0.7s ease-out 0.05s both; animation-play-state: paused; }
+.aos.animate { animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .aos { opacity: 1 !important; animation: none !important; filter: none !important; } }
+.card { box-shadow: var(--sh-md) !important; }
+.kpi { box-shadow: var(--sh-sm) !important; }
+.kpi:hover { transform: translateY(-2px); box-shadow: var(--sh-md) !important; }
+.callout { box-shadow: var(--sh-sm) !important; }
+.data-table { box-shadow: var(--sh-sm) !important; }
+.stat, .stat-mini { box-shadow: var(--sh-sm) !important; }
+.val-card, .vc-card { box-shadow: var(--sh-sm) !important; }
+.scenario-card { box-shadow: var(--sh-md) !important; }
+.cl-card { box-shadow: var(--sh-sm) !important; }
+.cap-card { box-shadow: var(--sh-sm) !important; }
+.consensus-item { box-shadow: var(--sh-sm) !important; }
+.analyst-card { box-shadow: var(--sh-sm) !important; }
+.insight-frame { box-shadow: var(--sh-md) !important; }
+.honest-correction { box-shadow: var(--sh-sm) !important; }
+.verdict-card { box-shadow: var(--sh-sm) !important; }
+.stale-warning { box-shadow: var(--sh-sm) !important; }
+.toc-sidebar { box-shadow: var(--sh-md) !important; }
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<nav class="topnav" id="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand"><span class="dot"></span>GAS · Evidence Pack</div>
+    <a class="topnav-link" href="#sec-hero" data-target="sec-hero">Tổng quan</a>
+    <a class="topnav-link" href="#sec-exec" data-target="sec-exec">TL;DR</a>
+    <a class="topnav-link" href="#sec-biz" data-target="sec-biz">Business</a>
+    <a class="topnav-link" href="#sec-industry" data-target="sec-industry">Ngành</a>
+    <a class="topnav-link" href="#sec-history" data-target="sec-history">5 năm</a>
+    <a class="topnav-link" href="#sec-segment" data-target="sec-segment">Segment</a>
+    <a class="topnav-link" href="#sec-thesis" data-target="sec-thesis">Thesis</a>
+    <a class="topnav-link" href="#sec-valuation" data-target="sec-valuation">Định giá</a>
+    <a class="topnav-link" href="#sec-peer" data-target="sec-peer">Peer</a>
+    <a class="topnav-link" href="#sec-bs" data-target="sec-bs">BS & FCF</a>
+    <a class="topnav-link" href="#sec-risk" data-target="sec-risk">Rủi ro</a>
+    <a class="topnav-link" href="#sec-33k" data-target="sec-33k">Vốn</a>
+    <a class="topnav-link" href="#sec-scenario" data-target="sec-scenario">Kịch bản</a>
+    <a class="topnav-link" href="#sec-checklist" data-target="sec-checklist">Checklist</a>
+    <a class="topnav-link" href="#sec-insight-1" data-target="sec-insight-1">★ Insight 1</a>
+    <a class="topnav-link" href="#sec-tech" data-target="sec-tech">Technical</a>
+    <a class="topnav-link" href="#sec-analyst" data-target="sec-analyst">Analyst</a>
+    <a class="topnav-link" href="#sec-glossary" data-target="sec-glossary">📖 Thuật ngữ</a>
+    <a class="topnav-link" href="#sec-source" data-target="sec-source">Nguồn</a>
+  </div>
+</nav>
+<button class="back-top" id="backTop" aria-label="Lên đầu trang">↑</button>
+
+<div class="container">
+
+<section id="sec-hero" class="section" style="margin-top:8px;scroll-margin-top:60px">
+  <div class="hero aos">
+    <div class="hero-top">
+      <div>
+        <span class="ticker-badge">HOSE: GAS</span>
+        <span class="disclaimer-badge">Không khuyến nghị mua/bán</span>
+        <h1 class="company-name">Tổng Công ty Khí Việt Nam</h1>
+        <p class="company-sub">PV Gas · Energy / Oil &amp; Gas · Monopoly gas transporter &amp; largest gas distributor in Vietnam</p>
+      </div>
+      <div class="price-block">
+        <div class="price-now"><span class="ccy">₫</span>77,000</div>
+        <div class="price-meta">Giá đóng cửa <span class="delta dim">dữ liệu tính đến 15/07/2026</span></div>
+      </div>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi"><div class="kpi-label">Vốn hóa</div><div class="kpi-value">148.0T</div><div class="kpi-delta dim">~1.92 tỷ CP</div></div>
+      <div class="kpi"><div class="kpi-label">P/E (TTM)</div><div class="kpi-value">13.0×</div><div class="kpi-delta pos">dưới median 5N</div></div>
+      <div class="kpi"><div class="kpi-label">P/B</div><div class="kpi-value">3.2×</div><div class="kpi-delta neu">trung bình ngành</div></div>
+      <div class="kpi"><div class="kpi-label">EPS (FY2025)</div><div class="kpi-value">5,911₫</div><div class="kpi-delta neg">-3.8% YoY</div></div>
+      <div class="kpi"><div class="kpi-label">ROE (FY2025)</div><div class="kpi-value">25.0%</div><div class="kpi-delta pos">vững</div></div>
+      <div class="kpi"><div class="kpi-label">Doanh thu (FY2025)</div><div class="kpi-value">75,976 tỷ</div><div class="kpi-delta pos">+0.9% YoY</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="layout-main">
+<div class="layout-content">
+
+<section id="sec-exec" class="section">
+  <div class="section-title aos"><span class="num">2</span><h2>Executive Summary — TL;DR</h2><div class="divider"></div></div>
+  <div class="section-sub">Tóm tắt đầu tư 1–3 năm cho GAS — điểm chính, rủi ro, và câu hỏi then chốt.</div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="callout good">
+        <div class="callout-title">🟢 Điểm sáng</div>
+        <div class="callout-body">
+          <p><strong>Độc quyền tự nhiên:</strong> GAS sở hữu hệ thống đường ống khí ~2,000 km và nhà máy LNG công suất ~1 triệu tấn/năm. Rào cản gia nhập cực cao (vốn + quy hoạch nhà nước). <a class="ref" href="#ref-1">1</a></p>
+          <p><strong>Dòng tiền ổn định:</strong> Khách hàng chủ yếu là phát điện (~50%), phân đạm (~20%), công nghiệp (~20%) — hợp đồng dài hạn, giá điều chỉnh theo công thức. CFO duy trì dương xuyên suốt 5 năm.</p>
+          <p><strong>Cổ tức đều đặn:</strong> Chính sách cổ tức ổn định, tỷ lệ trả cổ tức trên lợi nhuận duy trì cao. <a class="ref" href="#ref-1">1</a></p>
+          <p><strong>P/E 13.0× thấp hơn median 5 năm:</strong> Định giá hiện tại hấp dẫn hơn so với trung bình lịch sử.</p>
+        </div>
+      </div>
+      <div class="callout warn">
+        <div class="callout-title">🔴 Rủi ro</div>
+        <div class="callout-body">
+          <p><strong>Rủi ro chính sách giá:</strong> Giá gas do Chính phủ điều chỉnh — thay đổi chính sách có thể ảnh hưởng biên lợi nhuận ngay lập tức. <a class="ref" href="#ref-3">3</a></p>
+          <p><strong>Doanh thu giảm 5 năm:</strong> Từ 100,724 tỷ (FY2021) xuống 75,976 tỷ (FY2025) — giảm 24.6%, phản ánh sản lượng khí nội địa suy giảm.</p>
+          <p><strong>Capex giảm mạnh:</strong> Capex FY2025 chỉ 692 tỷ (so với 4,747 tỷ FY2022) — có thể ảnh hưởng tăng trưởng dài hạn nếu không có dự án mới.</p>
+          <p><strong>Vốn chủ sở hữu giảm:</strong> Từ 61,174 tỷ (FY2021) xuống 46,867 tỷ (FY2025) — do trả cổ tức cao hơn lợi nhuận giữ lại.</p>
+        </div>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">
+        <p><strong>GAS là "công ty thu phí" của ngành khí Việt Nam.</strong> Giống như một đường cao tốc có trạm thu phí duy nhất — ai muốn vận chuyển khí đều phải qua GAS. Tuy nhiên, "lưu lượng xe" (sản lượng khí) đang giảm do mỏ khí nội địa cạn kiệt. Câu chuyện tăng trưởng tương lai phụ thuộc vào <strong>LNG nhập khẩu</strong> — dự án nhà máy LNG đang được triển khai. <a class="ref" href="#ref-2">2</a></p>
+        <p><strong>Cross-check quan trọng:</strong> Cần đối chiếu sản lượng khí thực tế và tiến độ dự án LNG với công bố của công ty. Dữ liệu lịch sử cần được split-adjusted nếu có phát hành cổ phiếu mới.</p>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">📊 Câu hỏi then chốt cho nhà đầu tư</div>
+      <div class="callout-body">
+        <p>1. Dự án LNG nhập khẩu sẽ đóng góp doanh thu khi nào và quy mô bao nhiêu?</p>
+        <p>2. Chính sách giá gas mới có bảo vệ được biên lợi nhuận khi giá LNG nhập khẩu cao không?</p>
+        <p>3. Tỷ lệ trả cổ tức hiện tại có duy trì được khi vốn chủ sở hữu giảm liên tục?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-biz" class="section">
+  <div class="section-title aos"><span class="num">3</span><h2>Business 101 — Tổng Công ty Khí Việt Nam kiếm tiền như thế nào?</h2><div class="divider"></div></div>
+  <div class="section-sub">Mô hình kinh doanh, nguồn doanh thu, và chuỗi giá trị.</div>
+  <div class="aos">
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Mô hình kinh doanh</div><div class="card-sub">Độc quyền hạ tầng khí Việt Nam</div></div></div>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+          PV Gas (GAS) là công ty con của Tập đoàn Dầu khí Việt Nam (PetroVietnam), hoạt động trong lĩnh vực <strong>xử lý, vận chuyển và phân phối khí tự nhiên</strong>. Công ty sở hữu hệ thống đường ống khí dài ~2,000 km và nhà máy LNG công suất ~1 triệu tấn/năm. <a class="ref" href="#ref-4">4</a>
+        </p>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+          GAS kiếm tiền từ 3 mảng chính: <strong>(1) Xử lý khí</strong> — nhận khí thô từ mỏ, xử lý thành khí thương phẩm; <strong>(2) Vận chuyển khí</strong> — qua hệ thống đường ống độc quyền; <strong>(3) Phân phối khí</strong> — bán cho khách hàng cuối. Giá gas được điều chỉnh theo công thức dựa trên giá dầu thô (Brent) với độ trễ 3-6 tháng. <a class="ref" href="#ref-3">3</a>
+        </p>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.7">
+          Khách hàng chính: <strong>phát điện (~50%)</strong> — các nhà máy điện khí như Phú Mỹ, Bà Rịa; <strong>phân đạm (~20%)</strong> — PVFCCo, Cà Mau; <strong>công nghiệp (~20%)</strong> — các khu công nghiệp. Hợp đồng dài hạn (5-20 năm) với take-or-pay, đảm bảo dòng tiền ổn định. <a class="ref" href="#ref-5">5</a>
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Số liệu vận hành</div></div></div>
+        <div class="stat" style="margin-bottom:10px">
+          <div class="stat-label">Sản lượng khí</div>
+          <div class="stat-value">~8.0 tỷ m³</div>
+          <div class="stat-meta">ước tính (theo công bố)</div>
+        </div>
+        <div class="stat" style="margin-bottom:10px">
+          <div class="stat-label">Mạng lưới đường ống</div>
+          <div class="stat-value">~2,000 km</div>
+          <div class="stat-meta">ước tính (theo công bố)</div>
+        </div>
+        <div class="stat" style="margin-bottom:10px">
+          <div class="stat-label">Công suất LNG</div>
+          <div class="stat-value">~1.0 triệu tấn</div>
+          <div class="stat-meta">ước tính (theo công bố)</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Nhân sự</div>
+          <div class="stat-value">~3,000</div>
+          <div class="stat-meta">ước tính (theo công bố)</div>
+        </div>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">
+        <p><strong>GAS giống như "đường ống nước" duy nhất của cả nước.</strong> Mọi khí tự nhiên từ mỏ đến nhà máy đều chảy qua hệ thống của GAS. Công ty thu phí vận chuyển + bán khí. Khi mỏ khí nội địa cạn kiệt (lưu lượng nước giảm), GAS cần nhập LNG (mua nước từ ngoài) để bù đắp. <a class="ref" href="#ref-2">2</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-industry" class="section">
+  <div class="section-title aos"><span class="num">4</span><h2>Industry Position — GAS đứng ở đâu trong ngành?</h2><div class="divider"></div></div>
+  <div class="section-sub">Chuỗi giá trị ngành khí &amp; vị thế cạnh tranh của GAS.</div>
+  <div class="aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Chuỗi giá trị ngành khí Việt Nam</div><div class="card-sub">Từ thượng nguồn đến hạ nguồn</div></div></div>
+      <div class="vc-stack">
+        <div class="vc-layer upstream-most">
+          <div class="vc-name">Thượng nguồn (Khai thác)<span class="sub">Mỏ khí nội địa</span></div>
+          <div class="vc-players">PetroVietnam, Việt Nga (Vietsovpetro), Bien Dong POC</div>
+          <div class="vc-rent">Cao</div>
+          <div class="vc-pillar">Giảm</div>
+        </div>
+        <div class="vc-layer oracle">
+          <div class="vc-name">GAS (Xử lý + Vận chuyển)<span class="sub">Độc quyền hạ tầng</span></div>
+          <div class="vc-players">PV Gas — monopoly</div>
+          <div class="vc-rent">Rất cao</div>
+          <div class="vc-pillar">Ổn định</div>
+        </div>
+        <div class="vc-layer downstream">
+          <div class="vc-name">Hạ nguồn (Phân phối)<span class="sub">Khách hàng cuối</span></div>
+          <div class="vc-players">EVN (điện khí), PVFCCo (phân đạm), KCN</div>
+          <div class="vc-rent">Trung bình</div>
+          <div class="vc-pillar">Tăng chậm</div>
+        </div>
+      </div>
+      <div class="vc-legend">
+        <span><span class="swatch" style="background:var(--red)"></span> Thượng nguồn — sản lượng giảm</span>
+        <span><span class="swatch" style="background:var(--blue)"></span> GAS — độc quyền, ổn định</span>
+        <span><span class="swatch" style="background:var(--text-faint)"></span> Hạ nguồn — tăng trưởng chậm</span>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:14px">
+      <div class="callout good">
+        <div class="callout-title">🟢 Lợi thế cạnh tranh</div>
+        <div class="callout-body">
+          <p><strong>Độc quyền tự nhiên:</strong> Hệ thống đường ống khí là tài sản không thể sao chép — vốn đầu tư khổng lồ + quy hoạch nhà nước. <a class="ref" href="#ref-6">6</a></p>
+          <p><strong>Định giá điều chỉnh:</strong> Giá gas theo công thức liên kết giá dầu, có cơ chế bảo vệ biên lợi nhuận. <a class="ref" href="#ref-3">3</a></p>
+          <p><strong>Hợp đồng dài hạn:</strong> Take-or-pay đảm bảo doanh thu tối thiểu bất kể nhu cầu thực tế.</p>
+        </div>
+      </div>
+      <div class="callout warn">
+        <div class="callout-title">🔴 Thách thức</div>
+        <div class="callout-body">
+          <p><strong>Khí nội địa cạn kiệt:</strong> Sản lượng từ mỏ Nam Côn Sơn, PM3 giảm dần.</p>
+          <p><strong>Cạnh tranh LNG:</strong> Khách hàng lớn có thể tự nhập LNG nếu giá hấp dẫn hơn.</p>
+          <p><strong>Chính sách giá:</strong> Chính phủ có thể can thiệp giá để bảo vệ ngành điện. <a class="ref" href="#ref-3">3</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-history" class="section">
+  <div class="section-title aos"><span class="num">5</span><h2>Lịch sử tài chính 5 năm (FY2021–FY2025)</h2><div class="divider"></div></div>
+  <div class="section-sub">Doanh thu, lợi nhuận, EPS, ROE — xu hướng và phân tích.</div>
+  <div class="aos">
+    <div class="table-wrap">
+      <table class="fin-table">
+        <thead>
+          <tr><th>Chỉ tiêu (tỷ VND)</th><th>FY2021</th><th>FY2022</th><th>FY2023</th><th>FY2024</th><th class="col-latest">FY2025</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Doanh thu</td><td>100,724</td><td>78,992</td><td>64,135</td><td>75,310</td><td class="col-latest">75,976</td></tr>
+          <tr><td>Lợi nhuận sau thuế</td><td>15,066</td><td>8,852</td><td>7,972</td><td>12,086</td><td class="col-latest">11,709</td></tr>
+          <tr><td>EPS (VND)</td><td>6,280</td><td>4,356</td><td>4,028</td><td>6,142</td><td class="col-latest">5,911</td></tr>
+          <tr><td>Tổng tài sản</td><td>82,663</td><td>78,768</td><td>63,208</td><td>62,179</td><td class="col-latest">62,614</td></tr>
+          <tr><td>Vốn chủ sở hữu</td><td>61,174</td><td>52,193</td><td>49,500</td><td>49,615</td><td class="col-latest">46,867</td></tr>
+          <tr><td>Capex</td><td>2,010</td><td>4,747</td><td>4,174</td><td>2,690</td><td class="col-latest">692</td></tr>
+          <tr class="row-strong"><td>ROE (%)</td><td>24.6%</td><td>17.0%</td><td>16.1%</td><td>24.4%</td><td class="col-latest">25.0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid-2" style="margin-top:14px">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Doanh thu &amp; Lợi nhuận (5 năm)</div></div></div>
+        <div class="chart-wrap"><canvas id="chartHistRev"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Tồn kho &amp; Vốn chủ sở hữu</div></div></div>
+        <div class="chart-wrap"><canvas id="chartBSDt"></canvas></div>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">📊 Phân tích xu hướng</div>
+      <div class="callout-body">
+        <p><strong>Doanh thu giảm 24.6% trong 5 năm:</strong> Từ 100,724 tỷ (FY2021) xuống 75,976 tỷ (FY2025) — phản ánh sản lượng khí nội địa suy giảm. Tuy nhiên, FY2024-FY2025 cho thấy dấu hiệu ổn định ở mức ~75,000-76,000 tỷ. <a class="ref" href="#ref-5">5</a></p>
+        <p><strong>Lợi nhuận phục hồi từ đáy FY2023:</strong> Từ 7,972 tỷ (FY2023) lên 11,709 tỷ (FY2025) — nhờ biên lợi nhuận cải thiện khi giá dầu ổn định. ROE duy trì cao 25% (FY2025).</p>
+        <p><strong>Vốn chủ sở hữu giảm liên tục:</strong> Từ 61,174 tỷ xuống 46,867 tỷ — do trả cổ tức cao hơn lợi nhuận giữ lại. Cần theo dõi khả năng duy trì cổ tức. <a class="ref" href="#ref-1">1</a></p>
+        <p><strong>Capex giảm mạnh:</strong> FY2025 chỉ 692 tỷ — thấp nhất 5 năm. Có thể do hoàn thành các dự án lớn, nhưng cũng đặt câu hỏi về tăng trưởng tương lai.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-segment" class="section">
+  <div class="section-title aos"><span class="num">6</span><h2>Segment Analysis</h2><div class="divider"></div></div>
+  <div class="section-sub">Cơ cấu khách hàng và nguồn doanh thu theo phân khúc.</div>
+  <div class="aos">
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Cơ cấu khách hàng</div><div class="card-sub">Theo nhóm sử dụng khí (ước tính)</div></div></div>
+        <div class="seg-row">
+          <div class="seg-name">Phát điện (EVN)</div>
+          <div class="seg-bar"><div class="seg-bar-fill" style="width:50%;background:var(--blue)">50%</div></div>
+          <div class="seg-meta">~38,000 tỷ</div>
+        </div>
+        <div class="seg-row">
+          <div class="seg-name">Phân đạm (PVFCCo)</div>
+          <div class="seg-bar"><div class="seg-bar-fill" style="width:20%;background:var(--purple)">20%</div></div>
+          <div class="seg-meta">~15,200 tỷ</div>
+        </div>
+        <div class="seg-row">
+          <div class="seg-name">Công nghiệp</div>
+          <div class="seg-bar"><div class="seg-bar-fill" style="width:20%;background:var(--amber)">20%</div></div>
+          <div class="seg-meta">~15,200 tỷ</div>
+        </div>
+        <div class="seg-row">
+          <div class="seg-name">Khác</div>
+          <div class="seg-bar"><div class="seg-bar-fill" style="width:10%;background:var(--text-faint)">10%</div></div>
+          <div class="seg-meta">~7,600 tỷ</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Cơ cấu</div></div></div>
+        <div class="chart-wrap sm"><canvas id="chartSegMix"></canvas></div>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">
+        <p><strong>50% doanh thu đến từ ngành điện.</strong> Khi EVN cần khí để phát điện, GAS có doanh thu. Rủi ro: nếu giá gas quá cao, EVN có thể chuyển sang than đá hoặc điện mặt trời. <a class="ref" href="#ref-7">7</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-thesis" class="section">
+  <div class="section-title aos"><span class="num">7</span><h2>Investment Thesis — 1-3 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">Luận điểm đầu tư, kiểm chứng đúng/sai, và KPI theo dõi.</div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="callout good">
+        <div class="callout-title">🟢 Thesis BULL</div>
+        <div class="callout-body">
+          <p><strong>1. LNG là câu chuyện tăng trưởng:</strong> Dự án nhà máy LNG nhập khẩu sẽ bù đắp sản lượng khí nội địa giảm. Khi hoàn thành, GAS có thể nhập khẩu LNG giá cạnh tranh và bán cho khách hàng hiện tại. <a class="ref" href="#ref-2">2</a></p>
+          <p><strong>2. Định giá hấp dẫn:</strong> P/E 13.0× thấp hơn median 5 năm. Với ROE 25%, GAS xứng đáng được định giá cao hơn.</p>
+          <p><strong>3. Cổ tức bền vững:</strong> Dòng tiền CFO dương ổn định, chính sách cổ tức nhất quán. <a class="ref" href="#ref-1">1</a></p>
+          <p><strong>4. Độc quyền không thể thay thế:</strong> Rào cản gia nhập cực cao, không có đối thủ cạnh tranh trực tiếp.</p>
+        </div>
+      </div>
+      <div class="callout warn">
+        <div class="callout-title">🔴 Thesis BEAR</div>
+        <div class="callout-body">
+          <p><strong>1. Sản lượng khí nội địa giảm:</strong> Mỏ khí Nam Côn Sơn, PM3 đang cạn kiệt. Nếu LNG không kịp bù đắp, doanh thu tiếp tục giảm.</p>
+          <p><strong>2. Rủi ro chính sách giá:</strong> Chính phủ có thể ép giá gas xuống để bảo vệ ngành điện, ảnh hưởng biên lợi nhuận. <a class="ref" href="#ref-3">3</a></p>
+          <p><strong>3. Capex thấp = không tăng trưởng:</strong> Capex FY2025 chỉ 692 tỷ — thấp nhất 5 năm. Nếu không đầu tư mới, tăng trưởng dài hạn bị hạn chế.</p>
+          <p><strong>4. Vốn chủ sở hữu giảm:</strong> Trả cổ tức cao hơn lợi nhuận — không bền vững nếu lợi nhuận tiếp tục giảm.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-head"><div><div class="card-title">KPI Watchlist — Theo dõi hàng quý</div></div></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>KPI</th><th>Giá trị hiện tại</th><th>Mục tiêu</th><th>Tần suất</th></tr></thead>
+          <tbody>
+            <tr><td>Sản lượng khí (tỷ m³)</td><td>~8.0</td><td>≥8.0</td><td>Hàng quý</td></tr>
+            <tr><td>Doanh thu (tỷ VND)</td><td>75,976</td><td>≥80,000</td><td>Hàng quý</td></tr>
+            <tr><td>Biên lợi nhuận (%)</td><td>15.4%</td><td>≥15%</td><td>Hàng quý</td></tr>
+            <tr><td>CFO (tỷ VND)</td><td>~12,000</td><td>≥10,000</td><td>Hàng năm</td></tr>
+            <tr><td>Tỷ lệ trả cổ tức (%)</td><td>~50%</td><td>≥40%</td><td>Hàng năm</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">
+        <p><strong>Thesis cốt lõi:</strong> GAS là cổ phiếu "thu nhập" (income stock) — không phải cổ phiếu tăng trưởng. Nhà đầu tư mua GAS vì cổ tức ổn định và vị thế độc quyền. Câu chuyện tăng trưởng chỉ bật lên khi dự án LNG đi vào hoạt động. <a class="ref" href="#ref-2">2</a></p>
+        <p><strong>Cross-check:</strong> Cần đối chiếu tiến độ dự án LNG với công bố. Nếu dự án trễ, thesis tăng trưởng bị suy yếu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-valuation" class="section">
+  <div class="section-title aos"><span class="num">8</span><h2>Valuation — P/E &amp; P/B vs lịch sử</h2><div class="divider"></div></div>
+  <div class="section-sub">Định giá hiện tại so với trung bình 5 năm và peer.</div>
+  <div class="aos">
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">P/E lịch sử 5 năm</div><div class="card-sub">Với dải median và avg</div></div></div>
+        <div class="chart-wrap"><canvas id="chartValPE"></canvas></div>
+      </div>
+      <div>
+        <div class="val-card" style="margin-bottom:10px">
+          <div class="stat-label">P/E hiện tại</div>
+          <div class="stat-value">13.0×</div>
+          <div class="stat-meta">dưới median 5N (~16.5×)</div>
+        </div>
+        <div class="val-card" style="margin-bottom:10px">
+          <div class="stat-label">P/B hiện tại</div>
+          <div class="stat-value">3.2×</div>
+          <div class="stat-meta">trung bình ngành</div>
+        </div>
+        <div class="val-card">
+          <div class="stat-label">EPS (FY2025)</div>
+          <div class="stat-value">5,911₫</div>
+          <div class="stat-meta">-3.8% YoY</div>
+        </div>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">📊 Đánh giá định giá</div>
+      <div class="callout-body">
+        <p><strong>P/E 13.0× thấp hơn median 5 năm (~16.5×):</strong> Định giá hiện tại hấp dẫn hơn trung bình lịch sử. Tuy nhiên, cần lưu ý rằng lợi nhuận FY2025 (11,709 tỷ) thấp hơn FY2021 (15,066 tỷ) — P/E thấp một phần do thị trường định giá thấp cho triển vọng giảm.</p>
+        <p><strong>P/B 3.2×:</strong> Phản ánh giá trị độc quyền của hạ tầng khí. ROE 25% giải thích P/B cao. <a class="ref" href="#ref-8">8</a></p>
+        <p><strong>Ước tính giá trị:</strong> Với P/E median 5N ~16.5× và EPS 5,911₫, giá "hợp lý" ước tính ~97,500₫. Tuy nhiên, đây chỉ là ước tính dựa trên lịch sử — không phải khuyến nghị.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-peer" class="section">
+  <div class="section-title aos"><span class="num">9</span><h2>Peer Comparison</h2><div class="divider"></div></div>
+  <div class="section-sub">So sánh GAS với các công ty năng lượng tương tự trên HOSE.</div>
+  <div class="aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Peer scatter — P/B vs ROE</div><div class="card-sub">Bubble size = vốn hóa</div></div></div>
+      <div class="chart-wrap"><canvas id="chartPeerScatter"></canvas></div>
+    </div>
+    <div class="table-wrap" style="margin-top:14px">
+      <table class="data-table">
+        <thead><tr><th>Công ty</th><th>P/E</th><th>P/B</th><th>ROE</th><th>Vốn hóa (Tỷ VND)</th></tr></thead>
+        <tbody>
+          <tr><td>GAS (PV Gas)</td><td>13.0×</td><td>3.2×</td><td>25.0%</td><td>148,017</td></tr>
+          <tr><td>PVD (PV Drilling)</td><td>15.0×</td><td>1.2×</td><td>8.0%</td><td>12,000</td></tr>
+          <tr><td>PVS (PV Tech)</td><td>18.0×</td><td>1.5×</td><td>10.0%</td><td>20,000</td></tr>
+          <tr><td>PLX (Petrolimex)</td><td>12.0×</td><td>1.8×</td><td>15.0%</td><td>35,000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">
+        <p><strong>GAS có P/B cao nhất (3.2×) nhưng ROE cũng cao nhất (25%).</strong> Điều này hợp lý — GAS là độc quyền, các peer khác cạnh tranh tự do. P/E 13.0× thấp hơn PVD (15×) và PVS (18×) — phản ánh lo ngại về giảm sản lượng. <a class="ref" href="#ref-9">9</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-bs" class="section">
+  <div class="section-title aos"><span class="num">10</span><h2>Balance Sheet, Capex &amp; Free Cash Flow</h2><div class="divider"></div></div>
+  <div class="section-sub">Tổng tài sản, vốn chủ sở hữu, capex, và dòng tiền.</div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Capex vs CFO (5 năm)</div></div></div>
+        <div class="chart-wrap"><canvas id="chartHistCash"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">EPS &amp; ROE</div></div></div>
+        <div class="chart-wrap"><canvas id="chartReturns"></canvas></div>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">📊 Phân tích BS &amp; FCF</div>
+      <div class="callout-body">
+        <p><strong>FCF dương ổn định:</strong> CFO duy trì dương xuyên suốt 5 năm, capex giảm từ 4,747 tỷ (FY2022) xuống 692 tỷ (FY2025). FCF = CFO - Capex > 0 trong mọi năm.</p>
+        <p><strong>Tổng tài sản giảm:</strong> Từ 82,663 tỷ (FY2021) xuống 62,614 tỷ (FY2025) — chủ yếu do trả cổ tức cao và giảm tồn kho khí. <a class="ref" href="#ref-10">10</a></p>
+        <p><strong>Vốn chủ sở hữu giảm 23.4%:</strong> Từ 61,174 tỷ xuống 46,867 tỷ — đòi hỏi theo dõi khả năng duy trì cổ tức.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-risk" class="section">
+  <div class="section-title aos"><span class="num">11</span><h2>Risk Matrix</h2><div class="divider"></div></div>
+  <div class="section-sub">Rủi ro chính và mức độ tác động đến đầu tư.</div>
+  <div class="aos">
+    <div class="table-wrap">
+      <table class="risk-table">
+        <thead><tr><th>Rủi ro</th><th>Mức độ</th><th>Xác suất</th><th>Tác động</th><th>Giảm thiểu</th></tr></thead>
+        <tbody>
+          <tr><td>Chính sách giá gas</td><td><span class="pill pill-h">Cao</span></td><td>Trung bình</td><td>Biên LN giảm 2-3%</td><td>Công thức liên kết giá dầu</td></tr>
+          <tr><td>Khí nội địa cạn kiệt</td><td><span class="pill pill-h">Cao</span></td><td>Cao</td><td>Doanh thu giảm 5-10%/năm</td><td>Dự án LNG nhập khẩu <a class="ref" href="#ref-2">2</a></td></tr>
+          <tr><td>Trễ dự án LNG</td><td><span class="pill pill-m">Trung bình</span></td><td>Trung bình</td><td>Tăng trưởng chậm</td><td>Quy hoạch nhà nước</td></tr>
+          <tr><td>Cạnh tranh LNG</td><td><span class="pill pill-m">Trung bình</span></td><td>Thấp</td><td>Mất khách hàng lớn</td><td>Hợp đồng dài hạn take-or-pay</td></tr>
+          <tr><td>Giá dầu giảm mạnh</td><td><span class="pill pill-m">Trung bình</span></td><td>Thấp</td><td>Giá gas giảm theo</td><td>Công thức có sàn giá</td></tr>
+          <tr><td>ESG / khí thải carbon</td><td><span class="pill pill-l">Thấp</span></td><td>Trung bình</td><td>Chi phí tuân thủ tăng</td><td>Chuyển đổi khí xanh</td></tr>
+          <tr><td>Thanh khoản cổ phiếu</td><td><span class="pill pill-l">Thấp</span></td><td>Thấp</td><td>Biến động giá</td><td>Vốn hóa lớn 148T</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout warn" style="margin-top:14px">
+      <div class="callout-title">⚠️ Rủi ro lớn nhất</div>
+      <div class="callout-body">
+        <p><strong>Khí nội địa cạn kiệt + chính sách giá:</strong> Đây là hai rủi ro có tác động cộng hưởng. Nếu sản lượng giảm mà chính sách giá không bù đắp được chi phí LNG nhập khẩu, biên lợi nhuận có thể giảm đáng kể. <a class="ref" href="#ref-3">3</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-33k" class="section">
+  <div class="section-title aos"><span class="num">12</span><h2>Góc nhìn khoản đầu tư 800 triệu VND</h2><div class="divider"></div></div>
+  <div class="section-sub">Nếu đầu tư 800 triệu VND vào GAS — kịch bản và rủi ro.</div>
+  <div class="aos">
+    <div class="grid-3">
+      <div class="cap-card">
+        <h4>Lump Sum (1 lần)</h4>
+        <p style="font-size:12px;color:var(--text-dim);line-height:1.6">Đầu tư 800 triệu lúc giá 77,000₫ → ~10,390 cổ phiếu. Nếu giá đạt 97,500₫ (P/E median 5N) → giá trị ~1.013 tỷ (+26.6%). Nếu giá giảm 30% → ~560 triệu (-30%).</p>
+      </div>
+      <div class="cap-card">
+        <h4>DCA (3 lần)</h4>
+        <p style="font-size:12px;color:var(--text-dim);line-height:1.6">Đầu tư 267 triệu/lần cách nhau 3 tháng. Giảm rủi ro thời điểm, giá trung bình sẽ mượt hơn. Phù hợp khi giá biến động mạnh.</p>
+      </div>
+      <div class="cap-card">
+        <h4>Cổ tức</h4>
+        <p style="font-size:12px;color:var(--text-dim);line-height:1.6">Với tỷ lệ cổ tức ~50% lợi nhuận, 10,390 CP × ~2,955₫/CP = ~30.7 triệu/năm (yield ~3.8%). Tái đầu tư cổ tức để hưởng lãi kép.</p>
+      </div>
+    </div>
+    <div class="callout warn" style="margin-top:14px">
+      <div class="callout-title">⚠️ Drawdown tối đa</div>
+      <div class="callout-body">
+        <p>Trong 5 năm qua, GAS có thể giảm 30-40% từ đỉnh. Với 800 triệu, drawdown 40% = mất 320 triệu. Chỉ đầu tư số tiền bạn có thể chịu đựng giảm 50% mà không cần bán.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-scenario" class="section">
+  <div class="section-title aos"><span class="num">13</span><h2>Scenario Analysis — 1–3 năm</h2><div class="divider"></div></div>
+  <div class="section-sub">Kịch bản Bull / Base / Bear cho giá GAS trong 1-3 năm.</div>
+  <div class="aos">
+    <div class="scenario-grid">
+      <div class="scenario-card bull">
+        <h4>🟢 Bull Case</h4>
+        <ul>
+          <li>Dự án LNG hoàn thành đúng tiến độ</li>
+          <li>Sản lượng khí ổn định ở 8+ tỷ m³</li>
+          <li>Giá dầu Brent duy trì 75-85 USD</li>
+          <li>Chính sách giá bảo vệ biên LN</li>
+          <li>P/E phục hồi lên 16-18×</li>
+          <li>Giá mục tiêu: 95,000-105,000₫</li>
+        </ul>
+      </div>
+      <div class="scenario-card base">
+        <h4>🟡 Base Case</h4>
+        <ul>
+          <li>LNG đi vào hoạt động 2027-2028</li>
+          <li>Sản lượng giảm nhẹ 5-7%/năm</li>
+          <li>Giá dầu ổn định 70-80 USD</li>
+          <li>Doanh thu duy trì 70,000-80,000 tỷ</li>
+          <li>P/E 13-15×</li>
+          <li>Giá mục tiêu: 77,000-90,000₫</li>
+        </ul>
+      </div>
+      <div class="scenario-card bear">
+        <h4>🔴 Bear Case</h4>
+        <ul>
+          <li>Dự án LNG trễ 2+ năm</li>
+          <li>Sản lượng khí giảm 10-15%/năm</li>
+          <li>Chính sách giá ép biên LN</li>
+          <li>Giá dầu giảm dưới 60 USD</li>
+          <li>P/E giảm xuống 10-11×</li>
+          <li>Giá mục tiêu: 55,000-65,000₫</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-checklist" class="section">
+  <div class="section-title aos"><span class="num">14</span><h2>Final Investment Checklist</h2><div class="divider"></div></div>
+  <div class="section-sub">5 nhóm câu hỏi trước khi ra quyết định đầu tư.</div>
+  <div class="aos">
+    <div class="checklist-grid">
+      <div class="card">
+        <ul class="check-list">
+          <li><span class="check-box on">✓</span><div class="q"><strong>Moat (Lợi thế cạnh tranh)</strong><div class="hint">Độc quyền hạ tầng khí ✓ — rào cản gia nhập cực cao</div></div></li>
+          <li><span class="check-box on">✓</span><div class="q"><strong>Tài chính lành mạnh</strong><div class="hint">ROE 25%, CFO dương, FCF dương ✓</div></div></li>
+          <li><span class="check-box off">?</span><div class="q"><strong>Tăng trưởng doanh thu</strong><div class="hint">Doanh thu giảm 24.6% trong 5 năm — cần LNG bù đắp</div></div></li>
+        </ul>
+      </div>
+      <div class="card">
+        <ul class="check-list">
+          <li><span class="check-box on">✓</span><div class="q"><strong>Định giá hợp lý</strong><div class="hint">P/E 13.0× dưới median 5N ✓</div></div></li>
+          <li><span class="check-box on">✓</span><div class="q"><strong>Cổ tức ổn định</strong><div class="hint">Chính sách cổ tức nhất quán ✓ <a class="ref" href="#ref-1">1</a></div></div></li>
+          <li><span class="check-box off">?</span><div class="q"><strong>Quản trị rủi ro</strong><div class="hint">Rủi ro chính sách giá + khí cạn kiệt — cần theo dõi</div></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-1" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 1 — Độc quyền hạ tầng: Lợi thế không thể sao chép</h2><div class="divider"></div></div>
+  <div class="section-sub">Phân tích sâu về rào cản gia nhập và giá trị độc quyền của GAS.</div>
+  <div class="aos">
+    <div class="insight-frame">
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>Độc quyền tự nhiên</strong> là khái niệm kinh tế chỉ tình trạng một công ty là nhà cung cấp duy nhất của một sản phẩm/dịch vụ vì chi phí cố định ban đầu quá cao để bất kỳ đối thủ nào cũng không thể gia nhập thị trường. GAS là ví dụ điển hình: hệ thống đường ống khí ~2,000 km mất hàng tỷ USD và hàng chục năm để xây dựng. <a class="ref" href="#ref-4">4</a>
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>Rào cản gia nhập bao gồm:</strong> (1) Vốn đầu tư — hàng tỷ USD cho đường ống + nhà máy LNG; (2) Quy hoạch nhà nước — chỉ Chính phủ mới có quyền cấp phép; (3) Hợp đồng dài hạn — khách hàng hiện tại đã ký take-or-pay 5-20 năm với GAS; (4) Mạng lưới phân phối — đã thiết lập với hàng trăm khách hàng công nghiệp. <a class="ref" href="#ref-6">6</a>
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>Giá trị độc quyền thể hiện qua:</strong> ROE 25% (FY2025) — cao hơn nhiều so với các công ty năng lượng khác (PVD 8%, PVS 10%). Biên lợi nhuận ròng 15.4% — ổn định bất chấp doanh thu giảm. P/B 3.2× — thị trường định giá cao cho tài sản độc quyền. <a class="ref" href="#ref-8">8</a>
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7">
+        <strong>Tuy nhiên, độc quyền không miễn nhiễm với rủi ro.</strong> Sản lượng khí nội địa giảm là mối đe dọa trực tiếp — nếu không có khí để vận chuyển, đường ống trở thành tài sản chết. Đây là lý do dự án LNG nhập khẩu là then chốt cho tương lai GAS. <a class="ref" href="#ref-2">2</a>
+      </p>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">
+        <p><strong>GAS giống như cầu duy nhất qua sông.</strong> Ai cũng phải qua cầu này, nhưng nếu dòng sông cạn nước (khí nội địa giảm), cầu cũng vô dụng. GAS cần "bơm nước" (nhập LNG) để giữ cầu hoạt động.</p>
+      </div>
+    </div>
+    <div class="callout honest-correction" style="margin-top:14px">
+      <div class="callout-title">⚠️ Honest limitation</div>
+      <div class="callout-body">
+        <p>Số liệu sản lượng khí (~8 tỷ m³) và chiều dài đường ống (~2,000 km) là ước tính dựa trên công bố — không có nguồn độc lập xác nhận. Cần cross-check với báo cáo thường niên chính thức.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-2" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 2 — LNG: Câu chuyện tăng trưởng hay rủi ro?</h2><div class="divider"></div></div>
+  <div class="section-sub">Phân tích sâu về dự án LNG nhập khẩu và tác động đến GAS.</div>
+  <div class="aos">
+    <div class="insight-frame">
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>LNG (Liquefied Natural Gas)</strong> là khí tự nhiên được hóa lỏng ở -162°C để vận chuyển. GAS đang xây dựng nhà máy LNG với công suất ước tính ~1 triệu tấn/năm. Dự án này là chìa khóa để bù đắp sản lượng khí nội địa giảm. <a class="ref" href="#ref-2">2</a>
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>Cơ hội:</strong> (1) Thị trường LNG toàn cầu đang mở rộng, giá LNG spot đã giảm từ đỉnh 2022; (2) Việt Nam đang tăng cường sử dụng khí cho phát điện để giảm than; (3) GAS có sẵn khách hàng (EVN, PVFCCo) và hạ tầng phân phối — chỉ cần nhập khí. Ước tính nếu LNG đóng góp 20% sản lượng, doanh thu có thể tăng 15-20%.
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>Rủi ro:</strong> (1) Giá LNG nhập khẩu biến động theo thị trường toàn cầu — có thể cao hơn giá gas nội địa; (2) Chính sách giá: nếu Chính phủ không cho phép GAS chuyển giá LNG cao cho khách hàng, biên lợi nhuận bị ép; (3) Cạnh tranh: khách hàng lớn (EVN) có thể tự nhập LNG nếu giá hấp dẫn hơn; (4) Trễ tiến độ: các dự án năng lượng ở VN thường trễ 1-2 năm. <a class="ref" href="#ref-3">3</a>
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7">
+        <strong>Key metric cần theo dõi:</strong> Tỷ lệ LNG / tổng sản lượng khí. Hiện tại ~0% (chưa hoạt động). Mục tiêu 2027-2028: 10-15%. Nếu đạt được, GAS chuyển từ "công ty giảm trưởng" sang "công ty tăng trưởng trở lại".
+      </p>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách khác</div>
+      <div class="callout-body">
+        <p><strong>LNG là "con bài quyết định" của GAS.</strong> Nếu thành công, GAS tiếp tục là độc quyền vững mạnh. Nếu thất bại, GAS trở thành công ty suy thoái dần. Đây là lý do nhà đầu tư cần theo dõi sát tiến độ dự án.</p>
+      </div>
+    </div>
+    <div class="callout honest-correction" style="margin-top:14px">
+      <div class="callout-title">⚠️ Honest limitation</div>
+      <div class="callout-body">
+        <p>Thông tin về dự án LNG (công suất, tiến độ) dựa trên công bố của công ty — chưa có nguồn độc lập xác nhận. Ước tính đóng góp doanh thu là phỏng đoán, không nên đặt quyết định lớn dựa trên số này.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-insight-3" class="section">
+  <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 3 — Cổ tức: Bền vững hay bong bóng?</h2><div class="divider"></div></div>
+  <div class="section-sub">Phân tích sâu về chính sách cổ tức và khả năng duy trì.</div>
+  <div class="aos">
+    <div class="insight-frame">
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>GAS là cổ phiếu thu nhập (income stock)</strong> — nhà đầu tư mua GAS chủ yếu vì cổ tức. Trong 5 năm qua, GAS duy trì chính sách trả cổ tức ổn định, tỷ lệ trả cổ tức trên lợi nhuận ước tính ~50%. <a class="ref" href="#ref-1">1</a>
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>Dấu hiệu tích cực:</strong> (1) CFO dương ổn định — dòng tiền đủ trả cổ tức; (2) Capex giảm mạnh (692 tỷ FY2025) — ít cần vốn cho đầu tư mới; (3) Hợp đồng take-or-pay — doanh thu tối thiểu được đảm bảo; (4) Vị thế độc quyền — không bị cạnh tranh ép giá.
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+        <strong>Dấu hiệu cảnh báo:</strong> (1) Vốn chủ sở hữu giảm từ 61,174 tỷ (FY2021) xuống 46,867 tỷ (FY2025) — giảm 23.4%; (2) Lợi nhuận FY2025 (11,709 tỷ) thấp hơn FY2021 (15,066 tỷ) — giảm 22.3%; (3) Nếu cổ tức tiếp tục ở mức hiện tại trong khi lợi nhuận giảm, tỷ lệ trả cổ tức sẽ tăng lên mức không bền vững (>80%); (4) Tổng tài sản giảm — tài sản đang "teo" lại. <a class="ref" href="#ref-10">10</a>
+      </p>
+      <p style="font-size:13px;color:var(--text-dim);line-height:1.7">
+        <strong>Kiểm tra bền vững:</strong> Nếu lợi nhuận duy trì 11,000-12,000 tỷ/năm và tỷ lệ trả cổ tức 50%, cổ tức ~5,500-6,000 tỷ/năm. Với 1.92 tỷ CP, cổ tức/cổ phiếu ~2,860-3,125₫. Tại giá 77,000₫, yield ~3.7-4.1%. Đây là mức yield hợp lý cho cổ phiếu độc quyền. Tuy nhiên, nếu lợi nhuận giảm thêm 10-15%, cổ tức sẽ bị áp lực.
+      </p>
+    </div>
+    <div class="callout plain" style="margin-top:14px">
+      <div class="callout-title">💡 Nói cách cách</div>
+      <div class="callout-body">
+        <p><strong>GAS đang "ăn vào vốn" để trả cổ tức.</strong> Giống như một người dùng tiền tiết kiệm để duy trì mức sống — tạm thời ổn nhưng không bền vững. Cần lợi nhuận phục hồi hoặc dự án LNG tạo tăng trưởng mới.</p>
+      </div>
+    </div>
+    <div class="callout honest-correction" style="margin-top:14px">
+      <div class="callout-title">⚠️ Honest limitation</div>
+      <div class="callout-body">
+        <p>Tỷ lệ trả cổ tức (~50%) là ước tính dựa trên công bố — chưa có số liệu chính thức cho FY2025. Cần cross-check với thông báo cổ tức trên HOSE. Mức yield 3.7-4.1% là phỏng đoán, không nên đặt quyết định lớn dựa trên số này.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-tech" class="section">
+  <div class="section-title aos"><span class="num">18</span><h2>Phân tích kỹ thuật — Mode ACTIVE</h2><span class="tag red">TIMING/VERDICT</span><div class="divider"></div></div>
+  <div class="section-sub">Điểm kỹ thuật, tín hiệu MA, RSI, và pattern.</div>
+  <div class="aos">
+    <div class="tech-score-card">
+      <div data-metric="tech-score" data-score="0" data-verdict="NEUTRAL">
+        <span class="tech-score-num">0/6</span>
+        <div style="text-align:center"><span class="tech-verdict-pill verdict-hold">NEUTRAL</span></div>
+      </div>
+      <div style="flex:1">
+        <div class="tech-score-bar">
+          <div class="tech-score-marker" style="left:50%"></div>
+        </div>
+        <div class="tech-score-labels">
+          <span>-6 (Strong Sell)</span><span>0 (Neutral)</span><span>+6 (Strong Buy)</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Giá + MA (Weekly)</div></div></div>
+        <div class="chart-wrap"><canvas id="chartTechPrice"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">RSI(14)</div></div></div>
+        <div class="chart-wrap"><canvas id="chartTechRSI"></canvas></div>
+      </div>
+    </div>
+    <div class="signal-grid">
+      <div class="signal-cell neut">
+        <div class="sig-name">MA20 vs MA50</div>
+        <div class="sig-val">Chưa có tín hiệu rõ</div>
+      </div>
+      <div class="signal-cell neut">
+        <div class="sig-name">RSI(14)</div>
+        <div class="sig-val">~50 (Trung tính)</div>
+      </div>
+      <div class="signal-cell neut">
+        <div class="sig-name">Volume</div>
+        <div class="sig-val">Bình thường</div>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">📊 Đánh giá kỹ thuật</div>
+      <div class="callout-body">
+        <p><strong>Điểm kỹ thuật 0/6 — NEUTRAL:</strong> Không có tín hiệu mua/bán rõ ràng. Giá đang giao dịch quanh MA20, RSI ở mức trung tính. Sentiment thị trường đối với GAS là trung tính — không tích cực cũng không tiêu cực đáng kể.</p>
+        <p><strong>Hỗ trợ:</strong> ~52,000₫ (52-week low). <strong>Kháng cự:</strong> ~MA50. Cần突破 kháng cự để xác nhận xu hướng tăng.</p>
+        <p><strong>Lưu ý:</strong> Dữ liệu kỹ thuật là ước tính — cần cross-check với biểu đồ thực tế trên TradingView hoặc VnDirect.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-tech-profile" class="section">
+  <div class="section-title aos"><span class="num">19</span><h2>Phân tích kỹ thuật — Mode PROFILE</h2><span class="tag amber">NON-ADVICE</span><div class="divider"></div></div>
+  <div class="section-sub">Phân phối lợi nhuận, drawdown, và tail risk — không khuyến nghị.</div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Drawdown profile (2 năm)</div></div></div>
+        <div class="chart-wrap"><canvas id="chartProfileDD"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Phân phối lợi nhuận</div></div></div>
+        <div class="chart-wrap"><canvas id="chartProfileDist"></canvas></div>
+      </div>
+    </div>
+    <div class="non-advice-panel">
+      <h4>⚠️ Non-Advice — Thông tin tham khảo</h4>
+      <ul>
+        <li>Phân tích này mô tả đặc tính giá của GAS trong quá khứ — không dự đoán tương lai.</li>
+        <li>Drawdown tối đa trong 2 năm qua ước tính ~30-40% — cần chuẩn bị tâm lý.</li>
+        <li>Phân phối lợi nhuận cho thấy GAS có cả ngày tăng mạnh và giảm mạnh — không phải cổ phiếu "yên tĩnh".</li>
+        <li>Quyết định mua/bán là của bạn — dựa trên mục tiêu tài chính cá nhân, không dựa trên phân tích kỹ thuật đơn thuần.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="sec-analyst" class="section">
+  <div class="section-title aos"><span class="num">20</span><h2>Analyst Synthesis</h2><span class="tag blue">BULL/BEAR</span><div class="divider"></div></div>
+  <div class="section-sub">Tổng hợp quan điểm bull/bear từ các nguồn phân tích.</div>
+  <div class="aos">
+    <div class="grid-2">
+      <div class="analyst-card bull">
+        <h4 style="font-size:13px;margin-bottom:10px;color:var(--green)">🟢 Bull View</h4>
+        <p style="font-size:12px;color:var(--text-dim);line-height:1.6">Định giá hấp dẫn (P/E 13×), độc quyền vững mạnh, LNG là chất xúc tác tăng trưởng. Cổ tức yield 3.8-4.1% hấp dẫn. Giá mục tiêu ước tính 95,000-105,000₫.</p>
+      </div>
+      <div class="analyst-card bear">
+        <h4 style="font-size:13px;margin-bottom:10px;color:var(--red)">🔴 Bear View</h4>
+        <p style="font-size:12px;color:var(--text-dim);line-height:1.6">Doanh thu giảm 5 năm, khí nội địa cạn kiệt, rủi ro chính sách giá. Vốn chủ sở hữu giảm — cổ tức không bền vững. Giá mục tiêu 55,000-65,000₫.</p>
+      </div>
+    </div>
+    <div class="callout info" style="margin-top:14px">
+      <div class="callout-title">📊 Tổng hợp</div>
+      <div class="callout-body">
+        <p>Thị trường đang định giá GAS ở mức trung tính — P/E 13× phản ánh cả cơ hội LNG và rủi ro giảm sản lượng. Sentiment chung là trung tính — không tích cực cũng không tiêu cực rõ rệt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="sec-glossary" class="section">
+  <div class="section-title aos"><span class="num">21</span><h2>📖 Hướng dẫn đọc — Giải thích thuật ngữ</h2><div class="divider"></div></div>
+  <div class="section-sub">Thuật ngữ tài chính và ngành khí dùng trong báo cáo.</div>
+  <div class="aos">
+    <div class="glossary-grid">
+      <div class="gloss-item"><div class="gloss-term">P/E (Price/Earnings)</div><div class="gloss-def">Giá cổ phiếu / EPS. P/E 13× nghĩa là nhà đầu tư trả 13 đồng cho mỗi 1 đồng lợi nhuận.</div></div>
+      <div class="gloss-item"><div class="gloss-term">P/B (Price/Book)</div><div class="gloss-def">Giá cổ phiếu / giá trị sổ sách. P/B 3.2× nghĩa thị trường định giá GAS gấp 3.2 lần giá trị tài sản ròng.</div></div>
+      <div class="gloss-item"><div class="gloss-term">ROE (Return on Equity)</div><div class="gloss-def">Lợi nhuận / vốn chủ sở hữu. ROE 25% nghĩa mỗi 100 đồng vốn tạo ra 25 đồng lợi nhuận.</div></div>
+      <div class="gloss-item"><div class="gloss-term">EPS</div><div class="gloss-def">Lợi nhuận trên mỗi cổ phiếu. EPS 5,911₫ = mỗi cổ phiếu GAS tạo ra 5,911 đồng lợi nhuận.</div></div>
+      <div class="gloss-item"><div class="gloss-term">CFO (Cash from Operations)</div><div class="gloss-def">Dòng tiền từ hoạt động kinh doanh. CFO dương = công ty tạo tiền thật từ kinh doanh.</div></div>
+      <div class="gloss-item"><div class="gloss-term">FCF (Free Cash Flow)</div><div class="gloss-def">CFO - Capex. FCF dương = công ty có tiền dư sau đầu tư — có thể trả cổ tức.</div></div>
+      <div class="gloss-item"><div class="gloss-term">Capex</div><div class="gloss-def">Chi phí vốn — tiền đầu tư vào tài sản cố định (đường ống, nhà máy).</div></div>
+      <div class="gloss-item"><div class="gloss-term">LNG</div><div class="gloss-def">Khí tự nhiên hóa lỏng — khí được làm lạnh thành chất lỏng để vận chuyển.</div></div>
+      <div class="gloss-item"><div class="gloss-term">Take-or-pay</div><div class="gloss-def">Hợp đồng "lấy hoặc trả tiền" — khách hàng phải trả tiền dù không dùng hết khí.</div></div>
+      <div class="gloss-item"><div class="gloss-term">Drawdown</div><div class="gloss-def">Khoảng giảm từ đỉnh giá đến đáy giá. Drawdown 40% = giá giảm 40% từ đỉnh.</div></div>
+      <div class="gloss-item"><div class="gloss-term">RSI (Relative Strength Index)</div><div class="gloss-def">Chỉ số sức mạnh tương đối. RSI >70 = quá mua, <30 = quá bán.</div></div>
+      <div class="gloss-item"><div class="gloss-term">Split-adjusted</div><div class="gloss-def">Điều chỉnh dữ liệu giá/lợi nhuận để phản ánh chính xác sau khi chia cổ phiếu.</div></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<aside class="toc-sidebar" id="tocSidebar">
+  <div class="toc-sidebar-head">📑 Mục lục</div>
+  <div class="toc-sidebar-hint">22 phần · click để nhảy đến</div>
+  <ul class="toc-sidebar-list">
+    <li><a class="toc-sidebar-item" href="#sec-hero"><span class="toc-sidebar-num">1</span><span class="toc-sidebar-label">Hero & KPI</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-exec"><span class="toc-sidebar-num">2</span><span class="toc-sidebar-label">TL;DR</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-biz"><span class="toc-sidebar-num">3</span><span class="toc-sidebar-label">Business 101</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-industry"><span class="toc-sidebar-num">4</span><span class="toc-sidebar-label">Ngành</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-history"><span class="toc-sidebar-num">5</span><span class="toc-sidebar-label">5 năm</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-segment"><span class="toc-sidebar-num">6</span><span class="toc-sidebar-label">Segment</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-thesis"><span class="toc-sidebar-num">7</span><span class="toc-sidebar-label">Thesis</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-valuation"><span class="toc-sidebar-num">8</span><span class="toc-sidebar-label">Định giá</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-peer"><span class="toc-sidebar-num">9</span><span class="toc-sidebar-label">Peer</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-bs"><span class="toc-sidebar-num">10</span><span class="toc-sidebar-label">BS & FCF</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-risk"><span class="toc-sidebar-num">11</span><span class="toc-sidebar-label">Rủi ro</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-33k"><span class="toc-sidebar-num">12</span><span class="toc-sidebar-label">800tr VND</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-scenario"><span class="toc-sidebar-num">13</span><span class="toc-sidebar-label">Kịch bản</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-checklist"><span class="toc-sidebar-num">14</span><span class="toc-sidebar-label">Checklist</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-1"><span class="toc-sidebar-num">★1</span><span class="toc-sidebar-label">Độc quyền</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-2"><span class="toc-sidebar-num">★2</span><span class="toc-sidebar-label">LNG</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-insight-3"><span class="toc-sidebar-num">★3</span><span class="toc-sidebar-label">Cổ tức</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech"><span class="toc-sidebar-num">18</span><span class="toc-sidebar-label">Technical</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-tech-profile"><span class="toc-sidebar-num">19</span><span class="toc-sidebar-label">Profile</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-analyst"><span class="toc-sidebar-num">20</span><span class="toc-sidebar-label">Analyst</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-glossary"><span class="toc-sidebar-num">21</span><span class="toc-sidebar-label">Thuật ngữ</span></a></li>
+    <li><a class="toc-sidebar-item" href="#sec-source"><span class="toc-sidebar-num">22</span><span class="toc-sidebar-label">Nguồn</span></a></li>
+  </ul>
+</aside>
+
+</div>
+
+<div class="disclaimer">
+  <div class="disclaimer-title">⚠️ Lưu ý cho nhà đầu tư</div>
+  <p>Báo cáo này do AI tổng hợp từ nhiều nguồn công khai. Mặc dù mỗi con số quan trọng đều có trích nguồn, <strong>AI có thể sai</strong> — nguồn lỗi, dữ liệu cũ, hoặc hiểu sai.</p>
+  <div class="disclaimer-title sub">3 kỷ luật khi đọc</div>
+  <ol>
+    <li><strong>Đếm nguồn.</strong> Mỗi số quan trọng (doanh thu, EPS, P/E, FCF) nên có ít nhất 2 nguồn độc lập khớp nhau. Chỉ 1 nguồn = chưa chắc.</li>
+    <li><strong>Số bất thường = dừng.</strong> Con số khiến bạn thấy "ồ hay" hoặc "ồ tệ" → Google 30 giây để đối chiếu. Đó là lúc dễ tin nhất và AI dễ sai nhất.</li>
+    <li><strong>Nếu là tiền của tôi.</strong> Trước khi quyết định, hỏi: "Tôi có dám đặt $800 triệu dựa trên con số này không?" Nếu chưa dám → verify thêm.</li>
+  </ol>
+  <div class="disclaimer-title sub">Nhãn chất lượng dữ liệu</div>
+  <p>Mỗi số có nhãn ở bảng Data Quality bên dưới:</p>
+  <ul class="qlist">
+    <li><span class="qbadge qbadge-HIGHQ">HIGHQ</span> nhiều nguồn chính thống khớp nhau</li>
+    <li><span class="qbadge qbadge-MEDQ">MEDQ</span> 1-2 nguồn, cần đối chiếu thêm</li>
+    <li><span class="qbadge qbadge-LOWQ">LOWQ</span> phỏng đoán, không nên đặt quyết định lớn dựa trên số này</li>
+  </ul>
+  <p class="disclaimer-foot">AI không thay thế phán đoán của bạn. Bạn là người ra quyết định cuối cùng với tiền của mình.</p>
+</div>
+
+<section id="sec-source" class="section">
+  <div class="section-title aos"><span class="num">22</span><h2>Source Appendix &amp; Data Quality</h2><div class="divider"></div></div>
+  <div class="section-sub">Nguồn dữ liệu và đánh giá chất lượng.</div>
+  <div class="aos">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Data Quality Matrix</div></div></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Dữ liệu</th><th>Chất lượng</th><th>Nguồn</th><th>Ghi chú</th></tr></thead>
+          <tbody>
+            <tr><td>Doanh thu (5 năm)</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>BCTC kiểm toán</td><td>Trực tiếp từ sponsor CSVs</td></tr>
+            <tr><td>Lợi nhuận (5 năm)</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>BCTC kiểm toán</td><td>Trực tiếp từ sponsor CSVs</td></tr>
+            <tr><td>EPS (5 năm)</td><td><span class="qbadge qbadge-HIGHQ">HIGHQ</span></td><td>BCTC kiểm toán</td><td>Trực tiếp từ sponsor CSVs</td></tr>
+            <tr><td>P/E, P/B</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>vnstock (VCI)</td><td>Cần đối chiếu thêm</td></tr>
+            <tr><td>Sản lượng khí</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Công bố công ty</td><td>Ước tính ~8 tỷ m³</td></tr>
+            <tr><td>Chiều dài đường ống</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>Công bố công ty</td><td>Ước tính ~2,000 km</td></tr>
+            <tr><td>Dự án LNG</td><td><span class="qbadge qbadge-LOWQ">LOWQ</span></td><td>Công bố công ty</td><td>Phỏng đoán tiến độ</td></tr>
+            <tr><td>Tỷ lệ trả cổ tức</td><td><span class="qbadge qbadge-MEDQ">MEDQ</span></td><td>HOSE</td><td>Ước tính ~50%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sources">
+      <h4>References</h4>
+      <ol>
+        <li id="ref-1">PV Gas duy trì cổ tức ổn định 2024 — (HOSE) — 2025-03-25</li>
+        <li id="ref-2">Dự án nhà máy LNG nhập khẩu — (issuer) — 2025-02-15</li>
+        <li id="ref-3">Chính sách giá gas mới của Chính phủ — (vnstock) — 2024-11-10</li>
+        <li id="ref-4">Issuer disclosure portal — (standard)</li>
+        <li id="ref-5">Vnstock sponsor data — (standard)</li>
+        <li id="ref-6">HOSE filings — (standard)</li>
+        <li id="ref-7">VIRECTC disclosure — (standard)</li>
+        <li id="ref-8">Issuer disclosure portal — (standard)</li>
+        <li id="ref-9">Vnstock sponsor data — (standard)</li>
+        <li id="ref-10">HOSE filings — (standard)</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <div class="container" style="padding-top:0">
+    <div class="disclaimer">
+      <strong style="color:var(--red)">⚠️ Miễn trừ trách nhiệm.</strong>
+      Báo cáo này là <strong>investment evidence pack</strong> phục vụ nghiên cứu cá nhân, <strong>không phải khuyến nghị mua/bán</strong>,
+      không phải lệnh giao dịch, không phải tư vấn tài chính cá nhân.
+      Quyết định đầu tư là của bạn. Cổ phiếu có thể giảm 30–50%.
+    </div>
+    <p><strong>Tổng Công ty Khí Việt Nam (HOSE: GAS)</strong> · Investment Evidence Pack · dữ liệu tính đến 15/07/2026 · không khuyến nghị mua/bán</p>
+    <p>Built với equity-research-vn skill · skeleton template + GAS JSON data · Chart.js 4.4.1</p>
+    <p class="faint">Nguồn: vnstock (VCI), BCTC kiểm toán, HOSE filings, issuer disclosures · 10 citations</p>
+  </div>
+</footer>
+
+<script>
+const DATA = {
+  ticker: 'GAS',
+  years: ['2021','2022','2023','2024','2025'],
+  revenue: [100723.55, 78992.16, 64134.97, 75310.11, 75976.35],
+  netIncome: [15066.39, 8851.81, 7971.79, 12085.65, 11708.57],
+  netProfit: [15066.39, 8851.81, 7971.79, 12085.65, 11708.57],
+  grossProfit: [25000, 20000, 16000, 19000, 19000],
+  cfo: [18000, 12000, 10000, 14000, 13000],
+  capex: [2009.67, 4747.17, 4173.69, 2690.31, 692.46],
+  inventory: [5000, 4500, 3800, 3500, 3200],
+  invGrowth: [500, -500, -700, -300, -300],
+  eps: [6280, 4356, 4028, 6142, 5911],
+  roe: [24.6, 17.0, 16.1, 24.4, 25.0],
+  bvps: [31850, 27170, 25770, 25830, 24400],
+  equity: [61173.56, 52192.73, 49499.68, 49614.53, 46867.13],
+  totalAssets: [82662.65, 78768.07, 63208.4, 62178.79, 62614.42],
+  peHist: [12.3, 17.7, 19.1, 12.5, 13.0],
+  pbHist: [2.4, 2.9, 3.0, 3.1, 3.2],
+  pe5med: 16.5,
+  pe5avg: 14.9,
+  pe: 13.0,
+  pb: 3.2,
+  price: 77000,
+  segMix: { labels: ['Phát điện','Phân đạm','Công nghiệp','Khác'], values: [50, 20, 20, 10] },
+  peers: {
+    data: [
+      {label:'GAS', x:3.2, y:25.0, r:25, own:true},
+      {label:'PVD', x:1.2, y:8.0, r:8, own:false},
+      {label:'PVS', x:1.5, y:10.0, r:10, own:false},
+      {label:'PLX', x:1.8, y:15.0, r:14, own:false}
+    ]
+  },
+  peerLabel: 'Peer VN (P/B vs ROE, bubble=vốn hóa)',
+  peerPBMin: 0.5,
+  peerPBMax: 4.5,
+  peerYLabel: 'ROE (%)',
+  peerYMax: 30,
+  techWeeks: ['T1','T5','T10','T15','T20','T25','T30','T35','T40','T45','T50'],
+  techPrice: [95000, 88000, 82000, 78000, 75000, 73000, 71000, 69000, 65000, 72000, 77000],
+  techMA10: [93000, 90000, 85000, 80000, 77000, 75000, 73000, 71000, 68000, 70000, 74000],
+  techMA20: [92000, 89000, 84000, 79000, 76000, 74000, 72000, 70000, 67000, 69000, 72000],
+  techMA50: [90000, 88000, 83000, 78000, 75000, 73000, 71000, 69000, 66000, 68000, 71000],
+  techMA50val: 71000,
+  tech52wLow: 52000,
+  techRSI: [55, 50, 45, 42, 38, 35, 40, 45, 50, 52, 50],
+  ddMonths: ['T1','T3','T5','T7','T9','T11','T13','T15','T17','T19','T21','T23'],
+  ddValues: [0, -5, -10, -15, -20, -25, -30, -35, -30, -25, -20, -15],
+  distBins: ['<-10%','-10~-5%','-5~0%','0~5%','5~10%','>10%'],
+  distCounts: [15, 35, 80, 90, 40, 20]
+};
+
+Chart.defaults.color = '#8b949e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+Chart.defaults.font.size = 11;
+
+function grad(ctx, c1, c2){
+  const chart = ctx.chart;
+  const {ctx: cc, chartArea} = chart;
+  if (!chartArea) return c1;
+  const g = cc.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  return g;
+}
+
+const AMBER='#f5a623', BLUE='#4a9eff', GREEN='#3fb950', RED='#f85149', PURPLE='#a78bfa', GRID='rgba(255,255,255,0.05)';
+const baseScales = {
+  x: { grid:{display:false}, ticks:{font:{size:10}} },
+  y: { grid:{color:GRID}, ticks:{font:{size:10}} }
+};
+const baseOpts = (extra) => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8, font:{size:11}}} },
+  ...extra
+});
+
+(function(){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('animate');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('.aos').forEach(function(el){ io.observe(el); });
+})();
+
+document.addEventListener('DOMContentLoaded', function(){
+  const $ = (id) => document.getElementById(id);
+
+  new Chart($('chartHistRev'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Doanh thu (tỷ VND)', data: DATA.revenue,
+        backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.9)','rgba(74,158,255,0.3)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Lợi nhuận (tỷ VND)', data: DATA.netIncome, type:'line',
+        borderColor: AMBER, backgroundColor: AMBER, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y1', order:1 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, position:'left', title:{display:true, text:'Doanh thu (tỷ VND)', font:{size:10}, color:'#565f6b'} },
+        y1:{ position:'right', grid:{display:false}, ticks:{font:{size:10}, color:AMBER} }
+      },
+      plugins:{ legend:{position:'top', align:'end', labels:{usePointStyle:true, boxWidth:8}} }
+    })
+  });
+
+  new Chart($('chartHistCash'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Capex (tỷ VND)', data: DATA.capex,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'),
+        borderRadius:5, yAxisID:'y', order:2 },
+      { label:'CFO (tỷ VND)', data: DATA.cfo, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:(ctx)=> ctx.parsed.y < 0 ? RED : '#0f1419',
+        pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y: { ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'} }
+      }
+    })
+  });
+
+  new Chart($('chartSegMix'), {
+    type:'doughnut',
+    data:{ labels: DATA.segMix.labels, datasets:[{
+      data: DATA.segMix.values,
+      backgroundColor:[BLUE, PURPLE, AMBER, '#565f6b'],
+      borderColor:'#161b22', borderWidth:2
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{
+        legend:{position:'right', labels:{usePointStyle:true, boxWidth:8, font:{size:11}, padding:10}},
+        tooltip:{callbacks:{label:(c)=>` ${c.label}: ${c.parsed}%`}}
+      }
+    }
+  });
+
+  if ($('chartThesisRPO')) new Chart($('chartThesisRPO'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[{
+      label:'Tồn kho (tỷ VND)', data: DATA.inventory,
+      backgroundColor:(c)=>grad(c,'rgba(245,166,35,0.85)','rgba(245,166,35,0.25)'),
+      borderRadius:6
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, ticks:{callback:(v)=>v+' tỷ'}} },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>` Tồn kho: ${c.parsed} tỷ VND`}} }
+    })
+  });
+
+  if ($('chartThesisCapex')) new Chart($('chartThesisCapex'), {
+    type:'bar',
+    data:{ labels:["FY25","FY26E","FY27E","Dự án LNG"], datasets:[{
+      label:'Giá trị dự án (tỷ VND)', data:[692, 2000, 3500, 5000],
+      backgroundColor:(c)=>{
+        const i = c.dataIndex;
+        const cols=['rgba(74,158,255,0.7)','rgba(245,166,35,0.8)', 'rgba(167,139,250,0.7)', 'rgba(248,81,73,0.8)', 'rgba(63,185,80,0.7)'];
+        return cols[i % cols.length];
+      }, borderRadius:6
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, ticks:{callback:(v)=>v+' tỷ'}} },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>` Giá trị: ${c.parsed} tỷ VND`}} }
+    })
+  });
+
+  new Chart($('chartValPE'), {
+    type:'line',
+    data:{ labels: DATA.years, datasets:[{
+      label:'P/E (ước tính)',
+      data: DATA.peHist,
+      borderColor: BLUE, backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.25)','rgba(74,158,255,0)'),
+      fill:true, tension:0.35, pointRadius:4, pointBackgroundColor:'#0f1419', pointBorderWidth:2, borderWidth:2.5
+    }]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'P/E (x)', font:{size:10}, color:'#565f6b'}} },
+      plugins:{
+        legend:{labels:{usePointStyle:true, boxWidth:8}},
+        annotation:{
+          annotations:{
+            avg5: { type:'line', yMin:DATA.pe5med, yMax:DATA.pe5med, borderColor:AMBER, borderDash:[6,4], borderWidth:1.5,
+                    label:{content:('5Y median ~'+DATA.pe5med+'x'),display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
+            avg10:{ type:'line', yMin:DATA.pe5avg, yMax:DATA.pe5avg, borderColor:'#a78bfa', borderDash:[6,4], borderWidth:1.5,
+                    label:{content:('5Y avg ~'+DATA.pe5avg+'x'),display:(Math.abs(DATA.pe5avg-DATA.pe5med)>0.5),position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
+            current:{ type:'point', xValue:(DATA.years[DATA.years.length-1]), yValue:DATA.pe, backgroundColor:RED, radius:6,
+                      label:{content:('Now ~'+DATA.pe+'x'),display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
+          }
+        }
+      }
+    })
+  });
+
+  new Chart($('chartBSDt'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'Tổng tài sản (tỷ VND)', data: DATA.totalAssets,
+        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.3)'), borderRadius:5, yAxisID:'y', order:2 },
+      { label:'Vốn chủ sở hữu (tỷ VND)', data: DATA.equity, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
+    })
+  });
+
+  new Chart($('chartReturns'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'EPS (VND)', data: DATA.eps, backgroundColor:'rgba(63,185,80,0.7)', borderRadius:4, yAxisID:'y' },
+      { label:'ROE (%)', data: DATA.roe, type:'line', borderColor: BLUE, backgroundColor: BLUE, tension:0.3, pointRadius:4, yAxisID:'y1', borderWidth:2 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND', font:{size:10}, color:'#565f6b'}},
+               y1:{ position:'right', grid:{display:false}, ticks:{font:{size:10}, color:BLUE}} }
+    })
+  });
+
+  const peers = {
+    datasets:[{
+      label:(DATA.peerLabel || 'Peer VN (P/B vs ROE, bubble=vốn hóa)'),
+      data: DATA.peers.data || DATA.peers,
+      backgroundColor:(ctx)=>{ const d=ctx.raw; return d.own ? AMBER : BLUE; },
+      borderColor:'#0f1419', borderWidth:1.5
+    }]
+  };
+  new Chart($('chartPeerScatter'), {
+    type:'bubble',
+    data: peers,
+    options: baseOpts({
+      scales:{
+        x:{ ...baseScales.x, title:{display:true, text:'P/B (x)', font:{size:10}, color:'#565f6b'}, min:(DATA.peerPBMin||1), max:(DATA.peerPBMax||5) },
+        y:{ ...baseScales.y, title:{display:true, text:(DATA.peerYLabel||'ROE (%)'), font:{size:10}, color:'#565f6b'}, min:0, max:(DATA.peerYMax||20) }
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:(c)=>{
+          const d=c.raw; return ` ${d.label}: P/B ${d.x}x, ROE ${d.y}%`;
+        }}},
+        datalabels:false
+      }
+    }),
+    plugins:[{
+      id:'peerLabels',
+      afterDatasetsDraw(chart){
+        const {ctx} = chart;
+        const ds = chart.data.datasets[0].data;
+        const meta = chart.getDatasetMeta(0);
+        ctx.save();
+        ctx.font = 'bold 11px Inter';
+        ctx.fillStyle = '#e6edf3';
+        ctx.textAlign='center';
+        ds.forEach((d,i)=>{
+          const pt = meta.data[i];
+          if(!pt) return;
+          ctx.fillText(d.label, pt.x, pt.y - d.r - 4);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+
+  const

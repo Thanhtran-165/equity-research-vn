@@ -1,0 +1,73 @@
+protocol_version: 0.10.0
+relation_to_previous: SOURCE_PACK_V2_AND_TWO_TIER_PROVENANCE
+baseline_protocol_sha256: f1c7df7ef066439f5601c04085d5ec299e8666966b2c93f47df8fd75c1928496
+frozen_before_execution: true
+frozen_at: '2026-07-15T00:30:00'
+verification_layer_version: 0.1.5 → 0.1.6 (two-tier REQ-027 provenance)
+changes_from_v0_9_1:
+  source_pack_v2: |
+    NEW: company_profile.json in source packs. Contains operational KPIs (store
+    counts, market share, factories, employees), market position, competitive
+    position, key narrative, provenance. Created for all 10 tickers (5 benchmark
+    + 5 shadow). Builder injects this into verified-dashboard-data.json so agent
+    has company descriptors from source — no need to fill from model memory.
+  req027_two_tier: |
+    REQ-027 verifier upgraded to two-tier provenance:
+      Tier A (financial/valuation): 100% provenance required (WCM, MCH patterns)
+      Tier B (company descriptors): memory allowed IF qualified (~, khoảng, theo
+      công bố, market leader, thống trị). Mirrors sell-side research convention.
+    Verifier hash: 6cc2e40f → 70d29366.
+  prompt_modification: |
+    phase6-dashboard.md: added "External claims & provenance" section instructing
+    agent to prefer source pack values, qualify non-sourced facts, omit if
+    uncertain. Light touch — not "cite everything", but "prefer source + qualify".
+  builder_upgrade: |
+    build_data_contract.py: added _load_company_profile(), injects company_profile
+    block into verified-dashboard-data.json. Hash: 7bfbab14 → 10dd8620.
+unchanged:
+- runner (846729a2)
+- content_depth_gate
+- environment_preflight
+- source_pack_readiness
+- no_source_claim_gate
+- phase4a_gate
+- phase6_preflight (structural)
+- model_backends
+- requirements.yaml (REQ-027 method unchanged, verifier logic upgraded)
+frozen_component_hashes:
+  verifier: 70d293666676df9a
+  runner: 846729a2f977ea5c
+  builder: 10dd8620f7dc19e8
+  phase6_prompt: 8257df209f510c63
+  content_depth_gate: 6e4f2ec1b9b818b4
+  environment_preflight: 06abeb0cc4170c23
+  source_pack_readiness: 80d25f2a75de05c2
+  no_source_claim_gate: eb752159460f4730
+  phase4a_gate: b3c6edb912eaf053
+  phase6_preflight: 7f29f328c9b202c4
+  model_backends: fcfcf01b6df07e75
+model_config:
+  backend: zai
+  model_id: GLM-5.2
+  python: /opt/homebrew/bin/python3
+  path_prefix: /opt/homebrew/bin
+  max_tokens: 32768
+validation_evidence:
+  req007_fixtures: '13/13 pass'
+  vnm_01_rescore: '26/28 → 28/28 PASS (REQ-027 two-tier)'
+  ctd_regression: '28/28 PASS (no regression)'
+  content_depth_gate: 'Cohort C′ artifacts still pass'
+  runner_tests: '47/47 pass'
+shadow_batch_1_prime:
+  description: Full 10-run shadow re-qualification under v0.10.0
+  tickers: [HPG, VNM, MWG, BID, GAS]
+  runs_per_ticker: 2
+  total: 10
+  no_mixing_with_batch_1: true
+  release_gate:
+    autonomous_successful_completion_rate: '>=90%'
+    no_ticker_0_of_2: true
+    critical_failures: 0
+    fabricated_data: 0
+patches_during_validation: prohibited
+protocol_sha256: 03ca4bcb6708758764c34cfbe904237a0f577d102d7cc0eff26f056bcaf7707a
