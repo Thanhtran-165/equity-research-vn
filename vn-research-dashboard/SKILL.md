@@ -1,174 +1,309 @@
 ---
 name: vn-research-dashboard
-description: Xây dựng dashboard HTML equity research đẹp mắt cho cổ phiếu VN (Bloomberg/Fintech style) từ data đã thu thập và phân tích. Use khi user yêu cầu "dashboard", "báo cáo HTML", "trực quan hóa", "biểu đồ phân tích", hoặc khi cần trình bày kết quả phân tích cơ bản+định giá thành web page tương tác. Cốt lõi = template HTML có Chart.js + CSS gradient fintech, chỉ cần fill data.
+description: Xây dựng Financial HTML/equity research dashboard cho cổ phiếu Việt Nam từ dữ liệu đã phân tích. Hỗ trợ dashboard tài chính, narrative publication, claim graph, counterpoint, centerpiece, Reader/Research mode, progressive disclosure, Chart.js, responsive, print/PDF và QA.
 ---
 
-# VN Research Dashboard
+# VN Research Dashboard — Financial HTML Narrative
 
-Báo cáo phân tích equity research dạng HTML dashboard — đẹp, tương tác, deploy được.
+Skill tạo báo cáo Financial HTML dạng single-page, deploy được, có hai lớp song song:
+
+- **Analytical layer:** KPI, bảng, Chart.js, định giá, technical, news, scenario/sensitivity.
+- **Narrative layer:** chapter question, claim graph, counterpoint, narrative centerpiece, Reader/Research mode và progressive disclosure.
+
+Mục tiêu: người đọc phổ thông hiểu được mạch lập luận; người đọc chuyên môn kiểm tra được claim, nguồn, công thức và uncertainty trên cùng một HTML.
 
 ## Điều kiện tiên quyết
 
-Cần output từ 4 skill trước:
-- `vn-financial-data-collector` → data 5 năm
-- `vn-fundamental-analysis` → ratios, DuPont, CAGR
-- `vn-valuation-engine` → định giá, khuyến nghị
-- `vn-technical-analysis` → indicators, patterns, beta (mảnh ghép kỹ thuật)
-- `vn-news-digest` → bản tin 30 ngày (optional nhưng khuyến nghị)
+Ưu tiên dùng output từ:
 
-## Workflow
+- `vn-financial-data-collector` → dữ liệu BCTC/giá;
+- `vn-fundamental-analysis` → ratios, DuPont, CAGR;
+- `vn-valuation-engine` → định giá và assumptions;
+- `vn-technical-analysis` → indicators/patterns khi có dữ liệu thật;
+- `vn-news-digest` → sự kiện và sentiment, optional.
 
-### Bước 0: Design system (refactor 2026-06)
+Không bịa dữ liệu. Không mô phỏng giá/technical nếu không fetch được. Mọi `DERIVED` phải có formula/input; mọi `SCENARIO` phải được phân biệt với actual.
 
-Template dùng **`_viz-shared/`** design system (`../_viz-shared/`):
-- CSS/JS shared đã được `inject.py` inline sẵn vào `dashboard_template.html` (single-file, không phụ thuộc runtime)
-- Template đã **tokenize** — thay hard-code HPG cũ bằng `{{UPPER_TOKEN}}`. Pattern fill = `str.replace` thuần
-- Theme switching = thêm `data-theme="bloomberg"`/`"corporate"` lên `<html>` (xem `references/style_variants.md`)
-- Chart rendering qua `viz.chart(id, {type,data,options})` registry (pattern "chart as plugin")
+# Output modes
 
-Khi cần sửa design chung (palette, component, chart helper): sửa `../_viz-shared/*.css|js` rồi chạy `python3 ../_viz-shared/inject.py`. KHÔNG sửa inline trong template.
+- `dashboard`: dashboard cũ, tương thích ngược.
+- `financial-html`: dashboard + narrative layer; mặc định cho báo cáo BCTC/chuyên sâu mới.
+- `compact`: ít section, narrative tối giản, không bắt buộc sticky-scroll.
+- `profile`: hồ sơ giá-khối lượng trung tính, phi tư vấn.
 
-### Bước 1: Copy template HTML
+# Workflow
 
-Đường dẫn template: `assets/dashboard_template.html`
+## Bước 0 — Design system
 
-Template có cấu trúc **10 section** (complete equity report, theo dashboard HPG đã build):
-1. **Hero** — ticker, tên công ty, giá hiện tại, 6 KPI cards
-2. **Executive Summary** — TL;DR + 4 highlight boxes
-2. **Executive Summary** — TL;DR + 4 highlight boxes (tóm tắt nhanh)
-3. **Kết quả kinh doanh** — 2 charts (Doanh thu/LNST, Biên LN) + bảng 5 năm
-4. **Định giá PE/PB** — gauge + 5 kịch bản + 2 charts (PE/PB, Giá/BVPS)
-5. **Multiples mở rộng** — 4 cards (PE, PB, P/S, P/CF)
-6. **DCF & Graham** — 3 kịch bản DCF + Graham comparison
-7. **DuPont** — chart stacked bar + diễn giải
-8. **Special insights ngành** — 3 cards + dự phóng + đánh giá + khuyến nghị
-9. **Technical Analysis** (data thật vnstock) — verdict + candlestick chart + indicators + correlation vs VNINDEX/VN30 + patterns + divergence check + trading strategy
-10. **News Digest 30 ngày** — sentiment meter + news cards + timeline + key takeaways
+Template dùng `_viz-shared/`:
 
-⚠️ **Section 9 (Technical) yêu cầu data thật từ vnstock** — KHÔNG BAO GIỜ mô phỏng data giá. Nếu không fetch được → bỏ section hoặc ghi "data không khả thi".
+- `tokens.css`: theme Fintech/Bloomberg/Corporate;
+- `components.css`: component dashboard;
+- `viz.js`: chart registry, candlestick, navigation;
+- `inject.py`: inline shared CSS/JS vào template.
 
-### Bước 2: Fill data vào template
+Không hard-code một design system thứ hai cho narrative layer. Component mới phải dùng CSS variables hiện có.
 
-Tham khảo `references/data_binding.md` cho danh sách toàn bộ placeholder cần fill:
+## Bước 1 — Khóa dữ liệu và narrative package
 
-```javascript
-// Cập nhật object data trong <script>:
-const data = {
-  ticker: "HPG",
-  companyName: "HÒA PHÁT GROUP",
-  priceCurrent: 23650,
-  years: [2021, 2022, 2023, 2024, 2025],
-  revenue: [...], netProfit: [...],
-  eps: [...], bvps: [...], pe: [...], pb: [...],
-  roe: [...], ros: [...],
-  valuations: { pbMedian: 24026, peMedian: 26869, ... },
-  recommendation: "ACCUMULATE",
-  targetRange: "26,000 - 29,000"
-};
+Tạo bộ dữ liệu nguồn duy nhất:
+
+```text
+project/
+├── financial_data.json
+├── evidence_ledger.csv hoặc claims.json
+├── chart_manifest.csv
+├── uncertainty_register.csv
+├── chapter_schema.json
+├── claim_graph.json
+├── counterpoints.json
+├── narrative_manifest.json
+└── index.html
 ```
 
-### Bước 3: Kiểm tra syntax JavaScript (BẮT BUỘC)
+Có thể khởi tạo bằng:
 
-**Lỗi phổ biến đã gặp:** Thiếu `}` đóng object, thiếu `new Chart(...)` wrapper, tooltip config lồng sai vào legend block.
-
-**Verify:**
 ```bash
-node -e "
-const fs = require('fs');
-const html = fs.readFileSync('dashboard.html','utf8');
-const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
-const last = scripts[scripts.length-1].replace(/<\/?script>/g,'');
-fs.writeFileSync('/tmp/dash.js', last);
-" && node --check /tmp/dash.js && echo '✅ Syntax OK'
+python scripts/init_financial_narrative.py --ticker [TICKER] --out ./project
 ```
 
-Nếu lỗi, dump phần quanh dòng lỗi để debug. Đếm canvas vs `new Chart` để bắt thiếu:
-```bash
-node -e "
-const fs = require('fs');
-const html = fs.readFileSync('dashboard.html','utf8');
-const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
-const last = scripts[scripts.length-1].replace(/<\/?script>/g,'');
-console.log('Canvas:', (html.match(/<canvas/g)||[]).length, '| new Chart:', (last.match(/new Chart/g)||[]).length);
-"
+### Chapter schema
+
+Mỗi chương/section trọng yếu phải có:
+
+- `chapter_id`, `title`, `guiding_question`;
+- `provisional_thesis`;
+- `claim_ids`;
+- `centerpiece_visual_id` nếu có;
+- `counterpoint_id` nếu có;
+- `mini_conclusion`, `risk_of_interpretation`, `takeaway`.
+
+Mạch mặc định:
+
+> Câu hỏi → kết luận sơ bộ → KPI/evidence → cơ chế/so sánh → phản biện → kết luận chương → chỉ tiêu cần theo dõi.
+
+### Claim taxonomy
+
+Giữ hai chiều phân loại:
+
+- `evidence_class`: `FACT`, `DERIVED`, `INFERENCE`, `SCENARIO`, `RECOMMENDATION`;
+- `epistemic_status`: `VERIFIED`, `QUALIFIED`, `DISPUTED`, `AUTHOR_VIEW`, `INSUFFICIENT_EVIDENCE`.
+
+### Claim graph
+
+Relation hợp lệ:
+
+```text
+SUPPORTS
+CONTRADICTS
+QUALIFIES
+EXPLAINS
+DERIVED_FROM
+SYNTHESIZES
+DEPENDS_ON
+INVALIDATES_IF
+REFERENCES
+SUPERSEDES
 ```
 
-### Bước 4: Mở local verify + Automated QA (BẮT BUỘC)
+Graph phải là evidence graph, không phải sơ đồ trang trí. Mỗi edge có `from_claim_id`, `relation`, `to_claim_id`, và `note` ngắn khi cần.
 
-**4a. Syntax check** (như Bước 3) — đảm bảo JS hợp lệ.
+### Counterpoint object
 
-**4b. Automated visual QA** — chạy script `scripts/qa_dashboard.js`:
+Counterpoint phải có:
+
+- câu hỏi tranh luận;
+- `main_view` + supporting claim IDs;
+- `opposing_view` + supporting claim IDs;
+- `synthesis`;
+- `decision_metrics`: dữ liệu nào sẽ phân định hai quan điểm.
+
+Không dùng “rủi ro chung chung” thay cho counterpoint.
+
+### Narrative manifest
+
+Mỗi centerpiece ghi:
+
+- `visual_id`, `chapter_id`, `type`, `layout`;
+- `data_mode`: `verified-data`, `derived-data`, `scenario-data`, `illustrative-mechanism`;
+- `claim_ids`, `source_ids`;
+- `mobile_fallback`, `print_fallback`, `accessibility_note`;
+- `steps` hoặc `milestones`.
+
+`illustrative-mechanism` phải có disclosure rằng đây là sơ đồ cơ chế, không phải dữ liệu quan sát.
+
+## Bước 2 — Chọn cấu trúc báo cáo
+
+Financial HTML đầy đủ nên gồm:
+
+1. Hero + KPI
+2. Executive Summary
+3. Scope/Data Quality
+4. Kết quả kinh doanh
+5. Chất lượng lợi nhuận/dòng tiền
+6. Bảng cân đối/chất lượng tài sản
+7. Định giá + scenario/sensitivity
+8. Counterpoints & risks
+9. Catalyst/monitoring dashboard
+10. Sources/Methodology
+
+Với ngân hàng, thay bằng NIM/CASA, tín dụng, NPL/nợ nhóm 2, dự phòng, CAR, ROE và P/B. Với chứng khoán, ưu tiên thanh khoản, môi giới, margin, tự doanh, vốn và ROE.
+
+Mỗi chương có một guiding question. Không để section chỉ là tập hợp chart không có câu hỏi phân tích.
+
+## Bước 3 — Copy template và gắn narrative components
+
+Copy:
+
+```text
+assets/dashboard_template.html
+```
+
+Sau đó tích hợp snippet:
+
+```text
+assets/narrative_components.html
+```
+
+Snippet cung cấp:
+
+- View mode switcher;
+- chapter header;
+- claim/evidence cards;
+- counterpoint panel;
+- claim graph renderer;
+- sticky centerpiece/stepper;
+- progressive disclosure bằng `<details>`;
+- mobile/print/reduced-motion fallback.
+
+Không tạo hai file Reader và Research riêng. Hai mode dùng cùng DOM và dataset:
+
+```html
+<html data-view="reader">
+```
+
+## Bước 4 — Data binding
+
+Dùng `str.replace` hoặc data object rõ ràng; không dùng f-string trực tiếp với template nhiều brace.
+
+Mọi số xuất hiện trong KPI, text, chart và research disclosure phải lấy từ cùng dataset đã khóa.
+
+### Reader mode
+
+- ưu tiên KPI, chart, insight và takeaway;
+- ẩn claim ID, công thức chi tiết, graph edges và uncertainty sâu;
+- nguồn hiển thị rút gọn.
+
+### Research mode
+
+- hiện claim ID, evidence class, epistemic status;
+- nguồn, kỳ, đơn vị, formula/input;
+- uncertainty/caveat;
+- claim graph và counterpoint evidence.
+
+### Progressive disclosure
+
+Ba cấp:
+
+1. **Primary:** KPI → chart → insight → takeaway;
+2. **Details:** cách tính, nguồn, kỳ, giới hạn;
+3. **Research:** claim graph, formula, input claims, uncertainty, contradictory evidence.
+
+Dùng `<details>` để nội dung vẫn accessible, printable và hoạt động khi JavaScript lỗi.
+
+## Bước 5 — Narrative centerpiece
+
+Mỗi báo cáo đầy đủ dùng 1–3 centerpiece, chỉ khi có giá trị kể chuyện:
+
+- `earnings-bridge`;
+- `cash-conversion-cascade`;
+- `balance-sheet-pressure-map`;
+- `credit-quality-cascade`;
+- `funding-to-nim`;
+- `capital-constraint-path`;
+- `policy-timeline`;
+- `cause-effect-network`;
+- `scenario-path`.
+
+Không dùng sticky-scroll thay cho chart thông thường. Nếu không có chuỗi step hợp lý, dùng card/timeline tĩnh.
+
+## Bước 6 — QA
+
+### Kiểm tra dữ liệu/schema
+
 ```bash
-# Cài playwright (1 lần)
-npm install playwright --prefix /tmp/qa-runner
-npx playwright install chromium
+python scripts/qa_financial_narrative.py ./project
+```
 
-# Chạy QA
+Bắt lỗi:
+
+- ID trùng hoặc tham chiếu không tồn tại;
+- `DERIVED` thiếu formula/input;
+- `VERIFIED` thiếu source;
+- edge relation không hợp lệ;
+- counterpoint thiếu một phía/evidence;
+- centerpiece thiếu claim/source/fallback;
+- `illustrative-mechanism` thiếu disclosure.
+
+### Kiểm tra HTML/interaction
+
+```bash
 NODE_PATH=/tmp/qa-runner/node_modules node scripts/qa_dashboard.js \
-  --url=file:///path/to/[TICKER]_Complete_Report.html \
-  --output=/tmp/qa-[TICKER]
+  --url=file:///path/to/index.html \
+  --output=/tmp/qa-[TICKER] \
+  --narrative
 ```
 
-Script kiểm tra tự động:
-- ✅ Tất cả `<canvas>` rendered (không blank)
-- ✅ Không JS console errors
-- ✅ Đủ sections (hero, exec summary, ≥7 section titles, footer, nav)
-- ✅ Navigation links click được
-- 📸 Screenshots: full-page + hero + middle
+`--narrative` kiểm tra thêm:
 
-**Kết quả:**
-- `✅ PASS` → tiếp tục Bước 5
-- `⚠️ PASS WITH WARNINGS` → review warnings, fix nếu cần
-- `❌ FAIL` → fix errors, rerun cho đến khi PASS
+- Reader/Research toggle hoạt động;
+- progressive disclosure tồn tại;
+- chapter question và takeaway;
+- counterpoint + claim graph;
+- centerpiece step interaction;
+- mobile 390 px không scroll ngang;
+- print/reduced-motion fallback;
+- không có `NaN`, `Infinity`, placeholder hoặc JS error.
 
-**4c. Mở local verify** (sau khi QA pass):
-```bash
-open dashboard.html
-```
+Dashboard cũ không dùng narrative vẫn chạy QA không có flag để bảo toàn tương thích.
 
-Kiểm tra mắt: tất cả charts hiển thị đúng, KPI cards có số đúng, không layout broken.
+# Quy tắc thiết kế
 
-### Bước 4d: Cover image (OPTIONAL — chỉ khi user thêm `--with-cover`)
+- Dashboard vẫn ưu tiên tốc độ đọc KPI và so sánh số chính xác.
+- Narrative layer không được làm chart/table khó tra cứu.
+- Component density 2–4/chương; centerpiece tối đa 1/chương.
+- Mobile: sticky chuyển thành stacked step cards.
+- Print: hiện toàn bộ research details và tất cả step; không dùng position sticky.
+- Có `prefers-reduced-motion`.
+- Không phụ thuộc JavaScript để đọc được nội dung cốt lõi.
+- Không để research mode gây tràn ngang.
 
-Nếu user yêu cầu cover image premium cho hero section:
-- Đọc `references/cover_image.md` cho prompt template theo sector
-- Dùng built-in `image_gen` tool (xem skill `imagegen`)
-- Detect sector → chọn prompt → generate → embed vào hero background
-- Mặc định KHÔNG generate (giữ dashboard lightweight)
+# Hard fail
 
-### Bước 5: Deploy (optional)
+Không publish Financial HTML narrative nếu:
 
-Nếu user muốn deploy online, dùng skill `vercel-deploy`:
-```bash
-~/.local/bin/vercel deploy [folder] --prod --yes
-```
+- text/KPI/chart dùng dữ liệu khác nhau;
+- claim trọng yếu không có provenance;
+- `DERIVED` thiếu formula/input;
+- `SCENARIO` bị trình bày như actual/forecast chính thức;
+- counterpoint chỉ có một phía;
+- conclusion không có supporting claim;
+- centerpiece không có mobile/print fallback;
+- graph có orphan/unknown claim;
+- reader/research toggle làm mất nội dung hoặc sai số liệu;
+- có placeholder, JS error, blank chart, overlap hoặc scroll ngang;
+- lộ prompt/hướng dẫn nội bộ.
 
-## Style guide
+# Tài nguyên
 
-Template dùng phong cách **Fintech hiện đại**:
-- **Background:** Dark (#0a0a14) với radial gradient tím-hồng
-- **Cards:** Glassmorphism (backdrop-filter blur, semi-transparent)
-- **Charts:** Chart.js với gradient fill, dual y-axis, neon colors
-- **Typography:** Inter (sans) + JetBrains Mono (numbers)
-- **Color palette:**
-  - Primary: #a855f7 (purple), #ec4899 (pink)
-  - Accent: #06b6d4 (cyan), #10d98a (green), #fbbf24 (amber), #ff4d6d (red)
-  - Text: #f0f0ff (main), #8b8ba7 (dim), #5a5a72 (faint)
-
-User có thể yêu cầu đổi phong cách (Bloomberg Terminal tối, Corporate sáng). Xem `references/style_variants.md` cho biến thể CSS.
-
-## Phân công
-
-- **Thu thập data**: dùng skill `vn-financial-data-collector`
-- **Phân tích cơ bản**: dùng skill `vn-fundamental-analysis`
-- **Định giá**: dùng skill `vn-valuation-engine`
-- **Deploy**: dùng skill `vercel-deploy`
-
-## Tham khảo
-
-- `assets/dashboard_template.html` — Template HTML hoàn chỉnh (Chart.js + CSS fintech)
-- `scripts/qa_dashboard.js` — ⭐ Automated visual QA (Playwright): canvas check + JS errors + screenshots
-- `references/data_binding.md` — Danh sách placeholder cần fill + schema data + market cap format
-- `references/style_variants.md` — ⭐ Layout Router (sector/audience) + 3 biến thể CSS (Fintech/Bloomberg/Corporate)
-- `references/chart_recipes.md` — Recipe cho 7 loại chart (bar+line combo, dual-axis, stacked DuPont, sensitivity table)
-- `references/cover_image.md` — ⭐ Optional AI cover image generation (prompt template theo sector)
+- `assets/dashboard_template.html`
+- `assets/narrative_components.html`
+- `references/data_binding.md`
+- `references/style_variants.md`
+- `references/chart_recipes.md`
+- `references/cover_image.md`
+- `references/narrative_layer.md`
+- `schemas/financial_narrative.schema.json`
+- `scripts/init_financial_narrative.py`
+- `scripts/qa_financial_narrative.py`
+- `scripts/qa_dashboard.js`
