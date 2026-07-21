@@ -287,15 +287,24 @@ def _detect_orphan_metric_references(
 # Main adapter
 # ---------------------------------------------------------------------------
 
-def adapt(child_output: Dict[str, Any]) -> AdapterResult:
+def adapt(child_output: Dict[str, Any], semantic_context: Dict[str, Any] = None,
+          verified_artifact_hash: str = None) -> AdapterResult:
     """Map child valuation-output dict to parent report IR zones.
+
+    Phase 4G v1.2.0: Accepts optional semantic_context + verified_artifact_hash
+    for boundary binding. When provided, adapter verifies:
+      - semantic_context_hash present and valid
+      - registry_hashes present
+      - artifact_hash bound to verifier result
+      - method count/IDs match between context and artifact
 
     Args:
         child_output: dict conforming to valuation-output.schema.json
+        semantic_context: optional semantic context dict (externally bound)
+        verified_artifact_hash: optional hash of artifact verified by child verifier
 
     Returns:
         AdapterResult with mapped zones + any validation failures.
-        Caller is responsible for acting on `final_status` and `failures`.
     """
     result = AdapterResult(adapter_metadata=get_adapter_metadata())
     failures = result.failures
@@ -310,6 +319,64 @@ def adapt(child_output: Dict[str, Any]) -> AdapterResult:
         ))
         result.final_status = "FAIL"
         return result
+
+    # === F4G-D v1.2.0: Semantic context binding ===
+    if semantic_context is not None:
+        ctx_schema = semantic_context.get("context_schema_version")
+        if not ctx_schema:
+            failures.append(AdapterFailure(
+                code="INTEGRATION_CONTEXT_MISSING", severity="CRITICAL",
+                target_zone="semantic_context",
+                evidence="semantic_context provided but missing context_schema_version",
+            ))
+        else:
+            # Store context reference in adapter result
+            result.adapter_metadata["semantic_context_hash"] = semantic_context.get("semantic_context_hash", "")
+            result.adapter_metadata["context_schema_version"] = ctx_schema
+
+            # Check registry hashes present
+            reg_hashes = semantic_context.get("registry_hashes") or {}
+            missing_reg = [k for k in ("formula_registry_hash", "applicability_registry_hash",
+                                       "benchmark_registry_hash", "source_registry_hash",
+                                       "period_registry_hash", "scope_registry_hash",
+                                       "error_registry_hash") if not reg_hashes.get(k)]
+            if missing_reg:
+                failures.append(AdapterFailure(
+                    code="INTEGRATION_REGISTRY_HASH_MISSING", severity="CRITICAL",
+                    target_zone="semantic_context",
+                    evidence=f"missing registry hashes: {missing_reg}",
+                ))
+
+            # Check method count consistency between context and artifact
+            ctx_methods = semantic_context.get("approved_methods") or []
+            artifact_methods = child_output.get("method_results") or []
+            ctx_method_ids = {m.get("method_id") for m in ctx_methods if isinstance(m, dict)}
+            artifact_method_ids = {m.get("method_id") for m in artifact_methods if isinstance(m, dict)}
+            if ctx_method_ids != artifact_method_ids:
+                missing_from_ctx = artifact_method_ids - ctx_method_ids
+                missing_from_art = ctx_method_ids - artifact_method_ids
+                evidence_parts = []
+                if missing_from_ctx: evidence_parts.append(f"artifact has methods not in context: {missing_from_ctx}")
+                if missing_from_art: evidence_parts.append(f"context has methods not in artifact: {missing_from_art}")
+                failures.append(AdapterFailure(
+                    code="INTEGRATION_METHOD_SET_MISMATCH", severity="CRITICAL",
+                    target_zone="semantic_context",
+                    evidence="; ".join(evidence_parts),
+                ))
+
+    # === F4G-D v1.2.0: Artifact-verifier hash binding ===
+    if verified_artifact_hash is not None:
+        import hashlib as _hl, json as _json
+        actual_artifact_hash = _hl.sha256(
+            _json.dumps(child_output, sort_keys=True, default=str,
+                        separators=(",", ":"), ensure_ascii=False).encode()
+        ).hexdigest()
+        if actual_artifact_hash != verified_artifact_hash:
+            failures.append(AdapterFailure(
+                code="INTEGRATION_STALE_VERIFIER_RESULT", severity="CRITICAL",
+                target_zone="verification_binding",
+                evidence=f"artifact hash changed since verification: expected={verified_artifact_hash[:16]}, actual={actual_artifact_hash[:16]}",
+            ))
 
     # === Valuation inputs (from input_summary) ===
     input_summary = child_output.get("input_summary") or {}

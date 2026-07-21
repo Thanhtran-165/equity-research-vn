@@ -1,6 +1,6 @@
 """Integration version — adapter identity contract (Directive Phase 6 §8.2)."""
 ADAPTER_ID = "vn-valuation-engine_to_equity-research-vn"
-ADAPTER_VERSION = "1.1.0"
+ADAPTER_VERSION = "1.2.0"
 CHILD_SCHEMA_VERSION = "1.0.0-phase2"
 PARENT_VERSION = "equity-research-vn-1.1.0"
 PARENT_REPORT_IR_VERSION = "1.0.0-arch-b"
