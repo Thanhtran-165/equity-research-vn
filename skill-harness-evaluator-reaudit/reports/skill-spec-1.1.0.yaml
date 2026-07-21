@@ -1,0 +1,902 @@
+skill_id: equity-research-vn
+skill_version: unknown
+skill_path: /Users/bobo/.zcode/skills/equity-research-vn
+triggers:
+- user invokes /equity-research-vn [TICKER]
+- request for full VN equity research (8-phase pipeline)
+non_triggers:
+- only a quick price lookup
+- only news, no fundamental/valuation
+- single-section edit of existing report
+scope: 'Full equity research for a VN ticker: data, fundamental, valuation, technical
+  (2 modes), news, dashboard, deploy — via subagent-per-phase with per-phase verification.'
+out_of_scope:
+- non-VN tickers
+- real-time trading signals
+- investment advice (NON-ADVICE in PROFILE)
+inputs:
+- name: ticker
+  contract: '[TICKER] uppercase VN ticker (e.g. PNJ)'
+  required: true
+- name: work_dir
+  contract: working directory for task-state + outputs
+  required: true
+required_steps:
+- &id001
+  id: WF-001
+  description: 'Execute phase0_sponsor: Sponsor package detection'
+  severity: high
+  how_to_check: phase prompt phases/phase0-sponsor.md executed; per-phase verifier
+    check REQs ['REQ-001', 'REQ-002']
+  evidence_to_collect:
+  - phases/phase0-sponsor.md
+  - task-state.json#phases.phase0_sponsor
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase0_sponsor PASS, and task-state.json#phases.phase0_sponsor.status
+    == completed
+  source_ref: phase0_sponsor
+- &id002
+  id: WF-002
+  description: 'Execute phase1_data: Data collection + split audit'
+  severity: high
+  how_to_check: phase prompt phases/phase1-data.md executed; per-phase verifier check
+    REQs ['REQ-003', 'REQ-004']
+  evidence_to_collect:
+  - phases/phase1-data.md
+  - task-state.json#phases.phase1_data
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase1_data PASS, and task-state.json#phases.phase1_data.status
+    == completed
+  source_ref: phase1_data
+- &id003
+  id: WF-003
+  description: 'Execute phase2_fundamental: Fundamental analysis (DuPont, ROE, CAGR)'
+  severity: high
+  how_to_check: phase prompt phases/phase2-fundamental.md executed; per-phase verifier
+    check REQs []
+  evidence_to_collect:
+  - phases/phase2-fundamental.md
+  - task-state.json#phases.phase2_fundamental
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase2_fundamental PASS, and task-state.json#phases.phase2_fundamental.status
+    == completed
+  source_ref: phase2_fundamental
+- &id004
+  id: WF-004
+  description: 'Execute phase3_valuation: Valuation (PE/PB/DCF sanity)'
+  severity: high
+  how_to_check: phase prompt phases/phase3-valuation.md executed; per-phase verifier
+    check REQs ['REQ-016']
+  evidence_to_collect:
+  - phases/phase3-valuation.md
+  - task-state.json#phases.phase3_valuation
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase3_valuation PASS, and task-state.json#phases.phase3_valuation.status
+    == completed
+  source_ref: phase3_valuation
+- &id005
+  id: WF-005
+  description: 'Execute phase4a_tech_active: Technical mode ACTIVE (Tech Score, Verdict)'
+  severity: high
+  how_to_check: phase prompt phases/phase4a-tech-active.md executed; per-phase verifier
+    check REQs ['REQ-005']
+  evidence_to_collect:
+  - phases/phase4a-tech-active.md
+  - task-state.json#phases.phase4a_tech_active
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase4a_tech_active PASS, and task-state.json#phases.phase4a_tech_active.status
+    == completed
+  source_ref: phase4a_tech_active
+- &id006
+  id: WF-006
+  description: 'Execute phase4b_tech_profile: Technical mode PROFILE (non-advice)'
+  severity: high
+  how_to_check: phase prompt phases/phase4b-tech-profile.md executed; per-phase verifier
+    check REQs ['REQ-006', 'REQ-007']
+  evidence_to_collect:
+  - phases/phase4b-tech-profile.md
+  - task-state.json#phases.phase4b_tech_profile
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase4b_tech_profile PASS, and task-state.json#phases.phase4b_tech_profile.status
+    == completed
+  source_ref: phase4b_tech_profile
+- &id007
+  id: WF-007
+  description: 'Execute phase5_news: News digest + sentiment'
+  severity: high
+  how_to_check: phase prompt phases/phase5-news.md executed; per-phase verifier check
+    REQs ['REQ-008']
+  evidence_to_collect:
+  - phases/phase5-news.md
+  - task-state.json#phases.phase5_news
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase5_news PASS, and task-state.json#phases.phase5_news.status
+    == completed
+  source_ref: phase5_news
+- &id008
+  id: WF-008
+  description: 'Execute phase6_dashboard: Dashboard build (structure + content depth
+    + chart render-readiness)'
+  severity: high
+  how_to_check: phase prompt phases/phase6-dashboard.md executed; per-phase verifier
+    check REQs ['REQ-009', 'REQ-010', 'REQ-011', 'REQ-012', 'REQ-013', 'REQ-014',
+    'REQ-015', 'REQ-017', 'REQ-018', 'REQ-019', 'REQ-020', 'REQ-028']
+  evidence_to_collect:
+  - phases/phase6-dashboard.md
+  - task-state.json#phases.phase6_dashboard
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase6_dashboard PASS, and task-state.json#phases.phase6_dashboard.status
+    == completed
+  source_ref: phase6_dashboard
+- &id009
+  id: WF-009
+  description: 'Execute phase7_deploy: Final verify + deploy'
+  severity: high
+  how_to_check: phase prompt phases/phase7-deploy.md executed; per-phase verifier
+    check REQs ['REQ-021']
+  evidence_to_collect:
+  - phases/phase7-deploy.md
+  - task-state.json#phases.phase7_deploy
+  applicable_condition: always
+  pass_rule: All REQs mapped to phase7_deploy PASS, and task-state.json#phases.phase7_deploy.status
+    == completed
+  source_ref: phase7_deploy
+conditional_steps: []
+tools:
+- python3
+- node
+- vnstock (golden tier)
+- vercel (deploy)
+- subagent per phase
+prohibited_actions:
+- Fallback community tier (8 periods) instead of golden (>=20)
+- Deploy when any REQ FAIL
+- Claim 'done' before verifier PASS
+- 'Fabricate data: Oracle placeholder, wrong capex, invented multiples'
+- Read entire pipeline into one context (must use subagent-per-phase isolation)
+required_outputs:
+- &id010
+  id: OUT-001
+  description: Report contains canonical section id='sec-hero'
+  severity: high
+  how_to_check: id="sec-hero" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id011
+  id: OUT-002
+  description: Report contains canonical section id='sec-exec'
+  severity: high
+  how_to_check: id="sec-exec" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id012
+  id: OUT-003
+  description: Report contains canonical section id='sec-biz'
+  severity: high
+  how_to_check: id="sec-biz" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id013
+  id: OUT-004
+  description: Report contains canonical section id='sec-industry'
+  severity: high
+  how_to_check: id="sec-industry" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id014
+  id: OUT-005
+  description: Report contains canonical section id='sec-history'
+  severity: high
+  how_to_check: id="sec-history" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id015
+  id: OUT-006
+  description: Report contains canonical section id='sec-segment'
+  severity: high
+  how_to_check: id="sec-segment" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id016
+  id: OUT-007
+  description: Report contains canonical section id='sec-thesis'
+  severity: high
+  how_to_check: id="sec-thesis" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id017
+  id: OUT-008
+  description: Report contains canonical section id='sec-valuation'
+  severity: high
+  how_to_check: id="sec-valuation" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id018
+  id: OUT-009
+  description: Report contains canonical section id='sec-peer'
+  severity: high
+  how_to_check: id="sec-peer" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id019
+  id: OUT-010
+  description: Report contains canonical section id='sec-bs'
+  severity: high
+  how_to_check: id="sec-bs" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id020
+  id: OUT-011
+  description: Report contains canonical section id='sec-risk'
+  severity: high
+  how_to_check: id="sec-risk" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id021
+  id: OUT-012
+  description: Report contains canonical section id='sec-33k'
+  severity: high
+  how_to_check: id="sec-33k" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id022
+  id: OUT-013
+  description: Report contains canonical section id='sec-scenario'
+  severity: high
+  how_to_check: id="sec-scenario" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id023
+  id: OUT-014
+  description: Report contains canonical section id='sec-checklist'
+  severity: high
+  how_to_check: id="sec-checklist" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id024
+  id: OUT-015
+  description: Report contains canonical section id='sec-insight-1'
+  severity: high
+  how_to_check: id="sec-insight-1" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id025
+  id: OUT-016
+  description: Report contains canonical section id='sec-insight-2'
+  severity: high
+  how_to_check: id="sec-insight-2" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id026
+  id: OUT-017
+  description: Report contains canonical section id='sec-insight-3'
+  severity: high
+  how_to_check: id="sec-insight-3" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id027
+  id: OUT-018
+  description: Report contains canonical section id='sec-tech'
+  severity: high
+  how_to_check: id="sec-tech" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id028
+  id: OUT-019
+  description: Report contains canonical section id='sec-tech-profile'
+  severity: high
+  how_to_check: id="sec-tech-profile" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id029
+  id: OUT-020
+  description: Report contains canonical section id='sec-analyst'
+  severity: high
+  how_to_check: id="sec-analyst" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id030
+  id: OUT-021
+  description: Report contains canonical section id='sec-glossary'
+  severity: high
+  how_to_check: id="sec-glossary" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id031
+  id: OUT-022
+  description: Report contains canonical section id='sec-source'
+  severity: high
+  how_to_check: id="sec-source" present in report HTML
+  pass_rule: section id present
+  source_ref: REQ-009
+  na_capable: false
+- &id032
+  id: OUT-023
+  description: Deploy URL produced ONLY if all REQ PASS
+  severity: critical
+  how_to_check: deploy_url non-null AND REQ-021 PASS
+  pass_rule: REQ-021 PASS → deploy allowed
+  source_ref: REQ-021
+  na_capable: false
+validation_gates:
+- &id033
+  id: VAL-001
+  description: Verification method 'command' is implemented and fires on applicable
+    REQs
+  severity: high
+  how_to_check: verifier implements command; fires for ['REQ-001', 'REQ-002', 'REQ-010',
+    'REQ-018', 'REQ-019']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: command
+  na_capable: false
+- &id034
+  id: VAL-002
+  description: Verification method 'artifact_check' is implemented and fires on applicable
+    REQs
+  severity: high
+  how_to_check: verifier implements artifact_check; fires for ['REQ-003', 'REQ-004',
+    'REQ-005', 'REQ-006', 'REQ-007', 'REQ-008', 'REQ-015', 'REQ-017']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: artifact_check
+  na_capable: false
+- &id035
+  id: VAL-003
+  description: Verification method 'section_map_check' is implemented and fires on
+    applicable REQs
+  severity: high
+  how_to_check: verifier implements section_map_check; fires for ['REQ-009']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: section_map_check
+  na_capable: false
+- &id036
+  id: VAL-004
+  description: Verification method 'canvas_check' is implemented and fires on applicable
+    REQs
+  severity: high
+  how_to_check: verifier implements canvas_check; fires for ['REQ-011']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: canvas_check
+  na_capable: false
+- &id037
+  id: VAL-005
+  description: Verification method 'count_check' is implemented and fires on applicable
+    REQs
+  severity: high
+  how_to_check: verifier implements count_check; fires for ['REQ-012']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: count_check
+  na_capable: false
+- &id038
+  id: VAL-006
+  description: Verification method 'content_depth_check' is implemented and fires
+    on applicable REQs
+  severity: high
+  how_to_check: verifier implements content_depth_check; fires for ['REQ-013']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: content_depth_check
+  na_capable: false
+- &id039
+  id: VAL-007
+  description: Verification method 'section_content_check' is implemented and fires
+    on applicable REQs
+  severity: high
+  how_to_check: verifier implements section_content_check; fires for ['REQ-014']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: section_content_check
+  na_capable: false
+- &id040
+  id: VAL-008
+  description: Verification method 'valuation_sanity_check' is implemented and fires
+    on applicable REQs
+  severity: high
+  how_to_check: verifier implements valuation_sanity_check; fires for ['REQ-016']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: valuation_sanity_check
+  na_capable: false
+- &id041
+  id: VAL-009
+  description: Verification method 'div_balance_check' is implemented and fires on
+    applicable REQs
+  severity: high
+  how_to_check: verifier implements div_balance_check; fires for ['REQ-020']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: div_balance_check
+  na_capable: false
+- &id042
+  id: VAL-010
+  description: Verification method 'data_accuracy_check' is implemented and fires
+    on applicable REQs
+  severity: high
+  how_to_check: verifier implements data_accuracy_check; fires for ['REQ-022', 'REQ-023']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: data_accuracy_check
+  na_capable: false
+- &id043
+  id: VAL-011
+  description: Verification method 'capex_accuracy_check' is implemented and fires
+    on applicable REQs
+  severity: high
+  how_to_check: verifier implements capex_accuracy_check; fires for ['REQ-024']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: capex_accuracy_check
+  na_capable: false
+- &id044
+  id: VAL-012
+  description: Verification method 'valuation_recompute_check' is implemented and
+    fires on applicable REQs
+  severity: high
+  how_to_check: verifier implements valuation_recompute_check; fires for ['REQ-025']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: valuation_recompute_check
+  na_capable: false
+- &id045
+  id: VAL-013
+  description: Verification method 'chart_data_accuracy_check' is implemented and
+    fires on applicable REQs
+  severity: high
+  how_to_check: verifier implements chart_data_accuracy_check; fires for ['REQ-026']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: chart_data_accuracy_check
+  na_capable: false
+- &id046
+  id: VAL-014
+  description: Verification method 'external_claim_flag_check' is implemented and
+    fires on applicable REQs
+  severity: high
+  how_to_check: verifier implements external_claim_flag_check; fires for ['REQ-027']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: external_claim_flag_check
+  na_capable: false
+- &id047
+  id: VAL-015
+  description: Verification method 'chart_runtime_check' is implemented and fires
+    on applicable REQs
+  severity: high
+  how_to_check: verifier implements chart_runtime_check; fires for ['REQ-028']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: chart_runtime_check
+  na_capable: false
+- &id048
+  id: VAL-016
+  description: Verification method 'all_requirements_pass' is implemented and fires
+    on applicable REQs
+  severity: high
+  how_to_check: verifier implements all_requirements_pass; fires for ['REQ-021']
+  pass_rule: method executes without crash and returns deterministic pass/fail
+  source_ref: all_requirements_pass
+  na_capable: false
+failure_modes:
+- FM-01
+- FM-02
+- FM-03
+- FM-05
+- FM-06
+- FM-08
+- FM-10
+completion_conditions:
+- All 8 phases completed in task-state.json
+- independent_verifier verdict == PASS (0 FAIL)
+- REQ-021 deploy gate satisfied
+- Post-deploy production check (bodyHeight, Chart.instances)
+requirements:
+- id: REQ-001
+  description: Sponsor package phải hoạt động (tier golden). KHÔNG fallback community
+    tier.
+  severity: critical
+  how_to_check: 'command: python3 -c "from vnstock_data import Finance; print(''OK'')"
+    2>/dev/null | grep -q OK'
+  evidence_to_collect:
+  - evidence/REQ-001.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: exit_code == 0
+  source_ref: REQ-001
+  na_capable: false
+- id: REQ-002
+  description: Sponsor data phải trả ≥20 kỳ (không phải community 8 kỳ).
+  severity: critical
+  how_to_check: 'command: python3 -c "import warnings; warnings.filterwarnings(''ignore'');
+    from vnstock_data import Finance; f=Finance(symbol=''$TIC'
+  evidence_to_collect:
+  - evidence/REQ-002.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: output >= 20
+  source_ref: REQ-002
+  na_capable: false
+- id: REQ-003
+  description: Audit split (Bẫy 5B) trước khi tính EPS/PE/PB. Back-calc CP = LNST/EPS
+    từng năm.
+  severity: high
+  how_to_check: Pattern-match artifact text per check string.
+  evidence_to_collect:
+  - evidence/REQ-003.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-003
+  na_capable: false
+- id: REQ-004
+  description: Data giá THẬT từ vnstock. KHÔNG mô phỏng/ngụy tạo data giá.
+  severity: critical
+  how_to_check: Pattern-match artifact text per check string.
+  evidence_to_collect:
+  - evidence/REQ-004.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-004
+  na_capable: false
+- id: REQ-005
+  description: Technical mode ACTIVE (weekly 52 tuần, Tech Score -6→+6, Verdict, MA/RSI/MACD).
+  severity: high
+  how_to_check: Pattern-match artifact text per check string.
+  evidence_to_collect:
+  - evidence/REQ-005.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-005
+  na_capable: false
+- id: REQ-006
+  description: Technical mode PROFILE (daily ~2 năm, 15 block, archetype, NON-ADVICE).
+  severity: high
+  how_to_check: Pattern-match artifact text per check string.
+  evidence_to_collect:
+  - evidence/REQ-006.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-006
+  na_capable: false
+- id: REQ-007
+  description: Section PROFILE phải dùng ngôn ngữ neutral_descriptive_non_advice.
+  severity: high
+  how_to_check: Pattern-match artifact text per check string.
+  evidence_to_collect:
+  - evidence/REQ-007.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-007
+  na_capable: false
+- id: REQ-008
+  description: News digest 30 ngày với sentiment score + category breakdown.
+  severity: medium
+  how_to_check: Pattern-match artifact text per check string.
+  evidence_to_collect:
+  - evidence/REQ-008.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-008
+  na_capable: false
+- id: REQ-009
+  description: Dashboard copy từ dashboard_template.html (22 sections canonical).
+    KHÔNG tự chế section ids.
+  severity: critical
+  how_to_check: Count canonical section ids present in report.
+  evidence_to_collect:
+  - evidence/REQ-009.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: found >= 20/22
+  source_ref: REQ-009
+  na_capable: false
+- id: REQ-010
+  description: Tất cả tokens {{...}} phải được replace. Không token rỗng.
+  severity: high
+  how_to_check: 'command: grep -oE ''\{\{[A-Z_0-9]+\}\}'' $REPORT | wc -l | tr -d
+    '' '''
+  evidence_to_collect:
+  - evidence/REQ-010.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: output <= 0
+  source_ref: REQ-010
+  na_capable: false
+- id: REQ-011
+  description: Canvas elements phải có height-wrapper (chặn Chart.js feedback loop
+    giãn vô hạn).
+  severity: high
+  how_to_check: Each <canvas> has height-wrapper parent.
+  evidence_to_collect:
+  - evidence/REQ-011.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-011
+  na_capable: false
+- id: REQ-012
+  description: Charts ≥10, Sections ≥20, Refs ≥10.
+  severity: high
+  how_to_check: Count charts/sections/refs vs min_*.
+  evidence_to_collect:
+  - evidence/REQ-012.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: counts >= min_*
+  source_ref: REQ-012
+  na_capable: false
+- id: REQ-013
+  description: Mỗi section phải có content depth ≥200 chars (không rỗng/mỏng).
+  severity: high
+  how_to_check: Per-section char count vs min.
+  evidence_to_collect:
+  - evidence/REQ-013.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: no shallow section
+  source_ref: REQ-013
+  na_capable: false
+- id: REQ-014
+  description: 3 Special Insights riêng biệt (sec-insight-1/2/3), mỗi cái ≥500 chars.
+  severity: high
+  how_to_check: Specific sections char count vs min.
+  evidence_to_collect:
+  - evidence/REQ-014.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: each named section >= min_chars
+  source_ref: REQ-014
+  na_capable: false
+- id: REQ-015
+  description: Bull + Bear case cân bằng (không chỉ bullish).
+  severity: high
+  how_to_check: Pattern-match artifact text per check string.
+  evidence_to_collect:
+  - evidence/REQ-015.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-015
+  na_capable: false
+- id: REQ-016
+  description: Valuation targets phải hợp lý (dương, không âm vô lý). DCF với FCF<0
+    phải flag + dùng alternative.
+  severity: high
+  how_to_check: val-card prices positive; FCF<0 flagged.
+  evidence_to_collect:
+  - evidence/REQ-016.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-016
+  na_capable: false
+- id: REQ-017
+  description: Flag honest về data limitation (ước tính, stale, community tier).
+  severity: medium
+  how_to_check: Pattern-match artifact text per check string.
+  evidence_to_collect:
+  - evidence/REQ-017.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-017
+  na_capable: false
+- id: REQ-018
+  description: Sources & references ≥10 numbered citations.
+  severity: medium
+  how_to_check: 'command: grep -oE ''id="ref-[0-9]+"'' $REPORT | wc -l | tr -d ''
+    '''
+  evidence_to_collect:
+  - evidence/REQ-018.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: output >= 10
+  source_ref: REQ-018
+  na_capable: false
+- id: REQ-019
+  description: JS syntax hợp lệ (node --check pass).
+  severity: high
+  how_to_check: 'command: node --check $JS_FILE'
+  evidence_to_collect:
+  - evidence/REQ-019.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: exit_code == 0
+  source_ref: REQ-019
+  na_capable: false
+- id: REQ-020
+  description: Div balance (open = close).
+  severity: high
+  how_to_check: Open vs close <div> count equal.
+  evidence_to_collect:
+  - evidence/REQ-020.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-020
+  na_capable: false
+- id: REQ-022
+  description: Revenue/NPATMI/EPS trong report KHỚP data files (±5%). KHÔNG bịa.
+  severity: critical
+  how_to_check: Report numbers match data/*.json ground truth ±tol.
+  evidence_to_collect:
+  - evidence/REQ-022.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-022
+  na_capable: true
+- id: REQ-023
+  description: Balance sheet metrics (Total Assets, Equity) khớp balance_sheet.json
+    (±5%).
+  severity: critical
+  how_to_check: Report numbers match data/*.json ground truth ±tol.
+  evidence_to_collect:
+  - evidence/REQ-023.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-023
+  na_capable: true
+- id: REQ-024
+  description: Capex trong chart/report KHỚP cash_flow.json 'Purchases of fixed assets'.
+    KHÔNG bịa capex array.
+  severity: critical
+  how_to_check: capex chart array matches cash_flow.json ±tol.
+  evidence_to_collect:
+  - evidence/REQ-024.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-024
+  na_capable: true
+- id: REQ-025
+  description: Valuation multiples (PE, PB, Graham) recomputed từ data == report values
+    (±2%).
+  severity: high
+  how_to_check: Recompute PE/PB/Graham from data == report ±tol.
+  evidence_to_collect:
+  - evidence/REQ-025.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-025
+  na_capable: true
+- id: REQ-026
+  description: Chart DATA JS object chứa values KHỚP data files (revenue, npatmi arrays).
+  severity: high
+  how_to_check: JS DATA arrays match data files.
+  evidence_to_collect:
+  - evidence/REQ-026.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-026
+  na_capable: true
+- id: REQ-027
+  description: Số liệuexternal (WCM LN, MCH DT, store count) phải flag 'ước tính'
+    nếu không có data file.
+  severity: medium
+  how_to_check: External claims flagged 'ước tính'.
+  evidence_to_collect:
+  - evidence/REQ-027.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-027
+  na_capable: false
+- id: REQ-028
+  description: 'Chart render-readiness: mỗi canvas ID referenced trong Chart() phải
+    có HTML element, không duplicate, có DATA object. (Học từ PNJ v2 test: 27/27 PASS
+    nhưng charts vẫn crash do duplicate canvas sau </body>.)'
+  severity: high
+  how_to_check: Canvas ids unique, referenced in Chart(), have DATA.
+  evidence_to_collect:
+  - evidence/REQ-028.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-028
+  na_capable: false
+- id: REQ-021
+  description: KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.
+  severity: critical
+  how_to_check: Every mandatory REQ PASS (deploy gate).
+  evidence_to_collect:
+  - evidence/REQ-021.json
+  - _summary.json
+  applicable_condition: always
+  pass_rule: check satisfied
+  source_ref: REQ-021
+  na_capable: false
+- *id001
+- *id002
+- *id003
+- *id004
+- *id005
+- *id006
+- *id007
+- *id008
+- *id009
+- *id010
+- *id011
+- *id012
+- *id013
+- *id014
+- *id015
+- *id016
+- *id017
+- *id018
+- *id019
+- *id020
+- *id021
+- *id022
+- *id023
+- *id024
+- *id025
+- *id026
+- *id027
+- *id028
+- *id029
+- *id030
+- *id031
+- *id032
+- *id033
+- *id034
+- *id035
+- *id036
+- *id037
+- *id038
+- *id039
+- *id040
+- *id041
+- *id042
+- *id043
+- *id044
+- *id045
+- *id046
+- *id047
+- *id048
+- id: REC-001
+  description: 'REQ-021 deploy gate: BLOCK deploy if any REQ FAIL; never deploy ''anyway'''
+  severity: critical
+  how_to_check: independent_verifier exit code 1 → no deploy; hook predeploy-gate.sh
+    re-verifies
+  pass_rule: no deploy occurs while verdict==FAIL
+  source_ref: REQ-021
+  na_capable: false
+- id: REC-002
+  description: Per-phase verifier blocks pipeline progression on FAIL (early block,
+    not just final)
+  severity: high
+  how_to_check: run_phase.py exits non-zero and prints PIPELINE BLOCKED on phase FAIL
+  pass_rule: phase FAIL → next phase not started
+  source_ref: run_phase.py
+  na_capable: false
+- id: REC-003
+  description: 'Context-compaction recovery: agent reads task-state.json to resume
+    (anti-omission layer 2)'
+  severity: high
+  how_to_check: task-state.json records phase + per-REQ status; resumable
+  pass_rule: state fully reconstructable from file
+  source_ref: init_task_state.py
+  na_capable: false
+_meta:
+  built_at: '2026-07-21T09:16:42.947442'
+  target_requirements_sha256: ffeb27c68a019882637d6b3567d6e9b10e68544bd7251a0becc84215d02953a2
+  target_req_count: 28
+  evaluator_req_count: 79

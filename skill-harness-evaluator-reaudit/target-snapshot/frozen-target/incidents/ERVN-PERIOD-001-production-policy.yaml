@@ -1,0 +1,68 @@
+# ERVN-PERIOD-001 — Production Policy (interim)
+# Set on 2026-07-18 pending forensic classification (Branch A vs Branch B).
+# Owner directive §IV: do not allow parent to publish reports until period order is proven.
+
+incident_id: ERVN-PERIOD-001
+opened_at: 2026-07-18
+opened_by: phase_6f_parent_integration_regression
+
+production_status:
+  v1_0_0_tag:
+    status: IMMUTABLE
+    note: "Tag equity-research-vn-1.0.0 remains untouched per owner directive §III"
+
+  sponsor_csv_ingestion_path:
+    status: FAIL_CLOSED
+    reason: |
+      Period-inversion confirmed across 6 tickers (FPT/MWG/DHG/VJC/GVR/NLG) on 2026-07-18.
+      build_data_contract.py uses years_asc[4-i] assuming CSV is descending,
+      but vnstock sponsor CSVs are ascending. Parent cannot be trusted to label periods
+      correctly until hotfix v1.0.1 is qualified.
+    blocked_components:
+      - build_data_contract.py
+      - agent_runner.py (downstream consumer of verified-dashboard-data.json)
+      - independent_verifier.py (uses contract's own values, does not cross-check CSV)
+
+  other_ingestion_paths:
+    status: PENDING_SCOPE_AUDIT
+    reason: |
+      Community vnstock API (Finance.income_statement() with item_en rows) and
+      WebFetch-based ingestion may not be affected. Scope audit required before
+      declaring them safe.
+    candidates_to_audit:
+      - community_vnstock_api_path
+      - webfetch_cafef_vietstock_path
+      - qhcd_pdf_path
+
+  published_artifacts:
+    status: SUSPENDED
+    reason: "No new reports may be published from v1.0.0 against sponsor CSVs until ERVN-PERIOD-001 closes."
+
+release_policy:
+  next_candidate: equity-research-vn-1.0.1
+  candidate_relation: PERIOD_ORDER_AND_SOURCE_SCHEMA_HOTFIX
+  requalification_required: true
+  requalification_scope_pending: forensic_audit_classification
+
+forensic_audit_required:
+  release_snapshots:
+    - raw_csv_order
+    - period_headers
+    - builder_output_periods
+    - artifact_display_periods
+  current_snapshots:
+    - raw_csv_order
+    - period_headers
+    - builder_output_periods
+  sample_size:
+    preferred: all_release_qualification_tickers
+    minimum_if_cost_constrained: 20_tickers_across_10_sectors
+  classification_branches:
+    A: LATENT_RELEASE_DEFECT  # if historical snapshots also ascending → defect was always present
+    B: EXTERNAL_SOURCE_SCHEMA_DRIFT  # if historical snapshots descending → schema changed post-release
+  rule: "Do NOT classify A or B until historical snapshots are compared."
+
+linked_artifacts:
+  incident_ticket: equity-research-vn/incidents/ERVN-PERIOD-001.md
+  discovery_run: vn-financial-data-collector/parent-integration-regression/
+  collector_maturity: vn-financial-data-collector/MATURITY.json

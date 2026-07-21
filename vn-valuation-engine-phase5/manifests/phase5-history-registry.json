@@ -1,0 +1,52 @@
+{
+  "phase_5_history_registry": {
+    "registered_at": "2026-07-21T06:02:33.374879+00:00",
+    "purpose": "Immutable record of Phase 5 raw cohort verdict + remediation per Directive Phase 5R §4",
+    "raw_cohort": {
+      "verdict": "FAIL_SCALE_DEFECT",
+      "verifier_requirement": "VVE-REQ-071",
+      "verifier_failure_code": "EQUITY_BRIDGE_INVALID",
+      "safety_stop_triggered": true,
+      "safety_trigger": "Directive Phase 5 §11 scale_error_with_material_valuation_impact",
+      "runs_attempted": 10,
+      "runs_affected_by_defect": 6,
+      "runs_clean_in_raw_cohort": 4,
+      "affected_tickers": [
+        "HPG",
+        "MWG",
+        "FPT"
+      ],
+      "defect_description": "Source adapter set Scale.MILLION for raw VND values from vnstock. vnstock returns VND UNIT values. unit_currency_engine multiplied × 1M → EBITDA 4.96e18 instead of 4.96e12. Implied price 25.8 billion VND/share instead of 25,843 VND.",
+      "raw_artifact_hashes_count": 102,
+      "raw_artifact_hashes_sample": {
+        "BVH-run-A/BVH-financials-652c8c8f.json": "40085c504fbcad3f",
+        "BVH-run-A/BVH-market-a7e50ba4.json": "1eb2afb8becfcff8",
+        "BVH-run-A/errors.json": "c7c4191d9e04b9e8",
+        "BVH-run-A/evidence-manifest.json": "852f1449d54b4ac7",
+        "BVH-run-A/execution-log.json": "249b5adc7c5e9a7f"
+      },
+      "raw_artifacts_location": "halt-baseline-v1-scale-defect/artifacts/phase5-genuine-baseline/",
+      "raw_artifacts_immutable": true
+    },
+    "remediation": {
+      "patch_id": "PATCH-ADAPTER-01-scale-unit",
+      "component": "SOURCE_ADAPTER (Phase 5 new — NOT in Phase 4 frozen implementation)",
+      "file_changed": "source-adapter/vnstock_adapter.py",
+      "files_changed_count": 1,
+      "phase4_files_modified": 0,
+      "phase4_implementation_unchanged": true,
+      "root_cause": "Scale.MILLION default for raw VND values from vnstock API. vnstock returns values already in VND UNIT (e.g., FPT EBITDA = 4.96e12 VND raw). When unit_currency_engine normalizes Scale.MILLION → UNIT, it multiplies × 1M, producing 4.96e18 (one million times truth).",
+      "fix": "Changed _metric default scale from Scale.MILLION to Scale.UNIT in vnstock_adapter.py line ~52.",
+      "adapter_hash_before": "20b9fb455ff11b7f4cea4a213958042a14bc8a9c0cccfc108087cd05585046b6",
+      "adapter_hash_after": "7216ab2eb7bfbce1a464b4dc6485f0014a963c89a853a7f74131f9eb0c285431",
+      "tests_added_in_phase5R": "pending (regression suite)",
+      "adapter_prefixed_location": "halt-baseline-v1-scale-defect/source-adapter-reconstructed/vnstock_adapter_prefixed.py",
+      "note_on_reconstruction": "Pre-fix adapter reconstructed from post-fix by reverting Scale.UNIT → Scale.MILLION substitution (single line). Saved to halt dir for hash verification."
+    },
+    "verdict_separation_principle": {
+      "principle": "Phase 5 raw cohort verdict is FAIL_SCALE_DEFECT — immutable per Directive Phase 5R §9.",
+      "prohibition": "Cannot pool pre-patch and post-patch runs. Cannot change raw verdict to PASS.",
+      "phase5R_purpose": "Establish a CLEAN fresh requalification cohort after a NEW freeze with patched adapter."
+    }
+  }
+}

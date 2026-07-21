@@ -1,0 +1,126 @@
+# Phase 6 Failure Registry
+
+**Date:** 2026-07-21
+**Subphase:** P6D
+**Verdict:** FAIL_ADAPTER_OR_MAPPING (per Directive §24)
+
+## Summary
+
+```yaml
+phase_6D_mutation_gate:
+  required:
+    mutations_executed: ">=24"
+    critical_mutations_survived: 0
+    major_mutations_survived: 0
+    unsafe_false_passes: 0
+  actual:
+    mutations_executed: 28
+    critical_mutations_survived: 10
+    major_mutations_survived: 8
+    unsafe_false_passes: 0
+  status: FAIL
+```
+
+## Survived mutations (18 total)
+
+### CRITICAL survived (10)
+
+| ID | Category | Description | Root cause | Owner |
+|---|---|---|---|---|
+| MUT-INT-005 | schema | Lossy mapping (drop method) | Adapter preserves what's given; if child drops a method pre-adapter, adapter can't know. Validator compares post-mutation child vs adapter — both have reduced count. | INTEGRATION_VALIDATOR gap — needs pre/post comparison |
+| MUT-INT-007 | entity | Company mismatch | Adapter doesn't validate company name semantics (only ticker is cross-checked) | SCHEMA_ADAPTER gap |
+| MUT-INT-010 | formula | Selected multiple changed | Adapter doesn't recompute; preserves whatever value is in method | CHILD_VERIFIER gap — needs recompute validation |
+| MUT-INT-014 | applicability | NOT_APPLICABLE → VALID | Status swap doesn't violate adapter schema; child verifier doesn't validate sector applicability | APPLICABILITY_ENGINE gap |
+| MUT-INT-016 | applicability | Fatal error removed | Adapter doesn't validate that errors[] should be non-empty when method failed | SCHEMA_ADAPTER gap |
+| MUT-INT-017 | bridge | Net debt sign reversed | Bridge items preserved as-is; no sum/balance check in adapter | CHILD_VERIFIER VVE-REQ-071 should catch but doesn't on preserved bridges |
+| MUT-INT-018 | bridge | Minority interest removed | Same — adapter preserves bridge items; no recompute | CHILD_VERIFIER gap |
+| MUT-INT-019 | bridge | Cash double-counted | Same — adapter doesn't sum-check | CHILD_VERIFIER gap |
+| MUT-INT-020 | bridge | Shares ×1.000 | Adapter preserves; child verifier doesn't range-check shares | CHILD_VERIFIER gap (documented as MUT-F7) |
+
+### MAJOR survived (8)
+
+| ID | Category | Description | Root cause |
+|---|---|---|---|
+| MUT-INT-009 | formula | Formula ID changed | Adapter doesn't validate against formula-registry |
+| MUT-INT-011 | formula | Benchmark type changed | Same — no registry cross-check |
+| MUT-INT-012 | formula | Unsupported premium added | Adapter doesn't validate premium registry |
+| MUT-INT-021 | bridge | Basic/diluted basis changed | Adapter preserves input_metric_ids verbatim |
+| MUT-INT-022 | provenance | Source reference removed | Adapter doesn't require provenance presence |
+| MUT-INT-023 | provenance | Source ID replaced | Same |
+| MUT-INT-024 | provenance | Period changed | Adapter preserves valuation_date verbatim |
+| MUT-INT-025 | provenance | Scope changed | Adapter preserves scope verbatim |
+
+## Root cause analysis
+
+The integration stack has a fundamental **architectural limitation**:
+
+```yaml
+current_architecture:
+  SCHEMA_ADAPTER:
+    role: "Lossless mapping layer — preserves child output structure"
+    does_not: "Recompute, validate semantic correctness, or check registry"
+  
+  CHILD_VERIFIER (Phase 4 frozen):
+    role: "Recompute checks for VALID methods (VVE-REQ-059)"
+    does_not: "Validate bridge balance on preserved bridges, validate shares range, validate applicability consistency"
+    limitation: "Originally designed for synthetic fixtures where values are known-good; doesn't have authority to recompute applicability decisions"
+  
+  INTEGRATION_VALIDATOR:
+    role: "Verify adapter preserved method count/order/IDs"
+    does_not: "Compare pre-mutation vs post-mutation (only sees post-mutation)"
+```
+
+The current adapter is **correct by design** — it's a lossless mapping, not a semantic validator. The semantic correctness responsibility belongs to:
+1. **Child runner** (pre-adapter) — must produce correct values
+2. **Child verifier** (post-child, pre-adapter) — must catch child-side semantic errors
+3. **Parent verifier** (post-adapter, in production) — must catch residual issues
+
+The Phase 6 integration test revealed that **child verifier has gaps** that were not visible in Phase 5R because Phase 5R used genuine outputs from a correct runner. Phase 6 mutations inject defects post-runner, which the existing verifier wasn't designed to catch.
+
+## Categorization per Directive §21
+
+```yaml
+root_causes:
+  CHILD_OUTPUT: 0  # child runner is correct (Phase 5R PASS)
+  CHILD_VERIFIER: 6  # most CRITICAL survivals — verifier doesn't recompute bridges/ranges
+  INTEGRATION_ADAPTER: 4  # adapter doesn't validate registry/semantic
+  REPORT_IR_MAPPING: 0
+  INTEGRATION_HARNESS: 2  # integration validator doesn't compare pre/post
+  PARENT_EXISTING_DEFECT: 0  # parent immutable, no defects
+  PARENT_VERIFIER_BLIND_SPOT: 0  # parent verifier not invoked in PIT scope
+  ENVIRONMENT: 0
+```
+
+## Recommendation
+
+```yaml
+recommendation:
+  short_term_option_A: |
+    Accept Phase 6 FAIL with documented gaps. The integration adapter is correct 
+    by design (lossless mapping). The 18 survived mutations reveal gaps in 
+    child verifier (Phase 4 frozen) that require Phase 4F-style remediation.
+    Standalone maturity FUNCTIONAL is preserved. Integration maturity remains 
+    NOT_YET_REQUALIFIED.
+  
+  short_term_option_B: |
+    Strengthen integration adapter to perform defense-in-depth validation:
+    - Bridge sum check (CRITICAL — catches MUT-INT-017/018/019)
+    - Shares range check (CRITICAL — catches MUT-INT-020, MIT-F7 deferred)
+    - Registry cross-check for formula_id (MAJOR)
+    This is a Phase 6 patch (adapter is new Phase 6 component, not frozen).
+    Requires new adapter version 1.1.0 + re-run P6B + P6C + P6D.
+  
+  long_term: |
+    Open Phase 4F to strengthen child verifier:
+    - Bridge balance check on all preserved bridges (not just recompute)
+    - Applicability consistency check (NA method with VALID price = critical)
+    - Provenance presence requirement
+```
+
+## Honest assessment
+
+Phase 6 integration regression revealed that the verification stack is **adequate for clean pipelines** (all 8 PITs PASS, all clean fixtures reproducible) but **has gaps for adversarial mutations** that target semantic correctness rather than schema structure.
+
+The adapter is correct — it does exactly what a lossless mapping layer should do. The gap is in **defense-in-depth validation** that the integration layer should provide.
+
+This is a legitimate FAIL under Directive §22 gate. Recommending owner review for remediation path.

@@ -1,0 +1,41 @@
+{
+  "date": "2026-07-18",
+  "drill_type": "PERIOD_VALUE_INVERSION injection + detect + restore",
+  "results": {
+    "s1_build_clean_lkg": {
+      "lkg_built": true,
+      "lkg_gate_pass": true,
+      "lkg_hash": "501676cdf5efd648fe6231d70ed532a8"
+    },
+    "s2_inject_defect": {
+      "defect_injected": true,
+      "fields_reversed": [
+        "revenue",
+        "netProfit",
+        "eps",
+        "totalAssets",
+        "equity",
+        "capex"
+      ]
+    },
+    "s3_gate_detects_defect": {
+      "gate_returned_nonzero": true,
+      "exit_code": 1,
+      "stdout_tail": "  net_profit        : [\u2717] 1/5 periods match (csv col: Net profit/(loss) after tax)\n  eps               : [\u2717] 1/5 periods match (csv col: EPS basic (VND))\n  total_assets      : [\u2717] 1/5 periods match (csv col: Total Assets)\n  total_equity      : [\u2717] 1/5 periods match (csv col: Owner's Equity)\n  capex             : [\u2717] 1/5 periods match (csv col: Purchases of fixed assets and other long term assets)\n"
+    },
+    "s4_deployment_blocked": {
+      "deployment_blocked": true,
+      "reason": "REQ-PERIOD-INTEGRITY FAIL"
+    },
+    "s5_restore_lkg": {
+      "restored": true,
+      "hash_matches_lkg": true,
+      "restored_hash": "501676cdf5efd648fe6231d70ed532a8"
+    },
+    "s6_smoke_validation": {
+      "smoke_pass": true,
+      "exit_code": 0
+    }
+  },
+  "all_steps_pass": true
+}

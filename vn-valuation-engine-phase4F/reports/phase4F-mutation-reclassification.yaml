@@ -1,0 +1,137 @@
+# Phase 4F Mutation Reclassification (F4F-A)
+
+**Date:** 2026-07-21
+**Directive:** Phase 4F §5
+**Source:** Phase 6 P6D mutation suite (28 mutations)
+**Method:** Each mutation run through full stack (child verifier + adapter + integration validator)
+
+## Summary
+
+```yaml
+total_mutations: 28
+classification_counts:
+  CAUGHT_BY_PRIMARY_OWNER: 11
+  MISSED_PRIMARY_CAUGHT_DOWNSTREAM: 0
+  SURVIVED_FULL_STACK_FINAL_PASS: 17
+  INVALID_MUTATION_ORACLE: 0
+  NOT_APPLICABLE: 0
+
+unsafe_false_passes: 17   # all SURVIVED_FULL_STACK_FINAL_PASS are unsafe
+  critical: 9
+  major: 8
+
+target_after_F4F_remediation:
+  unsafe_false_passes: 0
+  critical_unsafe: 0
+  major_unsafe: 0
+```
+
+## Per-mutation classification
+
+### CAUGHT_BY_PRIMARY_OWNER (11)
+
+| ID | Severity | Category | Primary Owner | Detection Layer | Description |
+|---|---|---|---|---|---|
+| MUT-INT-001 | CRITICAL | schema | INTEGRATION_ADAPTER | adapter | Missing required valuation field |
+| MUT-INT-002 | CRITICAL | schema | INTEGRATION_ADAPTER | adapter | Duplicate method ID |
+| MUT-INT-003 | CRITICAL | schema | INTEGRATION_ADAPTER | adapter | Invalid status |
+| MUT-INT-004 | MAJOR | schema | INTEGRATION_ADAPTER | adapter | Invalid reference (orphan metric) |
+| MUT-INT-006 | CRITICAL | entity | INTEGRATION_ADAPTER | adapter | Ticker mismatch |
+| MUT-INT-008 | CRITICAL | entity | INTEGRATION_ADAPTER | adapter | Cross-ticker input |
+| MUT-INT-013 | CRITICAL | formula | CHILD_VERIFIER | child_verifier | Implied price changed (recompute mismatch) |
+| MUT-INT-015 | CRITICAL | applicability | INTEGRATION_ADAPTER | adapter | INPUT_INCOMPLETE→VALID caught (adapter requires trace for VALID) |
+| MUT-INT-026 | CRITICAL | parent | BY_DESIGN | by_design | Financial DATA changed (adapter never writes forbidden targets) |
+| MUT-INT-027 | CRITICAL | parent | BY_DESIGN | by_design | Financial chart changed |
+| MUT-INT-028 | CRITICAL | parent | BY_DESIGN | by_design | Parent narrative adds unsupported number |
+
+### SURVIVED_FULL_STACK_FINAL_PASS (17) — UNSAFE, require remediation
+
+| ID | Severity | Category | Primary Owner (should be) | Description | Required F4F Remediation |
+|---|---|---|---|---|---|
+| MUT-INT-005 | CRITICAL | schema | INTEGRATION_HARNESS | drop_method (count drop) | F4F-D: harness pre/post comparison |
+| MUT-INT-007 | CRITICAL | entity | INTEGRATION_ADAPTER | company_mismatch | F4F-E: adapter v1.1.0 entity registry check |
+| MUT-INT-009 | MAJOR | formula | CHILD_VERIFIER | formula_id changed | F4F-B/C: VVE-REQ-080 registry consistency |
+| MUT-INT-010 | CRITICAL | formula | CHILD_VERIFIER | selected_multiple changed | F4F-B/C: VVE-REQ-080 benchmark trace validation |
+| MUT-INT-011 | MAJOR | formula | CHILD_VERIFIER | benchmark_type changed | F4F-B/C: VVE-REQ-080 |
+| MUT-INT-012 | MAJOR | formula | CHILD_VERIFIER | unsupported premium added | F4F-B/C: VVE-REQ-080 |
+| MUT-INT-014 | CRITICAL | applicability | CHILD_VERIFIER | NOT_APPLICABLE→VALID | F4F-B/C: VVE-REQ-078 applicability consistency |
+| MUT-INT-016 | CRITICAL | applicability | CHILD_VERIFIER | fatal_error_removed | F4F-B/C: VVE-REQ-078 |
+| MUT-INT-017 | CRITICAL | bridge | CHILD_VERIFIER | net_debt_sign_reversed | F4F-B/C: VVE-REQ-077 bridge recompute |
+| MUT-INT-018 | CRITICAL | bridge | CHILD_VERIFIER | minority_interest_removed | F4F-B/C: VVE-REQ-077 |
+| MUT-INT-019 | CRITICAL | bridge | CHILD_VERIFIER | cash_double_counted | F4F-B/C: VVE-REQ-077 |
+| MUT-INT-020 | CRITICAL | bridge | CHILD_VERIFIER | shares_x1000 | F4F-B/C: VVE-REQ-079 shares range sanity |
+| MUT-INT-021 | MAJOR | bridge | CHILD_VERIFIER | basic/diluted basis changed | F4F-B/C: VVE-REQ-079 |
+| MUT-INT-022 | MAJOR | provenance | CHILD_VERIFIER | source_reference_removed | F4F-B/C: VVE-REQ-081 provenance presence |
+| MUT-INT-023 | MAJOR | provenance | CHILD_VERIFIER | source_id_replaced | F4F-B/C: VVE-REQ-081 |
+| MUT-INT-024 | MAJOR | provenance | CHILD_VERIFIER | period_changed | F4F-B/C: VVE-REQ-078 |
+| MUT-INT-025 | MAJOR | provenance | CHILD_VERIFIER | scope_changed | F4F-B/C: VVE-REQ-078 |
+
+## Remediation mapping (per Directive §3 ownership)
+
+```yaml
+F4F_B_requirement_groups:
+  VVE_REQ_077_bridge_recompute:
+    catches: [MUT-INT-017, MUT-INT-018, MUT-INT-019]
+    severity: CRITICAL
+    description: |
+      Verifier recomputes EV → equity bridge from calculation_trace.
+      Detects: net debt sign reversal, minority interest removal, cash double-counting.
+  
+  VVE_REQ_078_applicability_consistency:
+    catches: [MUT-INT-014, MUT-INT-016, MUT-INT-024, MUT-INT-025]
+    severity: CRITICAL/MAJOR
+    description: |
+      Verifier cross-checks method status against input metric status, sector rule, 
+      and period/scope alignment. Detects: NA→VALID swap, fatal error removed,
+      period/scope mutation.
+  
+  VVE_REQ_079_shares_range_sanity:
+    catches: [MUT-INT-020, MUT-INT-021]
+    severity: CRITICAL/MAJOR
+    description: |
+      Verifier checks shares × price ≈ market_cap within tolerance,
+      and shares within registered range. Detects: shares×1000, basic/diluted swap.
+      (Closes MUT-F7 documented gap from Phase 4E.)
+  
+  VVE_REQ_080_method_registry_consistency:
+    catches: [MUT-INT-009, MUT-INT-010, MUT-INT-011, MUT-INT-012]
+    severity: MAJOR
+    description: |
+      Verifier checks method_id ∈ registry, formula_id matches method,
+      selected_multiple ∈ benchmark trace, no unsupported premium/discount.
+  
+  VVE_REQ_081_provenance_presence:
+    catches: [MUT-INT-022, MUT-INT-023]
+    severity: MAJOR
+    description: |
+      Verifier requires provenance for all material input metrics.
+      Detects: source reference removed, source_id replaced.
+
+F4F_D_harness_binding:
+  catches: [MUT-INT-005]
+  description: |
+    Integration harness binds verifier result to exact artifact hash.
+    Pre-adapter vs post-adapter comparison catches method drop.
+
+F4F_E_adapter_v1_1_0:
+  catches: [MUT-INT-007]
+  description: |
+    Adapter v1.1.0 adds company registry cross-check.
+    (Adapter remains lossless — no recompute.)
+```
+
+## Gate
+
+```yaml
+F4F_A_gate:
+  mutations_classified: 28/28          ✓
+  unresolved: 0                        ✓
+  mutation_stage_known: 28/28          ✓
+  primary_owner_known: 28/28           ✓
+  final_pipeline_verdict_known: 28/28  ✓
+  status: PASS
+```
+
+## Conclusion
+
+17 unsafe_false_passes identified — all have clear remediation mapping to specific F4F-B/C/D/E components. No INVALID_MUTATION_ORACLE, no NOT_APPLICABLE, no unresolved. Ready for F4F-B requirement definition.

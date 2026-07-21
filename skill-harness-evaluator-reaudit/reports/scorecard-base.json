@@ -1,0 +1,112 @@
+{
+  "skill": {
+    "name": "equity-research-vn",
+    "version": "1.1.0",
+    "path": "/Users/bobo/.zcode/skills/equity-research-vn"
+  },
+  "evaluation": {
+    "evaluator_version": "0.1.0",
+    "date": "2026-07-21",
+    "audit_type": "re-audit after target drift (60\u2192505 files, v1.0.0\u2192v1.1.0)",
+    "total_runs": 10,
+    "observed_runs": 10,
+    "protocol_sha256": "72ce36017ab1aafd4a8fbeef1bf7af2bc7888653df4ec2818df576be4d7b9c23"
+  },
+  "scores": {
+    "skill_design_score": {
+      "value": 92.0,
+      "max": 100,
+      "evidence_coverage_pct": 100,
+      "confidence": "HIGH",
+      "basis": "static analysis of skill-spec v1.1.0"
+    },
+    "skill_correctness_score": {
+      "value": 90.0,
+      "max": 100,
+      "evidence_coverage_pct": 80,
+      "confidence": "MEDIUM",
+      "basis": "50% native verifier recall (clean-control 28/28) + 50% mutation correct-detection (4/5)"
+    },
+    "harness_reliability_score": {
+      "value": 100.0,
+      "max": 100,
+      "evidence_coverage_pct": 66.7,
+      "confidence": "LOW",
+      "basis": "Preliminary HRS \u2014 only 4/6 dimensions observed; phase0 was deterministic_workflow",
+      "not_for_maturity_classification": true
+    },
+    "production_readiness_score": {
+      "value": 94.5,
+      "max": 100,
+      "status": "PRELIMINARY",
+      "decision_eligible": false,
+      "hard_gate_override": "FAIL",
+      "basis": "vetoed by HG-011 + HG-VALIDATOR-MISSED-CRITICAL"
+    }
+  },
+  "verification_layer": {
+    "verifier_repeatability_rate": 1.0,
+    "verifier_score_variance": 0.0,
+    "evidence_reproducibility": true,
+    "clean_control_first_pass_yield": 1.0,
+    "correct_detection_rate": 0.8,
+    "missed_critical_defects": 1,
+    "specificity_rate": 1.0,
+    "false_positive_count": 0
+  },
+  "agent_execution": {
+    "first_pass_yield": "N/A",
+    "reason": "no_genuine_agent_runs",
+    "note": "phase0 orchestration was deterministic_workflow (vnstock call, no model inference)"
+  },
+  "hard_gates": {
+    "overall_status": "FAIL",
+    "critical_fail": [
+      "HG-011",
+      "HG-VALIDATOR-MISSED-CRITICAL"
+    ],
+    "critical_pass_count": 15
+  },
+  "maturity": {
+    "evaluator_engine": {
+      "level": "ROBUST",
+      "confidence": "HIGH"
+    },
+    "target_verification_layer": {
+      "level": "FUNCTIONAL",
+      "max_allowed": "ROBUST",
+      "constrained_by": [
+        "correct_detection<1.0",
+        "missed_critical>0"
+      ]
+    },
+    "target_orchestration": {
+      "level": "EXPERIMENTAL",
+      "max_allowed": "FUNCTIONAL"
+    },
+    "target_agent_execution": {
+      "level": "UNASSESSED",
+      "reason": "no_genuine_agent_runs"
+    },
+    "overall_target_skill": {
+      "level": "FUNCTIONAL",
+      "max_allowed": "FUNCTIONAL",
+      "constrained_by": [
+        "hard_gate_veto",
+        "no_agent_runs"
+      ]
+    }
+  },
+  "final_status": "FAIL",
+  "comparison_vs_prior_audit": {
+    "prior_audit_date": "2026-07-12",
+    "prior_status": "FAIL",
+    "changes": [
+      "spec/target: 60\u2192505 files (target skill matured to 1.1.0)",
+      "specificity: 0.0\u21921.0 (REQ-028 false positive FIXED)",
+      "correct_detection: 0.4\u21920.8 (REQ-009, REQ-021 FIXED; REQ-025 still missed)",
+      "missed_critical: 3\u21921 (down from 3; REQ-025 remains)",
+      "overall: still FAIL due to REQ-025 oracle (MUT-VALUATION-001)"
+    ]
+  }
+}

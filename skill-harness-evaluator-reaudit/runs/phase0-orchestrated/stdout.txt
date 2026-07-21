@@ -1,0 +1,58 @@
+
+============================================================
+  Equity Research v2 — PNJ
+  Work dir: /Users/bobo/ZCodeProject/skill-harness-evaluator-reaudit/runs/phase0-orchestrated
+  Current phase: init
+============================================================
+
+============================================================
+  PHASE: phase0_sponsor
+============================================================
+
+📋 PHASE PROMPT (agent executes this):
+────────────────────────────────────────────────────────────
+# Phase 0: Sponsor Package Detection
+
+Bạn là subagent Phase 0. Context tách biệt — chỉ làm việc này.
+
+## Input
+- Đọc `/Users/bobo/ZCodeProject/skill-harness-evaluator-reaudit/runs/phase0-orchestrated/.task-state/task-state.json` → field `ticker`
+
+## Nhiệm vụ
+1. Check `~/.vnstock/auth_state.json` → xác nhận tier (golden/platinum)
+2. Test import: `python3 -c "from vnstock_data import Finance; print('OK')"`
+3. Nếu ImportError (`_GROUP_CODE` hoặc `_INDEX_MAPPING`): fix bằng `pip3 install 'vnstock==3.5.1' --break-system-packages`
+4. Verify sponsor data ≥20 kỳ: `python3 -c "from vnstock_data import Finance; f=Finance(symbol='PNJ',source='VCI'); print(len(f.income_statement()))"`
+
+## Output — cập nhật task-state.json
+```json
+{
+  "phases": {
+    "phase0_sponsor": {
+      "status": "completed",
+      "result": {"tier": "golden", "periods": 41, "sponsor_ok": true, "version": "vnstock==3.5.1"}
+    }
+  }
+}
+```
+
+## Requirements (REQ cho phase này)
+- REQ-001: Sponsor import OK (KHÔNG fallback community)
+- REQ-002: Sponsor data ≥20 kỳ
+
+## KHÔNG được
+- Fallback community tier (8 kỳ) — data sẽ sai 3-4×
+- Skip nếu fail — phải fix sponsor trước khi qua Phase 1
+
+## Không cần biết (không phải việc của phase này)
+- Dashboard template, section map, canvas — Phase 6 lo
+- Valuation method — Phase 3 lo
+- News sentiment — Phase 5 lo
+
+────────────────────────────────────────────────────────────
+
+🔍 VERIFYING Phase phase0_sponsor...
+  ✅ REQ-001 PASS: Sponsor package phải hoạt động (tier golden). KHÔNG fallback
+  ✅ REQ-002 PASS: Sponsor data phải trả ≥20 kỳ (không phải community 8 kỳ).
+
+✅ Phase phase0_sponsor VERIFIED — ready for next phase

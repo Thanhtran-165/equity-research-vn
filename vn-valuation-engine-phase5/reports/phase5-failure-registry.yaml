@@ -1,0 +1,70 @@
+# Phase 5 Failure Registry
+
+defects_caught_during_cohort:
+  - defect_id: SCALE_ERROR_FPT_EBITDA_x1M
+    timestamp: 2026-07-21T05:18Z
+    severity: CRITICAL
+    trigger: Directive §11 safety_stop / scale_error_with_material_valuation_impact
+    component: source-adapter/vnstock_adapter.py
+    component_layer: SOURCE_ADAPTER (Phase 5 NEW — not in Phase 4 freeze)
+    
+    root_cause: |
+      Adapter set Scale.MILLION for raw VND values from vnstock.
+      vnstock returns values in VND UNIT (e.g., FPT EBITDA = 4.96e12 VND).
+      unit_currency_engine correctly multiplied × 1M → 4.96e18 (one million times truth).
+      EV/EBITDA implied price = 25.8 billion VND/share (should be 25,843 VND).
+    
+    detection_mechanism: |
+      Independent verifier VVE-REQ-071 (EQUITY_BRIDGE_INVALID)
+      6/10 runs FAILed (HPG/MWG/FPT — VCB/BVH PASS because no EV method)
+    
+    classification:
+      bucket: ENFORCEMENT (3-source-adapter enforcement)
+      sub_bucket: 3B-verifier-evidence-provenance
+    
+    resolution:
+      - halt cohort (preserve artifacts)
+      - classify defect
+      - fix source adapter (Scale.MILLION → Scale.UNIT)
+      - re-run cohort with fixed adapter
+      - all 10/10 verifier PASS after fix
+    
+    engine_runner_verifier_changes: 0
+    phase_4_frozen_implementation_changes: 0
+    parent_changes: 0
+    
+    safety_outcome: |
+      Verifier correctly caught defect on first run.
+      No unsafe PASS emitted.
+      Target price never reached production output.
+      Phase 4 standalone_maturity PROTOTYPE_OPERATIONAL preserved.
+
+quality_failures_recoverable:
+  - code: PRICE_DATE_UNRESOLVED
+    severity: MAJOR
+    occurrences: 10/10 runs
+    evidence: "shares_outstanding age 201 days > 90"
+    classification: EXPECTED (shares update infrequently; not a defect)
+    output_allowed: true (recoverable)
+    
+  - code: INPUT_MISSING
+    severity: MAJOR
+    occurrences: 10/10 runs
+    evidence: "FCFF forecast missing — DCF skipped to avoid fabrication"
+    classification: EXPECTED (live data has no FCFF forecast; engine correctly fails-closed)
+    output_allowed: true (recoverable)
+
+unsafe_false_passes:
+  count: 0
+
+fatal_errors:
+  count: 0
+
+secret_leaks:
+  count: 0
+
+parent_hash_changes:
+  count: 0
+
+target_implementation_changes:
+  count: 0
