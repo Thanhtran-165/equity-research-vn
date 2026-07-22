@@ -194,6 +194,11 @@ def run_semantic_binding(
         return traces
     compare(_trace_hash(pre_methods), _trace_hash(post_methods), "calculation_trace_hashes")
 
+    # 19b: Premium/discount blocks
+    pre_premium = {m.get("method_id"): m.get("premium_discount") for m in pre_methods if isinstance(m, dict)}
+    post_premium = {m.get("method_id"): m.get("premium_discount") for m in post_methods if isinstance(m, dict)}
+    compare(pre_premium, post_premium, "premium_discount_blocks")
+
     # 20: Equity bridge hashes
     def _bridge_hash(methods):
         bridges = {}

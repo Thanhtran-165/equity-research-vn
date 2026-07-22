@@ -1,0 +1,59 @@
+{
+  "phase6R2_final_manifest": {
+    "generated_at": "2026-07-22T10:29:48.720900+00:00",
+    "phase_6R2_status": "PASS",
+    "subphases": {
+      "P6R2_A_oracle_remediation": "PASS (3 replacement mutations designed)",
+      "P6R2_B_meta_validation": "PASS (clean PASS + 3 new mutations CAUGHT + inversion evidence)",
+      "P6R2_C_candidate_freeze": "PASS (SBH patched for premium_discount, same adapter v1.2.0)",
+      "P6R2_D_fresh_requalification": "PASS (28/28 mutations caught)",
+      "P6R2_E_final_gate": "PASS"
+    },
+    "oracle_replacement": {
+      "MUT-INT-012-v2": {
+        "root_cause": "old mutation added premium_discount to wrong field; SBH didn't bind premium blocks",
+        "fix": "SBH patched to add premium_discount_blocks bound group; mutation v2 adds structured block",
+        "canonical_target": "method_result.premium_discount",
+        "expected_error": "UNREGISTERED_PREMIUM_DISCOUNT or SBH drift",
+        "caught_by": "SBH+CTX"
+      },
+      "MUT-INT-016-v2": {
+        "root_cause": "BVH clean artifact had no CRITICAL errors — mutation was no-op",
+        "fix": "inject synthetic fatal error as precondition, build context with fatal, then remove",
+        "canonical_target": "artifact.errors[] CRITICAL severity",
+        "expected_error": "FATAL_ERROR_STATE_REMOVED",
+        "caught_by": "SBH+CTX"
+      },
+      "MUT-INT-025-v2": {
+        "root_cause": "old mutation targeted method_result.scope (wrong field — scope is in input_summary)",
+        "fix": "mutation v2 changes input_summary.eps.scope CONSOLIDATED → PARENT_ONLY",
+        "canonical_target": "input_summary metric scope binding",
+        "expected_error": "SCOPE_CONTEXT_MISMATCH",
+        "caught_by": "SBH+CTX"
+      }
+    },
+    "mutation_summary": {
+      "valid_material_mutations": 28,
+      "mutations_caught": 28,
+      "critical_survived": 0,
+      "major_survived": 0,
+      "unsafe_false_passes": 0,
+      "invalid_mutation_oracles": 0
+    },
+    "clean_runs": "8/8 (same as Phase 6R — SBH patch doesn't affect clean artifacts)",
+    "PITs": "8/8 (same as Phase 6R — structural boundary unchanged)",
+    "parent_immutable": true,
+    "maturity_decision": {
+      "phase_6R2": "PASS",
+      "implementation_status": "PARENT_INTEGRATION_REQUALIFIED_CONTEXT_BOUND",
+      "standalone_maturity": "FUNCTIONAL",
+      "integration_maturity": "REQUALIFIED_FOR_EQUITY_RESEARCH_VN_1_1_0",
+      "integration_status": "READY_FOR_OWNER_DEPLOYMENT_SIGNOFF"
+    },
+    "decision": {
+      "production_integration_authorized": false,
+      "deployment_directive_required": true,
+      "owner_review_required": true
+    }
+  }
+}
