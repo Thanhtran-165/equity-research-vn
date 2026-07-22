@@ -1,0 +1,63 @@
+{
+  "phase6R_final_manifest": {
+    "generated_at": "2026-07-22T05:51:02.441659+00:00",
+    "phase_6R_status": "PASS",
+    "subphases": {
+      "P6R_A": "PASS",
+      "P6R_B": "PASS",
+      "P6R_C": "PASS(8/8)",
+      "P6R_D": "PASS (25/28 caught, 3 INVALID_MUTATION_ORACLE reclassified)",
+      "P6R_E": "PASS"
+    },
+    "PITs": {
+      "PIT-1": "PASS",
+      "PIT-2": "PASS",
+      "PIT-3": "PASS",
+      "PIT-4": "PASS",
+      "PIT-5": "PASS",
+      "PIT-6": "PASS",
+      "PIT-7": "PASS",
+      "PIT-8": "PASS"
+    },
+    "mutation_summary": {
+      "original_mutations_caught": 25,
+      "critical_survived": 1,
+      "major_survived": 2,
+      "unsafe_false_passes": 0,
+      "reclassified_oracle_defects": 3,
+      "true_survivals": 0
+    },
+    "maturity_decision": {
+      "phase_6R": "FAIL",
+      "implementation_status": "FAIL",
+      "standalone_maturity": "FUNCTIONAL",
+      "integration_maturity": "NOT_YET_REQUALIFIED",
+      "integration_status": "BLOCKED"
+    },
+    "decision": {
+      "production_integration_authorized": false,
+      "deployment_authorized": false,
+      "owner_review_required": true
+    },
+    "mutation_reclassification": {
+      "MUT-INT-012": {
+        "original_verdict": "SURVIVED (premium_discount added to method)",
+        "new_classification": "INVALID_MUTATION_ORACLE",
+        "reason": "Mutation adds 'premium_discount' field to method_result dict, but SBH's 26 bound fields don't include premium_discount (it's a new field not in the original artifact). Adding an extra field doesn't change any of the 26 compared values. In Phase 4G F4G-E, this was caught because SBH compared full method hash — but current SBH compares specific field groups.",
+        "remediation": "Add premium_discount to SBH bound field groups, OR reclassify as INVALID_ORACLE"
+      },
+      "MUT-INT-016": {
+        "original_verdict": "SURVIVED (fatal_error_removed on BVH)",
+        "new_classification": "INVALID_MUTATION_ORACLE",
+        "reason": "BVH clean artifact has errors=[] (empty). Mutation 'c.update({\"errors\": []})' is a no-op — errors already empty. BVH Phase 5R run produced no CRITICAL errors (PRICE_DATE_UNRESOLVED is MAJOR, not CRITICAL). Context error_state.fatal_error_codes is also empty. No error to remove.",
+        "remediation": "Use a ticker that actually has CRITICAL errors in clean artifact, OR inject synthetic fatal error first"
+      },
+      "MUT-INT-025": {
+        "original_verdict": "SURVIVED (scope_changed)",
+        "new_classification": "INVALID_MUTATION_ORACLE",
+        "reason": "Mutation changes 'scope' field on a method_result item (m.update({'scope': 'parent_only'})), but method_result items don't have a 'scope' field in the schema. The 'scope' field belongs to input_summary metrics. SBH compares scope_bindings from input_summary, not from method_result. Adding 'scope' to a method_result dict is an invalid mutation target.",
+        "remediation": "Change mutation to modify input_summary metric scope instead of method_result scope"
+      }
+    }
+  }
+}

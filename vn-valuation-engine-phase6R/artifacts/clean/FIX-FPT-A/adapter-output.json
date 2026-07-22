@@ -1,0 +1,1148 @@
+{
+  "adapter_metadata": {
+    "adapter_id": "vn-valuation-engine_to_equity-research-vn",
+    "adapter_version": "1.2.0",
+    "child_schema_version": "1.0.0-phase2",
+    "parent_version": "equity-research-vn-1.1.0",
+    "parent_report_IR_version": "1.0.0-arch-b",
+    "mapping_mode": "LOSSLESS",
+    "mapping_policy": {
+      "silent_rename": "PROHIBITED",
+      "lossy_mapping": "FAIL",
+      "unknown_critical_field": "FAIL",
+      "duplicate_method_id": "FAIL",
+      "orphan_reference": "FAIL",
+      "parent_default_recalculation": "PROHIBITED"
+    },
+    "semantic_context_hash": "212603b4d62b883e71b211a72205b2c04b5f73c379a9ed319190410803abdf61",
+    "context_schema_version": "1.0.0"
+  },
+  "valuation_inputs": {
+    "price": {
+      "metric_id": "price",
+      "value": 67100.0,
+      "status": "VALID",
+      "unit": "VND_PER_SHARE",
+      "scale": "UNIT",
+      "currency": "VND",
+      "period": "2026-07-20 00:00:00",
+      "period_type": "POINT_IN_TIME",
+      "scope": "CONSOLIDATED",
+      "source_id": "vnstock:39cb1dc0",
+      "source_date": "2026-07-20 00:00:00",
+      "source_type": "SPONSOR",
+      "transformation_trace": []
+    },
+    "shares_outstanding": {
+      "metric_id": "shares_outstanding",
+      "value": 1714326422.0,
+      "status": "VALID",
+      "unit": "SHARES",
+      "scale": "UNIT",
+      "currency": "VND",
+      "period": "FY2025",
+      "period_type": "POINT_IN_TIME",
+      "scope": "CONSOLIDATED",
+      "source_id": "vnstock:39cb1dc0",
+      "source_date": "2025-12-31",
+      "source_type": "SPONSOR",
+      "transformation_trace": []
+    },
+    "eps": {
+      "metric_id": "eps",
+      "value": 3903.0,
+      "status": "VALID",
+      "unit": "VND_PER_SHARE",
+      "scale": "UNIT",
+      "currency": "VND",
+      "period": "FY2025",
+      "period_type": "YEAR",
+      "scope": "CONSOLIDATED",
+      "source_id": "vnstock:61d11245",
+      "source_date": "2025-12-31",
+      "source_type": "SPONSOR",
+      "transformation_trace": []
+    },
+    "bvps": {
+      "metric_id": "bvps",
+      "value": 8619.0,
+      "status": "VALID",
+      "unit": "VND_PER_SHARE",
+      "scale": "UNIT",
+      "currency": "VND",
+      "period": "FY2025",
+      "period_type": "YEAR",
+      "scope": "CONSOLIDATED",
+      "source_id": "vnstock:61d11245",
+      "source_date": "2025-12-31",
+      "source_type": "SPONSOR",
+      "transformation_trace": []
+    },
+    "revenue": {
+      "metric_id": "revenue",
+      "value": 23213536857725.0,
+      "status": "VALID",
+      "unit": "VND",
+      "scale": "UNIT",
+      "currency": "VND",
+      "period": "FY2025",
+      "period_type": "YEAR",
+      "scope": "CONSOLIDATED",
+      "source_id": "vnstock:61d11245",
+      "source_date": "2025-12-31",
+      "source_type": "SPONSOR",
+      "transformation_trace": []
+    },
+    "ebitda": {
+      "metric_id": "ebitda",
+      "value": 4964523158662.0,
+      "status": "VALID",
+      "unit": "VND",
+      "scale": "UNIT",
+      "currency": "VND",
+      "period": "FY2025",
+      "period_type": "YEAR",
+      "scope": "CONSOLIDATED",
+      "source_id": "vnstock:61d11245",
+      "source_date": "2025-12-31",
+      "source_type": "SPONSOR",
+      "transformation_trace": []
+    },
+    "net_debt": {
+      "metric_id": "net_debt",
+      "value": 3039934965907.0,
+      "status": "VALID",
+      "unit": "VND",
+      "scale": "UNIT",
+      "currency": "VND",
+      "period": "FY2025",
+      "period_type": "YEAR",
+      "scope": "CONSOLIDATED",
+      "source_id": "vnstock:61d11245",
+      "source_date": "2025-12-31",
+      "source_type": "SPONSOR",
+      "transformation_trace": []
+    }
+  },
+  "valuation_methods": [
+    {
+      "method_id": "PE",
+      "status": "VALID",
+      "formula_id": "PE-v1.0.0",
+      "input_metric_ids": [
+        "eps"
+      ],
+      "calculation_trace": [
+        {
+          "step": 1,
+          "expression": "EPS = 3903.0",
+          "inputs_used": [
+            "eps"
+          ],
+          "result": 3903.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 2,
+          "expression": "selected_multiple = 15.0",
+          "inputs_used": [
+            "PE_median_5y_v1"
+          ],
+          "result": 15.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 3,
+          "expression": "implied_price = EPS × multiple",
+          "inputs_used": [
+            "eps",
+            "PE_median_5y_v1"
+          ],
+          "result": 58545,
+          "rule_id": null,
+          "evidence": null
+        }
+      ],
+      "benchmark_type": "PE_median_5y_v1",
+      "selected_multiple": 15.0,
+      "implied_enterprise_value": null,
+      "equity_bridge": null,
+      "implied_equity_value": null,
+      "shares_outstanding": null,
+      "implied_price": 58545,
+      "currency": "VND",
+      "warnings": [],
+      "error_codes": []
+    },
+    {
+      "method_id": "PB",
+      "status": "VALID",
+      "formula_id": "PB-v1.0.0",
+      "input_metric_ids": [
+        "bvps"
+      ],
+      "calculation_trace": [
+        {
+          "step": 1,
+          "expression": "BVPS = 8619.0",
+          "inputs_used": [
+            "bvps"
+          ],
+          "result": 8619.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 2,
+          "expression": "selected_multiple = 1.5",
+          "inputs_used": [
+            "PB_median_5y_v1"
+          ],
+          "result": 1.5,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 3,
+          "expression": "implied_price = BVPS × multiple",
+          "inputs_used": [
+            "bvps",
+            "PB_median_5y_v1"
+          ],
+          "result": 12928,
+          "rule_id": null,
+          "evidence": null
+        }
+      ],
+      "benchmark_type": "PB_median_5y_v1",
+      "selected_multiple": 1.5,
+      "implied_enterprise_value": null,
+      "equity_bridge": null,
+      "implied_equity_value": null,
+      "shares_outstanding": null,
+      "implied_price": 12928,
+      "currency": "VND",
+      "warnings": [],
+      "error_codes": []
+    },
+    {
+      "method_id": "GRAHAM_NUMBER",
+      "status": "VALID",
+      "formula_id": "GRAHAM_NUMBER-v1.0.0",
+      "input_metric_ids": [
+        "eps",
+        "bvps"
+      ],
+      "calculation_trace": [
+        {
+          "step": 1,
+          "expression": "EPS = 3903.0",
+          "inputs_used": [
+            "eps"
+          ],
+          "result": 3903.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 2,
+          "expression": "BVPS = 8619.0",
+          "inputs_used": [
+            "bvps"
+          ],
+          "result": 8619.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 3,
+          "expression": "product = 22.5 × EPS × BVPS = 756899032.5",
+          "inputs_used": [
+            "eps",
+            "bvps"
+          ],
+          "result": 756899032.5,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 4,
+          "expression": "graham = sqrt(756899032.5) = 27511.80",
+          "inputs_used": [
+            "eps",
+            "bvps"
+          ],
+          "result": 27512,
+          "rule_id": null,
+          "evidence": null
+        }
+      ],
+      "benchmark_type": null,
+      "selected_multiple": null,
+      "implied_enterprise_value": null,
+      "equity_bridge": null,
+      "implied_equity_value": null,
+      "shares_outstanding": null,
+      "implied_price": 27512,
+      "currency": "VND",
+      "warnings": [],
+      "error_codes": []
+    },
+    {
+      "method_id": "EV_EBITDA",
+      "status": "VALID",
+      "formula_id": "EV_EBITDA-v1.0.0",
+      "input_metric_ids": [
+        "ebitda",
+        "net_debt",
+        "shares_outstanding"
+      ],
+      "calculation_trace": [
+        {
+          "step": 1,
+          "expression": "EBITDA = 4964523158662.0",
+          "inputs_used": [
+            "ebitda"
+          ],
+          "result": 4964523158662.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 2,
+          "expression": "selected_multiple = 10.0",
+          "inputs_used": [
+            "EV_EBITDA_median_5y_v1"
+          ],
+          "result": 10.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 3,
+          "expression": "EV_implied = EBITDA × multiple = 49645231586620.0",
+          "inputs_used": [
+            "ebitda",
+            "EV_EBITDA_median_5y_v1"
+          ],
+          "result": 49645231586620.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 4,
+          "expression": "equity_value = EV - net_debt - preferred - minority + non_op = 44303445291516.0",
+          "inputs_used": [
+            "ev_implied",
+            "net_debt"
+          ],
+          "result": 44303445291516.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 5,
+          "expression": "implied_price = equity / shares = 25843.06",
+          "inputs_used": [
+            "equity_value",
+            "shares"
+          ],
+          "result": 25843,
+          "rule_id": null,
+          "evidence": null
+        }
+      ],
+      "benchmark_type": "EV_EBITDA_median_5y_v1",
+      "selected_multiple": 10.0,
+      "implied_enterprise_value": 49645231586620.0,
+      "equity_bridge": {
+        "items": [
+          {
+            "item_id": "EV",
+            "value": 49645231586620.0,
+            "sign": "+"
+          },
+          {
+            "item_id": "NET_DEBT",
+            "value": 3039934965907.0,
+            "sign": "-"
+          },
+          {
+            "item_id": "MINORITY_INTEREST",
+            "value": 2301851329197.0,
+            "sign": "-"
+          },
+          {
+            "item_id": "PREFERRED_EQUITY",
+            "value": 0.0,
+            "sign": "-"
+          },
+          {
+            "item_id": "NON_OPERATING_INVESTMENTS",
+            "value": 0.0,
+            "sign": "+"
+          },
+          {
+            "item_id": "EQUITY_VALUE",
+            "value": 44303445291516.0,
+            "sign": "="
+          }
+        ],
+        "balances": true
+      },
+      "implied_equity_value": 44303445291516.0,
+      "shares_outstanding": 1714326422.0,
+      "implied_price": 25843,
+      "currency": "VND",
+      "warnings": [],
+      "error_codes": []
+    },
+    {
+      "method_id": "P_CF",
+      "status": "VALID",
+      "formula_id": "P_CF-v1.0.0",
+      "input_metric_ids": [
+        "cfo",
+        "shares_outstanding"
+      ],
+      "calculation_trace": [
+        {
+          "step": 1,
+          "expression": "CFO = 3588320092336.0",
+          "inputs_used": [
+            "cfo"
+          ],
+          "result": 3588320092336.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 2,
+          "expression": "multiple = 10.0",
+          "inputs_used": [
+            "P_CF_median_5y_v1"
+          ],
+          "result": 10.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 3,
+          "expression": "market_cap = CFO × multiple = 35883200923360.0",
+          "inputs_used": [
+            "cfo",
+            "P_CF_median_5y_v1"
+          ],
+          "result": 35883200923360.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 4,
+          "expression": "implied_price = 20931.37",
+          "inputs_used": [
+            "market_cap",
+            "shares"
+          ],
+          "result": 20931,
+          "rule_id": null,
+          "evidence": null
+        }
+      ],
+      "benchmark_type": "P_CF_median_5y_v1",
+      "selected_multiple": 10.0,
+      "implied_enterprise_value": null,
+      "equity_bridge": null,
+      "implied_equity_value": 35883200923360.0,
+      "shares_outstanding": 1714326422.0,
+      "implied_price": 20931,
+      "currency": "VND",
+      "warnings": [],
+      "error_codes": []
+    },
+    {
+      "method_id": "P_S",
+      "status": "VALID",
+      "formula_id": "P_S-v1.0.0",
+      "input_metric_ids": [
+        "revenue",
+        "shares_outstanding"
+      ],
+      "calculation_trace": [
+        {
+          "step": 1,
+          "expression": "revenue = 23213536857725.0",
+          "inputs_used": [
+            "revenue"
+          ],
+          "result": 23213536857725.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 2,
+          "expression": "multiple = 1.0",
+          "inputs_used": [
+            "P_S_median_5y_v1"
+          ],
+          "result": 1.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 3,
+          "expression": "market_cap = revenue × multiple = 23213536857725.0",
+          "inputs_used": [
+            "revenue",
+            "P_S_median_5y_v1"
+          ],
+          "result": 23213536857725.0,
+          "rule_id": null,
+          "evidence": null
+        },
+        {
+          "step": 4,
+          "expression": "implied_price = market_cap / shares = 13540.91",
+          "inputs_used": [
+            "market_cap",
+            "shares"
+          ],
+          "result": 13541,
+          "rule_id": null,
+          "evidence": null
+        }
+      ],
+      "benchmark_type": "P_S_median_5y_v1",
+      "selected_multiple": 1.0,
+      "implied_enterprise_value": null,
+      "equity_bridge": null,
+      "implied_equity_value": 23213536857725.0,
+      "shares_outstanding": 1714326422.0,
+      "implied_price": 13541,
+      "currency": "VND",
+      "warnings": [],
+      "error_codes": []
+    },
+    {
+      "method_id": "DCF_FCFF",
+      "status": "INPUT_INCOMPLETE",
+      "formula_id": "DCF_FCFF-v1.0.0",
+      "input_metric_ids": [],
+      "calculation_trace": [],
+      "benchmark_type": null,
+      "selected_multiple": null,
+      "implied_enterprise_value": null,
+      "equity_bridge": null,
+      "implied_equity_value": null,
+      "shares_outstanding": null,
+      "implied_price": null,
+      "currency": "VND",
+      "warnings": [
+        "FCFF forecast missing — DCF skipped (would require fabrication)"
+      ],
+      "error_codes": [
+        "INPUT_MISSING"
+      ]
+    }
+  ],
+  "valuation_results": {
+    "median_implied_price": 23387.0,
+    "mean_implied_price": 26550,
+    "p25_implied_price": 13541,
+    "p75_implied_price": 27512,
+    "upside_pct_vs_current": -65.15
+  },
+  "valuation_assumptions": {
+    "wacc": null,
+    "wacc_source": null,
+    "terminal_growth": null,
+    "premium_discounts_applied": []
+  },
+  "executive_summary_inputs": {
+    "target_price_median": 23387.0,
+    "upside_pct": -65.15,
+    "methodology_summary": [
+      "EV_EBITDA",
+      "GRAHAM_NUMBER",
+      "P_CF"
+    ],
+    "top3_methods": [
+      {
+        "method_id": "EV_EBITDA",
+        "implied_price": 25843
+      },
+      {
+        "method_id": "GRAHAM_NUMBER",
+        "implied_price": 27512
+      },
+      {
+        "method_id": "P_CF",
+        "implied_price": 20931
+      }
+    ]
+  },
+  "risks": [
+    {
+      "risk_code": "PRICE_DATE_UNRESOLVED",
+      "severity": "MAJOR",
+      "description": "age 201 days > 90",
+      "method_id": null,
+      "metric_ids": [
+        "shares_outstanding"
+      ]
+    },
+    {
+      "risk_code": "INPUT_MISSING",
+      "severity": "MAJOR",
+      "description": "FCFF forecast missing — DCF skipped to avoid fabrication",
+      "method_id": "DCF_FCFF",
+      "metric_ids": [
+        "fcff_forecast"
+      ]
+    }
+  ],
+  "audit_notes": {
+    "valuation_methods_full": [
+      {
+        "method_id": "PE",
+        "status": "VALID",
+        "formula_id": "PE-v1.0.0",
+        "input_metric_ids": [
+          "eps"
+        ],
+        "calculation_trace": [
+          {
+            "step": 1,
+            "expression": "EPS = 3903.0",
+            "inputs_used": [
+              "eps"
+            ],
+            "result": 3903.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 2,
+            "expression": "selected_multiple = 15.0",
+            "inputs_used": [
+              "PE_median_5y_v1"
+            ],
+            "result": 15.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 3,
+            "expression": "implied_price = EPS × multiple",
+            "inputs_used": [
+              "eps",
+              "PE_median_5y_v1"
+            ],
+            "result": 58545,
+            "rule_id": null,
+            "evidence": null
+          }
+        ],
+        "benchmark_type": "PE_median_5y_v1",
+        "selected_multiple": 15.0,
+        "implied_enterprise_value": null,
+        "equity_bridge": null,
+        "implied_equity_value": null,
+        "shares_outstanding": null,
+        "implied_price": 58545,
+        "currency": "VND",
+        "warnings": [],
+        "error_codes": []
+      },
+      {
+        "method_id": "PB",
+        "status": "VALID",
+        "formula_id": "PB-v1.0.0",
+        "input_metric_ids": [
+          "bvps"
+        ],
+        "calculation_trace": [
+          {
+            "step": 1,
+            "expression": "BVPS = 8619.0",
+            "inputs_used": [
+              "bvps"
+            ],
+            "result": 8619.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 2,
+            "expression": "selected_multiple = 1.5",
+            "inputs_used": [
+              "PB_median_5y_v1"
+            ],
+            "result": 1.5,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 3,
+            "expression": "implied_price = BVPS × multiple",
+            "inputs_used": [
+              "bvps",
+              "PB_median_5y_v1"
+            ],
+            "result": 12928,
+            "rule_id": null,
+            "evidence": null
+          }
+        ],
+        "benchmark_type": "PB_median_5y_v1",
+        "selected_multiple": 1.5,
+        "implied_enterprise_value": null,
+        "equity_bridge": null,
+        "implied_equity_value": null,
+        "shares_outstanding": null,
+        "implied_price": 12928,
+        "currency": "VND",
+        "warnings": [],
+        "error_codes": []
+      },
+      {
+        "method_id": "GRAHAM_NUMBER",
+        "status": "VALID",
+        "formula_id": "GRAHAM_NUMBER-v1.0.0",
+        "input_metric_ids": [
+          "eps",
+          "bvps"
+        ],
+        "calculation_trace": [
+          {
+            "step": 1,
+            "expression": "EPS = 3903.0",
+            "inputs_used": [
+              "eps"
+            ],
+            "result": 3903.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 2,
+            "expression": "BVPS = 8619.0",
+            "inputs_used": [
+              "bvps"
+            ],
+            "result": 8619.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 3,
+            "expression": "product = 22.5 × EPS × BVPS = 756899032.5",
+            "inputs_used": [
+              "eps",
+              "bvps"
+            ],
+            "result": 756899032.5,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 4,
+            "expression": "graham = sqrt(756899032.5) = 27511.80",
+            "inputs_used": [
+              "eps",
+              "bvps"
+            ],
+            "result": 27512,
+            "rule_id": null,
+            "evidence": null
+          }
+        ],
+        "benchmark_type": null,
+        "selected_multiple": null,
+        "implied_enterprise_value": null,
+        "equity_bridge": null,
+        "implied_equity_value": null,
+        "shares_outstanding": null,
+        "implied_price": 27512,
+        "currency": "VND",
+        "warnings": [],
+        "error_codes": []
+      },
+      {
+        "method_id": "EV_EBITDA",
+        "status": "VALID",
+        "formula_id": "EV_EBITDA-v1.0.0",
+        "input_metric_ids": [
+          "ebitda",
+          "net_debt",
+          "shares_outstanding"
+        ],
+        "calculation_trace": [
+          {
+            "step": 1,
+            "expression": "EBITDA = 4964523158662.0",
+            "inputs_used": [
+              "ebitda"
+            ],
+            "result": 4964523158662.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 2,
+            "expression": "selected_multiple = 10.0",
+            "inputs_used": [
+              "EV_EBITDA_median_5y_v1"
+            ],
+            "result": 10.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 3,
+            "expression": "EV_implied = EBITDA × multiple = 49645231586620.0",
+            "inputs_used": [
+              "ebitda",
+              "EV_EBITDA_median_5y_v1"
+            ],
+            "result": 49645231586620.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 4,
+            "expression": "equity_value = EV - net_debt - preferred - minority + non_op = 44303445291516.0",
+            "inputs_used": [
+              "ev_implied",
+              "net_debt"
+            ],
+            "result": 44303445291516.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 5,
+            "expression": "implied_price = equity / shares = 25843.06",
+            "inputs_used": [
+              "equity_value",
+              "shares"
+            ],
+            "result": 25843,
+            "rule_id": null,
+            "evidence": null
+          }
+        ],
+        "benchmark_type": "EV_EBITDA_median_5y_v1",
+        "selected_multiple": 10.0,
+        "implied_enterprise_value": 49645231586620.0,
+        "equity_bridge": {
+          "items": [
+            {
+              "item_id": "EV",
+              "value": 49645231586620.0,
+              "sign": "+"
+            },
+            {
+              "item_id": "NET_DEBT",
+              "value": 3039934965907.0,
+              "sign": "-"
+            },
+            {
+              "item_id": "MINORITY_INTEREST",
+              "value": 2301851329197.0,
+              "sign": "-"
+            },
+            {
+              "item_id": "PREFERRED_EQUITY",
+              "value": 0.0,
+              "sign": "-"
+            },
+            {
+              "item_id": "NON_OPERATING_INVESTMENTS",
+              "value": 0.0,
+              "sign": "+"
+            },
+            {
+              "item_id": "EQUITY_VALUE",
+              "value": 44303445291516.0,
+              "sign": "="
+            }
+          ],
+          "balances": true
+        },
+        "implied_equity_value": 44303445291516.0,
+        "shares_outstanding": 1714326422.0,
+        "implied_price": 25843,
+        "currency": "VND",
+        "warnings": [],
+        "error_codes": []
+      },
+      {
+        "method_id": "P_CF",
+        "status": "VALID",
+        "formula_id": "P_CF-v1.0.0",
+        "input_metric_ids": [
+          "cfo",
+          "shares_outstanding"
+        ],
+        "calculation_trace": [
+          {
+            "step": 1,
+            "expression": "CFO = 3588320092336.0",
+            "inputs_used": [
+              "cfo"
+            ],
+            "result": 3588320092336.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 2,
+            "expression": "multiple = 10.0",
+            "inputs_used": [
+              "P_CF_median_5y_v1"
+            ],
+            "result": 10.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 3,
+            "expression": "market_cap = CFO × multiple = 35883200923360.0",
+            "inputs_used": [
+              "cfo",
+              "P_CF_median_5y_v1"
+            ],
+            "result": 35883200923360.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 4,
+            "expression": "implied_price = 20931.37",
+            "inputs_used": [
+              "market_cap",
+              "shares"
+            ],
+            "result": 20931,
+            "rule_id": null,
+            "evidence": null
+          }
+        ],
+        "benchmark_type": "P_CF_median_5y_v1",
+        "selected_multiple": 10.0,
+        "implied_enterprise_value": null,
+        "equity_bridge": null,
+        "implied_equity_value": 35883200923360.0,
+        "shares_outstanding": 1714326422.0,
+        "implied_price": 20931,
+        "currency": "VND",
+        "warnings": [],
+        "error_codes": []
+      },
+      {
+        "method_id": "P_S",
+        "status": "VALID",
+        "formula_id": "P_S-v1.0.0",
+        "input_metric_ids": [
+          "revenue",
+          "shares_outstanding"
+        ],
+        "calculation_trace": [
+          {
+            "step": 1,
+            "expression": "revenue = 23213536857725.0",
+            "inputs_used": [
+              "revenue"
+            ],
+            "result": 23213536857725.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 2,
+            "expression": "multiple = 1.0",
+            "inputs_used": [
+              "P_S_median_5y_v1"
+            ],
+            "result": 1.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 3,
+            "expression": "market_cap = revenue × multiple = 23213536857725.0",
+            "inputs_used": [
+              "revenue",
+              "P_S_median_5y_v1"
+            ],
+            "result": 23213536857725.0,
+            "rule_id": null,
+            "evidence": null
+          },
+          {
+            "step": 4,
+            "expression": "implied_price = market_cap / shares = 13540.91",
+            "inputs_used": [
+              "market_cap",
+              "shares"
+            ],
+            "result": 13541,
+            "rule_id": null,
+            "evidence": null
+          }
+        ],
+        "benchmark_type": "P_S_median_5y_v1",
+        "selected_multiple": 1.0,
+        "implied_enterprise_value": null,
+        "equity_bridge": null,
+        "implied_equity_value": 23213536857725.0,
+        "shares_outstanding": 1714326422.0,
+        "implied_price": 13541,
+        "currency": "VND",
+        "warnings": [],
+        "error_codes": []
+      },
+      {
+        "method_id": "DCF_FCFF",
+        "status": "INPUT_INCOMPLETE",
+        "formula_id": "DCF_FCFF-v1.0.0",
+        "input_metric_ids": [],
+        "calculation_trace": [],
+        "benchmark_type": null,
+        "selected_multiple": null,
+        "implied_enterprise_value": null,
+        "equity_bridge": null,
+        "implied_equity_value": null,
+        "shares_outstanding": null,
+        "implied_price": null,
+        "currency": "VND",
+        "warnings": [
+          "FCFF forecast missing — DCF skipped (would require fabrication)"
+        ],
+        "error_codes": [
+          "INPUT_MISSING"
+        ]
+      }
+    ],
+    "valuation_warnings": [],
+    "valuation_errors": [
+      {
+        "code": "PRICE_DATE_UNRESOLVED",
+        "severity": "MAJOR",
+        "stage": "PERIOD_SCOPE_ENGINE",
+        "method_id": null,
+        "metric_ids": [
+          "shares_outstanding"
+        ],
+        "recoverable": false,
+        "output_allowed": true,
+        "evidence": "age 201 days > 90"
+      },
+      {
+        "code": "INPUT_MISSING",
+        "severity": "MAJOR",
+        "stage": "APPLICABILITY_ENGINE",
+        "method_id": "DCF_FCFF",
+        "metric_ids": [
+          "fcff_forecast"
+        ],
+        "recoverable": true,
+        "output_allowed": true,
+        "evidence": "FCFF forecast missing — DCF skipped to avoid fabrication"
+      }
+    ],
+    "peer_set": [],
+    "assumptions_full": {
+      "wacc": null,
+      "benchmark_pe": 15.0,
+      "benchmark_pb": 1.5
+    },
+    "adapter_mapping_metadata": {
+      "adapter_id": "vn-valuation-engine_to_equity-research-vn",
+      "adapter_version": "1.2.0",
+      "child_schema_version": "1.0.0-phase2",
+      "parent_version": "equity-research-vn-1.1.0",
+      "parent_report_IR_version": "1.0.0-arch-b",
+      "mapping_mode": "LOSSLESS",
+      "mapping_policy": {
+        "silent_rename": "PROHIBITED",
+        "lossy_mapping": "FAIL",
+        "unknown_critical_field": "FAIL",
+        "duplicate_method_id": "FAIL",
+        "orphan_reference": "FAIL",
+        "parent_default_recalculation": "PROHIBITED"
+      }
+    }
+  },
+  "citations": [
+    {
+      "metric_id": "price",
+      "source_id": "vnstock:39cb1dc0",
+      "source_type": "SPONSOR",
+      "source_date": "2026-07-20 00:00:00",
+      "content_hash": "2f88c727a63dbf404c10c54c434ba77acecccd6bc8961c88559ba2be95fc63d6"
+    },
+    {
+      "metric_id": "shares_outstanding",
+      "source_id": "vnstock:39cb1dc0",
+      "source_type": "SPONSOR",
+      "source_date": "2025-12-31",
+      "content_hash": "06429811e2cf931712231cf3878453c9e9f3acfd950863f122fee2fd25777f9c"
+    },
+    {
+      "metric_id": "eps",
+      "source_id": "vnstock:61d11245",
+      "source_type": "SPONSOR",
+      "source_date": "2025-12-31",
+      "content_hash": "0e72e2fe8c33d519a4d39f12bcc97e837b6084e05de8d62dbbc019c438e5b87b"
+    },
+    {
+      "metric_id": "bvps",
+      "source_id": "vnstock:61d11245",
+      "source_type": "SPONSOR",
+      "source_date": "2025-12-31",
+      "content_hash": "45585bb57553b70b5de0e90740012b5e94a85861afb0241bc8b2029ee2dc22f6"
+    },
+    {
+      "metric_id": "revenue",
+      "source_id": "vnstock:61d11245",
+      "source_type": "SPONSOR",
+      "source_date": "2025-12-31",
+      "content_hash": "e6ff0a44940360422ece6e34d0289dc44e986ef672279c0cef2ff7c58de646c7"
+    },
+    {
+      "metric_id": "ebitda",
+      "source_id": "vnstock:61d11245",
+      "source_type": "SPONSOR",
+      "source_date": "2025-12-31",
+      "content_hash": "76c2c2733e76131746cac9c3506822a6b192e37a58caf434a2814b314055f1f0"
+    },
+    {
+      "metric_id": "net_debt",
+      "source_id": "vnstock:61d11245",
+      "source_type": "SPONSOR",
+      "source_date": "2025-12-31",
+      "content_hash": "d88dc73ec6467071c4626c84a953f126cce6b7602c5bb0945020ced4606216a3"
+    },
+    {
+      "metric_id": "cfo",
+      "source_id": "vnstock:61d11245",
+      "source_type": "SPONSOR",
+      "source_date": "2025-12-31",
+      "content_hash": "f43b297ba860fd71dfe85eb4582e2941a0162e0e71ddeea428d79a8cd8d24f84"
+    },
+    {
+      "metric_id": "minority_interest",
+      "source_id": "vnstock:61d11245",
+      "source_type": "SPONSOR",
+      "source_date": "2025-12-31",
+      "content_hash": "4d065b393b8943111fa77fa662e2f923d8df399bf6814886d94134a1d706fead"
+    }
+  ],
+  "failures": [],
+  "warnings": [],
+  "final_status": "PASS"
+}
