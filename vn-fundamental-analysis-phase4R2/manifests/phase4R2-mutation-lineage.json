@@ -1,0 +1,79 @@
+{
+  "phase4R2_mutation_lineage": {
+    "generated_at": "2026-07-23T15:00:00+00:00",
+    "source_phase3_registry": "vn-fundamental-analysis-phase3/mutations/mutation-registry.yaml",
+    "phase_4Q_verdict": "FAIL_MUTATION_GATE (IMMUTABLE)",
+    "phase_4R_verdict": "FAIL_ORACLE_SEMANTIC_DRIFT_AND_FREEZE_INTEGRITY (IMMUTABLE)",
+    "policy": {
+      "rule": "Mutation cũ sai target/no-op → giữ immutable → gắn INVALID_MUTATION_ORACLE → tạo mutation-v2 → replacement vẫn kiểm tra cùng semantic requirement",
+      "forbidden": "Thay mutation về CAGR bằng mutation về shares; đổi semantic target mà giữ cùng mutation_id"
+    },
+    "lineage_gate": {
+      "original_slots_reconciled": "32/32",
+      "semantic_slots_preserved": "32/32",
+      "silent_target_substitutions": 0,
+      "orphan_requirements": 0
+    },
+    "drifted_slots_in_phase_4R": [
+      {
+        "mutation_id": "MUT-FUND-015",
+        "original_semantic_target": "margin numerator changed to operating income",
+        "original_expected_error": "DUPONT_INCONSISTENT",
+        "original_requirement_ids": ["VFA-REQ-015"],
+        "phase_4R_drifted_target": "shares inflated, EPS sanity (SHARE-SCALE)",
+        "phase_4R_drifted_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "drift_class": "SEMANTIC_TARGET_SUBSTITUTION",
+        "remediation": "Restore mutation to operating-income numerator substitution; engine must detect via DUPONT_INCONSISTENT (NPM recomputed from mutated numerator must disagree with canonical NPM used by DuPont chain).",
+        "phase_4R2_target": "operating_income substituted as NPAT in NPM computation",
+        "phase_4R2_expected_error": "DUPONT_INCONSISTENT",
+        "semantic_slot_preserved": true
+      },
+      {
+        "mutation_id": "MUT-FUND-017",
+        "original_semantic_target": "CAGR year count changed",
+        "original_expected_error": "CAGR_PERIOD_INVALID",
+        "original_requirement_ids": ["VFA-REQ-025"],
+        "phase_4R_drifted_target": "shares inflated, EPS sanity (SHARE-SCALE)",
+        "phase_4R_drifted_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "drift_class": "SEMANTIC_TARGET_SUBSTITUTION",
+        "remediation": "Restore mutation to period-distance corruption: change number of periods between first and last without changing values. Engine must detect via CAGR_PERIOD_INVALID.",
+        "phase_4R2_target": "CAGR period distance corrupted (year count mismatch)",
+        "phase_4R2_expected_error": "CAGR_PERIOD_INVALID",
+        "semantic_slot_preserved": true
+      },
+      {
+        "mutation_id": "MUT-FUND-018",
+        "original_semantic_target": "missing input replaced with zero",
+        "original_expected_error": "MISSING_REPLACED_WITH_ZERO",
+        "original_requirement_ids": ["VFA-REQ-003", "VFA-REQ-022"],
+        "phase_4R_drifted_target": "equity inflated to trigger BVPS sanity",
+        "phase_4R_drifted_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "drift_class": "SEMANTIC_TARGET_SUBSTITUTION",
+        "remediation": "Restore mutation to genuine missing→zero substitution: a metric with None value is silently replaced by 0.0 in the normalized input. Engine must detect via MISSING_REPLACED_WITH_ZERO (None in raw → 0.0 in normalized is a hard error, not a plausibility guess).",
+        "phase_4R2_target": "None value in raw input replaced by 0.0 in normalized input",
+        "phase_4R2_expected_error": "MISSING_REPLACED_WITH_ZERO",
+        "semantic_slot_preserved": true
+      },
+      {
+        "mutation_id": "MUT-FUND-022",
+        "original_semantic_target": "near-zero denominator warning removed",
+        "original_expected_error": "EXTREME_DENOMINATOR_WARNING",
+        "original_requirement_ids": ["VFA-REQ-028"],
+        "phase_4R_drifted_target": "equity inflated",
+        "phase_4R_drifted_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "drift_class": "SEMANTIC_TARGET_SUBSTITUTION",
+        "remediation": "Restore mutation to genuine near-zero denominator: denominator value is small-but-positive (e.g. 0.5 tỷ VND equity). Engine must emit EXTREME_DENOMINATOR_WARNING as a structured warning (not hard-fail). Removing the warning from output is the corruption.",
+        "phase_4R2_target": "denominator near-zero (0.5), warning stripped from output",
+        "phase_4R2_expected_error": "EXTREME_DENOMINATOR_WARNING",
+        "semantic_slot_preserved": true
+      }
+    ],
+    "phase_4R2_replacement_protocol": {
+      "drifted_count": 4,
+      "restored_to_original_semantic_slot": 4,
+      "new_mutation_ids_created": 0,
+      "INVALID_MUTATION_ORACLE_tagged": "phase_4R versions of MUT-015/017/018/022 (tagged in lineage, not reused)",
+      "note": "No INVALID_MUTATION_ORACLE needed because original targets were always valid; the drift was in Phase 4R's mutation DEFINITIONS, not in the oracles themselves. Phase 4R2 restores the original definitions."
+    }
+  }
+}
