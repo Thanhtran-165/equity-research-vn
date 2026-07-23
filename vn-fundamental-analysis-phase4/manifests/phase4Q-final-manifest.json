@@ -1,0 +1,68 @@
+{
+  "phase4Q_final_manifest": {
+    "generated_at": "2026-07-23T04:35:54.370326+00:00",
+    "phase_4Q_status": "FAIL_MUTATION_GATE",
+    "subphases": {
+      "P4Q_A_formula_freeze": "PASS (10 canonical formulas reconciled)",
+      "P4Q_B_synthetic_fixtures": "PASS (16/16 executed, 16/16 correct)",
+      "P4Q_C_oracle_meta_validation": "PASS (32 mutations defined, oracles checked)",
+      "P4Q_D_mutation_qualification": "FAIL (17/32 caught, 15 survived)",
+      "P4Q_E_reproducibility": "PASS (8/8 stable)"
+    },
+    "mutation_summary": {
+      "total": 32,
+      "caught": 17,
+      "survived": 15,
+      "critical_survived": 0,
+      "major_survived": 10,
+      "medium_survived": 4,
+      "high_survived": 1,
+      "unsafe_false_passes": 15
+    },
+    "survived_analysis": {
+      "structural_mutations_not_detectable": [
+        "MUT-FUND-008: period-end→weighted (structural — no data change)",
+        "MUT-FUND-009: basic→diluted (structural — no data change)",
+        "MUT-FUND-013: ROE ending silently (structural — avg vs ending)",
+        "MUT-FUND-014: ROA denom→equity (structural)",
+        "MUT-FUND-016: DuPont EM ending (structural)",
+        "MUT-FUND-019: INCOMPLETE→VALID (structural — status swap)",
+        "MUT-FUND-023: TTM→quarter (structural)",
+        "MUT-FUND-026: avg→ending silently (structural)"
+      ],
+      "peer_engine_not_implemented": [
+        "MUT-FUND-027: peer removed",
+        "MUT-FUND-028: median→mean",
+        "MUT-FUND-029: period-misaligned peer",
+        "MUT-FUND-030: insufficient ranked"
+      ],
+      "scope_awareness_gap": [
+        "MUT-FUND-024: consol→standalone (runner doesn't check scope consistency)",
+        "MUT-FUND-025: attributable+total mix (same)"
+      ],
+      "provenance_gap": [
+        "MUT-FUND-031: provenance removed (runner doesn't enforce provenance)"
+      ]
+    },
+    "tests": {
+      "total": 150,
+      "pass_rate": "100%"
+    },
+    "fixtures": {
+      "executed": 16,
+      "correct": 16
+    },
+    "reproducibility": "PASS (8/8 stable)",
+    "root_cause": "Phase 4 implementation is a PROTOTYPE — formula engine works correctly but missing structural validation layers (scope checking, share basis enforcement, peer engine, provenance enforcement). 0 CRITICAL survived. 15 MAJOR/MEDIUM survived — all in structural/policy areas.",
+    "maturity_decision": {
+      "implementation_status": "DETERMINISTIC_IMPLEMENTATION_CANDIDATE",
+      "standalone_maturity": "UNASSESSED",
+      "integration_maturity": "NOT_YET_ASSESSED"
+    },
+    "decision": {
+      "phase_5_authorized": false,
+      "remediation_required": true,
+      "recommended_next": "Phase 4R: strengthen runner with scope/period/provenance enforcement + implement peer engine, then re-run 32 mutations"
+    }
+  }
+}
