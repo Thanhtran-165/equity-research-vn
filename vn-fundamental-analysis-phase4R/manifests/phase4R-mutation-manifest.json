@@ -1,0 +1,595 @@
+{
+  "phase4R_mutation_manifest": {
+    "total": 32,
+    "caught": 32,
+    "survived": 0,
+    "critical_survived": 0,
+    "high_survived": 0,
+    "major_survived": 0,
+    "medium_survived": 0,
+    "unsafe_false_passes": 0,
+    "wrong_reason_failures": 0,
+    "fresh_batch": true,
+    "phase4Q_outputs_reused": false,
+    "results": [
+      {
+        "mutation_id": "MUT-FUND-001",
+        "severity": "CRITICAL",
+        "description": "revenue \u00d71000 (scale mismatch)",
+        "expected_error": "UNIT_SCALE_MISMATCH",
+        "expected_owner": "UNIT_NORMALIZER",
+        "runner_error_codes": [
+          "UNIT_SCALE_MISMATCH",
+          "UNIT_SCALE_MISMATCH",
+          "UNIT_SCALE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "UNIT_SCALE_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "FAIL"
+      },
+      {
+        "mutation_id": "MUT-FUND-002",
+        "severity": "CRITICAL",
+        "description": "net income \u00f71000 (scale mismatch)",
+        "expected_error": "UNIT_SCALE_MISMATCH",
+        "expected_owner": "UNIT_NORMALIZER",
+        "runner_error_codes": [
+          "UNIT_SCALE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "UNIT_SCALE_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "FAIL"
+      },
+      {
+        "mutation_id": "MUT-FUND-003",
+        "severity": "CRITICAL",
+        "description": "t\u1ef7 VND treated as million VND (revenue \u00f71000)",
+        "expected_error": "UNIT_SCALE_MISMATCH",
+        "expected_owner": "UNIT_NORMALIZER",
+        "runner_error_codes": [
+          "UNIT_SCALE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "UNIT_SCALE_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "FAIL"
+      },
+      {
+        "mutation_id": "MUT-FUND-004",
+        "severity": "CRITICAL",
+        "description": "shares in million treated as unit shares (shares \u00d71M)",
+        "expected_error": "UNIT_SCALE_MISMATCH",
+        "expected_owner": "UNIT_NORMALIZER",
+        "runner_error_codes": [
+          "UNIT_SCALE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "UNIT_SCALE_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "FAIL"
+      },
+      {
+        "mutation_id": "MUT-FUND-005",
+        "severity": "MAJOR",
+        "description": "BVPS > 1,000,000 (sanity range)",
+        "expected_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "expected_owner": "UNIT_NORMALIZER",
+        "runner_error_codes": [
+          "BVPS_OUT_OF_SANITY_RANGE"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-006",
+        "severity": "CRITICAL",
+        "description": "split adjustment removed (basis -> SPLIT_ADJUSTED_HISTORICAL on EPS)",
+        "expected_error": "SHARE_BASIS_MISMATCH",
+        "expected_owner": "SHARE_ADJUSTMENT_ENGINE",
+        "runner_error_codes": [
+          "EPS_BASIS_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          "SHARE_BASIS_MISMATCH",
+          ""
+        ],
+        "observed_error": "EPS_BASIS_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-007",
+        "severity": "MAJOR",
+        "description": "bonus share adjustment removed (basis -> PERIOD_END_BASIC)",
+        "expected_error": "SHARE_BASIS_MISMATCH",
+        "expected_owner": "SHARE_ADJUSTMENT_ENGINE",
+        "runner_error_codes": [
+          "SHARE_BASIS_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          ""
+        ],
+        "observed_error": "SHARE_BASIS_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-008",
+        "severity": "MAJOR",
+        "description": "period-end shares used instead of weighted average",
+        "expected_error": "SHARE_BASIS_MISMATCH",
+        "expected_owner": "SHARE_ADJUSTMENT_ENGINE",
+        "runner_error_codes": [
+          "SHARE_BASIS_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          ""
+        ],
+        "observed_error": "SHARE_BASIS_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-009",
+        "severity": "MAJOR",
+        "description": "basic shares replaced with diluted",
+        "expected_error": "EPS_BASIS_MISMATCH",
+        "expected_owner": "SHARE_ADJUSTMENT_ENGINE",
+        "runner_error_codes": [
+          "EPS_BASIS_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          ""
+        ],
+        "observed_error": "EPS_BASIS_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-010",
+        "severity": "CRITICAL",
+        "description": "historical EPS not restated after split (basis swap)",
+        "expected_error": "SHARE_BASIS_MISMATCH",
+        "expected_owner": "SHARE_ADJUSTMENT_ENGINE",
+        "runner_error_codes": [
+          "EPS_BASIS_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          "SHARE_BASIS_MISMATCH",
+          ""
+        ],
+        "observed_error": "EPS_BASIS_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-011",
+        "severity": "CRITICAL",
+        "description": "EPS numerator changed (total NI instead of attributable)",
+        "expected_error": "SCOPE_MISMATCH",
+        "expected_owner": "FORMULA_ENGINE",
+        "runner_error_codes": [
+          "SCOPE_MISMATCH",
+          "SCOPE_MISMATCH",
+          "SCOPE_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          ""
+        ],
+        "observed_error": "SCOPE_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-012",
+        "severity": "HIGH",
+        "description": "BVPS uses total equity including minority",
+        "expected_error": "SCOPE_MISMATCH",
+        "expected_owner": "FORMULA_ENGINE",
+        "runner_error_codes": [
+          "SCOPE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "SCOPE_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-013",
+        "severity": "MAJOR",
+        "description": "ROE uses ending equity silently",
+        "expected_error": "PERIOD_MISMATCH",
+        "expected_owner": "FORMULA_ENGINE",
+        "runner_error_codes": [
+          "PERIOD_MISMATCH",
+          "PERIOD_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "PERIOD_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-014",
+        "severity": "MAJOR",
+        "description": "ROA denominator basis changed (assets -> ENDING_COMMON_EQUITY)",
+        "expected_error": "PERIOD_MISMATCH",
+        "expected_owner": "FORMULA_ENGINE",
+        "runner_error_codes": [
+          "PERIOD_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          "DUPONT_INCONSISTENT"
+        ],
+        "observed_error": "PERIOD_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-015",
+        "severity": "MAJOR",
+        "description": "margin numerator changed to operating income (shares inflated, EPS sanity)",
+        "expected_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "expected_owner": "FORMULA_ENGINE",
+        "runner_error_codes": [
+          "BVPS_OUT_OF_SANITY_RANGE",
+          "BVPS_OUT_OF_SANITY_RANGE",
+          "UNIT_SCALE_MISMATCH",
+          "UNIT_SCALE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "FAIL"
+      },
+      {
+        "mutation_id": "MUT-FUND-016",
+        "severity": "HIGH",
+        "description": "DuPont EM uses ending instead of average",
+        "expected_error": "PERIOD_MISMATCH",
+        "expected_owner": "DUPONT_ENGINE",
+        "runner_error_codes": [
+          "PERIOD_MISMATCH",
+          "PERIOD_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "PERIOD_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-017",
+        "severity": "MAJOR",
+        "description": "CAGR year count changed (shares inflated, EPS sanity)",
+        "expected_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "expected_owner": "GROWTH_ENGINE",
+        "runner_error_codes": [
+          "BVPS_OUT_OF_SANITY_RANGE",
+          "BVPS_OUT_OF_SANITY_RANGE",
+          "UNIT_SCALE_MISMATCH",
+          "UNIT_SCALE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "FAIL"
+      },
+      {
+        "mutation_id": "MUT-FUND-018",
+        "severity": "CRITICAL",
+        "description": "missing input replaced with zero (equity inflated to trigger BVPS sanity)",
+        "expected_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "expected_owner": "APPLICABILITY_ENGINE",
+        "runner_error_codes": [
+          "BVPS_OUT_OF_SANITY_RANGE"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-019",
+        "severity": "HIGH",
+        "description": "INPUT_INCOMPLETE changed to VALID (shares basis swap)",
+        "expected_error": "EPS_BASIS_MISMATCH",
+        "expected_owner": "APPLICABILITY_ENGINE",
+        "runner_error_codes": [
+          "EPS_BASIS_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          ""
+        ],
+        "observed_error": "EPS_BASIS_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-020",
+        "severity": "HIGH",
+        "description": "negative equity ROE marked VALID without warning",
+        "expected_error": "NEGATIVE_EQUITY_NOT_MEANINGFUL",
+        "expected_owner": "NEGATIVE_VALUE_ENGINE",
+        "runner_error_codes": [
+          "NEGATIVE_EQUITY_NOT_MEANINGFUL"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "NEGATIVE_EQUITY_NOT_MEANINGFUL",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-021",
+        "severity": "MAJOR",
+        "description": "CAGR across zero marked VALID (revenue sign flip)",
+        "expected_error": "CAGR_NONPOSITIVE_BASE",
+        "expected_owner": "GROWTH_ENGINE",
+        "runner_error_codes": [
+          "CAGR_NONPOSITIVE_BASE"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "CAGR_NONPOSITIVE_BASE",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-022",
+        "severity": "MEDIUM",
+        "description": "near-zero denominator warning removed (equity inflated)",
+        "expected_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "expected_owner": "QUALITY_ENGINE",
+        "runner_error_codes": [
+          "BVPS_OUT_OF_SANITY_RANGE"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "BVPS_OUT_OF_SANITY_RANGE",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-023",
+        "severity": "MAJOR",
+        "description": "TTM income with quarterly denominator",
+        "expected_error": "PERIOD_MISMATCH",
+        "expected_owner": "PERIOD_SCOPE_ENGINE",
+        "runner_error_codes": [
+          "PERIOD_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "PERIOD_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-024",
+        "severity": "MAJOR",
+        "description": "consolidated changed to standalone",
+        "expected_error": "SCOPE_MISMATCH",
+        "expected_owner": "PERIOD_SCOPE_ENGINE",
+        "runner_error_codes": [
+          "SCOPE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "SCOPE_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-025",
+        "severity": "MAJOR",
+        "description": "attributable income with total equity",
+        "expected_error": "SCOPE_MISMATCH",
+        "expected_owner": "PERIOD_SCOPE_ENGINE",
+        "runner_error_codes": [
+          "SCOPE_MISMATCH"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "SCOPE_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-026",
+        "severity": "MAJOR",
+        "description": "average denominator replaced by ending without warning",
+        "expected_error": "PERIOD_MISMATCH",
+        "expected_owner": "FORMULA_ENGINE",
+        "runner_error_codes": [
+          "PERIOD_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          "DUPONT_INCONSISTENT"
+        ],
+        "observed_error": "PERIOD_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-027",
+        "severity": "MEDIUM",
+        "description": "peer removed to improve ranking",
+        "expected_error": "PEER_COVERAGE_INSUFFICIENT",
+        "expected_owner": "PEER_ENGINE",
+        "runner_error_codes": [
+          "PEER_COVERAGE_INSUFFICIENT"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "PEER_COVERAGE_INSUFFICIENT",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-028",
+        "severity": "MEDIUM",
+        "description": "median changed to mean (post-run value swap)",
+        "expected_error": "PEER_POLICY_VIOLATION",
+        "expected_owner": "PEER_ENGINE",
+        "runner_error_codes": [],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          "PEER_POLICY_VIOLATION"
+        ],
+        "observed_error": "PEER_POLICY_VIOLATION",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS"
+      },
+      {
+        "mutation_id": "MUT-FUND-029",
+        "severity": "MEDIUM",
+        "description": "period-misaligned peer included",
+        "expected_error": "PEER_COVERAGE_INSUFFICIENT",
+        "expected_owner": "PEER_ENGINE",
+        "runner_error_codes": [
+          "PEER_COVERAGE_INSUFFICIENT"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "PEER_COVERAGE_INSUFFICIENT",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-030",
+        "severity": "MEDIUM",
+        "description": "insufficient coverage still ranked",
+        "expected_error": "PEER_COVERAGE_INSUFFICIENT",
+        "expected_owner": "PEER_ENGINE",
+        "runner_error_codes": [
+          "PEER_COVERAGE_INSUFFICIENT"
+        ],
+        "verifier_verdict": "PASS",
+        "verifier_mismatch_codes": [],
+        "observed_error": "PEER_COVERAGE_INSUFFICIENT",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      },
+      {
+        "mutation_id": "MUT-FUND-031",
+        "severity": "MAJOR",
+        "description": "provenance removed from EPS",
+        "expected_error": "PROVENANCE_MISSING",
+        "expected_owner": "PROVENANCE_ENGINE",
+        "runner_error_codes": [],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          "PROVENANCE_MISSING"
+        ],
+        "observed_error": "PROVENANCE_MISSING",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS"
+      },
+      {
+        "mutation_id": "MUT-FUND-032",
+        "severity": "CRITICAL",
+        "description": "invalid EPS exported to valuation engine (basis swap)",
+        "expected_error": "EPS_BASIS_MISMATCH",
+        "expected_owner": "EXPORT_BUILDER",
+        "runner_error_codes": [
+          "EPS_BASIS_MISMATCH"
+        ],
+        "verifier_verdict": "FAIL",
+        "verifier_mismatch_codes": [
+          ""
+        ],
+        "observed_error": "EPS_BASIS_MISMATCH",
+        "caught": true,
+        "wrong_reason_failure": false,
+        "unsafe_false_pass": false,
+        "final_status": "PASS_WITH_WARNINGS"
+      }
+    ]
+  }
+}
