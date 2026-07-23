@@ -1,0 +1,178 @@
+# Mutation Registry — vn-fundamental-analysis
+# Phase 3 P3D. 32 mutations across 7 categories.
+skill: vn-fundamental-analysis
+phase: 3
+
+mutations:
+
+  # === Unit and scale (5) ===
+  - id: MUT-FUND-001
+    severity: CRITICAL
+    semantic_target: "revenue ×1000"
+    expected_error: UNIT_SCALE_MISMATCH
+    expected_owner: UNIT_NORMALIZER
+
+  - id: MUT-FUND-002
+    severity: CRITICAL
+    semantic_target: "net income ÷1000"
+    expected_error: UNIT_SCALE_MISMATCH
+
+  - id: MUT-FUND-003
+    severity: CRITICAL
+    semantic_target: "tỷ VND treated as million VND"
+    expected_error: UNIT_SCALE_MISMATCH
+
+  - id: MUT-FUND-004
+    severity: CRITICAL
+    semantic_target: "shares in million treated as unit shares"
+    expected_error: UNIT_SCALE_MISMATCH
+
+  - id: MUT-FUND-005
+    severity: MAJOR
+    semantic_target: "BVPS > 1,000,000 (sanity range)"
+    expected_error: BVPS_OUT_OF_SANITY_RANGE
+
+  # === Share and split (5) ===
+  - id: MUT-FUND-006
+    severity: CRITICAL
+    semantic_target: "split adjustment removed from historical shares"
+    expected_error: SPLIT_ADJUSTMENT_MISSING
+
+  - id: MUT-FUND-007
+    severity: MAJOR
+    semantic_target: "bonus share adjustment removed"
+    expected_error: SPLIT_ADJUSTMENT_MISSING
+
+  - id: MUT-FUND-008
+    severity: MAJOR
+    semantic_target: "period-end shares used instead of weighted average"
+    expected_error: SHARE_BASIS_MISMATCH
+
+  - id: MUT-FUND-009
+    severity: MAJOR
+    semantic_target: "basic shares replaced with diluted"
+    expected_error: SHARE_BASIS_MISMATCH
+
+  - id: MUT-FUND-010
+    severity: CRITICAL
+    semantic_target: "historical EPS not restated after split"
+    expected_error: SPLIT_ADJUSTMENT_MISSING
+
+  # === Formula (7) ===
+  - id: MUT-FUND-011
+    severity: CRITICAL
+    semantic_target: "EPS numerator changed (total NI instead of attributable)"
+    expected_error: SCOPE_MISMATCH
+
+  - id: MUT-FUND-012
+    severity: HIGH
+    semantic_target: "BVPS uses total equity including minority"
+    expected_error: SCOPE_MISMATCH
+
+  - id: MUT-FUND-013
+    severity: MAJOR
+    semantic_target: "ROE uses ending equity silently"
+    expected_error: PERIOD_MISMATCH
+
+  - id: MUT-FUND-014
+    severity: MAJOR
+    semantic_target: "ROA denominator changed to equity"
+    expected_error: DUPONT_INCONSISTENT
+
+  - id: MUT-FUND-015
+    severity: MAJOR
+    semantic_target: "margin numerator changed to operating income"
+    expected_error: DUPONT_INCONSISTENT
+
+  - id: MUT-FUND-016
+    severity: HIGH
+    semantic_target: "DuPont component altered (EM uses ending instead of average)"
+    expected_error: DUPONT_INCONSISTENT
+
+  - id: MUT-FUND-017
+    severity: MAJOR
+    semantic_target: "CAGR year count changed"
+    expected_error: CAGR_PERIOD_INVALID
+
+  # === Applicability and missing data (5) ===
+  - id: MUT-FUND-018
+    severity: CRITICAL
+    semantic_target: "missing input replaced with zero"
+    expected_error: MISSING_REPLACED_WITH_ZERO
+
+  - id: MUT-FUND-019
+    severity: HIGH
+    semantic_target: "INPUT_INCOMPLETE changed to VALID"
+    expected_error: DOWNSTREAM_EXPORT_BLOCKED
+
+  - id: MUT-FUND-020
+    severity: HIGH
+    semantic_target: "negative equity ROE marked VALID without warning"
+    expected_error: NEGATIVE_EQUITY_NOT_MEANINGFUL
+
+  - id: MUT-FUND-021
+    severity: MAJOR
+    semantic_target: "CAGR across zero marked VALID"
+    expected_error: CAGR_NONPOSITIVE_BASE
+
+  - id: MUT-FUND-022
+    severity: MEDIUM
+    semantic_target: "near-zero denominator warning removed"
+    expected_error: EXTREME_DENOMINATOR_WARNING
+
+  # === Period and scope (4) ===
+  - id: MUT-FUND-023
+    severity: MAJOR
+    semantic_target: "TTM income with quarterly denominator"
+    expected_error: PERIOD_MISMATCH
+
+  - id: MUT-FUND-024
+    severity: MAJOR
+    semantic_target: "consolidated changed to standalone"
+    expected_error: SCOPE_MISMATCH
+
+  - id: MUT-FUND-025
+    severity: MAJOR
+    semantic_target: "attributable income with total equity"
+    expected_error: SCOPE_MISMATCH
+
+  - id: MUT-FUND-026
+    severity: MAJOR
+    semantic_target: "average denominator replaced by ending without warning"
+    expected_error: PERIOD_MISMATCH
+
+  # === Peer (4) ===
+  - id: MUT-FUND-027
+    severity: MEDIUM
+    semantic_target: "peer removed to improve ranking"
+    expected_error: PEER_COVERAGE_INSUFFICIENT
+
+  - id: MUT-FUND-028
+    severity: MEDIUM
+    semantic_target: "median changed to mean"
+    expected_error: PEER_POLICY_VIOLATION
+
+  - id: MUT-FUND-029
+    severity: MEDIUM
+    semantic_target: "period-misaligned peer included"
+    expected_error: PERIOD_MISMATCH
+
+  - id: MUT-FUND-030
+    severity: MEDIUM
+    semantic_target: "insufficient coverage still ranked"
+    expected_error: PEER_COVERAGE_INSUFFICIENT
+
+  # === Provenance and export (3) ===
+  - id: MUT-FUND-031
+    severity: MAJOR
+    semantic_target: "provenance removed from EPS"
+    expected_error: PROVENANCE_MISSING
+
+  - id: MUT-FUND-032
+    severity: CRITICAL
+    semantic_target: "invalid EPS exported to valuation engine"
+    expected_error: DOWNSTREAM_EXPORT_BLOCKED
+
+total: 32
+critical_failure_modes_covered: 3/3  # FM-001, FM-002, FM-006
+formulas_mutated: 11/11

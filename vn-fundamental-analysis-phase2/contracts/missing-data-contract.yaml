@@ -1,0 +1,36 @@
+# Missing Data Contract
+skill: vn-fundamental-analysis
+phase: 2
+
+policy:
+  missing_to_zero: PROHIBITED
+  none_blank_unavailable_zero_are_different: true
+
+allowed_statuses:
+  VALID: "Data present and verified"
+  INPUT_INCOMPLETE: "Required input missing — metric cannot be computed"
+  NOT_APPLICABLE: "Metric doesn't apply to this sector/company"
+  MANUAL_REVIEW_REQUIRED: "Data present but ambiguous or suspicious"
+  ERROR: "Data quality issue prevents computation"
+
+fallback_requires:
+  - explicit_rule_id
+  - warning emitted
+  - provenance recorded
+  - status set to INPUT_INCOMPLETE (not VALID)
+
+treatment_by_metric:
+  EPS:
+    missing_net_income: "INPUT_INCOMPLETE, no fallback, no zero"
+    missing_shares: "INPUT_INCOMPLETE, no fallback, no zero"
+  BVPS:
+    missing_equity: "INPUT_INCOMPLETE, no fallback"
+    missing_shares: "INPUT_INCOMPLETE, no fallback"
+  ROE:
+    missing_equity: "INPUT_INCOMPLETE"
+    missing_net_income: "INPUT_INCOMPLETE"
+  CAGR:
+    missing_beginning: "INPUT_INCOMPLETE, CAGR NOT_APPLICABLE"
+    missing_ending: "INPUT_INCOMPLETE, CAGR NOT_APPLICABLE"
+  DuPont:
+    any_missing: "Component with missing data → INPUT_INCOMPLETE; consistency check skipped"

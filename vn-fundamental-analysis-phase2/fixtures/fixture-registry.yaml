@@ -1,0 +1,99 @@
+# Fixture Registry — vn-fundamental-analysis Phase 2
+skill: vn-fundamental-analysis
+phase: 2
+
+fixtures:
+
+  # === Clean (8) ===
+  clean:
+    - id: FIX-001
+      name: standard_profitable_company
+      profile: "FPT-like: positive EPS, ROE 10-20%, stable growth, 5 years"
+      sector: technology
+      expected: "All metrics VALID, DuPont CONSISTENT, quality_verdict=TÀI_CHÍNH_KHỎE"
+
+    - id: FIX-002
+      name: bank
+      profile: "VCB-like: high equity, moderate ROE, no COGS, interest income"
+      sector: banking
+      expected: "ROE/ROA VALID, gross_margin NOT_APPLICABLE, BVPS high"
+
+    - id: FIX-003
+      name: insurer
+      profile: "BVH-like: revenue structure different, moderate profitability"
+      sector: insurance
+      expected: "ROE moderate, margins different from industrial"
+
+    - id: FIX-004
+      name: cyclical_industrial
+      profile: "HPG-like: high ROE at peak, low ROE at trough, CAGR distorted"
+      sector: steel
+      expected: "CAGR needs cyclical adjustment, DuPont shows margin as driver"
+
+    - id: FIX-005
+      name: negative_earnings
+      profile: "Loss-making company: negative NPAT for 2+ years"
+      sector: various
+      expected: "EPS VALID_NEGATIVE, PE downstream NOT_APPLICABLE, CAGR NOT_APPLICABLE"
+
+    - id: FIX-006
+      name: negative_equity
+      profile: "Insolvent: equity < 0"
+      sector: various
+      expected: "BVPS VALID_NEGATIVE, ROE MANUAL_REVIEW_REQUIRED, quality NGUY_HIỂM"
+
+    - id: FIX-007
+      name: stock_split
+      profile: "Company with 50% bonus issue mid-period; historical shares need adjustment"
+      sector: various
+      expected: "split_adjustment_verified=true, EPS/BVPS consistent across split"
+
+    - id: FIX-008
+      name: bonus_share_issue
+      profile: "Rights issue + bonus; weighted average shares complex"
+      sector: various
+      expected: "weighted_average_shares correct, EPS reflects dilution"
+
+  # === Failure (8) ===
+  failure:
+    - id: FIX-009
+      name: unit_scale_mismatch
+      profile: "Revenue in tỷ VND but shares in unit (not tỷ)"
+      expected_error: UNIT_SCALE_MISMATCH (CRITICAL)
+
+    - id: FIX-010
+      name: missing_to_zero
+      profile: "Missing revenue replaced with 0"
+      expected_error: MISSING_REPLACED_WITH_ZERO (CRITICAL)
+
+    - id: FIX-011
+      name: period_mismatch
+      profile: "NPAT is 2025 but equity is 2024-Q4"
+      expected_error: PERIOD_MISMATCH (MAJOR)
+
+    - id: FIX-012
+      name: scope_mismatch
+      profile: "Consolidated revenue with standalone net income"
+      expected_error: SCOPE_MISMATCH (MAJOR)
+
+    - id: FIX-013
+      name: dupont_inconsistency
+      profile: "NPM × AT × EM ≠ ROE (beyond 0.5% tolerance)"
+      expected_error: DUPONT_INCONSISTENT (HIGH)
+
+    - id: FIX-014
+      name: CAGR_cross_zero
+      profile: "Net profit goes from positive to negative across period"
+      expected_error: CAGR_NONPOSITIVE_BASE (MAJOR)
+
+    - id: FIX-015
+      name: insufficient_peer_coverage
+      profile: "Only 2 peers available (minimum 3)"
+      expected_error: PEER_COVERAGE_INSUFFICIENT (MEDIUM)
+
+    - id: FIX-016
+      name: missing_provenance
+      profile: "EPS computed but source_id missing"
+      expected_error: PROVENANCE_MISSING (MAJOR)
+
+total: 16

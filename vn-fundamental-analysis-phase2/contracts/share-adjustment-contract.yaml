@@ -1,0 +1,41 @@
+# Share Adjustment Contract
+skill: vn-fundamental-analysis
+phase: 2
+
+share_adjustment:
+  weighted_average_shares:
+    preferred: true
+    basis: [BASIC, DILUTED]
+    note: "Use weighted average if available from collector"
+
+  period_end_shares:
+    preferred: false
+    fallback_for: BVPS (point-in-time metric)
+    warning: ENDING_SHARES_FOR_BVPS
+
+  split_adjusted_historical_shares:
+    required: true
+    invariant: "Historical per-share metrics must use split-adjusted shares"
+    check: "Back-calc CP = net_income / EPS; must match reported shares within tolerance"
+    tolerance_pct: 2
+
+  bonus_share_adjustment:
+    formula: "adjusted_shares = original_shares × (1 + bonus_ratio)"
+    example: "50% bonus → multiply by 1.5"
+
+  rights_issue_adjustment:
+    formula: "theoretical_ex_rights_price calculation per standard formula"
+
+  diluted_share_basis:
+    treatment: "Use if available; if not, fall back to basic with warning"
+
+invariants:
+  - "Historical EPS/BVPS before and after mechanical split should be economically equivalent"
+  - "Net income and equity are NOT adjusted for splits — only share count"
+  - "If split occurred mid-period, weighted average shares must reflect pre/post split portions"
+
+split_verification:
+  method: "Compare shares_outstanding year-over-year; if >20% change, flag for split check"
+  back_calc: "CP_implied = net_income / EPS_reported; compare with shares_outstanding"
+  tolerance: "2% difference allowed (rounding)"
+  on_mismatch: SPLIT_ADJUSTMENT_MISSING (CRITICAL)

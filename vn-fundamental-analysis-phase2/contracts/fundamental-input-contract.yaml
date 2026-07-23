@@ -1,0 +1,95 @@
+# Input Contract — vn-fundamental-analysis
+# Phase 2 §7. Machine-checkable input specification.
+skill: vn-fundamental-analysis
+phase: 2
+
+source: vn-financial-data-collector (PRODUCTION_INTEGRATED)
+
+fundamental_input:
+  entity:
+    ticker: {type: string, required: true, pattern: "^[A-Z]{2,10}$"}
+    company: {type: string, required: true}
+    exchange: {type: string, required: true, enum: [HOSE, HNX, UPCOM]}
+    sector: {type: string, required: true}
+
+  reporting_context:
+    reporting_currency: {type: string, const: "VND"}
+    periods: {type: array, items: integer, minItems: 3, maxItems: 10}
+    scope: {type: string, enum: [consolidated, parent_only]}
+    fiscal_year_end: {type: string, description: "e.g., 2025-12-31"}
+
+  financials:
+    revenue:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      period: {type: array, items: integer}
+      scope: {enum: [consolidated, standalone]}
+      source_id: {type: string}
+      quality_status: {enum: [VALID, NOT_APPLICABLE, MISSING, REPORTED_ZERO, SOURCE_CONFLICT]}
+
+    net_income:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      scope: {enum: [attributable_to_parent, total_group]}
+      required_scope: attributable_to_parent
+      note: "If only total_group available, must flag ATTRIBUTABLE_VS_TOTAL_WARNING"
+
+    total_assets:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      period_type: {const: POINT_IN_TIME}
+
+    equity:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      scope: {enum: [attributable_to_parent, total_group]}
+      required_scope: attributable_to_parent
+      period_type: {const: POINT_IN_TIME}
+
+    shares_outstanding:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_SHARES"}
+      basis: {enum: [BASIC, DILUTED]}
+      note: "Must be split-adjusted for historical periods"
+
+    operating_income:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      required: false
+
+    gross_profit:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      required: false
+
+    dividends:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      required: false
+
+    debt:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      required: false
+
+    cash:
+      value: {type: array, items: number}
+      unit: {const: "BILLION_VND"}
+      required: false
+
+  corporate_actions:
+    stock_splits: {type: array, items: object, required: false}
+    bonus_shares: {type: array, items: object, required: false}
+    rights_issues: {type: array, items: object, required: false}
+
+  provenance:
+    source_ids: {type: array, items: string}
+    metric_source_map: {type: object}
+
+critical_invariants:
+  - "All financial values in BILLION_VND (tỷ VND)"
+  - "Shares in BILLION_SHARES (tỷ cổ phiếu)"
+  - "EPS = tỷ_VND / tỷ_shares = đồng/cổ phiếu (NO extra ×1000)"
+  - "BVPS = tỷ_VND / tỷ_shares = đồng/cổ phiếu"
+  - "Historical shares must be split-adjusted"
+  - "Net income scope must be ATTRIBUTABLE_TO_PARENT for EPS"

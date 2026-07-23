@@ -1,0 +1,285 @@
+# Requirement Registry — vn-fundamental-analysis
+# Phase 3 P3A. VFA-REQ namespace.
+skill: vn-fundamental-analysis
+phase: 3
+
+requirements:
+
+  # === ENTITY_AND_REQUEST ===
+  - id: VFA-REQ-001
+    title: Entity consistency
+    category: ENTITY_AND_REQUEST
+    severity: CRITICAL
+    primary_owner: ENTITY_VALIDATOR
+    pass_condition: "ticker, company, exchange, sector present and consistent"
+    fail_condition: "missing or cross-ticker contamination"
+    error_codes: [SCOPE_MISMATCH]
+    verifier_strategy: "compare entity across input and output"
+
+  # === INPUT_SCHEMA ===
+  - id: VFA-REQ-002
+    title: Input schema valid
+    category: INPUT_SCHEMA
+    severity: CRITICAL
+    primary_owner: INPUT_VALIDATOR
+    pass_condition: "all required fields present per fundamental-input.schema.json"
+    fail_condition: "missing required field"
+    error_codes: [MISSING_REQUIRED_INPUT]
+
+  - id: VFA-REQ-003
+    title: No missing-to-zero
+    category: INPUT_SCHEMA
+    severity: CRITICAL
+    primary_owner: INPUT_VALIDATOR
+    pass_condition: "no missing value silently replaced with zero"
+    fail_condition: "None/blank/missing treated as 0"
+    error_codes: [MISSING_REPLACED_WITH_ZERO]
+
+  # === UNIT_AND_CURRENCY ===
+  - id: VFA-REQ-004
+    title: Unit scale consistency
+    category: UNIT_AND_CURRENCY
+    severity: CRITICAL
+    primary_owner: UNIT_NORMALIZER
+    pass_condition: "numerator and denominator in same scale before division"
+    fail_condition: "tỷ VND / unit shares or similar mismatch"
+    error_codes: [UNIT_SCALE_MISMATCH]
+
+  - id: VFA-REQ-005
+    title: Per-share metric sanity range
+    category: UNIT_AND_CURRENCY
+    severity: HIGH
+    primary_owner: UNIT_NORMALIZER
+    pass_condition: "BVPS 1K-1M VND, EPS 100-100K VND"
+    fail_condition: "BVPS > 1M or EPS > 1M → likely unit error"
+    error_codes: [BVPS_OUT_OF_SANITY_RANGE, EPS_OUT_OF_SANITY_RANGE]
+
+  # === PERIOD_AND_SCOPE ===
+  - id: VFA-REQ-006
+    title: Period alignment
+    category: PERIOD_AND_SCOPE
+    severity: MAJOR
+    primary_owner: PERIOD_SCOPE_ENGINE
+    pass_condition: "income and balance sheet periods aligned"
+    fail_condition: "NPAT annual but equity from different year"
+    error_codes: [PERIOD_MISMATCH]
+
+  - id: VFA-REQ-007
+    title: Scope alignment
+    category: PERIOD_AND_SCOPE
+    severity: MAJOR
+    primary_owner: PERIOD_SCOPE_ENGINE
+    pass_condition: "consolidated revenue with consolidated income, attributable with attributable"
+    fail_condition: "mixed scopes"
+    error_codes: [SCOPE_MISMATCH]
+
+  # === SHARE_AND_CORPORATE_ACTIONS ===
+  - id: VFA-REQ-008
+    title: Split adjustment verified
+    category: SHARE_AND_CORPORATE_ACTIONS
+    severity: CRITICAL
+    primary_owner: SHARE_ADJUSTMENT_ENGINE
+    pass_condition: "historical shares split-adjusted; back-calc matches"
+    fail_condition: "shares not adjusted → EPS/BVPS inconsistent across split"
+    error_codes: [SPLIT_ADJUSTMENT_MISSING]
+
+  - id: VFA-REQ-009
+    title: Share basis consistency
+    category: SHARE_AND_CORPORATE_ACTIONS
+    severity: MAJOR
+    primary_owner: SHARE_ADJUSTMENT_ENGINE
+    pass_condition: "basic or diluted basis declared and consistent"
+    fail_condition: "basis mismatch across years"
+    error_codes: [SHARE_BASIS_MISMATCH, EPS_BASIS_MISMATCH]
+
+  # === FORMULA_CALCULATION (11 formulas × calculation correctness) ===
+  - id: VFA-REQ-010
+    title: EPS basic calculation correct
+    category: FORMULA_CALCULATION
+    severity: CRITICAL
+    primary_owner: FORMULA_ENGINE
+    formula: EPS-BASIC-v1.0.0
+    pass_condition: "EPS = NPAT_attributable / weighted_avg_basic_shares"
+    error_codes: [UNIT_SCALE_MISMATCH]
+
+  - id: VFA-REQ-011
+    title: EPS diluted calculation correct
+    category: FORMULA_CALCULATION
+    severity: CRITICAL
+    primary_owner: FORMULA_ENGINE
+    formula: EPS-DILUTED-v1.0.0
+
+  - id: VFA-REQ-012
+    title: BVPS calculation correct
+    category: FORMULA_CALCULATION
+    severity: CRITICAL
+    primary_owner: FORMULA_ENGINE
+    formula: BVPS-v1.0.0
+
+  - id: VFA-REQ-013
+    title: ROE calculation correct
+    category: FORMULA_CALCULATION
+    severity: HIGH
+    primary_owner: FORMULA_ENGINE
+    formula: ROE-v1.0.0
+
+  - id: VFA-REQ-014
+    title: ROA calculation correct
+    category: FORMULA_CALCULATION
+    severity: HIGH
+    primary_owner: FORMULA_ENGINE
+    formula: ROA-v1.0.0
+
+  - id: VFA-REQ-015
+    title: Net profit margin calculation correct
+    category: FORMULA_CALCULATION
+    severity: HIGH
+    primary_owner: FORMULA_ENGINE
+    formula: NET-PROFIT-MARGIN-v1.0.0
+
+  - id: VFA-REQ-016
+    title: DuPont NPM calculation correct
+    category: FORMULA_CALCULATION
+    severity: HIGH
+    primary_owner: FORMULA_ENGINE
+    formula: DUPONT-NPM-v1.0.0
+
+  - id: VFA-REQ-017
+    title: DuPont asset turnover calculation correct
+    category: FORMULA_CALCULATION
+    severity: HIGH
+    primary_owner: FORMULA_ENGINE
+    formula: DUPONT-AT-v1.0.0
+
+  - id: VFA-REQ-018
+    title: DuPont equity multiplier calculation correct
+    category: FORMULA_CALCULATION
+    severity: HIGH
+    primary_owner: FORMULA_ENGINE
+    formula: DUPONT-EM-v1.0.0
+
+  - id: VFA-REQ-019
+    title: DuPont ROE check calculation correct
+    category: FORMULA_CALCULATION
+    severity: HIGH
+    primary_owner: DUPONT_ENGINE
+    formula: DUPONT-ROE-CHECK-v1.0.0
+
+  - id: VFA-REQ-020
+    title: CAGR calculation correct
+    category: FORMULA_CALCULATION
+    severity: HIGH
+    primary_owner: GROWTH_ENGINE
+    formula: CAGR-v1.0.0
+
+  # === APPLICABILITY ===
+  - id: VFA-REQ-021
+    title: Applicability decisions before calculation
+    category: APPLICABILITY
+    severity: HIGH
+    primary_owner: APPLICABILITY_ENGINE
+    pass_condition: "status determined before formula execution"
+
+  # === MISSING_DATA ===
+  - id: VFA-REQ-022
+    title: Missing data fail-closed
+    category: MISSING_DATA
+    severity: CRITICAL
+    primary_owner: APPLICABILITY_ENGINE
+    pass_condition: "missing input → INPUT_INCOMPLETE, no zero fallback"
+
+  # === NEGATIVE_VALUE ===
+  - id: VFA-REQ-023
+    title: Negative equity handling
+    category: NEGATIVE_VALUE
+    severity: HIGH
+    primary_owner: NEGATIVE_VALUE_ENGINE
+    pass_condition: "BVPS VALID_NEGATIVE, ROE MANUAL_REVIEW_REQUIRED"
+    error_codes: [NEGATIVE_EQUITY_NOT_MEANINGFUL]
+
+  # === DUPONT_CONSISTENCY ===
+  - id: VFA-REQ-024
+    title: DuPont consistency check
+    category: DUPONT_CONSISTENCY
+    severity: HIGH
+    primary_owner: DUPONT_ENGINE
+    pass_condition: "|reconstructed_ROE - direct_ROE/100| < 0.005"
+    fail_condition: "difference beyond tolerance"
+    error_codes: [DUPONT_INCONSISTENT]
+
+  # === CAGR_VALIDITY ===
+  - id: VFA-REQ-025
+    title: CAGR applicability enforcement
+    category: CAGR_VALIDITY
+    severity: MAJOR
+    primary_owner: GROWTH_ENGINE
+    pass_condition: "CAGR only computed when beginning > 0, continuous periods, same scope"
+    error_codes: [CAGR_NONPOSITIVE_BASE, CAGR_PERIOD_INVALID]
+
+  # === PEER_COMPARISON ===
+  - id: VFA-REQ-026
+    title: Peer coverage minimum
+    category: PEER_COMPARISON
+    severity: MEDIUM
+    primary_owner: PEER_ENGINE
+    pass_condition: "≥3 peers with data"
+    error_codes: [PEER_COVERAGE_INSUFFICIENT]
+
+  # === PROVENANCE ===
+  - id: VFA-REQ-027
+    title: Provenance present for material metrics
+    category: PROVENANCE
+    severity: MAJOR
+    primary_owner: PROVENANCE_ENGINE
+    pass_condition: "all material metrics have source_id, source_date, source_type"
+    error_codes: [PROVENANCE_MISSING]
+
+  # === QUALITY_AND_ERRORS ===
+  - id: VFA-REQ-028
+    title: Quality summary complete
+    category: QUALITY_AND_ERRORS
+    severity: MEDIUM
+    primary_owner: QUALITY_ENGINE
+    pass_condition: "split, unit, dupont, period_scope checks all present"
+
+  # === DOWNSTREAM_EXPORT ===
+  - id: VFA-REQ-029
+    title: Export gate enforcement
+    category: DOWNSTREAM_EXPORT
+    severity: HIGH
+    primary_owner: EXPORT_BUILDER
+    pass_condition: "only VALID/VALID_NEGATIVE metrics exported"
+    error_codes: [DOWNSTREAM_EXPORT_BLOCKED]
+
+  # === REPRODUCIBILITY ===
+  - id: VFA-REQ-030
+    title: Calculation reproducibility
+    category: REPRODUCIBILITY
+    severity: HIGH
+    primary_owner: RUNNER
+    pass_condition: "same input → same output (semantic hash stable)"
+
+  # === INTEGRATION_BOUNDARY ===
+  - id: VFA-REQ-031
+    title: Collector boundary preserved
+    category: INTEGRATION_BOUNDARY
+    severity: HIGH
+    primary_owner: INPUT_ADAPTER
+
+  - id: VFA-REQ-032
+    title: Valuation boundary preserved
+    category: INTEGRATION_BOUNDARY
+    severity: CRITICAL
+    primary_owner: EXPORT_BUILDER
+    pass_condition: "EPS/BVPS exported with status, basis, split_adjusted, hash binding"
+
+  - id: VFA-REQ-033
+    title: Parent IR boundary preserved
+    category: INTEGRATION_BOUNDARY
+    severity: HIGH
+    primary_owner: OUTPUT_ASSEMBLER
+
+total: 33
+formulas_mapped: 11/11
+errors_mapped: 17/17
+fixtures_mapped: 16/16

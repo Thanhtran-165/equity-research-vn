@@ -1,0 +1,31 @@
+# Unit & Currency Contract
+skill: vn-fundamental-analysis
+phase: 2
+
+scales:
+  UNIT: 1
+  THOUSAND: 1000
+  MILLION: 1000000
+  BILLION: 1000000000
+  TRILLION: 1000000000000
+
+currency:
+  reporting: VND
+  no_FX_conversion: true  # all inputs are VND
+
+unit_safety:
+  ratio_scale_invariant: true   # ROE/ROA/margins: tỷ/tỷ = ratio regardless of scale
+  per_share_scale_sensitive: true  # EPS/BVPS: MUST normalize both to same scale
+  currency_consistency_required: true
+
+critical_checks:
+  - detect: "revenue in BILLION_VND but shares in UNIT (not BILLION_SHARES)"
+    action: FAIL (UNIT_SCALE_MISMATCH)
+  - detect: "BVPS > 1,000,000 VND"
+    action: WARNING (BVPS_OUT_OF_SANITY_RANGE)
+  - detect: "EPS > 1,000,000 VND"
+    action: WARNING (EPS_OUT_OF_SANITY_RANGE)
+  - detect: "revenue scope=standalone but net_income scope=consolidated"
+    action: FAIL (SCOPE_MISMATCH)
+
+ratio_computation_rule: "Normalize numerator and denominator to same scale before division. Ratios are scale-invariant. Per-share metrics are scale-sensitive."

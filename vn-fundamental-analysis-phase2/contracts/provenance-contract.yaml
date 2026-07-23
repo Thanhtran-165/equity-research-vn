@@ -1,0 +1,39 @@
+# Provenance Contract
+skill: vn-fundamental-analysis
+phase: 2
+
+trace_chain:
+  fundamental_metric:
+    → normalized_inputs: "Values used in calculation (post-normalization)"
+    → collector_metric_ids: "Original metric names from vn-financial-data-collector"
+    → source_ids: "Source identifiers (vnstock endpoint, sponsor, etc.)"
+    → raw_evidence: "Raw financial statement data"
+
+requirements:
+  - "Every material metric (EPS, BVPS, ROE, ROA, margins, DuPont, CAGR) MUST have provenance"
+  - "Provenance must include source_id, source_date, source_type"
+  - "Citations in prose are NOT sufficient — structured provenance required"
+  - "If provenance missing for material metric → PROVENANCE_MISSING error"
+
+material_metrics:
+  - EPS_basic
+  - EPS_diluted
+  - BVPS
+  - ROE
+  - ROA
+  - net_profit_margin
+  - dupont_npm
+  - dupont_asset_turnover
+  - dupont_equity_multiplier
+  - revenue_CAGR
+  - net_profit_CAGR
+
+provenance_schema:
+  per_metric:
+    metric_id: string
+    source_id: string
+    source_type: enum  # SPONSOR, VNSTOCK, MANUAL
+    source_date: string
+    collector_metric_name: string
+    transformation_applied: string  # e.g., "avg(beginning, ending)"
+    content_hash: string  # hash of raw input value

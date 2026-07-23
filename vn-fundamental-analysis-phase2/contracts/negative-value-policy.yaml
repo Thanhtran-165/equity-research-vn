@@ -1,0 +1,27 @@
+# Negative Value Policy
+skill: vn-fundamental-analysis
+phase: 2
+
+negative_net_income:
+  EPS: VALID_NEGATIVE (negative EPS allowed)
+  PE_downstream: NOT_APPLICABLE (valuation engine handles)
+  CAGR: NOT_APPLICABLE if crosses zero
+  ROE: VALID but flagged (negative net income / positive equity = negative ROE)
+  quality_verdict: "Likely CẦN_THEO DÕI or NGUY HIỂM"
+
+negative_equity:
+  BVPS: VALID_NEGATIVE (negative book value)
+  PB_downstream: NOT_APPLICABLE
+  ROE: MANUAL_REVIEW_REQUIRED (negative/negative = positive ROE which is misleading)
+  DuPont: EQUITY_MULTIPLIER < 0 (meaningless)
+  quality_verdict: NGUY HIỂM
+
+near_zero_equity:
+  threshold: "|equity| < 10% of total_assets"
+  ROE: EXTREME_DENOMINATOR_WARNING
+  ROA: NORMAL (uses total_assets, not equity)
+
+absolute_value_prohibition:
+  rule: "Never use |x| to create a positive ratio from negative inputs"
+  example: "ROE = |NPAT|/equity is WRONG — masks the true sign"
+  action: "Report actual negative ratio with appropriate status"

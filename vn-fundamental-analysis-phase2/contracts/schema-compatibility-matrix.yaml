@@ -1,0 +1,83 @@
+# Schema Compatibility Matrix
+skill: vn-fundamental-analysis
+phase: 2
+
+boundaries:
+
+  collector_to_fundamental:
+    mappings:
+      - source: collector.income_statement.revenue_b_vnd
+        target: fundamental.financials.revenue
+        transformation: "direct (already in tỷ VND)"
+        lossless: true
+        required: true
+
+      - source: collector.income_statement.net_profit_b_vnd
+        target: fundamental.financials.net_income
+        transformation: "must verify scope=attributable_to_parent"
+        lossless: true
+        required: true
+        rejection_condition: "if scope=total_group and attributable unavailable"
+
+      - source: collector.balance_sheet.equity_b_vnd
+        target: fundamental.financials.equity
+        transformation: "must verify scope=attributable_to_parent"
+        lossless: true
+        required: true
+
+      - source: collector.balance_sheet.total_assets_b_vnd
+        target: fundamental.financials.total_assets
+        transformation: "direct"
+        lossless: true
+        required: true
+
+      - source: collector.shares_outstanding_b
+        target: fundamental.financials.shares_outstanding
+        transformation: "must verify split-adjusted"
+        lossless: true
+        required: true
+        rejection_condition: "if not split-adjusted and historical comparison needed"
+
+  fundamental_to_valuation:
+    mappings:
+      - source: fundamental.downstream_export.EPS_basic.value
+        target: valuation.input_metrics.eps
+        transformation: "direct"
+        lossless: true
+        required: true
+        rejection_condition: "status not in [VALID, VALID_NEGATIVE]"
+
+      - source: fundamental.downstream_export.BVPS.value
+        target: valuation.input_metrics.bvps
+        transformation: "direct"
+        lossless: true
+        required: true
+        rejection_condition: "status not in [VALID, VALID_NEGATIVE]"
+
+      - source: fundamental.growth.revenue_CAGR
+        target: valuation.assumptions.growth_rate
+        transformation: "use as PEG growth input if applicable"
+        lossless: true
+        required: false
+        rejection_condition: "CAGR not applicable (crossed zero)"
+
+  fundamental_to_parent_report_IR:
+    mappings:
+      - source: fundamental.metric_results
+        target: parent.sections[fundamental].structured_facts.ratios
+        transformation: "map metric_results[] to ratio table"
+        lossless: true
+        required: true
+
+      - source: fundamental.dupont
+        target: parent.sections[fundamental].structured_facts.dupont
+        transformation: "direct"
+        lossless: true
+
+      - source: fundamental.quality_summary.quality_verdict
+        target: parent.sections[fundamental].structured_facts.quality_verdict
+        transformation: "direct"
+        lossless: true
+
+lossy_mapping_policy: FAIL
+  description: "Any lossy mapping of EPS, BVPS, basis, period, scope or provenance must FAIL"

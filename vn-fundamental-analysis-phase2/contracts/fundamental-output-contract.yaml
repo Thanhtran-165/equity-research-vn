@@ -1,0 +1,67 @@
+# Output Contract — vn-fundamental-analysis
+skill: vn-fundamental-analysis
+phase: 2
+
+fundamental_output:
+  entity:
+    ticker: string
+    company: string
+    sector: string
+
+  metric_results:
+    - metric_id: string  # EPS-BASIC, BVPS, ROE, ROA, NET_PROFIT_MARGIN, etc.
+      status: enum  # VALID, VALID_NEGATIVE, NOT_APPLICABLE, INPUT_INCOMPLETE, MANUAL_REVIEW_REQUIRED, ERROR
+      value: number  # or null if not VALID
+      unit: string
+      formula_id: string
+      formula_version: string
+      normalized_inputs: object  # values used in calculation
+      calculation_trace: array   # step-by-step
+      period: string
+      scope: string
+      basis: string  # BASIC or DILUTED for EPS
+      warnings: array
+      errors: array
+      provenance: object
+
+  dupont:
+    net_margin: number
+    asset_turnover: number
+    equity_multiplier: number
+    reconstructed_ROE: number
+    direct_ROE: number
+    consistency_difference: number
+    consistency_status: enum  # CONSISTENT, INCONSISTENT
+    tolerance: 0.005
+
+  growth:
+    revenue_CAGR: number
+    net_profit_CAGR: number
+    cyclical_adjustment_applied: boolean
+    recovery_CAGR: number  # if cyclical adjustment applied
+
+  peer_comparison:
+    eligible: boolean
+    peer_count: integer
+    metrics_compared: array
+    median_values: object
+    warning: string  # if coverage insufficient
+
+  quality_summary:
+    split_adjustment_verified: boolean
+    unit_sanity_verified: boolean
+    dupont_consistency_verified: boolean
+    period_scope_aligned: boolean
+    quality_verdict: enum  # TÀI_CHÍNH_KHỎE, CẦN_THEO_DÕI, NGUY_HIỂM
+
+  downstream_export:
+    EPS_basic: {value, status, basis, period, split_adjusted}
+    BVPS: {value, status, scope, period, split_adjusted}
+    growth_metrics: {revenue_CAGR_status, net_profit_CAGR_status}
+    export_blocked_reasons: array  # why certain metrics not exported
+
+export_rules:
+  - "Only export metrics with status VALID or VALID_NEGATIVE"
+  - "INPUT_INCOMPLETE metrics: export as null with status"
+  - "ERROR metrics: do NOT export value (only status=ERROR)"
+  - "downstream_export hash must bind to full output hash"

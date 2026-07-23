@@ -1,0 +1,44 @@
+# Fundamental Peer Comparison Contract
+skill: vn-fundamental-analysis
+phase: 2
+
+scope: "Fundamental peer comparison is SEPARATE from valuation peer selection"
+
+comparison_metrics:
+  - revenue_growth
+  - net_profit_growth
+  - ROE
+  - ROA
+  - net_profit_margin
+  - gross_margin
+  - equity_multiplier (leverage)
+  - asset_turnover
+
+policy:
+  eligible_sector_relation:
+    preferred: same_industry
+    allowed: same_sector_broader
+    prohibited: cross_sector_without_justification
+
+  minimum_peer_count: 3
+  period_alignment: "All peers must use same fiscal year periods"
+  scope_alignment: "All peers must use same scope (consolidated vs standalone)"
+
+  outlier_policy:
+    method: "Exclude peers with values beyond 2 standard deviations from median"
+    min_after_exclusion: 3
+
+  median_mean_policy:
+    primary: median (robust to outliers)
+    report_both: true
+
+  missing_metric_policy:
+    action: "Exclude peer from that specific metric comparison, not from all"
+    min_coverage: 3  # need at least 3 peers with data for meaningful median
+
+prohibitions:
+  - "Self-selecting favorable peers"
+  - "Switching from median to mean to get better number"
+  - "Comparing different periods"
+  - "Ranking when coverage below minimum"
+  - "Using peer data from different scope"

@@ -1,0 +1,129 @@
+# Error Codes — vn-fundamental-analysis
+skill: vn-fundamental-analysis
+phase: 2
+
+errors:
+  # Unit/scale errors
+  - code: UNIT_SCALE_MISMATCH
+    severity: CRITICAL
+    stage: UNIT_VALIDATION
+    description: "Numerator and denominator in different scales (e.g., tỷ VND / unit shares)"
+    recoverable: false
+
+  - code: CURRENCY_MISMATCH
+    severity: CRITICAL
+    stage: UNIT_VALIDATION
+    description: "Mixed currencies in inputs"
+    recoverable: false
+
+  # Period/scope errors
+  - code: PERIOD_MISMATCH
+    severity: MAJOR
+    stage: PERIOD_SCOPE_ENGINE
+    description: "Income statement period doesn't match balance sheet period"
+    recoverable: true
+
+  - code: SCOPE_MISMATCH
+    severity: MAJOR
+    stage: PERIOD_SCOPE_ENGINE
+    description: "Consolidated revenue mixed with standalone income, or parent equity with group income"
+    recoverable: false
+
+  # Missing data errors
+  - code: MISSING_REQUIRED_INPUT
+    severity: MAJOR
+    stage: INPUT_VALIDATION
+    description: "Required input metric is missing"
+    recoverable: true
+
+  - code: MISSING_REPLACED_WITH_ZERO
+    severity: CRITICAL
+    stage: INPUT_VALIDATION
+    description: "Missing value was silently replaced with zero"
+    recoverable: false
+
+  # Split/share errors
+  - code: SPLIT_ADJUSTMENT_MISSING
+    severity: CRITICAL
+    stage: SHARE_ADJUSTMENT_ENGINE
+    description: "Historical shares not split-adjusted; back-calc mismatch"
+    recoverable: false
+
+  - code: SHARE_BASIS_MISMATCH
+    severity: MAJOR
+    stage: SHARE_ADJUSTMENT_ENGINE
+    description: "Basic shares used where diluted required (or vice versa) without warning"
+    recoverable: true
+
+  - code: EPS_BASIS_MISMATCH
+    severity: MAJOR
+    stage: FORMULA_ENGINE
+    description: "EPS basis changed across years without consistency"
+    recoverable: true
+
+  # DuPont errors
+  - code: DUPONT_INCONSISTENT
+    severity: HIGH
+    stage: DUPONT_ENGINE
+    description: "NPM × AT × EM ≠ direct ROE (beyond tolerance)"
+    recoverable: false
+
+  # CAGR errors
+  - code: CAGR_NONPOSITIVE_BASE
+    severity: MAJOR
+    stage: CAGR_ENGINE
+    description: "CAGR beginning value ≤ 0; cannot compute"
+    recoverable: true
+
+  - code: CAGR_PERIOD_INVALID
+    severity: MAJOR
+    stage: CAGR_ENGINE
+    description: "CAGR periods discontinuous or scope changed"
+    recoverable: true
+
+  # Negative value errors
+  - code: NEGATIVE_EQUITY_NOT_MEANINGFUL
+    severity: HIGH
+    stage: RATIO_ENGINE
+    description: "ROE/PB computed with negative equity — result misleading"
+    recoverable: true
+
+  # Peer errors
+  - code: PEER_COVERAGE_INSUFFICIENT
+    severity: MEDIUM
+    stage: PEER_ENGINE
+    description: "Fewer than minimum peers with data for comparison"
+    recoverable: true
+
+  # Provenance errors
+  - code: PROVENANCE_MISSING
+    severity: MAJOR
+    stage: PROVENANCE_LAYER
+    description: "Material metric lacks source provenance"
+    recoverable: true
+
+  # Export errors
+  - code: DOWNSTREAM_EXPORT_BLOCKED
+    severity: HIGH
+    stage: OUTPUT_ASSEMBLY
+    description: "Metric blocked from downstream export due to quality gate failure"
+    recoverable: false
+
+  # Sanity errors
+  - code: BVPS_OUT_OF_SANITY_RANGE
+    severity: HIGH
+    stage: UNIT_VALIDATION
+    description: "BVPS > 1,000,000 VND — likely unit error"
+    recoverable: false
+
+  - code: EPS_OUT_OF_SANITY_RANGE
+    severity: HIGH
+    stage: UNIT_VALIDATION
+    description: "EPS > 1,000,000 VND — likely unit error"
+    recoverable: false
+
+fatal_conditions:
+  - UNIT_SCALE_MISMATCH
+  - MISSING_REPLACED_WITH_ZERO
+  - SPLIT_ADJUSTMENT_MISSING
+  - CURRENCY_MISMATCH

@@ -1,0 +1,65 @@
+# Metric Ownership — vn-fundamental-analysis
+# Phase 2 §6. Defines which skill owns which metrics.
+skill: vn-fundamental-analysis
+phase: 2
+
+ownership:
+  vn_financial_data_collector:
+    owns:
+      - raw_financial_statements
+      - canonical_financial_DATA
+      - raw_shares_data
+      - price_data
+      - source_provenance
+      - reported_periods
+      - reported_scopes
+      - corporate_actions_raw
+
+  vn_fundamental_analysis:
+    owns:
+      - normalized_fundamental_metrics
+      - profitability_ratios:
+          - ROE
+          - ROA
+          - net_profit_margin
+          - gross_margin
+      - per_share_metrics:
+          - EPS_basic
+          - EPS_diluted
+          - BVPS
+      - growth_metrics:
+          - revenue_CAGR
+          - net_profit_CAGR
+          - EPS_CAGR
+      - dupont_decomposition:
+          - dupont_net_margin
+          - dupont_asset_turnover
+          - dupont_equity_multiplier
+          - dupont_reconstructed_ROE
+      - fundamental_quality_flags:
+          - split_adjustment_verified
+          - unit_sanity_verified
+          - dupont_consistency_verified
+          - period_scope_aligned
+      - fundamental_peer_comparison:
+          - peer_ROE_comparison
+          - peer_margin_comparison
+          - peer_growth_comparison
+
+  vn_valuation_engine:
+    owns:
+      - valuation_method_applicability
+      - valuation_multiples
+      - implied_values
+      - target_prices
+      - valuation_peer_selection
+      - equity_bridge
+
+boundary_rules:
+  - fundamental_skill_does_not_own: target_price
+  - fundamental_skill_does_not_own: valuation_multiple
+  - fundamental_skill_does_not_own: implied_value
+  - fundamental_skill_does_not_own: valuation_method_decision
+  - valuation_engine_does_not_own: raw_financial_DATA
+  - valuation_engine_does_not_own: dupont_decomposition
+  - valuation_engine_does_not_own: quality_verdict

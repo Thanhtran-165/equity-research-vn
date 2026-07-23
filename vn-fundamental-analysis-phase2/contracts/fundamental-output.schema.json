@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vn-fundamental-analysis/fundamental-output.schema.json",
+  "title": "Fundamental Analysis Output",
+  "type": "object",
+  "required": ["entity", "metric_results", "dupont", "quality_summary", "downstream_export"],
+  "properties": {
+    "entity": {"type": "object", "required": ["ticker"], "properties": {"ticker": {"type": "string"}, "company": {"type": "string"}, "sector": {"type": "string"}}},
+    "metric_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["metric_id", "status", "formula_id"],
+        "properties": {
+          "metric_id": {"type": "string"},
+          "status": {"type": "string", "enum": ["VALID", "VALID_NEGATIVE", "NOT_APPLICABLE", "INPUT_INCOMPLETE", "MANUAL_REVIEW_REQUIRED", "ERROR"]},
+          "value": {"type": ["number", "null"]},
+          "unit": {"type": "string"},
+          "formula_id": {"type": "string"},
+          "formula_version": {"type": "string"},
+          "calculation_trace": {"type": "array"},
+          "period": {"type": "string"},
+          "scope": {"type": "string"},
+          "basis": {"type": "string"},
+          "warnings": {"type": "array", "items": {"type": "string"}},
+          "errors": {"type": "array", "items": {"type": "string"}},
+          "provenance": {"type": "object"}
+        }
+      }
+    },
+    "dupont": {
+      "type": "object",
+      "properties": {
+        "net_margin": {"type": ["number", "null"]},
+        "asset_turnover": {"type": ["number", "null"]},
+        "equity_multiplier": {"type": ["number", "null"]},
+        "reconstructed_ROE": {"type": ["number", "null"]},
+        "direct_ROE": {"type": ["number", "null"]},
+        "consistency_difference": {"type": ["number", "null"]},
+        "consistency_status": {"type": "string", "enum": ["CONSISTENT", "INCONSISTENT", "NOT_COMPUTED"]}
+      }
+    },
+    "growth": {
+      "type": "object",
+      "properties": {
+        "revenue_CAGR": {"type": ["number", "null"]},
+        "net_profit_CAGR": {"type": ["number", "null"]},
+        "cyclical_adjustment_applied": {"type": "boolean"},
+        "recovery_CAGR": {"type": ["number", "null"]}
+      }
+    },
+    "quality_summary": {
+      "type": "object",
+      "required": ["quality_verdict"],
+      "properties": {
+        "split_adjustment_verified": {"type": "boolean"},
+        "unit_sanity_verified": {"type": "boolean"},
+        "dupont_consistency_verified": {"type": "boolean"},
+        "period_scope_aligned": {"type": "boolean"},
+        "quality_verdict": {"type": "string", "enum": ["TÀI_CHÍNH_KHỎE", "CẦN_THEO_DÕI", "NGUY HIỂM"]}
+      }
+    },
+    "downstream_export": {
+      "type": "object",
+      "properties": {
+        "EPS_basic": {"type": "object"},
+        "BVPS": {"type": "object"},
+        "growth_metrics": {"type": "object"},
+        "export_blocked_reasons": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

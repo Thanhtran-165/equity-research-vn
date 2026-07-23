@@ -1,0 +1,34 @@
+# Period & Scope Contract
+skill: vn-fundamental-analysis
+phase: 2
+
+period_types:
+  ANNUAL: "Full fiscal year"
+  QUARTERLY: "Single quarter"
+  TTM: "Trailing twelve months"
+  YTD: "Year-to-date"
+  POINT_IN_TIME: "Balance sheet snapshot (specific date)"
+
+scope_types:
+  CONSOLIDATED: "Including subsidiaries"
+  STANDALONE: "Parent only"
+  ATTRIBUTABLE_TO_PARENT: "Net income/equity attributable to ordinary shareholders"
+  TOTAL_GROUP: "Including minority interest"
+
+alignment_rules:
+  - "Income statement metrics (revenue, net_income): use ANNUAL period"
+  - "Balance sheet metrics (equity, total_assets): use POINT_IN_TIME"
+  - "ROE/ROA: numerator=ANNUAL income, denominator=average of beginning+ending POINT_IN_TIME"
+  - "EPS: numerator=ANNUAL net_income attributable, denominator=weighted average shares for that year"
+  - "BVPS: numerator=ending equity, denominator=ending shares"
+
+prohibited_mixes:
+  - "TTM income with single-quarter denominator"
+  - "Consolidated revenue with standalone income"
+  - "Parent equity with group net income"
+  - "Ending balance with average balance without ENDING_BALANCE_DENOMINATOR warning"
+
+period_continuity:
+  required: true
+  check: "Periods must be consecutive years (e.g., 2021,2022,2023,2024,2025)"
+  gap_handling: "If gap detected, CAGR computation FAILS (discontinuous)"

@@ -1,0 +1,131 @@
+# Component Model — vn-fundamental-analysis
+# Phase 3 P3B. 17 deterministic components.
+skill: vn-fundamental-analysis
+phase: 3
+
+components:
+
+  C01_input_validator:
+    responsibility: "JSON schema validation, required fields, enum, duplicate detection"
+    inputs: [raw_request]
+    outputs: [validated_request, validation_errors]
+    owns_reqs: [VFA-REQ-002, VFA-REQ-003]
+    repairs_input: false
+
+  C02_entity_validator:
+    responsibility: "Ticker/company/exchange/sector consistency, cross-ticker detection"
+    inputs: [validated_request]
+    outputs: [entity_status, entity_errors]
+    owns_reqs: [VFA-REQ-001]
+
+  C03_unit_normalizer:
+    responsibility: "Scale normalization (UNIT/THOUSAND/MILLION/BILLION/TRILLION), currency check, sanity range"
+    inputs: [validated_financials]
+    outputs: [normalized_metrics, transformation_traces, unit_warnings]
+    owns_reqs: [VFA-REQ-004, VFA-REQ-005]
+
+  C04_period_scope_engine:
+    responsibility: "Period alignment, scope alignment, continuity check, average balance computation"
+    inputs: [normalized_metrics]
+    outputs: [aligned_metrics, period_warnings, average_balances]
+    owns_reqs: [VFA-REQ-006, VFA-REQ-007]
+
+  C05_share_adjustment_engine:
+    responsibility: "Weighted average, period-end, split adjustment, bonus/rights, basic/diluted"
+    inputs: [normalized_shares, corporate_actions]
+    outputs: [adjusted_shares, adjustment_traces]
+    owns_reqs: [VFA-REQ-008, VFA-REQ-009]
+
+  C06_applicability_engine:
+    responsibility: "Determine VALID/VALID_NEGATIVE/INPUT_INCOMPLETE/NOT_APPLICABLE per metric per year"
+    inputs: [aligned_metrics, adjusted_shares]
+    outputs: [applicability_decisions]
+    owns_reqs: [VFA-REQ-021, VFA-REQ-022]
+
+  C07_formula_engine:
+    responsibility: "Compute 11 formulas with calculation_trace, rounding, status"
+    inputs: [aligned_metrics, adjusted_shares, applicability_decisions]
+    outputs: [metric_results]
+    owns_reqs: [VFA-REQ-010 through VFA-REQ-020]
+    does_not: "change applicability, select peers, apply premium"
+
+  C08_dupont_engine:
+    responsibility: "DuPont 3-component decomposition, reconstructed ROE, consistency check"
+    inputs: [metric_results]
+    outputs: [dupont_results, consistency_status]
+    owns_reqs: [VFA-REQ-024]
+
+  C09_growth_engine:
+    responsibility: "CAGR computation with applicability enforcement and cyclical adjustment"
+    inputs: [metric_results, periods]
+    outputs: [growth_results]
+    owns_reqs: [VFA-REQ-025]
+
+  C10_peer_engine:
+    responsibility: "Validate peer set, align periods/scopes, median/mean, outlier policy, coverage"
+    inputs: [metric_results, peer_data]
+    outputs: [peer_comparison_results]
+    owns_reqs: [VFA-REQ-026]
+
+  C11_negative_value_engine:
+    responsibility: "Apply treatment for negative NI, negative equity, near-zero denominators"
+    inputs: [metric_results]
+    outputs: [adjusted_statuses, negative_value_warnings]
+    owns_reqs: [VFA-REQ-023]
+
+  C12_quality_engine:
+    responsibility: "Aggregate input/calculation/provenance quality, fallback warnings, export eligibility"
+    inputs: [all_engine_outputs]
+    outputs: [quality_summary, quality_verdict]
+    owns_reqs: [VFA-REQ-028]
+
+  C13_provenance_engine:
+    responsibility: "Bind metric results to collector metric IDs, source IDs, raw evidence"
+    inputs: [metric_results, input_provenance]
+    outputs: [provenance_bindings]
+    owns_reqs: [VFA-REQ-027]
+
+  C14_export_builder:
+    responsibility: "Build downstream_export with verified EPS/BVPS/growth, hash binding"
+    inputs: [metric_results, quality_summary, provenance_bindings]
+    outputs: [downstream_export]
+    owns_reqs: [VFA-REQ-029, VFA-REQ-032]
+
+  C15_output_assembler:
+    responsibility: "Assemble output per fundamental-output.schema.json"
+    inputs: [all_outputs]
+    outputs: [fundamental_output]
+    owns_reqs: [VFA-REQ-033]
+
+  C16_evidence_manifest_builder:
+    responsibility: "Record request hash, input hash, registry hashes, result hashes, verifier binding"
+    inputs: [fundamental_output, execution_log]
+    outputs: [evidence_manifest]
+
+  C17_deterministic_runner:
+    responsibility: "Orchestrate pipeline: validation → normalization → share → applicability → formulas → dupont → growth → peer → quality → provenance → export → output → verification → evidence"
+    inputs: [request]
+    outputs: [PipelineResult]
+    owns_reqs: [VFA-REQ-030]
+
+pipeline_order:
+  - C01_input_validator
+  - C02_entity_validator
+  - C03_unit_normalizer
+  - C04_period_scope_engine
+  - C05_share_adjustment_engine
+  - C06_applicability_engine
+  - C07_formula_engine
+  - C08_dupont_engine
+  - C09_growth_engine
+  - C10_peer_engine
+  - C11_negative_value_engine
+  - C12_quality_engine
+  - C13_provenance_engine
+  - C14_export_builder
+  - C15_output_assembler
+  - C16_evidence_manifest_builder
+  - C17_deterministic_runner
+
+ownership_overlaps: 0
+fail_closed_paths: [UNIT_SCALE_MISMATCH, MISSING_REPLACED_WITH_ZERO, SPLIT_ADJUSTMENT_MISSING, CURRENCY_MISMATCH]

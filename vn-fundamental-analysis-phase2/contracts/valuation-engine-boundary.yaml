@@ -1,0 +1,48 @@
+# Valuation Engine Boundary Contract
+skill: vn-fundamental-analysis
+phase: 2
+
+purpose: "Defines exactly what fundamental exports to valuation engine"
+
+valuation_export:
+  EPS_basic:
+    required_basis: BASIC
+    required_period: "most recent annual (FY2025)"
+    required_scope: ATTRIBUTABLE_TO_PARENT
+    split_adjusted: true
+    allowed_statuses: [VALID, VALID_NEGATIVE]
+    blocked_statuses: [INPUT_INCOMPLETE, NOT_APPLICABLE, ERROR]
+
+  BVPS:
+    required_scope: ATTRIBUTABLE_TO_PARENT
+    required_period: "most recent point-in-time"
+    split_adjusted: true
+    allowed_statuses: [VALID, VALID_NEGATIVE]
+    blocked_statuses: [INPUT_INCOMPLETE, NOT_APPLICABLE, ERROR]
+
+  growth_metrics:
+    revenue_CAGR:
+      allowed_only_if:
+        - positive_beginning_value
+        - positive_ending_value
+        - continuous_period
+        - same_scope
+        - same_basis
+    net_profit_CAGR:
+      allowed_only_if: same_as_revenue_CAGR
+    note: "If CAGR not applicable, export status=NOT_APPLICABLE (do NOT export zero)"
+
+  margin_metrics:
+    net_profit_margin: {allowed_statuses: [VALID]}
+
+boundary_binding:
+  fundamental_output_hash: "SHA-256 of full fundamental output"
+  metric_result_hashes: "Per-metric SHA-256 for trace binding"
+  calculation_trace_hashes: "Per-formula trace SHA-256"
+  provenance_hashes: "Source binding for each input"
+
+rules:
+  - "Valuation engine does NOT receive raw unverified EPS/BVPS from narrative"
+  - "Valuation engine receives ONLY structured downstream_export with verified status"
+  - "If fundamental output hash doesn't match, valuation must reject (STALE_FUNDAMENTAL_DATA)"
+  - "Fundamental does NOT emit target_price, valuation_multiple, or implied_value"

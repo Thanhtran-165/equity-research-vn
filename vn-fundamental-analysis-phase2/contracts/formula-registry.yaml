@@ -1,0 +1,156 @@
+# Formula Registry — vn-fundamental-analysis
+# Phase 2 §8. Versioned, machine-checkable formula definitions.
+skill: vn-fundamental-analysis
+phase: 2
+
+versioning_policy:
+  format: "<FORMULA_ID>-v<MAJOR>.<MINOR>.<PATCH>"
+  all_formulas_must_be_versioned: true
+  unversioned_formula_forbidden: true
+
+formulas:
+
+  # === EPS ===
+  - formula_id: EPS-BASIC-v1.0.0
+    name: Earnings Per Share (Basic)
+    equation: "EPS_basic = net_income_attributable_to_common / weighted_average_basic_shares"
+    required_inputs:
+      - net_income_attributable_to_common (status=VALID, period_type=YEAR, scope=ATTRIBUTABLE_TO_PARENT)
+      - weighted_average_basic_shares (status=VALID, period_type=YEAR, basis=BASIC)
+    optional_inputs: []
+    output_unit: VND_PER_SHARE
+    output_scale: UNIT
+    valid_period_relationship: "income statement period must match shares period"
+    valid_scope_relationship: "net_income must be ATTRIBUTABLE_TO_PARENT, not total group"
+    applicability_rules:
+      sectors_applicable: [all]
+      sectors_NOT_applicable: []
+    missing_data_policy: FAIL_CLOSED (NOT_APPLICABLE downstream)
+    negative_value_policy: VALID_NEGATIVE (negative EPS allowed for loss-making companies)
+    rounding_policy: "round to nearest integer (đồng)"
+
+  - formula_id: EPS-DILUTED-v1.0.0
+    name: Earnings Per Share (Diluted)
+    equation: "EPS_diluted = net_income_attributable_to_common / weighted_average_diluted_shares"
+    required_inputs:
+      - net_income_attributable_to_common (status=VALID)
+      - weighted_average_diluted_shares (status=VALID, basis=DILUTED)
+    optional_inputs: []
+    output_unit: VND_PER_SHARE
+    output_scale: UNIT
+    applicability_rules:
+      sectors_applicable: [all]
+    missing_data_policy: FAIL_CLOSED
+    negative_value_policy: VALID_NEGATIVE
+
+  # === BVPS ===
+  - formula_id: BVPS-v1.0.0
+    name: Book Value Per Share
+    equation: "BVPS = common_equity_attributable_to_ordinary / period_end_ordinary_shares"
+    required_inputs:
+      - common_equity_attributable_to_ordinary (status=VALID, period_type=POINT_IN_TIME, scope=ATTRIBUTABLE_TO_PARENT)
+      - period_end_ordinary_shares (status=VALID, period_type=POINT_IN_TIME)
+    optional_inputs: []
+    output_unit: VND_PER_SHARE
+    output_scale: UNIT
+    treatment:
+      preferred_equity: "subtract from total equity before computing BVPS"
+      treasury_shares: "subtract from shares outstanding"
+      minority_interest: "subtract from total equity (use attributable, not total)"
+    missing_data_policy: FAIL_CLOSED
+    negative_value_policy: VALID_NEGATIVE (insolvent company)
+    unit_sanity_range: [1000, 1000000]  # BVPS 1K-1M VND reasonable for VN listed
+
+  # === ROE ===
+  - formula_id: ROE-v1.0.0
+    name: Return on Equity
+    equation: "ROE = (net_income_attributable_to_common / average_common_equity) × 100"
+    required_inputs:
+      - net_income_attributable_to_common (status=VALID, period_type=YEAR)
+      - average_common_equity (status=VALID, period_type=YEAR, derivation="avg(beginning, ending)")
+    optional_inputs:
+      - ending_common_equity (fallback if average unavailable, warning=ENDING_BALANCE_DENOMINATOR)
+    output_unit: PERCENTAGE
+    output_scale: UNIT
+    valid_scope_relationship: "numerator ATTRIBUTABLE_TO_PARENT, denominator ATTRIBUTABLE_TO_PARENT"
+    missing_data_policy: FAIL_CLOSED
+    negative_value_policy:
+      negative_equity: MANUAL_REVIEW_REQUIRED (ROE meaningless when equity < 0)
+      near_zero_equity: EXTREME_DENOMINATOR_WARNING (|equity| < 10% of assets)
+
+  # === ROA ===
+  - formula_id: ROA-v1.0.0
+    name: Return on Assets
+    equation: "ROA = (net_income / average_total_assets) × 100"
+    required_inputs:
+      - net_income (status=VALID, period_type=YEAR)
+      - average_total_assets (status=VALID, derivation="avg(beginning, ending)")
+    optional_inputs:
+      - ending_total_assets (fallback, warning=ENDING_BALANCE_DENOMINATOR)
+    output_unit: PERCENTAGE
+    output_scale: UNIT
+    missing_data_policy: FAIL_CLOSED
+
+  # === Net Profit Margin (ROS in current SKILL.md, renamed for clarity) ===
+  - formula_id: NET_PROFIT_MARGIN-v1.0.0
+    name: Net Profit Margin
+    equation: "NPM = (net_income / revenue) × 100"
+    required_inputs:
+      - net_income (status=VALID)
+      - revenue (status=VALID)
+    output_unit: PERCENTAGE
+    output_scale: UNIT
+    note: "Current SKILL.md calls this 'ROS' but canonical name is NET_PROFIT_MARGIN"
+
+  # === DuPont Components ===
+  - formula_id: DUPONT-NPM-v1.0.0
+    name: DuPont Net Profit Margin
+    equation: "dupont_NPM = net_income / revenue"
+    required_inputs: [net_income, revenue]
+    output_unit: RATIO
+    output_scale: UNIT
+
+  - formula_id: DUPONT-AT-v1.0.0
+    name: DuPont Asset Turnover
+    equation: "dupont_AT = revenue / average_total_assets"
+    required_inputs: [revenue, average_total_assets]
+    output_unit: RATIO
+    output_scale: UNIT
+
+  - formula_id: DUPONT-EM-v1.0.0
+    name: DuPont Equity Multiplier
+    equation: "dupont_EM = average_total_assets / average_common_equity"
+    required_inputs: [average_total_assets, average_common_equity]
+    output_unit: RATIO
+    output_scale: UNIT
+
+  - formula_id: DUPONT-ROE-CHECK-v1.0.0
+    name: DuPont Reconstructed ROE
+    equation: "reconstructed_ROE = dupont_NPM × dupont_AT × dupont_EM"
+    required_inputs: [dupont_NPM, dupont_AT, dupont_EM]
+    output_unit: RATIO
+    output_scale: UNIT
+    consistency_check: "abs(reconstructed_ROE - direct_ROE/100) < tolerance"
+    tolerance: 0.005  # 0.5% absolute tolerance
+    on_inconsistency: DUPONT_INCONSISTENT error
+
+  # === CAGR ===
+  - formula_id: CAGR-v1.0.0
+    name: Compound Annual Growth Rate
+    equation: "CAGR = (ending_value / beginning_value)^(1/years) - 1"
+    required_inputs:
+      - beginning_value (status=VALID, must_be_positive=true)
+      - ending_value (status=VALID)
+      - year_count (integer >= 1)
+    output_unit: RATIO
+    output_scale: UNIT
+    fail_closed_conditions:
+      - beginning_value <= 0
+      - year_count <= 0
+      - discontinuous_periods
+      - scope_changed_mid_period
+      - accounting_basis_changed
+    cyclical_adjustment:
+      detect: "If sector in [steel, oil_gas, real_estate, shipping] and CAGR < 0"
+      action: "Compute recovery CAGR from trough-to-latest; report both"
+      warning: CYCLICAL_CAGR_DISTORTION

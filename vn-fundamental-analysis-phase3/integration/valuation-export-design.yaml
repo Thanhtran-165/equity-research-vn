@@ -1,0 +1,68 @@
+# Integration Boundary Design — vn-fundamental-analysis
+# Phase 3 P3E.
+skill: vn-fundamental-analysis
+phase: 3
+
+boundaries:
+
+  collector_to_fundamental:
+    adapter: collector_input_adapter
+    mapping:
+      - source: collector.financials.revenue_ty
+        target: fundamental.input.financials.revenue.value
+        transformation: "direct (already tỷ VND)"
+        lossless: true
+        status_preservation: true
+        provenance_preservation: true
+        rejection_condition: "if quality_status != VALID and no fallback rule"
+
+      - source: collector.financials.npatmi_ty
+        target: fundamental.input.financials.net_income.value
+        transformation: "verify scope=attributable_to_parent"
+        lossless: true
+        rejection_condition: "scope=total_group without attributable"
+
+      - source: collector.shares_outstanding
+        target: fundamental.input.financials.shares_outstanding.value
+        transformation: "verify split-adjusted"
+        lossless: true
+        rejection_condition: "not split-adjusted when historical comparison needed"
+
+  fundamental_to_valuation:
+    adapter: valuation_export_builder
+    export_fields:
+      metric_id: required
+      value: required (if VALID)
+      status: required
+      period: required
+      scope: required
+      basis: required (for EPS)
+      split_adjusted: required
+      calculation_trace_hash: required
+      provenance_hash: required
+      fundamental_output_hash: required
+      verifier_result_hash: required
+
+    rejection_by_valuation:
+      - "stale fundamental output (hash mismatch)"
+      - "metric status not in [VALID, VALID_NEGATIVE]"
+      - "split_adjusted=false when valuation needs adjusted"
+      - "basis mismatch with valuation's expected basis"
+
+  fundamental_to_parent_report_ir:
+    mapping:
+      - source: fundamental.metric_results
+        target: parent.sections[fundamental].structured_facts.ratios
+        lossless: true
+      - source: fundamental.dupont
+        target: parent.sections[fundamental].structured_facts.dupont
+        lossless: true
+      - source: fundamental.quality_summary
+        target: parent.sections[fundamental].structured_facts.quality
+        lossless: true
+
+    prohibitions:
+      - "parent recalculates metrics with unregistered formula"
+      - "parent changes warning/error severity"
+      - "parent converts INPUT_INCOMPLETE to value"
+      - "parent creates target_price from fundamental section"

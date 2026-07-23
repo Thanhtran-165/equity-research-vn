@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vn-fundamental-analysis/fundamental-input.schema.json",
+  "title": "Fundamental Analysis Input",
+  "type": "object",
+  "required": ["entity", "reporting_context", "financials"],
+  "properties": {
+    "entity": {
+      "type": "object",
+      "required": ["ticker", "company", "exchange", "sector"],
+      "properties": {
+        "ticker": {"type": "string", "minLength": 2, "maxLength": 10},
+        "company": {"type": "string"},
+        "exchange": {"type": "string", "enum": ["HOSE", "HNX", "UPCOM"]},
+        "sector": {"type": "string"}
+      }
+    },
+    "reporting_context": {
+      "type": "object",
+      "required": ["reporting_currency", "periods", "scope"],
+      "properties": {
+        "reporting_currency": {"type": "string", "const": "VND"},
+        "periods": {"type": "array", "items": {"type": "integer"}, "minItems": 3, "maxItems": 10},
+        "scope": {"type": "string", "enum": ["consolidated", "parent_only"]},
+        "fiscal_year_end": {"type": "string"}
+      }
+    },
+    "financials": {
+      "type": "object",
+      "required": ["revenue", "net_income", "total_assets", "equity", "shares_outstanding"],
+      "properties": {
+        "revenue": {"$ref": "#/$defs/metric_array"},
+        "net_income": {"$ref": "#/$defs/metric_array"},
+        "total_assets": {"$ref": "#/$defs/metric_array"},
+        "equity": {"$ref": "#/$defs/metric_array"},
+        "shares_outstanding": {"$ref": "#/$defs/metric_array"},
+        "operating_income": {"$ref": "#/$defs/metric_array"},
+        "gross_profit": {"$ref": "#/$defs/metric_array"},
+        "dividends": {"$ref": "#/$defs/metric_array"},
+        "debt": {"$ref": "#/$defs/metric_array"},
+        "cash": {"$ref": "#/$defs/metric_array"}
+      }
+    },
+    "corporate_actions": {
+      "type": "object",
+      "properties": {
+        "stock_splits": {"type": "array"},
+        "bonus_shares": {"type": "array"},
+        "rights_issues": {"type": "array"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "source_ids": {"type": "array", "items": {"type": "string"}},
+        "metric_source_map": {"type": "object"}
+      }
+    }
+  },
+  "$defs": {
+    "metric_array": {
+      "type": "object",
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "array", "items": {"type": ["number", "null"]}},
+        "unit": {"type": "string"},
+        "period": {"type": "array", "items": {"type": "integer"}},
+        "scope": {"type": "string"},
+        "source_id": {"type": "string"},
+        "quality_status": {"type": "string", "enum": ["VALID", "NOT_APPLICABLE", "MISSING", "REPORTED_ZERO", "SOURCE_CONFLICT"]}
+      }
+    }
+  }
+}
