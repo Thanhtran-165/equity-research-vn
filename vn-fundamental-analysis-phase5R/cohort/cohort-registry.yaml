@@ -1,0 +1,82 @@
+# Cohort Registry — vn-fundamental-analysis Phase 5R
+# 5 primary tickers (5 sectors) + 1 supplementary edge-case ticker.
+# Frozen BEFORE live runs. No substitutions after freeze.
+
+cohort:
+  version: phase5R-v1
+  selection_date: "2026-07-23"
+  candidate_commit: 711c79401
+  frozen_before_live_runs: true
+
+  primary_members:
+
+    - ticker: FPT
+      sector: technology_or_services
+      company: FPT Corporation
+      exchange: HOSE
+      edge_cases: [profitable_company, valid_peer_comparison]
+      peer_set: [CMG, ELC, ITD]
+      selection_rationale: "Large-cap tech, consistent profitability, good peer set"
+
+    - ticker: VCB
+      sector: bank
+      company: Vietcombank
+      exchange: HOSE
+      edge_cases: [profitable_company, banking_NII_revenue_gap]
+      peer_set: [CTG, BID, TCB]
+      selection_rationale: "Largest bank, tests revenue=None (banking NII)"
+
+    - ticker: BVH
+      sector: insurer_or_securities
+      company: Bao Viet Holdings
+      exchange: HOSE
+      edge_cases: [profitable_company, insurance_field_mapping]
+      peer_set: [MIG, BMI, VNR]
+      selection_rationale: "Insurance, alternative NPAT field mapping"
+
+    - ticker: HPG
+      sector: industrial_or_materials
+      company: Hoa Phat Group
+      exchange: HOSE
+      edge_cases: [profitable_company, cyclical_materials]
+      peer_set: [HSG, NKG, VIS]
+      selection_rationale: "Largest steel maker, cyclical"
+
+    - ticker: MWG
+      sector: consumer_or_retail
+      company: Mobile World Investment
+      exchange: HOSE
+      edge_cases: [profitable_company, retail_peer_comparison]
+      peer_set: [DGW, FRT, PET]
+      selection_rationale: "Largest retailer"
+
+  supplementary_edge_case_members:
+
+    - ticker: HSG
+      sector: industrial_or_materials
+      company: Hoa Sen Group
+      exchange: HOSE
+      edge_cases: [negative_earnings_loss_period]
+      peer_set: []
+      selection_rationale: "Steel cyclical, NPAT 2022 = -1068 tỷ (loss period). Tests negative earnings handling + CAGR across zero."
+      periods: [2021, 2022, 2023, 2024, 2025]
+
+# Coverage matrix
+sector_coverage:
+  bank: 1  # VCB
+  insurer_or_securities: 1  # BVH
+  industrial_or_materials: 2  # HPG (primary) + HSG (supplementary)
+  consumer_or_retail: 1  # MWG
+  technology_or_services: 1  # FPT
+
+edge_case_coverage:
+  profitable_company: true  # all 5 primary
+  negative_earnings_or_loss_period: true  # HSG (supplementary, 2022 loss)
+  stock_split_bonus_or_material_share_change: false  # not found in 2021-2025 for selected tickers; covered synthetically
+  negative_or_near_zero_equity: false  # not found in VN large-caps; covered synthetically (Phase 4R3 fixtures)
+  valid_peer_comparison: true  # FPT, HPG, MWG
+
+# Note on gaps:
+# stock_split and near_zero_equity are tested in synthetic fixtures (Phase 4R3).
+# VN large-cap cohort 2021-2025 did not exhibit these cases.
+# HSG provides genuine negative-earnings coverage.

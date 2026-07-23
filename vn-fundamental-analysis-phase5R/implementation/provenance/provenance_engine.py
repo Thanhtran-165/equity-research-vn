@@ -32,14 +32,16 @@ def build_provenance(metric_id: str, input_metrics: Dict[str, MetricInput], year
         # collector_metric_id is the per-slot source_metric_id binding if present, else metric_id
         sm = m.get_binding(year, "source_metric_ids") if year in m.periods else None
         collector_metric_ids.append(sm or m.metric_id)
-        source_ids.append(m.get_binding(year, "source_dates") or m.source_id or f"src:{m.metric_id}")
-        # source_date / source_type bindings
+        # source_id = stable provider source identifier (NOT source_dates which is runtime)
+        source_ids.append(m.source_id or f"src:{m.metric_id}")
+        # source_date / source_type bindings (runtime metadata, not in hash)
         sd = m.get_binding(year, "source_dates") or ""
         st = m.get_binding(year, "source_types") or ""
         source_dates.append(sd)
         source_types.append(st)
         v = m.get_value(year)
-        raw_evidence_parts.append({"role": role, "metric_id": m.metric_id, "year": year, "value": v, "source_id": m.source_id})
+        raw_evidence_parts.append({"role": role, "metric_id": m.metric_id, "year": year, "value": v,
+                                   "source_id": m.source_id, "source_metric_id": sm or m.metric_id})
 
     raw_evidence_hash = _hash(raw_evidence_parts)
     record = ProvenanceRecord(
