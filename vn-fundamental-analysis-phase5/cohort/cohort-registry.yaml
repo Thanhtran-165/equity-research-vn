@@ -1,0 +1,83 @@
+# Cohort Registry — vn-fundamental-analysis Phase 5
+# 5 tickers covering 5 sectors + edge cases.
+
+cohort:
+  version: phase5-v1
+  selection_date: "2026-07-23"
+  ticker_count: 5
+  runs_per_ticker: 2  # 1 live + 1 replay
+  total_runs: 10
+
+  members:
+
+    - ticker: FPT
+      sector: technology_or_services
+      company: FPT Corporation
+      exchange: HOSE
+      edge_cases:
+        - profitable_company
+        - valid_peer_comparison
+      peer_set: [CMG, ELC, ITD]
+      selection_rationale: "Large-cap tech, consistent profitability, good peer set"
+
+    - ticker: VCB
+      sector: bank
+      company: Vietcombank
+      exchange: HOSE
+      edge_cases:
+        - profitable_company
+        - banking_revenue_NII_applicability
+      peer_set: [CTG, BIDV, TCB]
+      selection_rationale: "Largest bank, tests revenue=None (banking NII) applicability gap"
+
+    - ticker: BVH
+      sector: insurer_or_securities
+      company: Bao Viet Holdings
+      exchange: HOSE
+      edge_cases:
+        - profitable_company
+        - insurance_field_mapping
+      peer_set: [MIG, BMI, VNR]
+      selection_rationale: "Insurance, tests alternative NPAT field mapping"
+
+    - ticker: HPG
+      sector: industrial_or_materials
+      company: Hoa Phat Group
+      exchange: HOSE
+      edge_cases:
+        - profitable_company
+        - cyclical_materials
+      peer_set: [HSG, NKG, VIS]
+      selection_rationale: "Largest steel maker, cyclical, tests margin volatility"
+
+    - ticker: MWG
+      sector: consumer_or_retail
+      company: Mobile World Investment
+      exchange: HOSE
+      edge_cases:
+        - profitable_company
+        - retail_peer_comparison
+      peer_set: [DGW, FRT, PET]
+      selection_rationale: "Largest retailer, tests consumer sector metrics"
+
+# Sector coverage
+sector_coverage:
+  bank: 1  # VCB
+  insurer_or_securities: 1  # BVH
+  industrial_or_materials: 1  # HPG
+  consumer_or_retail: 1  # MWG
+  technology_or_services: 1  # FPT
+
+# Edge-case coverage
+required_cases:
+  profitable_company: true  # all 5
+  negative_earnings_or_loss_period: false  # none in current cohort — acceptable for FUNCTIONAL baseline
+  stock_split_bonus_or_material_share_change: false  # none detected in 2021-2025 window
+  negative_or_near_zero_equity: false  # none in current cohort
+  valid_peer_comparison: true  # FPT, HPG, MWG
+
+# Note on missing edge cases:
+# negative_earnings, stock_split, near_zero_equity are tested in synthetic
+# fixtures (Phase 4R3 16/16). Phase 5 focuses on genuine live profitable
+# companies. If owner requires these edge cases live, Phase 5R can add
+# loss-making tickers (e.g., airlines, real estate distress).

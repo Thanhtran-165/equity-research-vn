@@ -246,11 +246,18 @@ def run_fundamental(request: FundamentalRequest) -> Any:
     npm_decision = decisions["NET_PROFIT_MARGIN"]
     if npm_decision.decided_status == MetricStatus.VALID.value and npat is not None and revenue is not None and revenue != 0:
         ok_pa, err_pa, _ = validate_period_alignment(npat_metric, revenue_metric, latest_year) if (npat_metric and revenue_metric) else (True, None, [])
-        ok_sc, err_sc, _ = validate_scope_alignment(npat_metric, revenue_metric, latest_year) if (npat_metric and revenue_metric) else (True, None, [])
+        # Scope check via registered rule NPM_ATTRIBUTABLE_OVER_GROUP_REVENUE
+        n_rs_npm = _binding(npat_metric, latest_year, "reporting_scope_bindings", ReportingScope.CONSOLIDATED.value) if npat_metric else ReportingScope.CONSOLIDATED.value
+        d_rs_npm = _binding(revenue_metric, latest_year, "reporting_scope_bindings", ReportingScope.CONSOLIDATED.value) if revenue_metric else ReportingScope.CONSOLIDATED.value
+        n_as_npm = _binding(npat_metric, latest_year, "attribution_scope_bindings", AttributionScope.ATTRIBUTABLE_TO_PARENT.value) if npat_metric else AttributionScope.ATTRIBUTABLE_TO_PARENT.value
+        d_as_npm = _binding(revenue_metric, latest_year, "attribution_scope_bindings", AttributionScope.TOTAL_GROUP.value) if revenue_metric else AttributionScope.TOTAL_GROUP.value
+        ok_sc, err_sc, npm_scope_warn = validate_scope_with_rule("NET_PROFIT_MARGIN", n_rs_npm, d_rs_npm, n_as_npm, d_as_npm)
         pk = _binding(npat_metric, latest_year, "period_kind_bindings", PeriodType.ANNUAL.value) if npat_metric else PeriodType.ANNUAL.value
-        rs = _binding(npat_metric, latest_year, "reporting_scope_bindings", ReportingScope.CONSOLIDATED.value) if npat_metric else ReportingScope.CONSOLIDATED.value
-        as_ = _binding(npat_metric, latest_year, "attribution_scope_bindings", AttributionScope.ATTRIBUTABLE_TO_PARENT.value) if npat_metric else AttributionScope.ATTRIBUTABLE_TO_PARENT.value
+        rs = n_rs_npm
+        as_ = n_as_npm
         npm = compute_net_profit_margin(npat, revenue, period_kind=pk, reporting_scope=rs, attribution_scope=as_)
+        if npm_scope_warn and npm_scope_warn not in npm.warnings:
+            npm.warnings.append(npm_scope_warn)
         for ok, err in [(ok_pa, err_pa), (ok_sc, err_sc)]:
             if not ok and err:
                 npm.errors.append(err); npm.status = MetricStatus.ERROR.value

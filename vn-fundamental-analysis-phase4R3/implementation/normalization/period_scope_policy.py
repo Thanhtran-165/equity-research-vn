@@ -66,8 +66,10 @@ def validate_period_alignment(numerator: MetricInput, denominator: MetricInput, 
     warnings = w1 + w2
     if n_kind is None or d_kind is None:
         return False, "PERIOD_OUT_OF_RANGE", warnings
-    # ANNUAL and TTM are compatible (both full-year). Quarterly must match quarter.
-    annual_compatible = {PeriodType.ANNUAL.value, PeriodType.TTM.value, PeriodType.YTD.value}
+    # ANNUAL, TTM, YTD are full-year flow metrics. POINT_IN_TIME is a balance-sheet
+    # stock metric. A flow/stock ratio (ROE = annual income / ending equity) is
+    # standard accounting convention — ANNUAL and POINT_IN_TIME are compatible.
+    annual_compatible = {PeriodType.ANNUAL.value, PeriodType.TTM.value, PeriodType.YTD.value, PeriodType.POINT_IN_TIME.value}
     if n_kind == d_kind:
         return True, None, warnings
     if n_kind in annual_compatible and d_kind in annual_compatible:

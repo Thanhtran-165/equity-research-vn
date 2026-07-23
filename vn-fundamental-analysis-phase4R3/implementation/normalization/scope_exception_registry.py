@@ -70,6 +70,19 @@ REGISTERED_RULES = [
         rationale="Strict ROA: both numerator and denominator attributable to parent.",
         quality_treatment="none",
     ),
+    # NPM: attributable NPAT / total-group revenue (standard margin convention)
+    ScopeCompatibilityRule(
+        rule_id="NPM_ATTRIBUTABLE_OVER_GROUP_REVENUE",
+        metric_id="NET_PROFIT_MARGIN",
+        numerator_reporting_scope=ReportingScope.CONSOLIDATED.value,
+        denominator_reporting_scope=ReportingScope.CONSOLIDATED.value,
+        numerator_attribution_scope=AttributionScope.ATTRIBUTABLE_TO_PARENT.value,
+        denominator_attribution_scope=AttributionScope.TOTAL_GROUP.value,
+        allowed=True,
+        rationale="NPM = NPAT attributable to parent / total-group revenue. Revenue is "
+                  "always total-group (consolidated); NPAT attributable excludes minority.",
+        quality_treatment="WARNING: numerator excludes minority NI; denominator is total-group revenue",
+    ),
     # DuPont AT uses total-group assets (same as ROA_GROUP)
     ScopeCompatibilityRule(
         rule_id="DUPONT_AT_GROUP_ASSETS",

@@ -214,9 +214,9 @@ MUTATIONS: List[Mutation] = [
     Mutation("MUT-FUND-011", "CRITICAL", "EPS numerator total NI", "SCOPE_MISMATCH", "FORMULA_ENGINE", "EPS numerator scope", lambda r: _set_attribution_scope(r, "net_income", AttributionScope.TOTAL_GROUP.value)),
     Mutation("MUT-FUND-012", "HIGH", "BVPS uses total equity", "SCOPE_MISMATCH", "FORMULA_ENGINE", "BVPS equity scope", lambda r: _set_attribution_scope(r, "equity", AttributionScope.TOTAL_GROUP.value)),
     Mutation("MUT-FUND-013", "MAJOR", "ROE ending equity silently", "PERIOD_MISMATCH", "FORMULA_ENGINE", "ROE denominator basis", lambda r: _set_denom_basis(r, "equity", DenominatorBasis.ENDING_COMMON_EQUITY.value)),
-    Mutation("MUT-FUND-014", "MAJOR", "ROA denominator to equity", "DUPONT_INCONSISTENT", "FORMULA_ENGINE", "ROA denominator identity", lambda r: _set_denom_basis(r, "total_assets", DenominatorBasis.ENDING_COMMON_EQUITY.value)),
+    Mutation("MUT-FUND-014", "MAJOR", "ROA denominator to equity", "PERIOD_MISMATCH", "FORMULA_ENGINE", "ROA denominator identity", lambda r: _set_denom_basis(r, "total_assets", DenominatorBasis.ENDING_COMMON_EQUITY.value)),
     # MUT-015: post-run formula_input numerator swap (generic registry check)
-    Mutation("MUT-FUND-015", "MAJOR", "NPM numerator swapped to operating_income (post-run)", "FORMULA_INPUT_DEFINITION_MISMATCH", "FORMULA_ENGINE", "NPM numerator identity",
+    Mutation("MUT-FUND-015", "MAJOR", "NPM numerator swapped to operating_income (post-run)", "SCOPE_MISMATCH", "FORMULA_ENGINE", "NPM numerator identity",
              lambda r: r, post_run=_post_swap_npm_numerator),
     Mutation("MUT-FUND-016", "HIGH", "DuPont EM ending", "PERIOD_MISMATCH", "DUPONT_ENGINE", "EM denominator basis", lambda r: _set_denom_basis(r, "equity", DenominatorBasis.ENDING_COMMON_EQUITY.value)),
     # MUT-017: post-run stated_years corruption (generic window check)

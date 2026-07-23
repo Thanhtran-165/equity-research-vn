@@ -1,0 +1,105 @@
+# Source Mapping — vn-fundamental-analysis Phase 5
+# Maps live vnstock provider fields to canonical MetricInput fields.
+# Every mapping has explicit unit/scale/period/scope/attribution/share_basis.
+
+adapter_version: "phase5-v1"
+provider: vnstock
+provider_source: VCI
+provider_api: "vnstock.api (Vnstock().stock(symbol, source='VCI'))"
+
+# ============================================================
+# FIELD MAPPING: provider → canonical MetricInput
+# ============================================================
+
+mappings:
+
+  # === Income statement ===
+  revenue:
+    provider_field: "net_sales"
+    provider_item_id: "net_sales"
+    canonical_metric_id: "revenue"
+    statement: income_statement
+    raw_unit: VND
+    raw_scale: UNIT           # raw value in VND (not tỷ)
+    normalized_unit: BILLION_VND
+    normalization_factor: 1.0e-9    # VND → tỷ VND
+    period_type: ANNUAL
+    reporting_scope: CONSOLIDATED
+    attribution_scope: TOTAL_GROUP   # revenue is total-group
+    transformation_rule: "RAW_DIVIDE_1E9"
+
+  net_income:
+    provider_field: "attributable_to_parent_company"
+    provider_item_id: "attributable_to_parent_company"
+    canonical_metric_id: "net_income"
+    statement: income_statement
+    raw_unit: VND
+    raw_scale: UNIT
+    normalized_unit: BILLION_VND
+    normalization_factor: 1.0e-9
+    period_type: ANNUAL
+    reporting_scope: CONSOLIDATED
+    attribution_scope: ATTRIBUTABLE_TO_PARENT
+    transformation_rule: "RAW_DIVIDE_1E9"
+    note: "Must use attributable_to_parent_company, NOT net_profit_loss_after_tax (which is total group)"
+
+  # === Balance sheet ===
+  total_assets:
+    provider_field: "Total Assets"
+    provider_item_id: "total_assets"
+    canonical_metric_id: "total_assets"
+    statement: balance_sheet
+    raw_unit: VND
+    raw_scale: UNIT
+    normalized_unit: BILLION_VND
+    normalization_factor: 1.0e-9
+    period_type: POINT_IN_TIME
+    reporting_scope: CONSOLIDATED
+    attribution_scope: TOTAL_GROUP
+    denominator_basis: AVERAGE_TOTAL_ASSETS
+    transformation_rule: "RAW_DIVIDE_1E9"
+
+  equity:
+    provider_field: "Owner's Equity"
+    provider_item_id: "owners_equity"
+    canonical_metric_id: "equity"
+    statement: balance_sheet
+    raw_unit: VND
+    raw_scale: UNIT
+    normalized_unit: BILLION_VND
+    normalization_factor: 1.0e-9
+    period_type: POINT_IN_TIME
+    reporting_scope: CONSOLIDATED
+    attribution_scope: ATTRIBUTABLE_TO_PARENT
+    denominator_basis: AVERAGE_COMMON_EQUITY
+    transformation_rule: "RAW_DIVIDE_1E9"
+
+  # === Shares ===
+  shares_outstanding:
+    provider_field: "issue_share"
+    provider_source: company_overview
+    canonical_metric_id: "shares_outstanding"
+    raw_unit: SHARES
+    raw_scale: UNIT           # raw count (e.g. 1714326422)
+    normalized_unit: BILLION_SHARES
+    normalization_factor: 1.0e-9    # shares → tỷ shares
+    period_type: POINT_IN_TIME
+    share_basis: WEIGHTED_AVERAGE_BASIC
+    transformation_rule: "RAW_DIVIDE_1E9"
+    note: "issue_share is period-end; adapter marks as PERIOD_END_BASIC by default. If weighted-average available, override."
+
+# ============================================================
+# UNIT SCALE CONTRACT
+# ============================================================
+scale_contract:
+  VND_UNIT_to_BILLION_VND: 1.0e-9
+  SHARES_UNIT_to_BILLION_SHARES: 1.0e-9
+  currency: VND
+
+# ============================================================
+# PROVENANCE TEMPLATE
+# ============================================================
+provenance:
+  source_type: "live_provider_vnstock"
+  source_id_template: "vnstock:{ticker}:{statement}:{period}"
+  source_date_template: "{fetch_timestamp}"
