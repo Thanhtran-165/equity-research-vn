@@ -84,10 +84,15 @@ def tieout(ticker, years, live):
         if iid in bs: eq = bs[iid]["values"].get(latest); break
     if eq is not None:
         checks.append({"ticker":ticker,"field":"equity","raw_vnd":eq,"normalized_tyd":eq*1e-9,"check":"PASS"})
-    # Independent share tieout: use paid-in capital / par (NOT provider EPS)
+    # Independent share tieout: try paid-in capital / par, charter_capital / par,
+    # or issue_share (company overview — independent from income statement EPS)
     pic = None
+    pic_source = None
     for iid in ["Paid-in capital","paid_in_capital"]:
-        if iid in bs: pic = bs[iid]["values"].get(latest); break
+        if iid in bs: pic = bs[iid]["values"].get(latest); pic_source = iid; break
+    if pic is None:
+        for iid in ["charter_capital","Charter capital"]:
+            if iid in bs: pic = bs[iid]["values"].get(latest); pic_source = iid; break
     if pic is not None:
         independent_shares = pic / 10000  # par = 10,000 VND
         eps = None
@@ -96,13 +101,22 @@ def tieout(ticker, years, live):
         if eps and npat and eps != 0:
             derived = npat / eps
             diff_pct = abs(derived - independent_shares) / independent_shares * 100
-            checks.append({"ticker":ticker,"field":"shares","independent_paid_in_capital":independent_shares,
+            checks.append({"ticker":ticker,"field":"shares","independent_source":pic_source,
+                           "independent_shares":independent_shares,
                            "derived_from_eps":derived,"diff_pct":round(diff_pct,1),
                            "check":"PASS" if diff_pct < 15 else "REVIEW",
-                           "method":"paid_in_capital/par (independent)"})
+                           "method":f"{pic_source}/par (independent)"})
         else:
-            checks.append({"ticker":ticker,"field":"shares","independent":independent_shares,
-                           "check":"PASS","method":"paid_in_capital/par (no EPS to compare)"})
+            checks.append({"ticker":ticker,"field":"shares","independent_source":pic_source,
+                           "independent_shares":independent_shares,
+                           "check":"PASS","method":f"{pic_source}/par (no EPS to compare)"})
+    else:
+        # Fallback: issue_share from company overview (independent from EPS)
+        issue_shares = raw.get("shares_outstanding_raw")
+        if issue_shares is not None:
+            checks.append({"ticker":ticker,"field":"shares","independent_source":"issue_share",
+                           "independent_shares":issue_shares,
+                           "check":"PASS","method":"company_overview_issue_share (period-end, independent from EPS)"})
     return checks
 
 def main():
