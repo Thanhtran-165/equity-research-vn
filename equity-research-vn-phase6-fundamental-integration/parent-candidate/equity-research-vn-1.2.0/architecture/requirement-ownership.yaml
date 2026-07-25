@@ -1,0 +1,174 @@
+# Requirement Ownership Matrix — Architecture Phase A
+# Each REQ has exactly ONE primary owner. Other layers may check defense-in-depth
+# but must use the SAME contract and applicability decision.
+
+requirement_ownership:
+
+  # === DATA LAYER (deterministic, no model involvement) ===
+  REQ-001:
+    owner: DATA_LAYER
+    description: "Sponsor package tier golden"
+    check: source_pack_readiness.py
+
+  REQ-002:
+    owner: DATA_LAYER
+    description: "≥20 periods from sponsor data"
+    check: source_pack_readiness.py
+
+  REQ-004:
+    owner: DATA_LAYER
+    description: "Real vnstock data, no fabrication"
+    check: period_integrity_gate + data_contract_enforcer
+
+  REQ-PERIOD-INTEGRITY:
+    owner: DATA_LAYER
+    description: "Every (period,value) pair matches raw CSV"
+    check: period_integrity_gate.py
+
+  # === REPORT IR (structured intermediate representation) ===
+  REQ-010:
+    owner: REPORT_IR
+    description: "All tokens replaced, no empty placeholders"
+    check: renderer placeholder substitution completeness
+
+  REQ-019:
+    owner: RENDERER
+    description: "JS syntax valid (node --check)"
+    check: renderer template validation (deterministic → always valid)
+
+  REQ-020:
+    owner: RENDERER
+    description: "Div balance (open = close)"
+    check: renderer template validation
+
+  REQ-028:
+    owner: RENDERER
+    description: "Chart render-readiness (canvas + Chart() match)"
+    check: renderer chart builder output
+
+  # === SECTION VALIDATOR (per-section checks) ===
+  REQ-003:
+    owner: SECTION_VALIDATOR
+    description: "Audit split (Bẫy 5B) — applicability-driven"
+    check: |
+      audit_notes section validator:
+      APPLICABLE → must have adjustment method
+      NOT_APPLICABLE → auto-PASS (no keyword requirement)
+
+  REQ-005:
+    owner: SECTION_VALIDATOR
+    description: "Technical mode ACTIVE"
+    check: tech_active section validator
+
+  REQ-006:
+    owner: SECTION_VALIDATOR
+    description: "Technical mode PROFILE"
+    check: tech_profile section validator
+
+  REQ-007:
+    owner: SECTION_VALIDATOR
+    description: "Neutral descriptive language"
+    check: tech_profile section validator
+
+  REQ-008:
+    owner: SECTION_VALIDATOR
+    description: "News digest with sentiment"
+    check: news section validator
+
+  REQ-009:
+    owner: RENDERER
+    description: "Dashboard from template (22 sections)"
+    check: renderer section container completeness
+
+  REQ-011:
+    owner: RENDERER
+    description: "Canvas height-wrapper"
+    check: renderer chart wrapper (always correct — template-generated)
+
+  REQ-012:
+    owner: RENDERER
+    description: "Charts ≥10, Sections ≥20, Refs ≥10"
+    check: renderer output count validation
+
+  REQ-013:
+    owner: SECTION_VALIDATOR
+    description: "Content depth ≥200 chars per section"
+    check: per-section validator
+
+  REQ-014:
+    owner: SECTION_VALIDATOR
+    description: "3 Special Insights ≥500 chars each"
+    check: insight_1/2/3 validators
+
+  REQ-015:
+    owner: SECTION_VALIDATOR
+    description: "Bull + Bear case balance"
+    check: thesis section validator
+
+  REQ-016:
+    owner: SECTION_VALIDATOR
+    description: "Valuation targets reasonable"
+    check: valuation section validator
+
+  REQ-017:
+    owner: SECTION_VALIDATOR
+    description: "Honest data limitation flag"
+    check: metadata + section validator
+
+  REQ-018:
+    owner: RENDERER
+    description: "Sources ≥10 numbered citations"
+    check: renderer source list output
+
+  # === FINAL VERIFIER (independent, reads final artifact) ===
+  REQ-022:
+    owner: FINAL_VERIFIER
+    description: "Revenue/NPATMI/EPS match data files"
+    check: independent_verifier (reads DATA block)
+
+  REQ-023:
+    owner: FINAL_VERIFIER
+    description: "Balance sheet metrics match"
+    check: independent_verifier
+
+  REQ-024:
+    owner: FINAL_VERIFIER
+    description: "Capex matches cash_flow.json"
+    check: independent_verifier
+
+  REQ-025:
+    owner: FINAL_VERIFIER
+    description: "Valuation multiples recomputed"
+    check: independent_verifier
+
+  REQ-026:
+    owner: FINAL_VERIFIER
+    description: "Chart DATA JS matches data files"
+    check: independent_verifier (with NOT_APPLICABLE carve-out)
+
+  REQ-027:
+    owner: FINAL_VERIFIER
+    description: "External claims flagged"
+    check: independent_verifier (typed qualifier)
+
+  # === DEPLOY GATE ===
+  REQ-021:
+    owner: FINAL_VERIFIER
+    description: "All requirements pass — deploy allowed"
+    check: independent_verifier aggregate
+
+# ============================================================================
+# CROSS-LAYER CONSISTENCY RULES
+# ============================================================================
+consistency_rules:
+  - rule: "audit-split applicability decision must be identical across all layers"
+    enforced_by: "shared applicability engine (single decision_hash)"
+    violates: "RC4 MWG-02 defect (admission NOT_APPLICABLE but verifier keyword-checks)"
+
+  - rule: "revenue NOT_APPLICABLE encoding must be consistent: data contract → report IR → DATA block → verifier"
+    enforced_by: "data contract builder produces canonical encoding; renderer copies it verbatim"
+    violates: "RC4 BVH defect (enforcer skipped, DATA missing revenueStatus)"
+
+  - rule: "chart data must come from DATA block, not model text"
+    enforced_by: "renderer generates Chart() calls from DATA; model has no chart responsibility"
+    violates: "RC4 cascade (model omitted charts → 5 REQ failures)"

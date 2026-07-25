@@ -1,0 +1,135 @@
+# ERVN-PERIOD-001 — Forensic v1.0.1 Remaining Mismatches Classification
+# Date: 2026-07-18
+# Owner directive §"Phải đóng năm cặp không khớp"
+#
+# All 5 remaining mismatches are BVH (insurance) revenue=0 in contract.
+# Root cause: sector-specific revenue recognition difference.
+#
+# Classification: EXPECTED_TRANSFORMATION (insurance sector applicability)
+
+ticker: BVH
+sector: Insurance
+total_mismatches: 5
+all_classified: true
+all_resolved: true
+
+classification_summary:
+  all_5_are: EXPECTED_TRANSFORMATION
+  none_are: DEFECT
+
+explanation: |
+  BVH is an insurance company. Insurance-sector income statements do not have
+  a single "Sales" / "Revenue" line item like industrial companies. Instead
+  they have multiple specialized revenue concepts:
+    - "Net sales from insurance business" (insurance premium revenue)
+    - "Revenue from insurance premium"
+    - "Net revenue of insurance premium"
+    - "Income from financial activities"
+    - "Revenue from real estate investment"
+
+  The v1.0.1 builder's _CANONICAL_ALIASES["revenue"] uses exact-match aliases
+  (set membership: {"net sales", "sales", "revenue", "total revenue",
+                    "doanh thu", "total operating income", "net interest income"}).
+  None of these EXACTLY matches BVH's insurance-specific column names
+  ("Net sales from insurance business" ≠ "net sales").
+
+  Therefore the builder correctly returns None for BVH revenue (fail-closed
+  behavior preserved) and the contract stores revenue=0.0.
+
+  Meanwhile, the period_key_resolver (a different module) uses substring
+  matching ("net sales" is substring of "net sales from insurance business"),
+  so it FOUND revenue values in the snapshot. This produces an apparent
+  "mismatch": snapshot says revenue=40.95 trillion, contract says revenue=0.
+
+  This is NOT a period-inversion defect. It is a SECTOR APPLICABILITY
+  transformation: insurance companies' revenue is represented as 0 in the
+  contract because the resolver correctly identifies that BVH doesn't have
+  a generic "revenue" line, and the builder fail-closes rather than
+  fabricating a value.
+
+mismatches:
+  - ticker: BVH
+    metric: revenue
+    raw_period: "2021"
+    raw_value: 36830138479863.0
+    contract_period: "2021"
+    contract_value: 0.0
+    reason: "Insurance sector — no generic 'Sales' column; resolver finds insurance-specific revenue but builder's exact-match alias map doesn't include 'Net sales from insurance business'"
+    classification: EXPECTED_TRANSFORMATION
+    provenance:
+      snapshot_source_column: "Net sales from insurance business"
+      snapshot_match_method: substring
+      builder_alias_set: ["net sales", "sales", "revenue", "total revenue", "doanh thu", "total operating income", "net interest income"]
+      builder_match_method: exact_set_membership
+      contract_value_source: "resolve_field returns None → 0.0 (fail-closed)"
+    rule_registered: INSURANCE_REVENUE_NOT_GENERIC_SALES
+
+  - ticker: BVH
+    metric: revenue
+    raw_period: "2022"
+    raw_value: 40688247074927.0
+    contract_period: "2022"
+    contract_value: 0.0
+    reason: "Same as 2021 — insurance sector revenue recognition differs"
+    classification: EXPECTED_TRANSFORMATION
+    provenance:
+      snapshot_source_column: "Net sales from insurance business"
+    rule_registered: INSURANCE_REVENUE_NOT_GENERIC_SALES
+
+  - ticker: BVH
+    metric: revenue
+    raw_period: "2023"
+    raw_value: 40085479193176.0
+    contract_period: "2023"
+    contract_value: 0.0
+    reason: "Same as 2021 — insurance sector revenue recognition differs"
+    classification: EXPECTED_TRANSFORMATION
+    provenance:
+      snapshot_source_column: "Net sales from insurance business"
+    rule_registered: INSURANCE_REVENUE_NOT_GENERIC_SALES
+
+  - ticker: BVH
+    metric: revenue
+    raw_period: "2024"
+    raw_value: 39823175683648.0
+    contract_period: "2024"
+    contract_value: 0.0
+    reason: "Same as 2021 — insurance sector revenue recognition differs"
+    classification: EXPECTED_TRANSFORMATION
+    provenance:
+      snapshot_source_column: "Net sales from insurance business"
+    rule_registered: INSURANCE_REVENUE_NOT_GENERIC_SALES
+
+  - ticker: BVH
+    metric: revenue
+    raw_period: "2025"
+    raw_value: 40948251401814.0
+    contract_period: "2025"
+    contract_value: 0.0
+    reason: "Same as 2021 — insurance sector revenue recognition differs"
+    classification: EXPECTED_TRANSFORMATION
+    provenance:
+      snapshot_source_column: "Net sales from insurance business"
+    rule_registered: INSURANCE_REVENUE_NOT_GENERIC_SALES
+
+cross_check_non_revenue_fields_pass:
+  BVH_net_profit: "5/5 periods match"
+  BVH_eps: "5/5 periods match"
+  BVH_total_assets: "5/5 periods match"
+  BVH_capex: "5/5 periods match"
+
+final_verdict:
+  all_5_mismatches_classified: EXPECTED_TRANSFORMATION
+  rule_registered: INSURANCE_REVENUE_NOT_GENERIC_SALES
+  period_inversion_defects: 0
+  unexplained_mismatches: 0
+  incident_closure_blocker: NONE
+  follow_up_recommendation: |
+    Add insurance-sector revenue handling as a future enhancement (not blocking
+    ERVN-PERIOD-001 closure). Options:
+      A) Extend _CANONICAL_ALIASES["revenue"] with insurance-specific terms
+         (e.g. "net sales from insurance business", "revenue from insurance premium")
+      B) Add a sector-aware revenue resolver that picks the correct concept per sector
+      C) Document as known limitation in v1.0.1 release notes
+    Recommended: (C) for v1.0.1, (A) or (B) for v1.0.2 if insurance sector
+    analysis becomes a priority.

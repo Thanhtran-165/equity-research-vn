@@ -1,0 +1,205 @@
+# Section Schema Registry — Architecture Phase A
+# Each section has its own contract: inputs, outputs, validation, applicability
+
+schema_version: "1.0.0-arch-b"
+
+# ============================================================================
+# SHARED APPLICABILITY ENGINE
+# All sections use the same applicability decision (single source of truth)
+# ============================================================================
+applicability_engine:
+  description: |
+    One engine produces applicability decisions for ALL layers:
+    data contract, report IR, section generation, charts, renderer, verifier.
+    Every layer must use the same decision_hash.
+  decision_schema:
+    subject: string        # e.g., "revenue" or "audit_split" or "tech_active"
+    sector: string         # e.g., "Insurance", "Banking", "Technology"
+    applicable: enum [APPLICABLE, NOT_APPLICABLE, CONDITIONAL]
+    rule_id: string        # e.g., INSURANCE_REVENUE_NOT_GENERIC_SALES
+    evidence: object       # why this decision was made
+    decision_hash: string  # sha256 of decision — all layers must match
+
+# ============================================================================
+# SECTION DEFINITIONS
+# ============================================================================
+sections:
+
+  # --- Executive summary ---
+  executive_summary:
+    section_id: executive_summary
+    title: "Tóm tắt điều hành"
+    required: true
+    applicability: ALWAYS_APPLICABLE
+    deterministic_inputs:
+      - ticker
+      - company_name
+      - sector
+      - price
+      - pe
+      - pb
+      - tech_score
+      - key_financial_snapshot
+    model_task: |
+      Viết tóm tắt điều hành 200-300 từ: đầu tư luận điểm chính,
+      rủi ro lớn nhất, catalyst gần nhất. KHÔNG lặp lại số liệu đã có trong bảng.
+    model_output_schema:
+      narrative: string (200-500 chars)
+    validation:
+      min_chars: 200
+      max_chars: 800
+      must_mention: [ticker]
+      forbidden: [narration_prefix, markdown_fence]
+    fallback_on_fail: RETRY_ONCE_THEN_FAIL
+
+  # --- Company profile ---
+  company_profile:
+    section_id: company_profile
+    title: "Hồ sơ doanh nghiệp"
+    required: true
+    applicability: ALWAYS_APPLICABLE
+    deterministic_inputs: [ticker, company_name, sector, industry, exchange]
+    model_task: |
+      Mô tả hoạt động kinh doanh chính, sản phẩm/dịch vụ cốt lõi,
+      vị thế thị trường. 200-400 từ.
+    model_output_schema:
+      narrative: string (200-600 chars)
+    validation:
+      min_chars: 200
+      forbidden: [raw_financial_numbers]
+    fallback_on_fail: RETRY_ONCE_THEN_FAIL
+
+  # --- Financial overview (deterministic table + model narrative) ---
+  financial_overview:
+    section_id: financial_overview
+    title: "Tổng quan tài chính 5 năm"
+    required: true
+    applicability: CONDITIONAL_ON_REVENUE
+    applicability_rules:
+      - condition: "revenue.status == NOT_APPLICABLE"
+        result: NOT_APPLICABLE
+        reason: INSURANCE_REVENUE_NOT_GENERIC_SALES
+        replacement_section: insurance_financial_overview
+    deterministic_inputs:
+      - revenue.values (or null if NOT_APPLICABLE)
+      - net_profit.values
+      - eps.values
+      - total_assets.values
+      - total_equity.values
+      - capex.values
+    deterministic_table: true   # renderer builds the 5-year table
+    model_task: |
+      Diễn giải xu hướng doanh thu/lợi nhuận/EPS 5 năm.
+      KHÔNG lặp lại số liệu trong bảng. Tập vào: xu hướng, biến động, nguyên nhân.
+      200-400 từ.
+    model_output_schema:
+      narrative: string (200-600 chars)
+    validation:
+      min_chars: 200
+      must_not_claim: ["doanh thu bằng 0"]  # when NOT_APPLICABLE
+    fallback_on_fail: RETRY_ONCE_THEN_FAIL
+
+  # --- Valuation ---
+  valuation:
+    section_id: valuation
+    title: "Định giá"
+    required: true
+    applicability: ALWAYS_APPLICABLE
+    deterministic_inputs: [pe, pb, graham, price, eps, bvps, pe_hist, pb_hist]
+    deterministic_table: true
+    model_task: |
+      Đánh giá PE/PB so với trung bình ngành và lịch sử.
+      Nhận định đắt/rẻ/hợp lý. 150-300 từ.
+    validation:
+      min_chars: 150
+
+  # --- Balance sheet ---
+  balance_sheet:
+    section_id: balance_sheet
+    title: "Bảng cân đối kế toán"
+    required: true
+    applicability: ALWAYS_APPLICABLE
+    deterministic_inputs: [total_assets.values, total_equity.values]
+    deterministic_table: true
+    model_task: |
+      Phân tích cấu trúc tài sản, đòn bẩy, chất lượng bảng cân đối.
+      150-300 từ.
+    validation:
+      min_chars: 150
+
+  # --- Risk ---
+  risk:
+    section_id: risk
+    title: "Rủi ro"
+    required: true
+    applicability: ALWAYS_APPLICABLE
+    deterministic_inputs: [sector, key_metrics]
+    model_task: |
+      Nêu 3-5 rủi ro chính (kinh doanh, tài chính, thị trường, pháp lý).
+      Mỗi rủi ro 50-100 từ.
+    validation:
+      min_chars: 300
+      min_risks: 3
+
+  # --- Audit notes (REQ-003 replacement) ---
+  audit_notes:
+    section_id: audit_notes
+    title: "Ghi chú kiểm toán / Điều chỉnh"
+    required: true
+    applicability: CONDITIONAL_ON_CORPORATE_ACTION
+    applicability_rules:
+      - condition: "no corporate action detected in events.csv / overview.json"
+        result: NOT_APPLICABLE
+        reason: NO_RELEVANT_CORPORATE_ACTION_EVIDENCE
+      - condition: "corporate action detected"
+        result: APPLICABLE
+        required_content: [adjustment_method, raw_vs_adjusted, affected_periods]
+    deterministic_inputs: [events.csv, overview.json, share_count_history]
+    model_task: |
+      Nếu có corporate action (stock split, bonus shares, rights issue):
+      mô tả điều chỉnh EPS/shares. Nếu không có: "Không có điều chỉnh cổ phiếu
+      đáng kể trong kỳ phân tích."
+    validation:
+      applicability_driven: true   # PASS automatically when NOT_APPLICABLE
+
+  # --- Bull/Bear thesis ---
+  thesis:
+    section_id: thesis
+    title: "Luận điểm đầu tư"
+    required: true
+    applicability: ALWAYS_APPLICABLE
+    model_task: |
+      Trình bày luận điểm Bull (3 điểm) và Bear (3 điểm).
+      Cân bằng, không thiên vị.
+    validation:
+      min_chars: 300
+      must_have_both_sides: true
+
+  # --- Technical analysis (active mode) ---
+  tech_active:
+    section_id: tech_active
+    title: "Phân tích kỹ thuật (Active)"
+    required: true
+    applicability: CONDITIONAL_ON_TECH_MODE
+    applicability_rules:
+      - condition: "technical_mode == ACTIVE"
+        result: APPLICABLE
+      - condition: "technical_mode != ACTIVE"
+        result: NOT_APPLICABLE
+    deterministic_inputs: [tech_score, tech_verdict, ma50, ma20, rsi, macd, price_52w]
+    model_task: |
+      Diễn giải Tech Score, xu hướng ngắn hạn, tín hiệu MA/RSI/MACD.
+      150-250 từ.
+    validation:
+      applicability_driven: true
+
+  # --- Sources ---
+  sources:
+    section_id: sources
+    title: "Nguồn tham khảo"
+    required: true
+    applicability: ALWAYS_APPLICABLE
+    deterministic_inputs: [source_list, access_dates]
+    model_task: NONE   # fully deterministic — renderer builds from source list
+    validation:
+      min_sources: 10

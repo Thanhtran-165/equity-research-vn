@@ -1,0 +1,92 @@
+# Deterministic Renderer Contract — Architecture Phase A
+# Defines what the renderer is responsible for and what it is NOT.
+
+renderer_version: "1.0.0-arch-b"
+
+# ============================================================================
+# RESPONSIBILITY BOUNDARY
+# ============================================================================
+# Renderer builds: HTML shell + DATA + charts + JS + tables + navigation
+# Model builds: section narrative text only (inserted into deterministic containers)
+# ============================================================================
+
+deterministic_outputs:
+  html_shell:
+    description: "Complete HTML document structure with <head>, <body>, <nav>, section containers"
+    template: dashboard_template.html (modified to use section slots)
+    model_input: NONE
+
+  section_containers:
+    description: "Each section has a <section id='sec-X'><div class='narrative-slot'></div></section>"
+    model_input: NONE
+    note: "Model narrative is inserted into .narrative-slot via string replacement"
+
+  data_block:
+    description: "const DATA = {...} generated from verified-dashboard-data.json"
+    source: data_contract_enforcer.py (preserved from hotfix)
+    model_input: NONE
+    null_handling: |
+      When metric status=NOT_APPLICABLE:
+      revenue: null,
+      revenueStatus: "NOT_APPLICABLE",
+      revenueApplicabilityRule: "<rule>"
+
+  chart_javascript:
+    description: "All new Chart() calls generated from chart definitions in report IR"
+    source: chart_builder.py (NEW — deterministic)
+    model_input: NONE
+    template: |
+      if ($('chartId')) new Chart($('chartId'), {
+        type: 'bar',
+        data: { labels: DATA.years, datasets: [{ data: DATA.metricName }] },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+  chart_wrappers:
+    description: "Every canvas wrapped in <div class='chart-wrap'>"
+    model_input: NONE
+
+  tables:
+    description: "5-year financial tables built from data contract"
+    model_input: NONE
+
+  navigation:
+    description: "Sidebar/topbar nav with section links"
+    model_input: NONE
+
+  footnotes:
+    description: "Source citations built from source list"
+    model_input: NONE
+
+# ============================================================================
+# MODEL OUTPUT INSERTION
+# ============================================================================
+model_insertion:
+  method: "string replacement"
+  pattern: "{{NARRATIVE:section_id}}"
+  description: |
+    Renderer outputs HTML with placeholders like {{NARRATIVE:executive_summary}}.
+    Model generates section narratives as plain text (no HTML).
+    Pipeline replaces each placeholder with model's narrative text.
+  safety: |
+    Model narrative is HTML-escaped before insertion.
+    Model cannot inject scripts, HTML tags, or modify DOM structure.
+    Maximum narrative length enforced per section.
+
+# ============================================================================
+# NOT RENDERER'S RESPONSIBILITY
+# ============================================================================
+not_renderer:
+  - financial calculations (done by data contract builder)
+  - period mapping (done by period_key_resolver)
+  - applicability decisions (done by shared applicability engine)
+  - narrative quality (done by section validators)
+  - requirement checking (done by verifier)
+
+# ============================================================================
+# JS SAFETY
+# ============================================================================
+js_safety:
+  node_check: "Always passes because JS is template-generated, not model-generated"
+  template_validation: "Templates validated once at build time, not per-run"
+  dynamic_values: "Only DATA values are dynamic (numbers), inserted via JSON serialization"

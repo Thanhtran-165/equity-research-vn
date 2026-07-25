@@ -1,0 +1,52 @@
+{
+  "date": "2026-07-19",
+  "candidate": "equity-research-vn-1.0.1-rc2",
+  "candidate_hash": "04f3005f1cd90609ef79862a7aea183c9d33871c8c99215271a6895bc966b0bf",
+  "drill_type": "PERIOD_VALUE_INVERSION injection + detect + restore + insurance LKG",
+  "results": {
+    "s1_build_clean_lkg": {
+      "lkg_built": true,
+      "lkg_gate_pass": true,
+      "lkg_hash": "154de171bbabae00a1dae6a0ee24e89e",
+      "schema_version": "0.2.0-rc2"
+    },
+    "s2_inject_defect": {
+      "defect_injected": true,
+      "fields_reversed": [
+        "revenue",
+        "netProfit",
+        "eps",
+        "totalAssets",
+        "equity",
+        "capex"
+      ]
+    },
+    "s3_gate_detects_defect": {
+      "gate_returned_nonzero": true,
+      "exit_code": 1,
+      "stdout_tail": "  net_profit        : [\u2717] 1/5 periods match (csv col: Net profit/(loss) after tax)\n  eps               : [\u2717] 1/5 periods match (csv col: EPS basic (VND))\n  total_assets      : [\u2717] 1/5 periods match (csv col: Total Assets)\n  total_equity      : [\u2717] 1/5 periods match (csv col: Owner's Equity)\n  capex             : [\u2717] 1/5 periods match (csv col: Purchases of fixed assets and other long term assets)\n"
+    },
+    "s4_deployment_blocked": {
+      "deployment_blocked": true,
+      "reason": "REQ-PERIOD-INTEGRITY FAIL"
+    },
+    "s5_restore_lkg": {
+      "restored": true,
+      "hash_matches_lkg": true,
+      "restored_hash": "154de171bbabae00a1dae6a0ee24e89e"
+    },
+    "s6_smoke_validation": {
+      "smoke_pass": true,
+      "exit_code": 0
+    },
+    "s7_insurance_lkg_drill": {
+      "bvh_lkg_built": true,
+      "bvh_lkg_gate_pass": true,
+      "bvh_revenue_null_verified": true
+    }
+  },
+  "all_steps_pass": true,
+  "diff_from_rc1_drill": [
+    "Added STEP 7 (insurance/BVH LKG drill \u2014 RC2 specific)"
+  ]
+}

@@ -1,0 +1,242 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Equity Research Report Intermediate Representation",
+  "description": "Structured IR for deterministic shell + section-level model generation (Option B)",
+  "type": "object",
+  "required": ["schema_version", "metadata", "reporting_scope", "financial_data", "sections", "charts", "validation"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0-arch-b",
+      "description": "Pinned to architecture Option B"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["ticker", "company_name", "sector", "generated_at"],
+      "properties": {
+        "ticker": {"type": "string", "minLength": 2, "maxLength": 10},
+        "company_name": {"type": "string"},
+        "sector": {"type": "string"},
+        "industry": {"type": "string"},
+        "exchange": {"type": "string", "enum": ["HOSE", "HNX", "UPCOM"]},
+        "generated_at": {"type": "string", "format": "date-time"},
+        "source_snapshot_hashes": {
+          "type": "object",
+          "additionalProperties": {"type": "string"},
+          "description": "sha256 of each source file used"
+        }
+      }
+    },
+    "reporting_scope": {
+      "type": "object",
+      "required": ["statement_scope", "currency", "unit", "annual_periods"],
+      "properties": {
+        "statement_scope": {"type": "string", "enum": ["consolidated", "parent_only"]},
+        "currency": {"type": "string", "const": "VND"},
+        "unit": {"type": "string", "enum": ["raw", "thousands", "millions"]},
+        "annual_periods": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 2000, "maximum": 2100},
+          "minItems": 3,
+          "maxItems": 10,
+          "description": "e.g., [2021, 2022, 2023, 2024, 2025]"
+        },
+        "quarterly_periods": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "e.g., ['2025-Q1', '2025-Q2']"
+        }
+      }
+    },
+    "financial_data": {
+      "type": "object",
+      "required": ["metrics"],
+      "properties": {
+        "metrics": {
+          "type": "object",
+          "description": "Canonical field → period-value mapping",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["canonical_field", "values", "status"],
+            "properties": {
+              "canonical_field": {"type": "string"},
+              "values": {
+                "type": "object",
+                "patternProperties": {
+                  "^\\d{4}$": {"type": ["number", "null"]}
+                },
+                "description": "period → value (null when NOT_APPLICABLE)"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["VALID", "NOT_APPLICABLE", "MISSING", "REPORTED_ZERO", "SUSPECT_ZERO_OR_MISSING", "SOURCE_CONFLICT", "NOT_REPORTED"]
+              },
+              "applicability_rule": {
+                "type": ["string", "null"],
+                "description": "e.g., INSURANCE_REVENUE_NOT_GENERIC_SALES when status=NOT_APPLICABLE"
+              },
+              "provenance": {
+                "type": "object",
+                "properties": {
+                  "source_id": {"type": "string"},
+                  "source_type": {"type": "string"},
+                  "accessed_at": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "derived_metrics": {
+      "type": "object",
+      "description": "Calculated from financial_data (deterministic, not model-generated)",
+      "properties": {
+        "growth": {
+          "type": "object",
+          "additionalProperties": {"type": ["number", "null"]}
+        },
+        "margins": {
+          "type": "object",
+          "additionalProperties": {"type": ["number", "null"]}
+        },
+        "valuation": {
+          "type": "object",
+          "properties": {
+            "pe": {"type": ["number", "null"]},
+            "pb": {"type": ["number", "null"]},
+            "graham": {"type": ["number", "null"]},
+            "pe_hist": {"type": "array", "items": {"type": ["number", "null"]}},
+            "pb_hist": {"type": "array", "items": {"type": ["number", "null"]}}
+          }
+        },
+        "scores": {
+          "type": "object",
+          "properties": {
+            "tech_score": {"type": "integer", "minimum": -6, "maximum": 6},
+            "tech_verdict": {"type": "string"}
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "description": "Each section is independently generated and validated",
+      "items": {
+        "type": "object",
+        "required": ["section_id", "title", "applicability", "validation_status"],
+        "properties": {
+          "section_id": {
+            "type": "string",
+            "enum": [
+              "executive_summary", "company_profile", "industry_overview",
+              "history", "segment", "thesis", "valuation", "peers",
+              "balance_sheet", "risk", "scenario", "checklist",
+              "insight_1", "insight_2", "insight_3",
+              "tech_active", "tech_profile", "analyst_notes",
+              "glossary", "sources"
+            ]
+          },
+          "title": {"type": "string"},
+          "required": {"type": "boolean", "default": true},
+          "applicability": {
+            "type": "string",
+            "enum": ["APPLICABLE", "NOT_APPLICABLE", "CONDITIONAL"],
+            "description": "Determined by shared applicability engine, not by individual gates"
+          },
+          "applicability_rule": {"type": ["string", "null"]},
+          "structured_facts": {
+            "type": "object",
+            "description": "Deterministic facts provided to model as inputs (read-only)",
+            "additionalProperties": true
+          },
+          "narrative": {
+            "type": "string",
+            "description": "Model-generated narrative (the ONLY model output for this section)",
+            "minLength": 0
+          },
+          "warnings": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "validation_status": {
+            "type": "string",
+            "enum": ["PENDING", "PASS", "FAIL", "RETRY_EXHAUSTED", "SKIPPED_NOT_APPLICABLE"]
+          }
+        }
+      },
+      "minItems": 15
+    },
+    "charts": {
+      "type": "array",
+      "description": "Deterministic chart definitions — renderer generates JS, not model",
+      "items": {
+        "type": "object",
+        "required": ["chart_id", "chart_type", "source_metrics", "applicability"],
+        "properties": {
+          "chart_id": {"type": "string"},
+          "chart_type": {"type": "string", "enum": ["bar", "line", "scatter", "doughnut", "mixed"]},
+          "source_metrics": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "period_value_pairs": {
+            "type": "object",
+            "patternProperties": {
+              "^\\d{4}$": {"type": ["number", "null"]}
+            }
+          },
+          "applicability": {
+            "type": "string",
+            "enum": ["VALID", "NOT_APPLICABLE"]
+          },
+          "title": {"type": "string"},
+          "annotations": {
+            "type": "array",
+            "items": {"type": "object"}
+          }
+        }
+      }
+    },
+    "external_claims": {
+      "type": "array",
+      "description": "Claims about non-sourced data (store counts, market share, etc.)",
+      "items": {
+        "type": "object",
+        "required": ["text", "qualifier_type"],
+        "properties": {
+          "text": {"type": "string"},
+          "source": {"type": "string", "enum": ["model_knowledge", "web", "company_disclosure"]},
+          "qualifier_type": {
+            "type": "string",
+            "enum": ["APPROXIMATE", "LOWER_BOUND", "UPPER_BOUND", "ATTRIBUTED", "UNQUALIFIED"]
+          },
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "required": ["section_results", "deterministic_gate_results"],
+      "properties": {
+        "unresolved_items": {
+          "type": "array",
+          "items": {"type": "object"}
+        },
+        "section_results": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "enum": ["PASS", "FAIL", "PENDING", "SKIPPED"]}
+        },
+        "deterministic_gate_results": {
+          "type": "object",
+          "properties": {
+            "period_integrity": {"type": "string", "enum": ["PASS", "FAIL"]},
+            "data_alignment": {"type": "string", "enum": ["PASS", "FAIL"]},
+            "applicability_consistency": {"type": "string", "enum": ["PASS", "FAIL"]},
+            "chart_data_alignment": {"type": "string", "enum": ["PASS", "FAIL"]}
+          }
+        }
+      }
+    }
+  }
+}
