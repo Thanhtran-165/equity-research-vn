@@ -1,0 +1,180 @@
+# VTA Phase 3 — Implementation Scope
+# Per OWNER DIRECTIVE Section 1, 10, 11, 12
+# DESIGN ONLY — no implementation code
+
+implementation_scope:
+  version: "1.0.0"
+  frozen_at: '2026-07-28'
+  canonical_readiness_commit: d75a9a3ac56db642ff8fa5623898ea7f4733222a
+
+  authorization_boundary:
+    workstream: vn-technical-analysis
+    phase: PHASE_3_IMPLEMENTATION_REVIEW
+    review_artifacts_authorized: true
+    implementation_code_authorized: false
+    independent_verifier_code_authorized: false
+    executable_fixture_authorized: false
+    production_integration_authorized: false
+
+  # === Section 10: Proposed implementation architecture ===
+  proposed_modules:
+
+    - module_path: implementation/normalization_engine.py
+      responsibility: "Input validation, dedup, sort, price-basis selection, adjustment verification"
+      public_interfaces:
+        - "normalize_input(raw_ohlcv, mode) → NormalizedInput"
+        - "verify_price_basis(input, calculation_type) → PriceBasisResult"
+      owned_formula_ids: [F-MA, F-BOLLINGER, F-PERCENTILE]
+      owned_requirement_ids: [VTA-REQ-004, VTA-REQ-012]
+      owned_VC_ids: [VC-EMPTY-SERIES-1, VC-INHIST-1, VC-DUP-TS-1, VC-UNSORTED-1,
+                     VC-MISS-INT-1, VC-ZERO-PX-1, VC-ZERO-VOL-1, VC-CORP-ACT-1,
+                     VC-PRICE-BASIS-1, VC-PRICE-BASIS-2, VC-PRICE-BASIS-3,
+                     VC-FAB-VAL-1, VC-NO-FAB-1, VC-NO-FAB-2]
+      dependencies: [market_data_packet_schema]
+      prohibited_dependencies: [production_decision_functions]
+
+    - module_path: implementation/indicator_engine.py
+      responsibility: "Compute 6 ACTIVE + PROFILE indicators with frozen formula semantics"
+      public_interfaces:
+        - "compute_rsi(close_series, period=14) → RSIResult"
+        - "compute_bollinger(close_series, window=20, multiplier=2) → BollingerResult"
+        - "compute_ma(close_series, period, ma_type) → MAResult"
+        - "compute_macd(close_series) → MACDResult"
+        - "compute_beta(stock_returns, market_returns, window=52) → BetaResult"
+        - "compute_cmf(hlcv, window=20) → CMFResult"
+      owned_formula_ids: [F-RSI, F-BOLLINGER, F-MA, F-MACD, F-BETA, F-CMF]
+      owned_requirement_ids: [VTA-REQ-001, VTA-REQ-005, VTA-REQ-006, VTA-REQ-007, VTA-REQ-014]
+      owned_VC_ids: [VC-RSI-WILDER-1, VC-RSI-WILDER-2, VC-WRONG-SMOOTH-1,
+                     VC-BOLL-1, VC-BOLL-2, VC-CHANNEL-1, VC-CHANNEL-2,
+                     VC-WRONG-LOOKBACK-1, VC-DIV-ZERO-1, VC-NAN-PROP-1,
+                     VC-OBV-VPT-1, VC-OBV-VPT-2]
+      dependencies: [normalization_engine]
+      prohibited_dependencies: [pattern_engine, verifier]
+
+    - module_path: implementation/profile_engine.py
+      responsibility: "Compute 17 PROFILE blocks + 8 bullish + 5 bearish setups + archetype classification"
+      public_interfaces:
+        - "compute_profile_block(block_id, normalized_input) → BlockResult"
+        - "detect_setup(setup_id, profile_context) → SetupResult"
+        - "classify_archetype(profile_context) → ArchetypeResult"
+      owned_formula_ids: [F-VPCI, F-VAR-ES, F-HVB, F-ALPHA, F-HV]
+      owned_requirement_ids: [VTA-REQ-002, VTA-REQ-009, VTA-REQ-009a, VTA-REQ-013]
+      owned_VC_ids: [VC-PROFILE-VALID-1, VC-PROFILE-VALID-2, VC-PROFILE-VALID-3,
+                     VC-PROFILE-VALID-4, VC-EVENTS-1Y-1, VC-COV-1, VC-COV-2,
+                     VC-CONFLICT-SETUP-1, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1,
+                     VC-ARCH-AMBIG-1, VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2,
+                     VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4]
+      dependencies: [indicator_engine]
+      prohibited_dependencies: [verifier]
+
+    - module_path: implementation/language_verifier.py
+      responsibility: "3-layer non-advice language check (lexical + semantic + imperative)"
+      public_interfaces:
+        - "check_language(output_text) → LanguageCheckResult"
+      owned_formula_ids: []
+      owned_requirement_ids: [VTA-REQ-003]
+      owned_VC_ids: [VC-REQ007-LEXICAL, VC-REQ007-SEMANTIC, VC-REQ007-NEGATION,
+                     VC-REQ007-IMPERATIVE, VC-ADV-LANG-1]
+      dependencies: []
+      prohibited_dependencies: []
+
+    - module_path: implementation/output_assembler.py
+      responsibility: "Assemble mode-specific output, schema validation, provenance generation"
+      public_interfaces:
+        - "assemble_output(mode, computed_results) → OutputPacket"
+        - "validate_schema(output_packet, schema) → ValidationResult"
+      owned_formula_ids: []
+      owned_requirement_ids: [VTA-REQ-008, VTA-REQ-010]
+      owned_VC_ids: [VC-SCHEMA-DRIFT-1, VC-MODE-CONTAM-1, VC-MODE-SEP-1,
+                     VC-MODE-SEP-2, VC-MODE-SEP-3, VC-MODE-KERNEL-1,
+                     VC-PROV-1, VC-PROV-2, VC-PROV-MISS-1,
+                     VC-ACTIVE-VALID-1, VC-ACTIVE-VALID-2, VC-ACTIVE-VALID-3]
+      dependencies: [indicator_engine, profile_engine, language_verifier]
+      prohibited_dependencies: [verifier]
+
+    - module_path: implementation/integration_adapter.py
+      responsibility: "Parent integration (Phase 4a/4b handoff), boundary enforcement"
+      public_interfaces:
+        - "handoff_to_parent(output_packet) → ParentHandoff"
+        - "enforce_valuation_boundary(output_packet) → BoundaryCheck"
+      owned_formula_ids: []
+      owned_requirement_ids: [VTA-REQ-011]
+      owned_VC_ids: [VC-VAL-BOUND-1, VC-VAL-BOUND-2, VC-VAL-OVERRIDE-1]
+      dependencies: [output_assembler]
+      prohibited_dependencies: [parent_valuation_engine]
+
+    - module_path: implementation/runner.py
+      responsibility: "Orchestrate full pipeline: fetch → normalize → compute → assemble → output"
+      public_interfaces:
+        - "run_active(ticker, weekly_data) → ActiveOutput"
+        - "run_profile(ticker, daily_data) → ProfileOutput"
+      owned_formula_ids: []
+      owned_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      owned_VC_ids: [VC-LOOKAHEAD-1, VC-BENCH-MISALIGN-1, VC-PARTIAL-WEEK-1]
+      dependencies: [all implementation modules]
+      prohibited_dependencies: [verifier]
+
+  # === Section 7: Independent verifier architecture ===
+  independent_verifier_architecture:
+    proposed_entrypoint: "verifier/vta_verifier.py"
+    proposed_modules:
+      - verifier/formula_conformance.py
+      - verifier/schema_conformance.py
+      - verifier/provenance_integrity.py
+      - verifier/setup_semantics.py
+      - verifier/language_policy.py
+      - verifier/boundary_enforcement.py
+
+    input_artifacts:
+      - "production output packet (JSON)"
+      - "frozen input fixtures (JSON)"
+      - "formula contracts (YAML)"
+      - "failure code registry (YAML)"
+
+    output_artifacts:
+      - "verification result (JSON with per-VC pass/fail + failure codes)"
+      - "determinism log (JSONL)"
+
+    forbidden_dependencies:
+      - production implementation as expected-output oracle
+      - runtime-generated expected outputs
+      - self-generated fixtures
+      - import of production decision functions
+      - silent network access
+      - mutable external data
+
+    oracle_independence:
+      mathematical_contracts_frozen_before_implementation: true
+      expected_outputs_frozen_before_qualification: true
+      expected_failure_codes_predeclared: true
+      fixtures_not_generated_by_production_code: true
+      verifier_does_not_import_production_decision_logic: true
+
+  # === Section 11: Future implementation sequence ===
+  future_commit_roles:
+    readiness_freeze_commit: d75a9a3ac56db642ff8fa5623898ea7f4733222a
+    implementation_review_freeze_commit: TO_BE_FILLED
+    implementation_specification_acceptance_commit: FUTURE
+    implementation_commit: FUTURE
+    fixture_freeze_commit: FUTURE
+    qualification_evidence_commit: FUTURE
+
+  future_lineage_rules:
+    implementation_before_spec_acceptance: prohibited
+    fixture_changes_after_fixture_freeze: prohibited
+    verifier_changes_after_fixture_freeze: prohibited
+    evidence_commit_may_change_implementation: false
+    backward_pooling: prohibited
+
+  # === Section 12: Cross-workstream isolation ===
+  scope_isolation:
+    rendering_files_modified: 0
+    rendering_control_ids_reused: 0
+    equity_research_files_modified: 0
+    equity_requirement_ids_modified: 0
+    historical_phase_1_files_modified: 0
+    historical_phase_2A_files_modified: 0
+    historical_phase_2B_files_modified: 0
+    implementation_code_added: 0
+    verifier_code_added: 0
+    executable_fixtures_added: 0

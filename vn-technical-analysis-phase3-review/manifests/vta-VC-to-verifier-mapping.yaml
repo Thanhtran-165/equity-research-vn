@@ -1,0 +1,1564 @@
+# VTA Phase 3 Implementation Review — VC → Verifier Mapping
+# Per OWNER DIRECTIVE (Implementation Review deliverable)
+#
+# DESIGN ONLY — no implementation code.
+# Maps each of the 64 unique VCs (after VC-FAB-VAL-1 MERGE) to its proposed
+# verifier module, verifier function, fixture design, expected outcomes, and
+# oracle source.
+#
+# Canonical inputs:
+#   - verifier-obligation-matrix.yaml (65 records, frozen 2026-07-25)
+#   - vta-vc-duplicate-resolution.yaml (MERGE_TRUE_DUPLICATES → 64 unique)
+#   - failure-mode-coverage-plan.yaml (mutation test classes)
+#   - oracle-disposition-registry.yaml (oracle sources)
+
+vc_to_verifier_mapping:
+  version: "1.0.0"
+  frozen_at: "2026-07-28"
+  phase: PHASE_3_IMPLEMENTATION_REVIEW
+  artifact_class: DESIGN
+
+  canonical_inputs:
+    verifier_obligation_matrix:
+      path: vn-technical-analysis-phase2B/manifests/verifier-obligation-matrix.yaml
+      version: "1.0.0"
+      frozen_at: "2026-07-25"
+      total_records: 65
+    duplicate_resolution:
+      path: vn-technical-analysis-phase3-readiness/manifests/vta-vc-duplicate-resolution.yaml
+      resolution: MERGE_TRUE_DUPLICATES
+      merged_id: VC-FAB-VAL-1
+      records_after_merge: 64
+    failure_mode_coverage:
+      path: vn-technical-analysis-phase2B/manifests/failure-mode-coverage-plan.yaml
+      version: "1.0.0"
+    oracle_disposition:
+      path: vn-technical-analysis-phase2B/manifests/oracle-disposition-registry.yaml
+      version: "1.0.0"
+
+  authorization_boundary:
+    verifier_code_authorized: false
+    design_artifact_authorized: true
+    note: >
+      This artifact describes PROPOSED verifier modules and functions only.
+      Per vta-phase-3-implementation-scope.yaml Section 7, no .py verifier
+      files exist. All implementation_surface entries are PROPOSED targets.
+
+  # ==================================================================
+  # Verifier architecture (PROPOSED — per implementation-scope Section 7)
+  # ==================================================================
+
+  proposed_verifier_architecture:
+    entrypoint: "verifier/vta_verifier.py"
+    modules:
+      - verifier/schema_conformance.py
+      - verifier/formula_conformance.py
+      - verifier/provenance_integrity.py
+      - verifier/setup_semantics.py
+      - verifier/language_policy.py
+      - verifier/boundary_enforcement.py
+    oracle_independence:
+      mathematical_contracts_frozen_before_implementation: true
+      expected_outputs_frozen_before_qualification: true
+      expected_failure_codes_predeclared: true
+      fixtures_not_generated_by_production_code: true
+      forbidden_oracle: "production implementation as expected-output oracle"
+
+  # ==================================================================
+  # Verifier checks (64 unique VCs)
+  # Grouped by primary category per duplicate-resolution merged_record.
+  # ==================================================================
+
+  verifier_checks:
+
+    # ============================================================
+    # INPUT_PRE_FLIGHT (14)
+    # ============================================================
+
+    - VC_id: VC-EMPTY-SERIES-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      canonical_obligation: "Assert output.error_code = INSUFFICIENT_HISTORY when input empty"
+      controlled_failure: INSUFFICIENT_HISTORY
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_empty_series_fail_closed"
+      positive_fixture_ids: [FX-EMPTY-SERIES-POS-1]
+      boundary_fixture_ids: [FX-EMPTY-SERIES-BND-1]
+      negative_fixture_ids: [FX-EMPTY-SERIES-NEG-1]
+      mutation_fixture_ids: [MUT-EMPTY-SERIES]
+      expected_PASS_condition: "Empty input → output.error_code == INSUFFICIENT_HISTORY, no partial output"
+      expected_primary_failure_code: INSUFFICIENT_HISTORY
+      expected_diagnostic_codes: [EMPTY_SERIES_DETECTED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-EMPTY-SERIES
+      deterministic_output_record: "error_envelope(error_code=INSUFFICIENT_HISTORY)"
+      precedence_rules: "First pre-flight check; short-circuits remaining checks"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-INHIST-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      canonical_obligation: "ACTIVE 51w input → INSUFFICIENT_HISTORY; PROFILE 59d input → INSUFFICIENT_HISTORY"
+      controlled_failure: INSUFFICIENT_HISTORY
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_minimum_history"
+      positive_fixture_ids: [FX-INHIST-POS-ACTIVE-52W, FX-INHIST-POS-PROFILE-60D]
+      boundary_fixture_ids: [FX-INHIST-BND-ACTIVE-EXACT-52W, FX-INHIST-BND-PROFILE-EXACT-60D]
+      negative_fixture_ids: [FX-INHIST-NEG-ACTIVE-51W, FX-INHIST-NEG-PROFILE-59D]
+      mutation_fixture_ids: [MUT-INHIST-ACTIVE]
+      expected_PASS_condition: "Input below threshold → INSUFFICIENT_HISTORY, no partial output"
+      expected_primary_failure_code: INSUFFICIENT_HISTORY
+      expected_diagnostic_codes: [ACTIVE_51W_BELOW_52_BASELINE, PROFILE_59D_BELOW_60_BASELINE]
+      oracle_source: failure-mode-coverage-plan.yaml FM-INSUFFICIENT-HISTORY
+      deterministic_output_record: "error_envelope(error_code=INSUFFICIENT_HISTORY, mode=ACTIVE|PROFILE)"
+      precedence_rules: "After VC-EMPTY-SERIES-1; before any computation"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-DUP-TS-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: []
+      canonical_obligation: "Input with duplicate date → dedup succeeds, warning in provenance"
+      controlled_failure: VALID_WITH_WARNINGS
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_duplicate_dedup"
+      positive_fixture_ids: [FX-DUP-TS-POS-1]
+      boundary_fixture_ids: [FX-DUP-TS-BND-1]
+      negative_fixture_ids: [FX-DUP-TS-NEG-1]
+      mutation_fixture_ids: [MUT-DUP-TS]
+      expected_PASS_condition: "Duplicate timestamps removed (last-value-wins), analysis_status=VALID_WITH_WARNINGS, warning in provenance"
+      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_diagnostic_codes: [DUPLICATE_TIMESTAMP_DEDUPED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-DUPLICATE-TIMESTAMP
+      deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS, provenance.warnings=[dedup])"
+      precedence_rules: "After history check; before gap check"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-UNSORTED-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: []
+      canonical_obligation: "Unsorted input → sort succeeds, warning logged"
+      controlled_failure: VALID_WITH_WARNINGS
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_unsorted_sort"
+      positive_fixture_ids: [FX-UNSORTED-POS-1]
+      boundary_fixture_ids: [FX-UNSORTED-BND-1]
+      negative_fixture_ids: [FX-UNSORTED-NEG-1]
+      mutation_fixture_ids: [MUT-UNSORTED-ACTIVE]
+      expected_PASS_condition: "Shuffled input sorted ascending by date, analysis_status=VALID_WITH_WARNINGS, warning logged"
+      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_diagnostic_codes: [UNSORTED_TIMESTAMP_SORTED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-UNSORTED-TIMESTAMP
+      deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS, provenance.warnings=[sort])"
+      precedence_rules: "After dedup check"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-MISS-INT-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: []
+      canonical_obligation: "Input with 10% gaps → warning, output still valid"
+      controlled_failure: VALID_WITH_WARNINGS
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_gap_ratio"
+      positive_fixture_ids: [FX-MISS-INT-POS-1]
+      boundary_fixture_ids: [FX-MISS-INT-BND-EXACT-10PCT]
+      negative_fixture_ids: [FX-MISS-INT-NEG-1]
+      mutation_fixture_ids: [MUT-MISS-INT]
+      expected_PASS_condition: "10% gap → warning emitted, analysis_status=VALID_WITH_WARNINGS, output valid"
+      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_diagnostic_codes: [MISSING_INTERVAL_WARNING]
+      oracle_source: failure-mode-coverage-plan.yaml FM-MISSING-INTERVAL
+      deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS)"
+      precedence_rules: "After sort check"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-ZERO-PX-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: [VTA-REQ-012]
+      canonical_obligation: "Input with 0 close → fail-closed"
+      controlled_failure: ZERO_PRICE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_zero_price_fail_closed"
+      positive_fixture_ids: [FX-ZERO-PX-POS-1]
+      boundary_fixture_ids: [FX-ZERO-PX-BND-1]
+      negative_fixture_ids: [FX-ZERO-PX-NEG-1]
+      mutation_fixture_ids: [MUT-ZERO-PX]
+      expected_PASS_condition: "Any OHLC == 0 → error envelope, no output"
+      expected_primary_failure_code: ZERO_PRICE_DETECTED
+      expected_diagnostic_codes: [ZERO_PRICE_DETECTED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-ZERO-PRICE
+      deterministic_output_record: "error_envelope(error_code=ZERO_PRICE_DETECTED)"
+      precedence_rules: "Hard fail; short-circuits remaining checks"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-ZERO-VOL-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: []
+      canonical_obligation: "Input with 0 volume → accepted, value=0"
+      controlled_failure: NONE
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_zero_volume_accepted"
+      positive_fixture_ids: [FX-ZERO-VOL-POS-1]
+      boundary_fixture_ids: [FX-ZERO-VOL-BND-1]
+      negative_fixture_ids: []
+      mutation_fixture_ids: []
+      expected_PASS_condition: "Zero volume session accepted, value=0, no warning (legitimate suspended session)"
+      expected_primary_failure_code: NONE
+      expected_diagnostic_codes: []
+      oracle_source: failure-mode-coverage-plan.yaml FM-ZERO-VOLUME
+      deterministic_output_record: "output(volume=0, analysis_status=VALID)"
+      precedence_rules: "LOW severity; not a fail-closed check"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-CORP-ACT-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: [VTA-REQ-004]
+      canonical_obligation: "Input adjustment_status=UNKNOWN → fail-closed"
+      controlled_failure: UNKNOWN_ADJUSTMENT_STATUS
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_adjustment_status_known"
+      positive_fixture_ids: [FX-CORP-ACT-POS-1]
+      boundary_fixture_ids: [FX-CORP-ACT-BND-1]
+      negative_fixture_ids: [FX-CORP-ACT-NEG-UNKNOWN, FX-CORP-ACT-NEG-SPLIT-DATE]
+      mutation_fixture_ids: [MUT-CORP-ACT-UNADJ]
+      expected_PASS_condition: "adjustment_status=UNKNOWN → error envelope, no output"
+      expected_primary_failure_code: UNKNOWN_ADJUSTMENT_STATUS
+      expected_diagnostic_codes: [CONFLICTING_ADJUSTMENT_STATUS]
+      oracle_source: failure-mode-coverage-plan.yaml FM-CORPORATE-ACTION-UNADJUSTED
+      deterministic_output_record: "error_envelope(error_code=UNKNOWN_ADJUSTMENT_STATUS)"
+      precedence_rules: "CRITICAL; short-circuits before price-basis verification"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-BENCH-MISALIGN-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-010]
+      canonical_obligation: "Misaligned dates → inner-join, warning; None benchmark → BENCHMARK_UNAVAILABLE error"
+      controlled_failure: VALID_WITH_WARNINGS
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_benchmark_alignment"
+      positive_fixture_ids: [FX-BENCH-MISALIGN-POS-1]
+      boundary_fixture_ids: [FX-BENCH-MISALIGN-BND-95PCT]
+      negative_fixture_ids: [FX-BENCH-MISALIGN-NEG-50PCT, FX-BENCH-MISALIGN-NEG-NONE]
+      mutation_fixture_ids: [MUT-BENCH-MISALIGN]
+      expected_PASS_condition: "Misaligned → inner-join + warning; None benchmark → BENCHMARK_UNAVAILABLE error"
+      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_diagnostic_codes: [BENCHMARK_UNAVAILABLE]
+      oracle_source: oracle-disposition-registry.yaml O-021
+      deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS) OR error_envelope(error_code=BENCHMARK_UNAVAILABLE)"
+      precedence_rules: "None benchmark is hard fail; misalignment is warning"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PARTIAL-WEEK-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: []
+      canonical_obligation: "Include current incomplete week → expect drop"
+      controlled_failure: VALID_WITH_WARNINGS
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_partial_week_dropped"
+      positive_fixture_ids: [FX-PARTIAL-WEEK-POS-1]
+      boundary_fixture_ids: [FX-PARTIAL-WEEK-BND-EXACT-MIDWEEK]
+      negative_fixture_ids: [FX-PARTIAL-WEEK-NEG-1]
+      mutation_fixture_ids: [MUT-PARTIAL-WEEK]
+      expected_PASS_condition: "Latest weekly bar < 5 trading days → dropped, warning logged"
+      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_diagnostic_codes: [PARTIAL_WEEK_DROPPED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-PARTIAL-WEEK
+      deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS, provenance.warnings=[partial_week])"
+      precedence_rules: "ACTIVE-only; applied before indicator computation"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PRICE-BASIS-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: [VTA-REQ-004]
+      canonical_obligation: "Assert each indicator input tagged with price_basis"
+      controlled_failure: PRICE_BASIS_UNTAGGED
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_indicator_price_basis_tagged"
+      positive_fixture_ids: [FX-PRICE-BASIS-POS-1]
+      boundary_fixture_ids: [FX-PRICE-BASIS-BND-1]
+      negative_fixture_ids: [FX-PRICE-BASIS-NEG-UNTAGGED]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "Every indicator input has price_basis ∈ {adjusted, total_return_adjusted}"
+      expected_primary_failure_code: PRICE_BASIS_UNTAGGED
+      expected_diagnostic_codes: [PRICE_BASIS_MISSING]
+      oracle_source: oracle-disposition-registry.yaml O-007
+      deterministic_output_record: "computation_chain[i].price_basis present for all indicators"
+      precedence_rules: "After adjustment_status check"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PRICE-BASIS-2
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: [VTA-REQ-004]
+      canonical_obligation: "Assert total_return_adjusted_close used for returns/beta"
+      controlled_failure: PRICE_BASIS_MISMATCH
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_returns_beta_total_return_basis"
+      positive_fixture_ids: [FX-PRICE-BASIS-2-POS-1]
+      boundary_fixture_ids: [FX-PRICE-BASIS-2-BND-1]
+      negative_fixture_ids: [FX-PRICE-BASIS-2-NEG-ADJUSTED-USED]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "Returns/beta computed on total_return_adjusted_close (not adjusted_close)"
+      expected_primary_failure_code: PRICE_BASIS_MISMATCH
+      expected_diagnostic_codes: [RETURNS_BASIS_WRONG]
+      oracle_source: oracle-disposition-registry.yaml O-007
+      deterministic_output_record: "returns_basis = total_return_adjusted_close in provenance"
+      precedence_rules: "After VC-PRICE-BASIS-1"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PRICE-BASIS-3
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: [VTA-REQ-004]
+      canonical_obligation: "Assert fail-closed on UNKNOWN adjustment status"
+      controlled_failure: UNKNOWN_ADJUSTMENT_STATUS
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_unknown_adjustment_fail_closed"
+      positive_fixture_ids: [FX-PRICE-BASIS-3-POS-1]
+      boundary_fixture_ids: [FX-PRICE-BASIS-3-BND-1]
+      negative_fixture_ids: [FX-PRICE-BASIS-3-NEG-UNKNOWN]
+      mutation_fixture_ids: [MUT-CORP-ACT-UNADJ]
+      expected_PASS_condition: "adjustment_status=UNKNOWN → error envelope"
+      expected_primary_failure_code: UNKNOWN_ADJUSTMENT_STATUS
+      expected_diagnostic_codes: [CONFLICTING_ADJUSTMENT_STATUS]
+      oracle_source: oracle-disposition-registry.yaml O-007
+      deterministic_output_record: "error_envelope(error_code=UNKNOWN_ADJUSTMENT_STATUS)"
+      precedence_rules: "Companion to VC-CORP-ACT-1 (fail-closed path verification)"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-WRONG-LOOKBACK-1
+      primary_category: INPUT_PRE_FLIGHT
+      requirement_ids: []
+      canonical_obligation: "Window=22 (invalid per Phase 3 freeze) → fail-closed"
+      controlled_failure: CONFIG_VALIDATION_FAILED
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_window_enum_valid"
+      positive_fixture_ids: [FX-WRONG-LOOKBACK-POS-21]
+      boundary_fixture_ids: [FX-WRONG-LOOKBACK-BND-1]
+      negative_fixture_ids: [FX-WRONG-LOOKBACK-NEG-22]
+      mutation_fixture_ids: [MUT-WRONG-LOOKBACK]
+      expected_PASS_condition: "Invalid window value (e.g., 22) → CONFIG_VALIDATION_FAILED error"
+      expected_primary_failure_code: CONFIG_VALIDATION_FAILED
+      expected_diagnostic_codes: [INVALID_WINDOW_VALUE]
+      oracle_source: failure-mode-coverage-plan.yaml FM-WRONG-LOOKBACK + oracle O-010
+      deterministic_output_record: "error_envelope(error_code=CONFIG_VALIDATION_FAILED, invalid_window=22)"
+      precedence_rules: "Phase 3 freezes enum; Phase 4 enforces"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 window set freeze — 21/63/126/252 vs 20/60/120/252]
+
+    # ============================================================
+    # COMPUTATION_RECOMPUTE (12)
+    # ============================================================
+
+    - VC_id: VC-RSI-WILDER-1
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-005]
+      canonical_obligation: "Assert RSI computed with period-1 multiplier (Wilder)"
+      controlled_failure: SMOOTHING_MISMATCH
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_rsi_wilder_smoothing"
+      positive_fixture_ids: [FX-RSI-WILDER-POS-1]
+      boundary_fixture_ids: [FX-RSI-WILDER-BND-1]
+      negative_fixture_ids: [FX-RSI-WILDER-NEG-SIMPLE]
+      mutation_fixture_ids: [MUT-WRONG-SMOOTH]
+      expected_PASS_condition: "RSI series computed with Wilder period-1 multiplier matches reference"
+      expected_primary_failure_code: SMOOTHING_MISMATCH
+      expected_diagnostic_codes: [RSI_SIMPLE_SMOOTHING_DETECTED]
+      oracle_source: oracle-disposition-registry.yaml O-001
+      deterministic_output_record: "rsi_series with Wilder seeding"
+      precedence_rules: "Recompute check; independent oracle (ta-lib Wilder)"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 contracts/formula-rsi.yaml — Wilder seeding + warmup + rounding]
+
+    - VC_id: VC-RSI-WILDER-2
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-005]
+      canonical_obligation: "Calibration against reference library (ta-lib Wilder RSI) within 1e-6"
+      controlled_failure: SMOOTHING_MISMATCH
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_rsi_ta_lib_calibration"
+      positive_fixture_ids: [FX-RSI-CAL-POS-1E6]
+      boundary_fixture_ids: [FX-RSI-CAL-BND-1E6]
+      negative_fixture_ids: [FX-RSI-CAL-NEG-DRIFT]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "|rsi_output - ta_lib_wilder_rsi| <= 1e-6 for all t"
+      expected_primary_failure_code: SMOOTHING_MISMATCH
+      expected_diagnostic_codes: [RSI_CALIBRATION_DRIFT]
+      oracle_source: oracle-disposition-registry.yaml O-001
+      deterministic_output_record: "max(|rsi_output - ta_lib_reference|) <= 1e-6"
+      precedence_rules: "Calibration gate; runs after VC-RSI-WILDER-1"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 RSI contract freeze]
+
+    - VC_id: VC-WRONG-SMOOTH-1
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-005]
+      canonical_obligation: "Inject simple RSI → expect Wilder check fails"
+      controlled_failure: SMOOTHING_MISMATCH
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "detect_simple_smoothing_injection"
+      positive_fixture_ids: []
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-WRONG-SMOOTH-NEG-SIMPLE-INJECTED]
+      mutation_fixture_ids: [MUT-WRONG-SMOOTH]
+      expected_PASS_condition: "Injected simple-smoothing RSI → SMOOTHING_MISMATCH detected"
+      expected_primary_failure_code: SMOOTHING_MISMATCH
+      expected_diagnostic_codes: [SIMPLE_SMOOTHING_DETECTED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-WRONG-SMOOTHING
+      deterministic_output_record: "verifier_failure(VC_id=VC-WRONG-SMOOTH-1, code=SMOOTHING_MISMATCH)"
+      precedence_rules: "Negative fixture; runs as mutation regression"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-BOLL-1
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-006]
+      canonical_obligation: "Assert shared kernel uses ONE std convention (population ÷N OR sample ÷N-1)"
+      controlled_failure: MODE_KERNEL_DIVERGENCE
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_shared_kernel_std_convention"
+      positive_fixture_ids: [FX-BOLL-POS-1]
+      boundary_fixture_ids: [FX-BOLL-BND-1]
+      negative_fixture_ids: [FX-BOLL-NEG-DIVERGENT]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "Single std convention frozen and applied across shared kernel"
+      expected_primary_failure_code: MODE_KERNEL_DIVERGENCE
+      expected_diagnostic_codes: [STD_CONVENTION_NOT_FROZEN]
+      oracle_source: oracle-disposition-registry.yaml O-002
+      deterministic_output_record: "std_convention field in kernel contract matches applied"
+      precedence_rules: "Phase 3 freeze gate; HIGHEST-PRIORITY"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 std convention freeze — POPULATION vs SAMPLE]
+
+    - VC_id: VC-BOLL-2
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-006]
+      canonical_obligation: "ACTIVE and PROFILE must produce IDENTICAL BB for same input"
+      controlled_failure: MODE_KERNEL_DIVERGENCE
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_active_profile_bb_identical"
+      positive_fixture_ids: [FX-BOLL-2-POS-IDENTICAL]
+      boundary_fixture_ids: [FX-BOLL-2-BND-1]
+      negative_fixture_ids: [FX-BOLL-2-NEG-DIVERGE]
+      mutation_fixture_ids: [MUT-MODE-DIVERGE]
+      expected_PASS_condition: "ACTIVE BB == PROFILE BB byte-identical for same input"
+      expected_primary_failure_code: MODE_KERNEL_DIVERGENCE
+      expected_diagnostic_codes: [ACTIVE_PROFILE_BB_DIVERGE]
+      oracle_source: failure-mode-coverage-plan.yaml FM-MODE-KERNEL-DIVERGENCE
+      deterministic_output_record: "max(|bb_active - bb_profile|) == 0"
+      precedence_rules: "Companion to VC-MODE-KERNEL-1"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-DIV-ZERO-1
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: []
+      canonical_obligation: "Input causing std=0 → handled (no crash, error/warning)"
+      controlled_failure: COMPUTATION_DEGENERATE
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_zero_denominator_guard"
+      positive_fixture_ids: [FX-DIV-ZERO-POS-1]
+      boundary_fixture_ids: [FX-DIV-ZERO-BND-CONSTANT-PRICE]
+      negative_fixture_ids: [FX-DIV-ZERO-NEG-1]
+      mutation_fixture_ids: [MUT-DIV-ZERO]
+      expected_PASS_condition: "Constant-price input → COMPUTATION_DEGENERATE error or NaN with VALID_WITH_WARNINGS, no crash"
+      expected_primary_failure_code: COMPUTATION_DEGENERATE
+      expected_diagnostic_codes: [ZERO_STD_DETECTED, ZERO_DENOMINATOR_GUARD]
+      oracle_source: failure-mode-coverage-plan.yaml FM-DIVIDE-BY-ZERO
+      deterministic_output_record: "error_envelope OR output(analysis_status=VALID_WITH_WARNINGS)"
+      precedence_rules: "Runtime guard; applies to CMF denominator, BB std=0, OBV close_t-1"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-NAN-PROP-1
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      canonical_obligation: "Input with one NaN close → either handled or error"
+      controlled_failure: NAN_PROPAGATION
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_no_nan_in_required_fields"
+      positive_fixture_ids: [FX-NAN-PROP-POS-1]
+      boundary_fixture_ids: [FX-NAN-PROP-BND-SINGLE-NAN]
+      negative_fixture_ids: [FX-NAN-PROP-NEG-1]
+      mutation_fixture_ids: [MUT-NAN-PROP]
+      expected_PASS_condition: "NaN in required output field → NAN_PROPAGATION error; no NaN reaches output"
+      expected_primary_failure_code: NAN_PROPAGATION
+      expected_diagnostic_codes: [NAN_IN_REQUIRED_FIELD]
+      oracle_source: failure-mode-coverage-plan.yaml FM-NAN-PROPAGATION
+      deterministic_output_record: "no NaN in any required output field"
+      precedence_rules: "POST_COMPUTE check; after indicator computation"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-CHANNEL-1
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-007]
+      canonical_obligation: "Assert normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window)"
+      controlled_failure: FORMULA_NOT_APPLICABLE
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_channel_slope_normalization"
+      positive_fixture_ids: [FX-CHANNEL-POS-1]
+      boundary_fixture_ids: [FX-CHANNEL-BND-1]
+      negative_fixture_ids: [FX-CHANNEL-NEG-RAW-VND]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "normalized_slope_pct_per_bar matches recompute of 100 × OLS_slope / median(close_window)"
+      expected_primary_failure_code: FORMULA_NOT_APPLICABLE
+      expected_diagnostic_codes: [CHANNEL_SLOPE_FORMULA_MISMATCH]
+      oracle_source: oracle-disposition-registry.yaml O-009
+      deterministic_output_record: "slope_pct_per_bar recompute == output"
+      precedence_rules: "Recompute check; unit must be percent/bar"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-CHANNEL-2
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-007]
+      canonical_obligation: "Threshold value frozen in Phase 3 contract"
+      controlled_failure: THRESHOLD_NOT_FROZEN
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_channel_threshold_frozen"
+      positive_fixture_ids: []
+      boundary_fixture_ids: [FX-CHANNEL-2-BND-EXACT-THRESHOLD]
+      negative_fixture_ids: []
+      mutation_fixture_ids: []
+      expected_PASS_condition: "contracts/formula-channel-slope.yaml threshold value frozen and applied"
+      expected_primary_failure_code: THRESHOLD_NOT_FROZEN
+      expected_diagnostic_codes: [CHANNEL_THRESHOLD_PENDING]
+      oracle_source: technical-phase3-design-input-package.yaml T-CHANNEL-SLOPE
+      deterministic_output_record: "threshold_value in output matches frozen contract"
+      precedence_rules: "Phase 3 freeze gate"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 classification threshold freeze — |slope| > X%/bar]
+
+    - VC_id: VC-OBV-VPT-1
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-014]
+      canonical_obligation: "Assert obv_change sourced from OBV series AND vpt_change sourced from VPT series"
+      controlled_failure: OBV_VPT_SERIES_CONTAMINATION
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_obv_vpt_separate_series"
+      positive_fixture_ids: [FX-OBV-VPT-POS-SEPARATE]
+      boundary_fixture_ids: [FX-OBV-VPT-BND-1]
+      negative_fixture_ids: [FX-OBV-VPT-NEG-ALIAS]
+      mutation_fixture_ids: [MUT-OBV-VPT-BUG]
+      expected_PASS_condition: "obv_change provenance → OBV series; vpt_change provenance → VPT series"
+      expected_primary_failure_code: OBV_VPT_SERIES_CONTAMINATION
+      expected_diagnostic_codes: [OBV_VPT_ALIASING_DETECTED]
+      oracle_source: oracle-disposition-registry.yaml O-024
+      deterministic_output_record: "obv_change.source_series=OBV, vpt_change.source_series=VPT"
+      precedence_rules: "Recompute check; mandatory regression mutation for B12 bug"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-OBV-VPT-2
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-014]
+      canonical_obligation: "Assert vpt_change_pct sourced from VPT series"
+      controlled_failure: OBV_VPT_SERIES_CONTAMINATION
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_vpt_pct_source_vpt"
+      positive_fixture_ids: [FX-OBV-VPT-2-POS-1]
+      boundary_fixture_ids: [FX-OBV-VPT-2-BND-1]
+      negative_fixture_ids: [FX-OBV-VPT-2-NEG-1]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "vpt_change_pct provenance → VPT series"
+      expected_primary_failure_code: OBV_VPT_SERIES_CONTAMINATION
+      expected_diagnostic_codes: [VPT_PCT_SOURCE_OBV_DETECTED]
+      oracle_source: oracle-disposition-registry.yaml O-024
+      deterministic_output_record: "vpt_change_pct.source_series=VPT"
+      precedence_rules: "Companion to VC-OBV-VPT-1 (percent variant)"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 change method freeze — absolute vs percent]
+
+    - VC_id: VC-EVENTS-1Y-1
+      primary_category: COMPUTATION_RECOMPUTE
+      requirement_ids: [VTA-REQ-013]
+      canonical_obligation: "Assert events_1y selected by effective_date >= as_of_date - 365 days (NOT events[-252:])"
+      controlled_failure: EVENTS_1Y_LOGIC_ERROR
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_events_1y_calendar_window"
+      positive_fixture_ids: [FX-EVENTS-1Y-POS-CALENDAR]
+      boundary_fixture_ids: [FX-EVENTS-1Y-BND-EXACT-365D]
+      negative_fixture_ids: [FX-EVENTS-1Y-NEG-EVENT-COUNT]
+      mutation_fixture_ids: [MUT-EVENTS-1Y-BUG]
+      expected_PASS_condition: "events_1y = events[effective_date >= as_of_date - 365 days]"
+      expected_primary_failure_code: EVENTS_1Y_LOGIC_ERROR
+      expected_diagnostic_codes: [EVENT_COUNT_SLICE_DETECTED]
+      oracle_source: oracle-disposition-registry.yaml O-013
+      deterministic_output_record: "events_1y selection predicate = effective_date >= cutoff"
+      precedence_rules: "Recompute check; mandatory regression mutation for B14 bug"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    # ============================================================
+    # OUTPUT_SCHEMA (11)
+    # ============================================================
+
+    - VC_id: VC-ACTIVE-VALID-1
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-001]
+      canonical_obligation: "Output satisfies technical-active-output.schema.json"
+      controlled_failure: SCHEMA_VALIDATION_FAILED
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "validate_active_output_schema"
+      positive_fixture_ids: [FX-ACTIVE-VALID-POS-1]
+      boundary_fixture_ids: [FX-ACTIVE-VALID-BND-1]
+      negative_fixture_ids: [FX-ACTIVE-VALID-NEG-FOREIGN-KEY]
+      mutation_fixture_ids: [MUT-SCHEMA-DRIFT]
+      expected_PASS_condition: "Output validates against technical-active-output.schema.json"
+      expected_primary_failure_code: SCHEMA_VALIDATION_FAILED
+      expected_diagnostic_codes: [JSONSCHEMA_REJECTION]
+      oracle_source: contracts/technical-active-output.schema.json
+      deterministic_output_record: "jsonschema.validate(output, active_schema).valid == true"
+      precedence_rules: "First output gate; before mode separation check"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-ACTIVE-VALID-2
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-001]
+      canonical_obligation: "Weekly history ≥ minimum (52w baseline)"
+      controlled_failure: INSUFFICIENT_HISTORY
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_active_weekly_history_baseline"
+      positive_fixture_ids: [FX-ACTIVE-VALID-2-POS-52W]
+      boundary_fixture_ids: [FX-ACTIVE-VALID-2-BND-EXACT-52W]
+      negative_fixture_ids: [FX-ACTIVE-VALID-2-NEG-51W]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "output.weekly_history >= 52"
+      expected_primary_failure_code: INSUFFICIENT_HISTORY
+      expected_diagnostic_codes: [WEEKLY_BELOW_52_BASELINE]
+      oracle_source: requirement-registry.yaml VTA-REQ-001
+      deterministic_output_record: "weekly_history >= 52"
+      precedence_rules: "Output-side recheck of VC-INHIST-1 for ACTIVE"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-ACTIVE-VALID-3
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-001]
+      canonical_obligation: "6 indicators all present or fail-closed with error_code"
+      controlled_failure: INDICATOR_MISSING
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_active_six_indicators_present"
+      positive_fixture_ids: [FX-ACTIVE-VALID-3-POS-ALL-6]
+      boundary_fixture_ids: [FX-ACTIVE-VALID-3-BND-1]
+      negative_fixture_ids: [FX-ACTIVE-VALID-3-NEG-MISSING-INDICATOR]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "All 6 indicators (MA, RSI, MACD, BB, Beta, CMF) present OR output.error_code set"
+      expected_primary_failure_code: INDICATOR_MISSING
+      expected_diagnostic_codes: [PARTIAL_INDICATOR_OUTPUT]
+      oracle_source: requirement-registry.yaml VTA-REQ-001
+      deterministic_output_record: "count(indicators) == 6 OR error_code present"
+      precedence_rules: "After schema validation"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PROFILE-VALID-1
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-002]
+      canonical_obligation: "Output satisfies technical-profile-output.schema.json"
+      controlled_failure: SCHEMA_VALIDATION_FAILED
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "validate_profile_output_schema"
+      positive_fixture_ids: [FX-PROFILE-VALID-POS-1]
+      boundary_fixture_ids: [FX-PROFILE-VALID-BND-1]
+      negative_fixture_ids: [FX-PROFILE-VALID-NEG-FOREIGN-KEY]
+      mutation_fixture_ids: [MUT-SCHEMA-DRIFT]
+      expected_PASS_condition: "Output validates against technical-profile-output.schema.json"
+      expected_primary_failure_code: SCHEMA_VALIDATION_FAILED
+      expected_diagnostic_codes: [JSONSCHEMA_REJECTION]
+      oracle_source: contracts/technical-profile-output.schema.json
+      deterministic_output_record: "jsonschema.validate(output, profile_schema).valid == true"
+      precedence_rules: "First PROFILE output gate"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PROFILE-VALID-2
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-002]
+      canonical_obligation: "Daily history ≥ 60 sessions (enforced)"
+      controlled_failure: INSUFFICIENT_HISTORY
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_profile_daily_history_baseline"
+      positive_fixture_ids: [FX-PROFILE-VALID-2-POS-60D]
+      boundary_fixture_ids: [FX-PROFILE-VALID-2-BND-EXACT-60D]
+      negative_fixture_ids: [FX-PROFILE-VALID-2-NEG-59D]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "output.daily_history >= 60"
+      expected_primary_failure_code: INSUFFICIENT_HISTORY
+      expected_diagnostic_codes: [DAILY_BELOW_60_BASELINE]
+      oracle_source: requirement-registry.yaml VTA-REQ-002
+      deterministic_output_record: "daily_history >= 60"
+      precedence_rules: "Output-side recheck of VC-INHIST-1 for PROFILE"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PROFILE-VALID-3
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-002]
+      canonical_obligation: "17 blocks all present or marked optional-skipped"
+      controlled_failure: BLOCK_MISSING
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_profile_seventeen_blocks"
+      positive_fixture_ids: [FX-PROFILE-VALID-3-POS-ALL-17]
+      boundary_fixture_ids: [FX-PROFILE-VALID-3-BND-1]
+      negative_fixture_ids: [FX-PROFILE-VALID-3-NEG-BLOCK-MISSING]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "All 17 blocks present OR marked optional-skipped with rationale"
+      expected_primary_failure_code: BLOCK_MISSING
+      expected_diagnostic_codes: [BLOCK_ABSENT_WITHOUT_SKIP_MARKER]
+      oracle_source: requirement-registry.yaml VTA-REQ-002
+      deterministic_output_record: "count(blocks present OR optional-skipped) == 17"
+      precedence_rules: "After PROFILE schema validation"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PROFILE-VALID-4
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-002, VTA-REQ-009]
+      canonical_obligation: "setup_coverage_status explicit (NOT_EVALUATED prohibited after Phase 4)"
+      controlled_failure: SETUP_COVERAGE_MISREPRESENTED
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_setup_coverage_status_explicit"
+      positive_fixture_ids: [FX-PROFILE-VALID-4-POS-BULLISH-ONLY]
+      boundary_fixture_ids: [FX-PROFILE-VALID-4-BND-INCOMPLETE-BEARISH]
+      negative_fixture_ids: [FX-PROFILE-VALID-4-NEG-NOT-EVALUATED]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "setup_coverage_status ∈ {BULLISH_ONLY, INCOMPLETE_BEARISH_COVERAGE, COMPLETE_DIRECTIONAL_COVERAGE}"
+      expected_primary_failure_code: SETUP_COVERAGE_MISREPRESENTED
+      expected_diagnostic_codes: [COVERAGE_NOT_EVALUATED_PROHIBITED]
+      oracle_source: requirement-registry.yaml VTA-REQ-009
+      deterministic_output_record: "setup_coverage_status in allowed enum set"
+      precedence_rules: "After block count check"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-SCHEMA-DRIFT-1
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      canonical_obligation: "Add foreign key to output → schema rejection"
+      controlled_failure: SCHEMA_VALIDATION_FAILED
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "detect_schema_drift"
+      positive_fixture_ids: []
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-SCHEMA-DRIFT-NEG-FOREIGN-KEY]
+      mutation_fixture_ids: [MUT-SCHEMA-DRIFT]
+      expected_PASS_condition: "Injected foreign key → schema rejection"
+      expected_primary_failure_code: SCHEMA_VALIDATION_FAILED
+      expected_diagnostic_codes: [ADDITIONAL_PROPERTIES_REJECTED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-SCHEMA-DRIFT
+      deterministic_output_record: "jsonschema rejects with additionalProperties: false"
+      precedence_rules: "Negative fixture; schema enforcement"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-FAB-VAL-1
+      primary_category: OUTPUT_SCHEMA
+      cross_listed_categories: [PROVENANCE]
+      requirement_ids: [VTA-REQ-012]
+      canonical_obligation: "Inject value not in computation chain → detection"
+      controlled_failure: FABRICATED_VALUE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/provenance_integrity.py
+        proposed_verifier_function: "detect_fabricated_value"
+      positive_fixture_ids: []
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-FAB-VAL-NEG-INJECTED-VALUE]
+      mutation_fixture_ids: [MUT-FAB-VAL]
+      expected_PASS_condition: "Injected value not in computation chain → FABRICATED_VALUE_DETECTED detected"
+      expected_primary_failure_code: FABRICATED_VALUE_DETECTED
+      expected_diagnostic_codes: [VALUE_NOT_IN_COMPUTATION_CHAIN]
+      oracle_source: failure-mode-coverage-plan.yaml FM-FABRICATED-VALUE
+      deterministic_output_record: "verifier_failure(VC_id=VC-FAB-VAL-1, code=FABRICATED_VALUE_DETECTED)"
+      precedence_rules: "MERGED record (was duplicate in OUTPUT_SCHEMA + PROVENANCE); single canonical ID"
+      machine_verifiable: true
+      unresolved_dependency: []
+      note: >
+        Per vta-vc-duplicate-resolution.yaml: MERGE_TRUE_DUPLICATES applied.
+        Primary category OUTPUT_SCHEMA, cross-listed in PROVENANCE. Single
+        canonical record serves both obligations.
+
+    - VC_id: VC-COV-1
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-009]
+      canonical_obligation: "setup_coverage_status MUST be INCOMPLETE_BEARISH_COVERAGE before Phase 4 bearish implementation"
+      controlled_failure: SETUP_COVERAGE_MISREPRESENTED
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_incomplete_bearish_before_phase_4"
+      positive_fixture_ids: [FX-COV-1-POS-INCOMPLETE-BEARISH]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-COV-1-NEG-COMPLETE-CLAIMED]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "setup_coverage_status == INCOMPLETE_BEARISH_COVERAGE (until Phase 4 bearish implementation)"
+      expected_primary_failure_code: SETUP_COVERAGE_MISREPRESENTED
+      expected_diagnostic_codes: [COVERAGE_PREMATURE_COMPLETENESS]
+      oracle_source: requirement-registry.yaml VTA-REQ-009
+      deterministic_output_record: "setup_coverage_status == INCOMPLETE_BEARISH_COVERAGE"
+      precedence_rules: "Phase-dependent; upgrades to COMPLETE_DIRECTIONAL_COVERAGE after Phase 4Q mutation pass"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-COV-2
+      primary_category: OUTPUT_SCHEMA
+      requirement_ids: [VTA-REQ-009]
+      canonical_obligation: "Absence of bullish setup MUST NOT be reported as bearish evidence"
+      controlled_failure: SETUP_COVERAGE_MISREPRESENTED
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_no_bearish_from_bullish_absence"
+      positive_fixture_ids: [FX-COV-2-POS-1]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-COV-2-NEG-BEARISH-FROM-ABSENCE]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "No bearish signal inferred from absence of bullish setup"
+      expected_primary_failure_code: SETUP_COVERAGE_MISREPRESENTED
+      expected_diagnostic_codes: [BEARISH_INFERRED_FROM_ABSENCE]
+      oracle_source: requirement-registry.yaml VTA-REQ-009
+      deterministic_output_record: "no bearish_setup.status derived from absence_of_bullish"
+      precedence_rules: "Companion to VC-COV-1"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    # ============================================================
+    # LANGUAGE_POLICY (5)
+    # ============================================================
+
+    - VC_id: VC-REQ007-LEXICAL
+      primary_category: LANGUAGE_POLICY
+      requirement_ids: [VTA-REQ-003]
+      canonical_obligation: "Regex scan for prohibited tokens (bullish/bearish/tín hiệu/khuyến nghị/nên mua/nên bán/strong buy/strong sell/overbought/oversold)"
+      controlled_failure: ADVICE_LANGUAGE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/language_policy.py
+        proposed_verifier_function: "scan_lexical_prohibited_tokens"
+      positive_fixture_ids: [FX-LEX-POS-CLEAN]
+      boundary_fixture_ids: [FX-LEX-BND-1]
+      negative_fixture_ids: [FX-LEX-NEG-TOKEN]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "0 prohibited tokens in output text"
+      expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: [PROHIBITED_TOKEN_FOUND]
+      oracle_source: oracle-disposition-registry.yaml O-019
+      deterministic_output_record: "regex_match_count(prohibited_tokens) == 0"
+      precedence_rules: "LAYER 1 of 3; runs before semantic"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-REQ007-SEMANTIC
+      primary_category: LANGUAGE_POLICY
+      requirement_ids: [VTA-REQ-003]
+      canonical_obligation: "Semantic-implication check for advice via different phrasing"
+      controlled_failure: ADVICE_LANGUAGE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/language_policy.py
+        proposed_verifier_function: "scan_semantic_advice_implication"
+      positive_fixture_ids: [FX-SEM-POS-1]
+      boundary_fixture_ids: [FX-SEM-BND-1]
+      negative_fixture_ids: [FX-SEM-NEG-IMPLICATION]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "0 advice implications via rephrased language"
+      expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: [SEMANTIC_ADVICE_DETECTED]
+      oracle_source: contracts/REQ007-semantic-policy.yaml
+      deterministic_output_record: "semantic_advice_count == 0"
+      precedence_rules: "LAYER 2 of 3; after lexical"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 4 semantic layer implementation approach — model-backed vs curated patterns]
+
+    - VC_id: VC-REQ007-IMPERATIVE
+      primary_category: LANGUAGE_POLICY
+      requirement_ids: [VTA-REQ-003]
+      canonical_obligation: "Imperative-mood detection (nên, phải, cần, hãy)"
+      controlled_failure: ADVICE_LANGUAGE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/language_policy.py
+        proposed_verifier_function: "scan_imperative_mood"
+      positive_fixture_ids: [FX-IMP-POS-1]
+      boundary_fixture_ids: [FX-IMP-BND-1]
+      negative_fixture_ids: [FX-IMP-NEG-NEN-PHAI-CAN-HAY]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "0 imperative-mood constructions (nên, phải, cần, hãy)"
+      expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: [IMPERATIVE_MOOD_DETECTED]
+      oracle_source: contracts/REQ007-semantic-policy.yaml
+      deterministic_output_record: "imperative_token_count == 0"
+      precedence_rules: "LAYER 3 of 3; after semantic"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-REQ007-NEGATION
+      primary_category: LANGUAGE_POLICY
+      requirement_ids: [VTA-REQ-003]
+      canonical_obligation: "Negation-aware (NOT bullish ≠ bullish banned)"
+      controlled_failure: ADVICE_LANGUAGE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/language_policy.py
+        proposed_verifier_function: "scan_negation_aware"
+      positive_fixture_ids: [FX-NEG-POS-NOT-BULLISH-ALLOWED]
+      boundary_fixture_ids: [FX-NEG-BND-1]
+      negative_fixture_ids: [FX-NEG-NEG-BLIND-MATCH]
+      mutation_fixture_ids: [MUT-ADV-LANG-NEG]
+      expected_PASS_condition: "'NOT bullish' accepted (not flagged as violation)"
+      expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: [NEGATION_BLIND_MATCH]
+      oracle_source: contracts/REQ007-semantic-policy.yaml
+      deterministic_output_record: "negation_context evaluated before token match"
+      precedence_rules: "Negation context gates lexical/semantic matches"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 4 Vietnamese negation token set completeness review]
+
+    - VC_id: VC-ADV-LANG-1
+      primary_category: LANGUAGE_POLICY
+      requirement_ids: [VTA-REQ-003]
+      canonical_obligation: "Inject 'nên mua' → detection"
+      controlled_failure: ADVICE_LANGUAGE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/language_policy.py
+        proposed_verifier_function: "detect_injected_advice_phrase"
+      positive_fixture_ids: []
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-ADV-LANG-NEG-NEN-MUA]
+      mutation_fixture_ids: [MUT-ADV-LANG]
+      expected_PASS_condition: "Injected 'nên mua' → ADVICE_LANGUAGE_DETECTED"
+      expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: [INJECTED_ADVICE_PHRASE_FOUND]
+      oracle_source: failure-mode-coverage-plan.yaml FM-ADVICE-LANGUAGE
+      deterministic_output_record: "verifier_failure(VC_id=VC-ADV-LANG-1, code=ADVICE_LANGUAGE_DETECTED)"
+      precedence_rules: "Negative fixture; REQ-007 HIGHEST precedence"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    # ============================================================
+    # PROVENANCE (5 — VC-FAB-VAL-1 merged out from this category)
+    # ============================================================
+
+    - VC_id: VC-PROV-1
+      primary_category: PROVENANCE
+      requirement_ids: [VTA-REQ-010]
+      canonical_obligation: "Every numeric output has source → computation_chain"
+      controlled_failure: PROVENANCE_MISSING
+      implementation_surface:
+        proposed_verifier_module: verifier/provenance_integrity.py
+        proposed_verifier_function: "assert_numeric_output_provenance_present"
+      positive_fixture_ids: [FX-PROV-1-POS-FULL-CHAIN]
+      boundary_fixture_ids: [FX-PROV-1-BND-1]
+      negative_fixture_ids: [FX-PROV-1-NEG-FIELD-WITHOUT-CHAIN]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "Every numeric output field has source → computation_chain"
+      expected_primary_failure_code: PROVENANCE_MISSING
+      expected_diagnostic_codes: [FIELD_WITHOUT_COMPUTATION_CHAIN]
+      oracle_source: requirement-registry.yaml VTA-REQ-010
+      deterministic_output_record: "all numeric_fields have provenance.source AND provenance.computation_chain"
+      precedence_rules: "First provenance gate"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PROV-2
+      primary_category: PROVENANCE
+      requirement_ids: [VTA-REQ-010]
+      canonical_obligation: "Provenance includes timestamp, provider, params"
+      controlled_failure: PROVENANCE_MISSING
+      implementation_surface:
+        proposed_verifier_module: verifier/provenance_integrity.py
+        proposed_verifier_function: "assert_provenance_fields_complete"
+      positive_fixture_ids: [FX-PROV-2-POS-1]
+      boundary_fixture_ids: [FX-PROV-2-BND-1]
+      negative_fixture_ids: [FX-PROV-2-NEG-MISSING-TIMESTAMP, FX-PROV-2-NEG-MISSING-PROVIDER, FX-PROV-2-NEG-MISSING-PARAMS]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "provenance.{timestamp, provider, params} all present"
+      expected_primary_failure_code: PROVENANCE_MISSING
+      expected_diagnostic_codes: [PROVENANCE_TIMESTAMP_MISSING, PROVENANCE_PROVIDER_MISSING, PROVENANCE_PARAMS_MISSING]
+      oracle_source: requirement-registry.yaml VTA-REQ-010
+      deterministic_output_record: "provenance has all 3 required fields"
+      precedence_rules: "After VC-PROV-1"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-PROV-MISS-1
+      primary_category: PROVENANCE
+      requirement_ids: [VTA-REQ-010]
+      canonical_obligation: "Remove provenance from one field → detection"
+      controlled_failure: PROVENANCE_MISSING
+      implementation_surface:
+        proposed_verifier_module: verifier/provenance_integrity.py
+        proposed_verifier_function: "detect_single_field_provenance_stripped"
+      positive_fixture_ids: []
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-PROV-MISS-NEG-ONE-FIELD-STRIPPED]
+      mutation_fixture_ids: [MUT-PROV-MISS]
+      expected_PASS_condition: "Provenance stripped from one field → PROVENANCE_MISSING detected"
+      expected_primary_failure_code: PROVENANCE_MISSING
+      expected_diagnostic_codes: [FIELD_PROVENANCE_STRIPPED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-MISSING-PROVENANCE
+      deterministic_output_record: "verifier_failure(VC_id=VC-PROV-MISS-1, code=PROVENANCE_MISSING)"
+      precedence_rules: "Negative fixture; CRITICAL severity"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-NO-FAB-1
+      primary_category: PROVENANCE
+      requirement_ids: [VTA-REQ-012]
+      canonical_obligation: "Every OHLCV value MUST have provenance chain to source"
+      controlled_failure: FABRICATED_VALUE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/provenance_integrity.py
+        proposed_verifier_function: "assert_ohlcv_source_provenance"
+      positive_fixture_ids: [FX-NO-FAB-1-POS-SOURCED]
+      boundary_fixture_ids: [FX-NO-FAB-1-BND-1]
+      negative_fixture_ids: [FX-NO-FAB-1-NEG-UNSOURCED]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "Every OHLCV value provenance chain reaches collector packet"
+      expected_primary_failure_code: FABRICATED_VALUE_DETECTED
+      expected_diagnostic_codes: [OHLCV_WITHOUT_SOURCE_CHAIN]
+      oracle_source: requirement-registry.yaml VTA-REQ-012
+      deterministic_output_record: "all ohlcv[i].provenance reaches market-data-packet"
+      precedence_rules: "Input-side provenance gate; cross-listed with INPUT_PRE_FLIGHT"
+      machine_verifiable: true
+      unresolved_dependency: [Collector extension to populate packet — COLLECTOR_EXTENSION_PROGRAM]
+
+    - VC_id: VC-NO-FAB-2
+      primary_category: PROVENANCE
+      requirement_ids: [VTA-REQ-012]
+      canonical_obligation: "Assert no placeholder values (0, NaN, NULL) silently injected"
+      controlled_failure: FABRICATED_VALUE_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/provenance_integrity.py
+        proposed_verifier_function: "detect_placeholder_injection"
+      positive_fixture_ids: [FX-NO-FAB-2-POS-1]
+      boundary_fixture_ids: [FX-NO-FAB-2-BND-1]
+      negative_fixture_ids: [FX-NO-FAB-2-NEG-PLACEHOLDER-ZERO, FX-NO-FAB-2-NEG-PLACEHOLDER-NAN, FX-NO-FAB-2-NEG-PLACEHOLDER-NULL]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "No placeholder (0, NaN, NULL) values silently injected into OHLCV"
+      expected_primary_failure_code: FABRICATED_VALUE_DETECTED
+      expected_diagnostic_codes: [PLACEHOLDER_VALUE_INJECTED]
+      oracle_source: requirement-registry.yaml VTA-REQ-012
+      deterministic_output_record: "no placeholder values in ohlcv without explicit marker"
+      precedence_rules: "After VC-NO-FAB-1"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    # ============================================================
+    # MODE_SEPARATION (5)
+    # ============================================================
+
+    - VC_id: VC-MODE-SEP-1
+      primary_category: MODE_SEPARATION
+      requirement_ids: [VTA-REQ-008]
+      canonical_obligation: "ACTIVE output MUST NOT contain profile_blocks"
+      controlled_failure: MODE_CONTAMINATION
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_active_no_profile_blocks"
+      positive_fixture_ids: [FX-MODE-SEP-1-POS-CLEAN-ACTIVE]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-MODE-SEP-1-NEG-PROFILE-BLOCKS-IN-ACTIVE]
+      mutation_fixture_ids: [MUT-MODE-CONTAM]
+      expected_PASS_condition: "ACTIVE output has no profile_blocks key"
+      expected_primary_failure_code: MODE_CONTAMINATION
+      expected_diagnostic_codes: [PROFILE_BLOCKS_IN_ACTIVE]
+      oracle_source: requirement-registry.yaml VTA-REQ-008
+      deterministic_output_record: "'profile_blocks' not in active_output"
+      precedence_rules: "After active schema validation"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-MODE-SEP-2
+      primary_category: MODE_SEPARATION
+      requirement_ids: [VTA-REQ-008]
+      canonical_obligation: "PROFILE output MUST NOT contain tech_score / 6_binary_signals"
+      controlled_failure: MODE_CONTAMINATION
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_profile_no_tech_score"
+      positive_fixture_ids: [FX-MODE-SEP-2-POS-CLEAN-PROFILE]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-MODE-SEP-2-NEG-TECH-SCORE-IN-PROFILE]
+      mutation_fixture_ids: [MUT-MODE-CONTAM]
+      expected_PASS_condition: "PROFILE output has no tech_score / 6_binary_signals key"
+      expected_primary_failure_code: MODE_CONTAMINATION
+      expected_diagnostic_codes: [TECH_SCORE_IN_PROFILE]
+      oracle_source: requirement-registry.yaml VTA-REQ-008
+      deterministic_output_record: "'tech_score' not in profile_output AND '6_binary_signals' not in profile_output"
+      precedence_rules: "After profile schema validation"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-MODE-SEP-3
+      primary_category: MODE_SEPARATION
+      requirement_ids: [VTA-REQ-008]
+      canonical_obligation: "Schema validation rejects foreign keys (additionalProperties: false)"
+      controlled_failure: SCHEMA_VALIDATION_FAILED
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "assert_additional_properties_false"
+      positive_fixture_ids: [FX-MODE-SEP-3-POS-1]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-MODE-SEP-3-NEG-FOREIGN-KEY]
+      mutation_fixture_ids: [MUT-SCHEMA-DRIFT]
+      expected_PASS_condition: "Both schemas set additionalProperties: false; foreign key rejected"
+      expected_primary_failure_code: SCHEMA_VALIDATION_FAILED
+      expected_diagnostic_codes: [ADDITIONAL_PROPERTIES_ALLOWED]
+      oracle_source: requirement-registry.yaml VTA-REQ-008
+      deterministic_output_record: "schema.additionalProperties == false (both modes)"
+      precedence_rules: "Schema-level enforcement; foundation for VC-MODE-SEP-1/2"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-MODE-CONTAM-1
+      primary_category: MODE_SEPARATION
+      requirement_ids: [VTA-REQ-008]
+      canonical_obligation: "ACTIVE output with profile_blocks → rejection"
+      controlled_failure: MODE_CONTAMINATION
+      implementation_surface:
+        proposed_verifier_module: verifier/schema_conformance.py
+        proposed_verifier_function: "detect_mode_contamination"
+      positive_fixture_ids: []
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-MODE-CONTAM-NEG-1]
+      mutation_fixture_ids: [MUT-MODE-CONTAM]
+      expected_PASS_condition: "ACTIVE output with profile_blocks → rejection"
+      expected_primary_failure_code: MODE_CONTAMINATION
+      expected_diagnostic_codes: [CROSS_MODE_FIELD_INJECTED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-MODE-CONTAMINATION
+      deterministic_output_record: "verifier_failure(VC_id=VC-MODE-CONTAM-1, code=MODE_CONTAMINATION)"
+      precedence_rules: "Negative fixture; companion to VC-MODE-SEP-1"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-MODE-KERNEL-1
+      primary_category: MODE_SEPARATION
+      requirement_ids: [VTA-REQ-006]
+      canonical_obligation: "ACTIVE BB and PROFILE BB helper produce IDENTICAL values for same input"
+      controlled_failure: MODE_KERNEL_DIVERGENCE
+      implementation_surface:
+        proposed_verifier_module: verifier/formula_conformance.py
+        proposed_verifier_function: "assert_active_profile_bb_identical"
+      positive_fixture_ids: [FX-MODE-KERNEL-POS-IDENTICAL]
+      boundary_fixture_ids: [FX-MODE-KERNEL-BND-1]
+      negative_fixture_ids: [FX-MODE-KERNEL-NEG-DIVERGE]
+      mutation_fixture_ids: [MUT-MODE-DIVERGE]
+      expected_PASS_condition: "ACTIVE BB == PROFILE BB helper for same input"
+      expected_primary_failure_code: MODE_KERNEL_DIVERGENCE
+      expected_diagnostic_codes: [ACTIVE_PROFILE_KERNEL_DIVERGE]
+      oracle_source: failure-mode-coverage-plan.yaml FM-MODE-KERNEL-DIVERGENCE + oracle O-002
+      deterministic_output_record: "max(|bb_active - bb_profile|) == 0"
+      precedence_rules: "Shared kernel integrity check; cross-listed with COMPUTATION_RECOMPUTE"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    # ============================================================
+    # BOUNDARY (3) — PHASE_6 obligations
+    # ============================================================
+
+    - VC_id: VC-VAL-BOUND-1
+      primary_category: BOUNDARY
+      requirement_ids: [VTA-REQ-011]
+      canonical_obligation: "Integration adapter MUST NOT have write path to fundamental/valuation fields"
+      controlled_failure: VALUATION_OVERRIDE_ATTEMPT
+      implementation_surface:
+        proposed_verifier_module: verifier/boundary_enforcement.py
+        proposed_verifier_function: "assert_no_write_path_to_valuation"
+      positive_fixture_ids: [FX-VAL-BOUND-1-POS-1]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-VAL-BOUND-1-NEG-WRITE-PATH]
+      mutation_fixture_ids: [MUT-VAL-OVERRIDE]
+      expected_PASS_condition: "Integration adapter has no write path to fundamental/valuation fields"
+      expected_primary_failure_code: VALUATION_OVERRIDE_ATTEMPT
+      expected_diagnostic_codes: [WRITE_PATH_TO_VALUATION_DETECTED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-VALUATION-OVERRIDE
+      deterministic_output_record: "no write_target ∈ valuation_fields in adapter"
+      precedence_rules: "CRITICAL; Phase 6 integration test"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 6 integration tests — verifier function is PHASE_6]
+
+    - VC_id: VC-VAL-BOUND-2
+      primary_category: BOUNDARY
+      requirement_ids: [VTA-REQ-011]
+      canonical_obligation: "Schema validation rejects valuation_* keys in technical output"
+      controlled_failure: VALUATION_OVERRIDE_ATTEMPT
+      implementation_surface:
+        proposed_verifier_module: verifier/boundary_enforcement.py
+        proposed_verifier_function: "assert_schema_rejects_valuation_keys"
+      positive_fixture_ids: [FX-VAL-BOUND-2-POS-1]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-VAL-BOUND-2-NEG-VALUATION-KEY]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "technical-active/profile-output schema rejects valuation_* keys"
+      expected_primary_failure_code: VALUATION_OVERRIDE_ATTEMPT
+      expected_diagnostic_codes: [VALUATION_KEY_IN_TECHNICAL_OUTPUT]
+      oracle_source: requirement-registry.yaml VTA-REQ-011
+      deterministic_output_record: "schema rejects valuation_* prefix"
+      precedence_rules: "Schema-level boundary enforcement"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 6 schema integration]
+
+    - VC_id: VC-VAL-OVERRIDE-1
+      primary_category: BOUNDARY
+      requirement_ids: [VTA-REQ-011]
+      canonical_obligation: "Integration adapter cannot modify valuation_* fields"
+      controlled_failure: VALUATION_OVERRIDE_ATTEMPT
+      implementation_surface:
+        proposed_verifier_module: verifier/boundary_enforcement.py
+        proposed_verifier_function: "detect_valuation_modification_attempt"
+      positive_fixture_ids: []
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-VAL-OVERRIDE-NEG-WRITE-ATTEMPT]
+      mutation_fixture_ids: [MUT-VAL-OVERRIDE]
+      expected_PASS_condition: "Attempt to write valuation_* field → blocked with VALUATION_OVERRIDE_ATTEMPT"
+      expected_primary_failure_code: VALUATION_OVERRIDE_ATTEMPT
+      expected_diagnostic_codes: [VALUATION_WRITE_BLOCKED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-VALUATION-OVERRIDE
+      deterministic_output_record: "verifier_failure(VC_id=VC-VAL-OVERRIDE-1, code=VALUATION_OVERRIDE_ATTEMPT)"
+      precedence_rules: "CRITICAL; Phase 6 integration mutation"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 6 integration tests]
+
+    # ============================================================
+    # ARCHETYPE (9)
+    # ============================================================
+
+    - VC_id: VC-ARCH-AMBIG-1
+      primary_category: ARCHETYPE
+      requirement_ids: []
+      canonical_obligation: "Ambiguity in archetype assignment → fallback to no_current_setup"
+      controlled_failure: ARCHETYPE_AMBIGUITY_FALLBACK
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_archetype_deterministic_fallback"
+      positive_fixture_ids: [FX-ARCH-AMBIG-POS-FALLBACK]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-ARCH-AMBIG-NEG-NONDETERMINISTIC]
+      mutation_fixture_ids: [MUT-ARCH-AMBIG]
+      expected_PASS_condition: "Ambiguous input → A-NO-CURRENT-SETUP fallback (deterministic)"
+      expected_primary_failure_code: ARCHETYPE_AMBIGUITY_FALLBACK
+      expected_diagnostic_codes: [NONDETERMINISTIC_ARCHETYPE]
+      oracle_source: archetype-verification-plan.yaml (precedence property test)
+      deterministic_output_record: "archetype ∈ {5 canonical}, deterministic for any input"
+      precedence_rules: "LOW severity; tie impossible by design (unique precedence)"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-FALSE-BREAKOUT-1
+      primary_category: ARCHETYPE
+      requirement_ids: []
+      canonical_obligation: "Breakout without volume → not flagged"
+      controlled_failure: FALSE_BREAKOUT_WITHOUT_VOLUME
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_breakout_volume_confirmation"
+      positive_fixture_ids: [FX-FALSE-BREAKOUT-POS-VOLUME-CONFIRMED]
+      boundary_fixture_ids: [FX-FALSE-BREAKOUT-BND-EXACT-1P5X]
+      negative_fixture_ids: [FX-FALSE-BREAKOUT-NEG-NO-VOLUME]
+      mutation_fixture_ids: [MUT-FALSE-BREAKOUT]
+      expected_PASS_condition: "Breakout without volume ≥1.5× avg20 → setup score <55 (not flagged)"
+      expected_primary_failure_code: FALSE_BREAKOUT_WITHOUT_VOLUME
+      expected_diagnostic_codes: [BREAKOUT_WITHOUT_VOLUME]
+      oracle_source: failure-mode-coverage-plan.yaml FM-FALSE-BREAKOUT
+      deterministic_output_record: "breakout_score < 55 when volume < threshold"
+      precedence_rules: "Volume confirmation gate"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-UNCONFIRMED-1
+      primary_category: ARCHETYPE
+      requirement_ids: []
+      canonical_obligation: "Setup score 65 → status=INDEVELOPMENT"
+      controlled_failure: UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_unconfirmed_setup_status"
+      positive_fixture_ids: [FX-UNCONFIRMED-POS-65-INDEVELOPMENT]
+      boundary_fixture_ids: [FX-UNCONFIRMED-BND-EXACT-62, FX-UNCONFIRMED-BND-EXACT-78]
+      negative_fixture_ids: [FX-UNCONFIRMED-NEG-65-CONFIRMED]
+      mutation_fixture_ids: [MUT-UNCONFIRMED]
+      expected_PASS_condition: "Setup score 62-77 → status=INDEVELOPMENT (not CONFIRMED)"
+      expected_primary_failure_code: UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED
+      expected_diagnostic_codes: [UNCONFIRMED_MARKED_CONFIRMED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-UNCONFIRMED-PATTERN
+      deterministic_output_record: "setup.status == INDEVELOPMENT for score in [62,77]"
+      precedence_rules: "Score band gate; <55 NOT_PRESENT, 55-61 emerging, 62-77 INDEVELOPMENT, ≥78 CONFIRMED"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 score band freeze — 55/62/78 thresholds]
+
+    - VC_id: VC-LOOKAHEAD-1
+      primary_category: ARCHETYPE
+      requirement_ids: [VTA-REQ-001]
+      canonical_obligation: "Pattern at index i must not reference close[i+k] for k>0"
+      controlled_failure: LOOKAHEAD_BIAS_DETECTED
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "detect_lookahead_bias"
+      positive_fixture_ids: [FX-LOOKAHEAD-POS-CAUSAL]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-LOOKAHEAD-NEG-FUTURE-PEEK]
+      mutation_fixture_ids: [MUT-LOOKAHEAD]
+      expected_PASS_condition: "Pattern detection at index i references only close[0..i] (causal)"
+      expected_primary_failure_code: LOOKAHEAD_BIAS_DETECTED
+      expected_diagnostic_codes: [FUTURE_REFERENCE_DETECTED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-LOOKAHEAD-BIAS
+      deterministic_output_record: "pattern[i] depends only on close[0..i]"
+      precedence_rules: "CRITICAL; static analysis + property test"
+      machine_verifiable: true
+      unresolved_dependency: []
+
+    - VC_id: VC-CONFLICT-SETUP-1
+      primary_category: ARCHETYPE
+      requirement_ids: [VTA-REQ-002, VTA-REQ-009a]
+      canonical_obligation: "Conflicting setups → all reported, archetype assigned"
+      controlled_failure: SETUP_DROPPED_SILENTLY
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_conflicting_setups_transparent"
+      positive_fixture_ids: [FX-CONFLICT-SETUP-POS-ALL-REPORTED]
+      boundary_fixture_ids: [FX-CONFLICT-SETUP-BND-1]
+      negative_fixture_ids: [FX-CONFLICT-SETUP-NEG-SILENT-DROP]
+      mutation_fixture_ids: [MUT-CONFLICT-SETUP]
+      expected_PASS_condition: "Multiple qualifying setups all reported (sorted by score desc), archetype resolved by precedence"
+      expected_primary_failure_code: SETUP_DROPPED_SILENTLY
+      expected_diagnostic_codes: [SETUP_SILENTLY_DROPPED]
+      oracle_source: failure-mode-coverage-plan.yaml FM-CONFLICTING-SETUP
+      deterministic_output_record: "count(reported_setups) == count(qualifying_setups), archetype ∈ canonical set"
+      precedence_rules: "No silent top-N truncation; all ≥55 reported"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 top-N policy freeze — recommend ALL ≥55]
+
+    - VC_id: VC-BEARISH-DESIGN-1
+      primary_category: ARCHETYPE
+      requirement_ids: [VTA-REQ-009a]
+      canonical_obligation: "Bearish setups have independent rules (NO sign inversion of bullish)"
+      controlled_failure: BEARISH_SIGN_INVERSION
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_bearish_rules_independent"
+      positive_fixture_ids: [FX-BEARISH-DESIGN-1-POS-INDEPENDENT]
+      boundary_fixture_ids: []
+      negative_fixture_ids: [FX-BEARISH-DESIGN-1-NEG-SIGN-FLIP]
+      mutation_fixture_ids: [MUT-BEAR-SIGN-FLIP]
+      expected_PASS_condition: "Bearish detector does NOT import/call bullish detector with sign flip"
+      expected_primary_failure_code: BEARISH_SIGN_INVERSION
+      expected_diagnostic_codes: [SIGN_INVERSION_OF_BULLISH]
+      oracle_source: bearish-setup-phase3-design-input.yaml (Sol §3 decision)
+      deterministic_output_record: "no import/call of bullish detector in bearish detector source"
+      precedence_rules: "Phase 3 design gate; mandatory before bearish implementation"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 bearish registry freeze]
+
+    - VC_id: VC-BEARISH-DESIGN-2
+      primary_category: ARCHETYPE
+      requirement_ids: [VTA-REQ-009a]
+      canonical_obligation: "Each bearish setup has confirmation + invalidation + min_history"
+      controlled_failure: BEARISH_SETUP_INCOMPLETE
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_bearish_setup_completeness"
+      positive_fixture_ids: [FX-BEARISH-DESIGN-2-POS-COMPLETE]
+      boundary_fixture_ids: [FX-BEARISH-DESIGN-2-BND-MIN-HISTORY]
+      negative_fixture_ids: [FX-BEARISH-DESIGN-2-NEG-NO-CONFIRMATION, FX-BEARISH-DESIGN-2-NEG-NO-INVALIDATION]
+      mutation_fixture_ids: [MUT-BEAR-NO-VOLUME, MUT-BEAR-NO-HOLD]
+      expected_PASS_condition: "Each bearish setup has confirmation (volume + hold) + invalidation (price + decay) + min_history"
+      expected_primary_failure_code: BEARISH_SETUP_INCOMPLETE
+      expected_diagnostic_codes: [BEARISH_NO_CONFIRMATION, BEARISH_NO_INVALIDATION, BEARISH_NO_MIN_HISTORY]
+      oracle_source: bearish-setup-phase3-design-input.yaml design_obligations
+      deterministic_output_record: "all bearish setups have 3 required elements"
+      precedence_rules: "Phase 3 design gate"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 confirmation/invalidation threshold freeze — BEAR-Q3/Q4]
+
+    - VC_id: VC-BEARISH-DESIGN-3
+      primary_category: ARCHETYPE
+      requirement_ids: [VTA-REQ-009a]
+      canonical_obligation: "Bullish+bearish simultaneous match behavior defined"
+      controlled_failure: SETUP_DROPPED_SILENTLY
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_bull_bear_conflict_behavior_defined"
+      positive_fixture_ids: [FX-BEARISH-DESIGN-3-POS-CONFLICT-RESOLVED]
+      boundary_fixture_ids: [FX-BEARISH-DESIGN-3-BND-SIMULTANEOUS]
+      negative_fixture_ids: [FX-BEARISH-DESIGN-3-NEG-UNDEFINED]
+      mutation_fixture_ids: []
+      expected_PASS_condition: "Bullish+bearish simultaneous match: behavior frozen (OPTION_A recommended → A-MIXED)"
+      expected_primary_failure_code: SETUP_DROPPED_SILENTLY
+      expected_diagnostic_codes: [BULL_BEAR_CONFLICT_UNDEFINED]
+      oracle_source: bearish-setup-phase3-design-input.yaml conflict_resolution
+      deterministic_output_record: "conflict_behavior ∈ {OPTION_A, OPTION_B, OPTION_C}, frozen"
+      precedence_rules: "Phase 3 design gate; must freeze one option"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 conflict-resolution option freeze — BEAR-Q2]
+
+    - VC_id: VC-BEARISH-DESIGN-4
+      primary_category: ARCHETYPE
+      requirement_ids: [VTA-REQ-009a]
+      canonical_obligation: "Denominator frozen after Phase 3 review"
+      controlled_failure: DENOMINATOR_NOT_FROZEN
+      implementation_surface:
+        proposed_verifier_module: verifier/setup_semantics.py
+        proposed_verifier_function: "assert_denominator_frozen"
+      positive_fixture_ids: []
+      boundary_fixture_ids: [FX-BEARISH-DESIGN-4-BND-DENOMINATOR]
+      negative_fixture_ids: []
+      mutation_fixture_ids: []
+      expected_PASS_condition: "Setup denominator frozen (8 bullish + N bearish) after Phase 3 review"
+      expected_primary_failure_code: DENOMINATOR_NOT_FROZEN
+      expected_diagnostic_codes: [DENOMINATOR_PENDING_PHASE_3_REVIEW]
+      oracle_source: bearish-setup-phase3-design-input.yaml denominator_policy
+      deterministic_output_record: "denominator value matches frozen registry"
+      precedence_rules: "Phase 3 design gate; freeze authority = Sol"
+      machine_verifiable: true
+      unresolved_dependency: [Phase 3 denominator freeze — 8 bullish + 5 bearish proposed = 13]
+
+  # ==================================================================
+  # Integrity gate
+  # ==================================================================
+
+  integrity_gate:
+    fully_mapped: 64
+    total_unique_VCs: 64
+    duplicate_VC_ids: 0
+    orphan_VCs: 0
+    VCs_without_verifier_function: 0
+    VCs_without_fixture_design: 0
+    VCs_without_failure_code: 0
+    VCs_without_oracle_source: 0
+
+    category_breakdown:
+      INPUT_PRE_FLIGHT: 14
+      COMPUTATION_RECOMPUTE: 12
+      OUTPUT_SCHEMA: 11
+      LANGUAGE_POLICY: 5
+      PROVENANCE: 5
+      MODE_SEPARATION: 5
+      BOUNDARY: 3
+      ARCHETYPE: 9
+      total: 64
+
+    phase_breakdown:
+      PHASE_3: 7
+      PHASE_4: 54
+      PHASE_6: 3
+
+    duplicate_resolution_applied:
+      merged_id: VC-FAB-VAL-1
+      resolution: MERGE_TRUE_DUPLICATES
+      records_before: 65
+      records_after: 64
+      cross_listed_category_handled: PROVENANCE
+      semantic_loss: false
+
+    fixture_design_coverage:
+      positive_fixture_count: 124
+      boundary_fixture_count: 78
+      negative_fixture_count: 96
+      mutation_fixture_count: 26
+      total_fixture_slots: 324
+      note: >
+        Fixture IDs are DESIGN placeholders (FX-* / MUT-*). Per Phase 3 scope,
+        executable fixtures are Phase 4. Counts reflect design coverage: each
+        VC has at least one fixture slot in its required class (positive VCs
+        may have empty negative_fixture_ids for negative-only checks).
+
+    verifier_module_coverage:
+      verifier/schema_conformance.py: 23   # INPUT_PRE_FLIGHT (14) + OUTPUT_SCHEMA (11) - overlaps + MODE_SEP schema
+      verifier/formula_conformance.py: 15   # COMPUTATION_RECOMPUTE (12) + price-basis (3)
+      verifier/provenance_integrity.py: 6   # PROVENANCE (5) + VC-FAB-VAL-1 (merged, OUTPUT_SCHEMA primary)
+      verifier/setup_semantics.py: 12       # ARCHETYPE (9) + COV (2) + PROFILE coverage
+      verifier/language_policy.py: 5        # LANGUAGE_POLICY (5)
+      verifier/boundary_enforcement.py: 3   # BOUNDARY (3)
+      total: 64
+
+    failure_code_coverage:
+      unique_primary_failure_codes: 32
+      unique_diagnostic_codes: 64
+      canonical_registry_aligned: true
+      canonical_codes_used: 26   # names match vta-failure-code-registry.yaml exactly
+      output_gate_codes_introduced: 7   # new codes for OUTPUT_SCHEMA gates not in canonical registry
+      output_gate_code_names:
+        - PRICE_BASIS_UNTAGGED       # VC-PRICE-BASIS-1
+        - PRICE_BASIS_MISMATCH       # VC-PRICE-BASIS-2
+        - INDICATOR_MISSING          # VC-ACTIVE-VALID-3
+        - BLOCK_MISSING              # VC-PROFILE-VALID-3
+        - SETUP_COVERAGE_MISREPRESENTED  # VC-PROFILE-VALID-4, VC-COV-1, VC-COV-2
+        - THRESHOLD_NOT_FROZEN       # VC-CHANNEL-2
+        - DENOMINATOR_NOT_FROZEN     # VC-BEARISH-DESIGN-4
+      note: >
+        Every VC has an expected_primary_failure_code (NONE for non-fail
+        checks like VC-ZERO-VOL-1, VALID_WITH_WARNINGS for recoverable
+        warnings). 25 codes reuse the canonical failure-code-registry names
+        verbatim. 7 codes are new OUTPUT_SCHEMA / design-gate codes introduced
+        here; Phase 4 implementation should reconcile these into the canonical
+        registry as PRIMARY tier-3 codes.
+
+    oracle_source_coverage:
+      failure_mode_plan_oracles: 24
+      oracle_registry_oracles: 13
+      contract_oracles: 8
+      requirement_oracles: 19
+      note: "Every VC traces to at least one oracle source; no VC is oracle-less"
+
+    status: PASS
+
+  # ==================================================================
+  # Required chain integrity
+  # ==================================================================
+
+  required_chain_integrity:
+    chain: "Requirement → canonical VC → implementation surface (module + function) → verifier function → frozen fixture → expected outcome → stable failure code"
+    chain_complete: true
+    broken_links: []
+    oracle_independence_verified: true
+    design_authority_note: >
+      All implementation_surface entries are PROPOSED targets — no .py
+      verifier files exist (per vta-phase-3-implementation-scope.yaml Section 7).
+      The mapping establishes the contract that Phase 4 verifier implementation
+      must satisfy: each VC resolves to exactly one verifier function with
+      predeclared fixtures and stable failure codes. Fixture IDs (FX-*, MUT-*)
+      are design placeholders; executable fixtures are Phase 4 deliverables.
+
+  cross_artifact_lock:
+    readiness_commit: d75a9a3ac56db642ff8fa5623898ea7f4733222a
+    status: ALIGNED

@@ -1,0 +1,1070 @@
+# VTA Phase 3 Implementation Review — Bearish Setup Registry
+# DESIGN ONLY — no implementation code produced by this artifact.
+#
+# Authority:
+#   - Phase 3 Implementation Scope, Section 6 (bearish_setup_registry_design)
+#   - Phase 2B design input package, Section 6 (bearish_setup_registry_design)
+#   - Sol §3 decision: ADD_BEARISH_SETUP_REGISTRY ; mirror by sign inversion PROHIBITED
+#
+# Canonical inputs:
+#   - vn-technical-analysis-phase2B/manifests/bearish-setup-phase3-design-input.yaml (5 candidates)
+#   - vn-technical-analysis-phase2A/requirements/requirement-registry.yaml (VTA-REQ-009a)
+#   - vn-technical-analysis-phase2A/manifests/setup-coverage-reconciliation.yaml (8 bullish setups)
+#
+# Design constraint (Sol §3): Mirror by sign inversion PROHIBITED.
+#   Each bearish setup has INDEPENDENT detection rules designed for distribution
+#   microstructure (distribution vs accumulation, weaker/deferred confirmation, different
+#   volume signatures). Rules are NOT derived by negating or sign-inverting a bullish setup.
+#
+# Semantic discipline — FOUR distinct concepts, never conflated within a single field:
+#   observation    = descriptive_market_condition
+#                    (what the recent tape looks like; descriptive, NEVER actionable alone)
+#   signal         = rule_qualified_event
+#                    (the structural conditions that ALL cross threshold → setup is "present")
+#   confirmation   = independent_supporting_condition
+#                    (a SEPARATE evidence channel — e.g. breakdown-hold + volume — that must
+#                     follow the signal before the setup may be elevated above UNCONFIRMED)
+#   invalidation   = condition_that_cancels_the_setup
+#                    (the setup is void; no bearish claim may be emitted for this instance)
+#
+# PROHIBITED ACTIVATION RULE:
+#   A bearish setup MUST NOT be activated because a single indicator happens to be negative
+#   (e.g. RSI < 30, MACD histogram < 0, close < MA). A lone negative indicator is at most a
+#   descriptive_market_condition; it is never a signal and never a confirmation.
+#   Any design that wires (negative_indicator → signal) is a sign-inversion in disguise and
+#   violates Sol §3.
+#
+# Decision vocabulary (per directive):
+#   ACCEPT_AS_PHASE_3      — design is sufficient to freeze; implementation may proceed Phase 4
+#   REVISE_BEFORE_FREEZE   — structure sound but specific thresholds/parameters need VN
+#                            calibration or added safeguards before freezing
+#   DEFER                  — defer beyond Phase 3 (e.g. insufficient data type available)
+#   REJECT                 — pattern not designable as an independent detector; drop
+
+bearish_setup_registry:
+  version: "1.0.0"
+  frozen_at: "2026-07-28"
+  phase: PHASE_3_IMPLEMENTATION_REVIEW
+  artifact_class: DESIGN_ONLY
+  review_authority: "Phase 3 Implementation Review"
+  freeze_authority: "Sol (after Phase 3 design review)"
+  implementation_phase: PHASE_4
+  related_requirement: VTA-REQ-009a
+  symmetric_sign_inversion: PROHIBITED
+
+  global_design_invariants:
+    - id: GDI-1
+      rule: "No bearish detector may import or call a bullish detector with a sign flip."
+    - id: GDI-2
+      rule: "No bearish threshold may be defined as (-1 × bullish_threshold)."
+    - id: GDI-3
+      rule: "Volume signatures are designed independently for distribution, not by inverting accumulation logic."
+    - id: GDI-4
+      rule: "A single negative indicator is observation only; it can never alone produce a signal or confirmation."
+    - id: GDI-5
+      rule: "Every signal requires BOTH a structural condition AND a volume/microstructure condition (no pattern-only, no indicator-only activation)."
+    - id: GDI-6
+      rule: "Every confirmation requires an evidence channel independent of the signal's own inputs."
+
+  # ==================================================================
+  # Candidate → setup mapping (origin tracking, no behavior implied)
+  # ==================================================================
+  candidate_mapping:
+    - candidate_id: C-BEAR-FLAG
+      setup_id: S-BEAR-FLAG
+      bullish_mirror: S-BULL-FLAG
+      mirror_status: PROHIBITED_AS_DERIVATION
+    - candidate_id: C-BEAR-PENNANT
+      setup_id: S-BEAR-PENNANT
+      bullish_mirror: S-BULL-PENNANT
+      mirror_status: PROHIBITED_AS_DERIVATION
+    - candidate_id: C-TRIANGLE-DESC   # a.k.a. C-DESCENDING-TRIANGLE in Phase 2B input
+      setup_id: S-BEAR-DOWN-TRIANGLE
+      bullish_mirror: S-TRIANGLE-ASC
+      mirror_status: PROHIBITED_AS_DERIVATION
+    - candidate_id: C-RECTANGLE-TOP
+      setup_id: S-BEAR-RECTANGLE-TOP
+      bullish_mirror: none
+      mirror_status: N/A
+    - candidate_id: C-HEAD-SHOULDERS
+      setup_id: S-BEAR-HEAD-SHOULDERS
+      bullish_mirror: none
+      mirror_status: N/A
+
+  # ==================================================================
+  # Shared condition vocabulary (referenced by setup conditions below)
+  # ==================================================================
+  shared_condition_vocabulary:
+
+    indicator_ids_available:
+      - F-RSI          # Relative Strength Index (Wilder)
+      - F-BOLLINGER    # Bollinger Bands
+      - F-MA           # Moving Average (SMA/EMA)
+      - F-MACD         # MACD
+      - F-BETA         # Beta vs VNINDEX
+      - F-CMF          # Chaikin Money Flow
+      - F-VPCI         # Volume-Price Confirmation Indicator
+      - F-HVB          # High Volume Behavior events
+      - F-CHANNEL-SLOPE # normalized channel slope (% per bar)
+      - OBV            # On-Balance Volume series
+      - VPT            # Volume-Price Trend series (separate source series from OBV)
+
+    data_quality_conditions:
+      DQ-OHLCV-VERIFIED:
+        meaning: "OHLCV sourced from verified provider/collector packet (VTA-REQ-012); no fabricated data"
+      DQ-ADJUSTMENT-KNOWN:
+        meaning: "Corporate-action adjustment status is KNOWN and not CONFLICTING (VTA-REQ-004)"
+      DQ-MIN-HISTORY:
+        meaning: "At least minimum_history sessions available for the setup (per-setup)"
+      DQ-OBV-VPT-SEPARATE:
+        meaning: "OBV and VPT sourced from separate series (VTA-REQ-014); no cross-contamination"
+      DQ-NO-DUP-GAP:
+        meaning: "Series deduplicated and gap-handled by normalization engine"
+
+    cross_setup_policies:
+
+      bullish_bearish_conflict:        # answers BEAR-Q2
+        chosen_option: OPTION_A
+        rule: "When one or more bullish setups AND one or more bearish setups both score ≥55, report BOTH. Do NOT silently drop either. Assign archetype A-MIXED (least information loss; preserves both evidence sets for the reader)."
+        rationale: "Option B (score-weighted winner) hides the losing evidence; Option C (INDEVELOPMENT) discards information unnecessarily. A-MIXED already exists in precedence order."
+
+      cooldown_and_retrigger:          # applies to ALL bearish setups uniformly
+        cooldown_sessions: 10
+        rule: "After a bearish setup is confirmed, re-triggering the SAME setup_id is suppressed for 10 daily sessions. A different bearish setup_id may still fire within the cooldown. A confirmed invalidation resets the cooldown for that setup_id."
+
+      precedence_among_bearish:        # when multiple bearish setups confirm on same bar
+        rule: "Report ALL confirmed bearish setups. Rank by setup_score descending. The highest-scoring bearish setup is the 'primary' bearish attribution; others are listed as 'secondary bearish setups'. No silent truncation (mirrors bullish top-N policy)."
+
+      no_setup_behavior:
+        rule: "When no bullish and no bearish setup reaches score ≥55, archetype falls through to A-NO-CURRENT-SETUP. Already covered by archetype precedence."
+
+  # ==================================================================
+  # The 5 bearish setups
+  # ==================================================================
+  setups:
+
+    # ----------------------------------------------------------------
+    # 1. Bear Flag
+    # ----------------------------------------------------------------
+    - setup_id: S-BEAR-FLAG
+      canonical_name: "Bear Flag"
+      candidate_origin: C-BEAR-FLAG
+      direction: BEARISH
+      market_hypothesis: >
+        After a sustained down-leg, sellers pause to absorb and weak hands
+        short-cover, producing a shallow upward-sloping consolidation on
+        contracting volume. This is distribution disguised as recovery.
+        Once the consolidation low breaks on expanding volume, sellers
+        regain control and the prior down-leg resumes. The pattern is a
+        continuation of an EXISTING downtrend, not a top.
+
+      prerequisite_indicator_ids:
+        - F-CHANNEL-SLOPE   # quantifies prior down-leg and consolidation slope
+        - F-MA              # trend context (price vs long MA)
+        - OBV               # distribution signature
+        - VPT               # independent volume-pressure confirmation
+
+      prerequisite_data_quality_conditions:
+        - DQ-OHLCV-VERIFIED
+        - DQ-ADJUSTMENT-KNOWN
+        - DQ-MIN-HISTORY
+        - DQ-OBV-VPT-SEPARATE
+        - DQ-NO-DUP-GAP
+
+      observation_conditions:   # descriptive_market_condition — NOT actionable alone
+        - id: BF-OBS-1
+          semantic: observation
+          condition: "A prior down-leg of ≥15 sessions exists within the lookback window."
+        - id: BF-OBS-2
+          semantic: observation
+          condition: "F-CHANNEL-SLOPE of the prior leg is negative (down-trend context present)."
+        - id: BF-OBS-3
+          semantic: observation
+          condition: "A consolidation of 5-20 sessions forms with a mildly rising slope (counter-trend channel)."
+        - id: BF-OBS-4
+          semantic: observation
+          condition: "Consolidation volume contracts (mean consolidation volume < 70% of prior-leg mean volume)."
+          note: "Volume contraction is OBSERVATION here; it becomes load-bearing only inside the signal (BF-SIG-3)."
+        - id: BF-OBS-5
+          semantic: observation
+          condition: "RSI during consolidation drifts in the 35-55 band (no decisive momentum reversal up)."
+          anti_inversion_clause: "A low RSI alone is NOT a signal; RSI is used only as descriptive context."
+
+      trigger_conditions:       # rule_qualified_event — ALL must hold for signal
+        - id: BF-SIG-1
+          semantic: signal
+          condition: "BF-OBS-1, BF-OBS-2, BF-OBS-3 all hold (structure present)."
+        - id: BF-SIG-2
+          semantic: signal
+          condition: "Close breaks below the consolidation low (lower boundary of the rising channel)."
+        - id: BF-SIG-3
+          semantic: signal
+          condition: "Breakdown-bar volume ≥ 1.5 × avg20 volume (volume expansion on the break, NOT pattern-only)."
+        - id: BF-SIG-4
+          semantic: signal
+          condition: "Breakdown-bar close is in the lower 25% of the breakdown-bar range (decisive close, not an intraday spike)."
+        - id: BF-SIG-5
+          semantic: signal
+          condition: "Aggregate signal requires BOTH structure (BF-SIG-1/2) AND microstructure (BF-SIG-3/4); pattern-only or volume-only is rejected."
+
+      confirmation_conditions:  # independent_supporting_condition — SEPARATE channel
+        - id: BF-CONF-1
+          semantic: confirmation
+          condition: "Breakdown HOLDS: the close of each of the next 3 sessions remains below the consolidation low (no immediate reversal)."
+          independence_clause: "Hold-evidence uses the post-breakdown bars — a window NOT used by the signal, so it is an independent channel."
+        - id: BF-CONF-2
+          semantic: confirmation
+          condition: "F-CMF over the 3-session post-breakdown window is negative (money flow confirms distribution, not a single-indicator flip)."
+          anti_inversion_clause: "CMF is one of two confirmations; it never confirms alone."
+        - id: BF-CONF-3
+          semantic: confirmation
+          condition: "VPT slope over the post-breakdown window is negative (volume-price trend corroborates)."
+          independence_clause: "VPT is a separate source series from OBV (VTA-REQ-014)."
+
+      invalidation_conditions:  # condition_that_cancels_the_setup
+        - id: BF-INV-1
+          semantic: invalidation
+          condition: "Within 5 sessions of the breakdown, price closes ABOVE the consolidation high → setup voided."
+        - id: BF-INV-2
+          semantic: invalidation
+          condition: "Prior-leg F-CHANNEL-SLOPE is not negative (no genuine downtrend) → structure prerequisite fails retroactively."
+        - id: BF-INV-3
+          semantic: invalidation
+          condition: "Breakdown immediately reverses (next session close > consolidation low AND volume > breakdown volume) → false breakout, voided."
+        - id: BF-INV-4
+          semantic: invalidation
+          condition: "No confirmation satisfied within 10 sessions of signal → setup expires (time decay)."
+
+      minimum_history:
+        sessions: 65
+        rationale: "Prior down-leg (≥15) + consolidation (5-20) + post-breakdown hold window (3) + avg20 calibration requires ≥65 daily sessions."
+
+      temporal_window:
+        evaluation_lookback: 65
+        signal_window: "consolidation (5-20 sessions) ending at breakdown bar"
+        confirmation_window: "next 3 sessions post-breakdown"
+        invalidation_window: "next 5 sessions post-breakdown"
+        expiry_window: "next 10 sessions post-signal"
+
+      precedence_rules:
+        within_bearish: "Ranked by setup_score; primary bearish attribution to highest score."
+        vs_bullish: "Per cross_setup_policies.bullish_bearish_conflict (OPTION_A → A-MIXED)."
+
+      conflict_rules:
+        same_id: "Re-detection of S-BEAR-FLAG suppressed by cooldown (10 sessions) unless invalidation fires."
+        with_S_BEAR_PENNANT: "If both flag and pennant structural sketches qualify, prefer the one with higher consolidation-slope linearity (pennant = converging, flag = parallel). Report the other as secondary if score ≥55."
+        with_bullish: "Report both; archetype A-MIXED."
+
+      cooldown_or_retrigger_rules:
+        cooldown_sessions: 10
+        retrigger_allowed_on: "New distinct down-leg forming after a confirmed prior trigger."
+
+      output_fields:
+        - setup_id
+        - setup_score
+        - confirmation_state   # UNCONFIRMED | CONFIRMED | INVALIDATED | EXPIRED
+        - breakdown_level
+        - breakdown_volume_ratio_to_avg20
+        - consolidation_slope_pct_per_bar
+        - prior_leg_slope_pct_per_bar
+
+      severity_semantics:
+        UNCONFIRMED: "Structure + signal present; confirmation not yet satisfied — informational only, NOT a bearish claim."
+        CONFIRMED: "Signal + ≥2 independent confirmations hold — bearish continuation evidence is in place."
+        INVALIDATED: "An invalidation condition fired — setup is void; no bearish attribution for this instance."
+        EXPIRED: "Confirmation window elapsed without confirmation — setup lapses silently."
+
+      confidence_semantics:
+        basis: "confidence ∈ [0,1] is a function of (a) clarity of the structural sketch, (b) breakdown volume ratio, (c) number of independent confirmations satisfied."
+        prohibited_inputs: "A single negative indicator must NOT raise confidence by itself."
+        floor: "confidence = 0 when confirmation_state ∈ {INVALIDATED, EXPIRED}."
+
+      provenance_requirements:
+        required_chains:
+          - "breakdown_level → exact bar OHLC (provider packet)"
+          - "breakdown_volume_ratio → volume series + avg20 (provider packet)"
+          - "consolidation_slope → F-CHANNEL-SLOPE computation (VTA-REQ-007 normalized)"
+          - "each confirmation → its post-breakdown window bars"
+        anti_inversion_clause: "Provenance must show the structural + microstructure evidence; it must NOT show 'indicator X was negative' as the sole basis."
+
+      related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-007, VTA-REQ-014]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
+
+      decision: ACCEPT_AS_PHASE_3
+      decision_rationale: >
+        Structure is canonical, microstructure (volume contraction → expansion) is
+        independently designable for distribution, confirmation uses a genuinely
+        separate post-breakdown window, and invalidation covers the false-breakout
+        and no-downtrend cases. No element derives from S-BULL-FLAG by sign flip.
+
+    # ----------------------------------------------------------------
+    # 2. Bear Pennant
+    # ----------------------------------------------------------------
+    - setup_id: S-BEAR-PENNANT
+      canonical_name: "Bear Pennant"
+      candidate_origin: C-BEAR-PENNANT
+      direction: BEARISH
+      market_hypothesis: >
+        After a sharp down-leg, price compresses into a small symmetrical
+        triangle (converging lower highs and higher lows) on fading volume —
+        a brief equilibrium as buyers and sellers hesitate. The downtrend
+        resumes on a breakdown below the lower converging trendline with
+        volume expansion. Continuation of an existing downtrend, not a top.
+
+      prerequisite_indicator_ids:
+        - F-CHANNEL-SLOPE
+        - F-MA
+        - OBV
+        - VPT
+
+      prerequisite_data_quality_conditions:
+        - DQ-OHLCV-VERIFIED
+        - DQ-ADJUSTMENT-KNOWN
+        - DQ-MIN-HISTORY
+        - DQ-OBV-VPT-SEPARATE
+        - DQ-NO-DUP-GAP
+
+      observation_conditions:
+        - id: BP-OBS-1
+          semantic: observation
+          condition: "A prior down-leg of ≥15 sessions exists within the lookback window."
+        - id: BP-OBS-2
+          semantic: observation
+          condition: "F-CHANNEL-SLOPE of the prior leg is negative."
+        - id: BP-OBS-3
+          semantic: observation
+          condition: "A triangular consolidation of 5-15 sessions forms: lower highs AND higher lows converging (range narrowing session-over-session)."
+        - id: BP-OBS-4
+          semantic: observation
+          condition: "Consolidation volume contracts (mean < 70% of prior-leg mean)."
+        - id: BP-OBS-5
+          semantic: observation
+          condition: "MACD histogram during consolidation is near zero (momentum pausing, not reversing up)."
+          anti_inversion_clause: "A negative MACD alone is NOT a signal; used only as descriptive context."
+
+      trigger_conditions:
+        - id: BP-SIG-1
+          semantic: signal
+          condition: "BP-OBS-1, BP-OBS-2, BP-OBS-3 all hold."
+        - id: BP-SIG-2
+          semantic: signal
+          condition: "Close breaks below the lower converging trendline of the pennant."
+        - id: BP-SIG-3
+          semantic: signal
+          condition: "Breakdown-bar volume ≥ 1.5 × avg20 volume."
+        - id: BP-SIG-4
+          semantic: signal
+          condition: "Aggregate signal requires BOTH structure (BP-SIG-1/2) AND microstructure (BP-SIG-3); pattern-only activation rejected."
+
+      confirmation_conditions:
+        - id: BP-CONF-1
+          semantic: confirmation
+          condition: "Breakdown HOLDS: next 3 session closes remain below the lower trendline."
+          independence_clause: "Uses post-breakdown bars not consumed by the signal."
+        - id: BP-CONF-2
+          semantic: confirmation
+          condition: "F-CMF over the post-breakdown window is negative."
+        - id: BP-CONF-3
+          semantic: confirmation
+          condition: "OBV slope over the post-breakdown window is negative."
+          independence_clause: "OBV is independent of the VPT channel; both may corroborate."
+
+      invalidation_conditions:
+        - id: BP-INV-1
+          semantic: invalidation
+          condition: "Within 5 sessions, close rises above the pennant apex/high → voided."
+        - id: BP-INV-2
+          semantic: invalidation
+          condition: "Prior-leg slope not negative → prerequisite fails."
+        - id: BP-INV-3
+          semantic: invalidation
+          condition: "Immediate reversal (next session close above trendline AND higher volume than breakdown) → false breakout."
+        - id: BP-INV-4
+          semantic: invalidation
+          condition: "No confirmation within 10 sessions → expired."
+
+      minimum_history:
+        sessions: 65
+        rationale: "Prior leg (≥15) + pennant (5-15) + confirmation (3) + avg20 calibration."
+
+      temporal_window:
+        evaluation_lookback: 65
+        signal_window: "pennant (5-15 sessions) ending at breakdown bar"
+        confirmation_window: "next 3 sessions post-breakdown"
+        invalidation_window: "next 5 sessions post-breakdown"
+        expiry_window: "next 10 sessions post-signal"
+
+      precedence_rules:
+        within_bearish: "Ranked by setup_score."
+        vs_bullish: "OPTION_A → A-MIXED."
+
+      conflict_rules:
+        same_id: "Cooldown 10 sessions unless invalidated."
+        with_S_BEAR_FLAG: "Disambiguate by consolidation geometry: converging → pennant; parallel rising → flag. Report the other as secondary if score ≥55."
+        with_bullish: "Report both; A-MIXED."
+
+      cooldown_or_retrigger_rules:
+        cooldown_sessions: 10
+        retrigger_allowed_on: "New distinct down-leg after a prior confirmed trigger."
+
+      output_fields:
+        - setup_id
+        - setup_score
+        - confirmation_state
+        - breakdown_level
+        - breakdown_volume_ratio_to_avg20
+        - pennant_convergence_ratio   # (range_first_bar - range_last_bar) / range_first_bar
+        - prior_leg_slope_pct_per_bar
+
+      severity_semantics:
+        UNCONFIRMED: "Signal present; informational only."
+        CONFIRMED: "Signal + ≥2 independent confirmations hold."
+        INVALIDATED: "Invalidation fired; void."
+        EXPIRED: "Confirmation window elapsed."
+
+      confidence_semantics:
+        basis: "Structural clarity (convergence fit) + breakdown volume ratio + confirmation count."
+        prohibited_inputs: "Single negative indicator must not raise confidence alone."
+        floor: "0 when INVALIDATED or EXPIRED."
+
+      provenance_requirements:
+        required_chains:
+          - "breakdown_level → exact bar OHLC"
+          - "pennant_convergence_ratio → per-bar highs/lows"
+          - "breakdown_volume_ratio → volume + avg20"
+          - "each confirmation → post-breakdown window bars"
+
+      related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-007, VTA-REQ-014]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
+
+      decision: ACCEPT_AS_PHASE_3
+      decision_rationale: >
+        Classic continuation structure; independently designable convergence
+        geometry distinguishes it from the flag; microstructure + confirmation +
+        invalidation all independent of any bullish rule.
+
+    # ----------------------------------------------------------------
+    # 3. Descending Triangle
+    # ----------------------------------------------------------------
+    - setup_id: S-BEAR-DOWN-TRIANGLE
+      canonical_name: "Descending Triangle"
+      candidate_origin: C-TRIANGLE-DESC   # Phase 2B input alias: C-DESCENDING-TRIANGLE
+      direction: BEARISH
+      market_hypothesis: >
+        A horizontal support level is tested repeatedly while each rebound makes
+        a lower high — sellers willing to sell lower, buyers only willing to
+        defend one level. The declining upper boundary reflects eroding demand.
+        Breakdown below the horizontal support on volume confirms demand has
+        collapsed. This is a TOP / REVERSAL-LEANING pattern that often forms at
+        the end of an uptrend or during a maturing downtrend.
+
+      prerequisite_indicator_ids:
+        - F-CHANNEL-SLOPE
+        - F-MA
+        - F-CMF
+        - OBV
+        - VPT
+
+      prerequisite_data_quality_conditions:
+        - DQ-OHLCV-VERIFIED
+        - DQ-ADJUSTMENT-KNOWN
+        - DQ-MIN-HISTORY
+        - DQ-OBV-VPT-SEPARATE
+        - DQ-NO-DUP-GAP
+
+      observation_conditions:
+        - id: DT-OBS-1
+          semantic: observation
+          condition: "A horizontal lower boundary: ≥2 tests of a support level within ≤3% tolerance, spanning ≥15 sessions."
+        - id: DT-OBS-2
+          semantic: observation
+          condition: "An upper boundary of declining highs: OLS regression of swing highs has negative slope."
+        - id: DT-OBS-3
+          semantic: observation
+          condition: "Volume trends lower into the apex (last-third mean volume < first-third mean volume)."
+        - id: DT-OBS-4
+          semantic: observation
+          condition: "Bollinger Band width is contracting into the apex (volatility compressing)."
+          anti_inversion_clause: "BB position/width is descriptive; a low %B alone is NOT a signal."
+
+      trigger_conditions:
+        - id: DT-SIG-1
+          semantic: signal
+          condition: "DT-OBS-1 and DT-OBS-2 both hold (horizontal support + declining highs)."
+        - id: DT-SIG-2
+          semantic: signal
+          condition: "Close breaks below the horizontal support level by ≥1% (decisive, not a marginal poke)."
+        - id: DT-SIG-3
+          semantic: signal
+          condition: "Breakdown-bar volume ≥ 1.5 × avg20 volume OR breakdown-bar CMF < -0.15 (volume/money-flow expansion accompanies the break)."
+        - id: DT-SIG-4
+          semantic: signal
+          condition: "Aggregate signal requires BOTH structure (DT-SIG-1/2) AND microstructure (DT-SIG-3)."
+
+      confirmation_conditions:
+        - id: DT-CONF-1
+          semantic: confirmation
+          condition: "Breakdown HOLDS: next 3 session closes remain below support."
+          independence_clause: "Post-breakdown window, independent of signal inputs."
+        - id: DT-CONF-2
+          semantic: confirmation
+          condition: "Prior support level now acts as resistance: at least one post-breakdown rebound stalls within 3% BELOW the old support."
+        - id: DT-CONF-3
+          semantic: confirmation
+          condition: "F-VPCI over the post-breakdown window is bearish (volume-price non-confirmation of any rebound)."
+
+      invalidation_conditions:
+        - id: DT-INV-1
+          semantic: invalidation
+          condition: "Within 5 sessions, close returns above the horizontal support AND holds 1 session → support held, voided."
+        - id: DT-INV-2
+          semantic: invalidation
+          condition: "Fewer than 2 support tests (structure prerequisite fails)."
+        - id: DT-INV-3
+          semantic: invalidation
+          condition: "Immediate reversal: next session close above support with volume > breakdown volume → false breakdown."
+        - id: DT-INV-4
+          semantic: invalidation
+          condition: "No confirmation within 10 sessions → expired."
+
+      minimum_history:
+        sessions: 65
+        rationale: "Triangle spans ≥15 sessions; with support tests, declining-highs regression, and confirmation window, ≥65 sessions required."
+
+      temporal_window:
+        evaluation_lookback: 65
+        signal_window: "triangle formation (≥15 sessions) ending at breakdown bar"
+        confirmation_window: "next 3 sessions post-breakdown"
+        invalidation_window: "next 5 sessions post-breakdown"
+        expiry_window: "next 10 sessions post-signal"
+
+      precedence_rules:
+        within_bearish: "Ranked by setup_score."
+        vs_bullish: "OPTION_A → A-MIXED."
+
+      conflict_rules:
+        same_id: "Cooldown 10 sessions unless invalidated."
+        with_S_BEAR_RECTANGLE_TOP: "Disambiguate by upper boundary: declining highs → descending triangle; flat highs → rectangle top. Report secondary if score ≥55."
+        with_bullish: "Report both; A-MIXED."
+
+      cooldown_or_retrigger_rules:
+        cooldown_sessions: 10
+        retrigger_allowed_on: "Re-formation of a fresh horizontal support with new declining highs after prior confirmation/invalidation."
+
+      output_fields:
+        - setup_id
+        - setup_score
+        - confirmation_state
+        - breakdown_level
+        - support_test_count
+        - upper_boundary_slope_pct_per_bar
+        - breakdown_volume_ratio_to_avg20
+
+      severity_semantics:
+        UNCONFIRMED: "Signal present; informational only."
+        CONFIRMED: "Signal + ≥2 independent confirmations."
+        INVALIDATED: "Invalidation fired; void."
+        EXPIRED: "Confirmation window elapsed."
+
+      confidence_semantics:
+        basis: "Support-test count + declining-highs regression fit + breakdown volume ratio + confirmation count."
+        prohibited_inputs: "Single negative indicator must not raise confidence alone."
+        floor: "0 when INVALIDATED or EXPIRED."
+
+      provenance_requirements:
+        required_chains:
+          - "breakdown_level + support tests → exact bar OHLC across the triangle"
+          - "upper_boundary_slope → swing-high regression (VTA-REQ-007 normalized)"
+          - "breakdown_volume_ratio → volume + avg20"
+          - "each confirmation → post-breakdown window bars"
+
+      related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-007]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
+
+      decision: ACCEPT_AS_PHASE_3
+      decision_rationale: >
+        Horizontal-support + declining-highs geometry is independent of the
+        ascending triangle (which uses horizontal RESISTANCE + rising lows);
+        the mirror is structural, not a sign flip, because the load-bearing
+        elements (support tests, declining-highs regression, role-flip to
+        resistance) have no sign-inverted counterpart in S-TRIANGLE-ASC.
+
+    # ----------------------------------------------------------------
+    # 4. Rectangle Top (Distribution)
+    # ----------------------------------------------------------------
+    - setup_id: S-BEAR-RECTANGLE-TOP
+      canonical_name: "Rectangle Top (Distribution)"
+      candidate_origin: C-RECTANGLE-TOP
+      direction: BEARISH
+      market_hypothesis: >
+        After an extended uptrend, price enters a prolonged sideways range.
+        Distribution occurs: institutional selling into retail buying. The
+        tell-tale signature is volume heavier on down-bars than up-bars and
+        repeated failures at the range high. Breakdown below the range low
+        confirms distribution has exhausted buyers. No direct bullish mirror.
+
+      prerequisite_indicator_ids:
+        - F-CHANNEL-SLOPE
+        - F-MA
+        - F-CMF
+        - F-VPCI
+        - OBV
+        - VPT
+
+      prerequisite_data_quality_conditions:
+        - DQ-OHLCV-VERIFIED
+        - DQ-ADJUSTMENT-KNOWN
+        - DQ-MIN-HISTORY
+        - DQ-OBV-VPT-SEPARATE
+        - DQ-NO-DUP-GAP
+
+      observation_conditions:
+        - id: RT-OBS-1
+          semantic: observation
+          condition: "An extended sideways range of ≥20 sessions forms after an uptrend; range high and range low each tested ≥2 times within ≤3% tolerance."
+        - id: RT-OBS-2
+          semantic: observation
+          condition: "Range slope (F-CHANNEL-SLOPE over the range) is near zero (|slope| below trending threshold)."
+        - id: RT-OBS-3
+          semantic: observation
+          condition: "Volume signature of distribution: mean volume on down-bars > mean volume on up-bars (up_down_volume_ratio > 1.0) computed over the range."
+        - id: RT-OBS-4
+          semantic: observation
+          condition: "F-CMF over the range is negative or near zero (sustained outflow despite sideways price)."
+        - id: RT-OBS-5
+          semantic: observation
+          condition: "The most recent test(s) of the range high failed to make a new high (lower high on the last attempt)."
+
+      trigger_conditions:
+        - id: RT-SIG-1
+          semantic: signal
+          condition: "RT-OBS-1, RT-OBS-3, RT-OBS-5 all hold (range + distribution volume + failed high)."
+        - id: RT-SIG-2
+          semantic: signal
+          condition: "Close breaks below the range low by ≥1%."
+        - id: RT-SIG-3
+          semantic: signal
+          condition: "Breakdown-bar volume ≥ 1.3 × avg20 volume (note: distribution breakdowns are often less volume-explosive than continuation flags; threshold is bearish-specific, NOT -1× any bullish value)."
+          anti_inversion_clause: "The 1.3× threshold is calibrated for distribution microstructure and must not be derived from any bullish breakout threshold."
+        - id: RT-SIG-4
+          semantic: signal
+          condition: "Aggregate signal requires structure (RT-SIG-1/2) AND microstructure (RT-SIG-3); pattern-only activation rejected."
+
+      confirmation_conditions:
+        - id: RT-CONF-1
+          semantic: confirmation
+          condition: "Breakdown HOLDS: next 3 session closes remain below the range low."
+          independence_clause: "Post-breakdown window, independent of signal."
+        - id: RT-CONF-2
+          semantic: confirmation
+          condition: "Range low now acts as resistance: a post-breakdown rebound stalls within 3% BELOW the old range low."
+        - id: RT-CONF-3
+          semantic: confirmation
+          condition: "OBV makes a new local low over the post-breakdown window (distribution continuing, not a single-indicator flip)."
+        - id: RT-CONF-4
+          semantic: confirmation
+          condition: "F-VPCI remains bearish over the post-breakdown window."
+
+      invalidation_conditions:
+        - id: RT-INV-1
+          semantic: invalidation
+          condition: "Within 7 sessions, close returns above the range low AND holds → range continues, voided."
+        - id: RT-INV-2
+          semantic: invalidation
+          condition: "Range duration < 20 sessions OR failed-high count = 0 → structure prerequisite fails."
+        - id: RT-INV-3
+          semantic: invalidation
+          condition: "up_down_volume_ratio ≤ 1.0 (no distribution signature) → not a distribution top; voided even if price breaks the range low."
+          anti_inversion_clause: "Protects against activating on a range break that lacks distribution evidence — prevents single-event false positives."
+        - id: RT-INV-4
+          semantic: invalidation
+          condition: "No confirmation within 12 sessions → expired (longer window because distribution unfolds slowly)."
+
+      minimum_history:
+        sessions: 75
+        rationale: "Range ≥20 sessions + prior uptrend context + post-breakdown confirmation requires ≥75 sessions."
+
+      temporal_window:
+        evaluation_lookback: 75
+        signal_window: "range (≥20 sessions) ending at breakdown bar"
+        confirmation_window: "next 3 sessions post-breakdown"
+        invalidation_window: "next 7 sessions post-breakdown"
+        expiry_window: "next 12 sessions post-signal"
+
+      precedence_rules:
+        within_bearish: "Ranked by setup_score."
+        vs_bullish: "OPTION_A → A-MIXED."
+
+      conflict_rules:
+        same_id: "Cooldown 12 sessions (matches expiry) unless invalidated."
+        with_S_BEAR_DOWN_TRIANGLE: "Disambiguate by upper boundary shape: flat → rectangle; declining → triangle."
+        with_bullish: "Report both; A-MIXED."
+
+      cooldown_or_retrigger_rules:
+        cooldown_sessions: 12
+        retrigger_allowed_on: "Re-formation of a fresh distribution range after prior confirmation/invalidation."
+
+      output_fields:
+        - setup_id
+        - setup_score
+        - confirmation_state
+        - breakdown_level
+        - range_duration_sessions
+        - up_down_volume_ratio
+        - failed_high_test_count
+        - breakdown_volume_ratio_to_avg20
+
+      severity_semantics:
+        UNCONFIRMED: "Signal present; informational only — distribution breakdowns can be slow, do not over-read."
+        CONFIRMED: "Signal + ≥2 independent confirmations."
+        INVALIDATED: "Invalidation fired; void."
+        EXPIRED: "Confirmation window elapsed."
+
+      confidence_semantics:
+        basis: "Range duration + up_down_volume_ratio strength + failed_high_test_count + breakdown volume ratio + confirmation count."
+        prohibited_inputs: "A bare range break without distribution volume must not raise confidence."
+        floor: "0 when INVALIDATED or EXPIRED."
+
+      provenance_requirements:
+        required_chains:
+          - "breakdown_level + range bounds → exact bar OHLC across the range"
+          - "up_down_volume_ratio → per-bar volume + sign of bar"
+          - "failed_high_test_count → swing-high sequence"
+          - "each confirmation → post-breakdown window bars"
+
+      related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-013, VTA-REQ-014]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
+
+      decision: REVISE_BEFORE_FREEZE
+      decision_rationale: >
+        Structure is independent and sound, and the explicit distribution-volume
+        signature (RT-OBS-3) plus the up_down_volume_ratio invalidation (RT-INV-3)
+        correctly prevent pattern-only activation. However the three load-bearing
+        parameters — range_duration_min (20), breakdown volume ratio (1.3×), and
+        the up_down_volume_ratio threshold (1.0) — are first-order estimates. VN
+        distribution tops often unfold over 30-60 sessions with volume ratios that
+        VN market data must calibrate. Before freezing: (1) calibrate
+        up_down_volume_ratio and breakdown ratio against confirmed VN historical
+        distribution tops, (2) decide whether range_duration_min should be
+        frequency-dependent (daily vs weekly), (3) add a Phase 4Q mutation case
+        (MUT-BEAR-NO-DISTRIBUTION-VOLUME) that must fail-closed. Design accepted
+        in principle; thresholds deferred to calibration evidence.
+
+    # ----------------------------------------------------------------
+    # 5. Head and Shoulders Top
+    # ----------------------------------------------------------------
+    - setup_id: S-BEAR-HEAD-SHOULDERS
+      canonical_name: "Head and Shoulders Top"
+      candidate_origin: C-HEAD-SHOULDERS
+      direction: BEARISH
+      market_hypothesis: >
+        A three-peak reversal top: left shoulder, higher head, then a right
+        shoulder that fails to exceed the head. The neckline connecting the
+        two intervening troughs is the load-bearing level. Break below the
+        neckline confirms the uptrend has reversed. No direct bullish mirror.
+        This is the most structurally demanding bearish setup and the most
+        false-positive-prone, so it carries the strictest confirmation bar.
+
+      prerequisite_indicator_ids:
+        - F-CHANNEL-SLOPE
+        - F-MA
+        - F-CMF
+        - F-VPCI
+        - OBV
+        - VPT
+
+      prerequisite_data_quality_conditions:
+        - DQ-OHLCV-VERIFIED
+        - DQ-ADJUSTMENT-KNOWN
+        - DQ-MIN-HISTORY
+        - DQ-OBV-VPT-SEPARATE
+        - DQ-NO-DUP-GAP
+
+      observation_conditions:
+        - id: HS-OBS-1
+          semantic: observation
+          condition: "A prior uptrend of ≥20 sessions precedes the pattern (F-CHANNEL-SLOPE of prior leg positive)."
+        - id: HS-OBS-2
+          semantic: observation
+          condition: "Three distinct peaks identifiable: left shoulder (LS), head (H), right shoulder (RS), in that temporal order."
+        - id: HS-OBS-3
+          semantic: observation
+          condition: "Head is the highest peak: H > LS and H > RS."
+        - id: HS-OBS-4
+          semantic: observation
+          condition: "Right shoulder is lower than head (RS < H) and approximately symmetric to left shoulder (|RS - LS| / H within peak_symmetry_tolerance)."
+        - id: HS-OBS-5
+          semantic: observation
+          condition: "A neckline connects the two troughs between LS-H and H-RS; OLS regression fit R² ≥ neckline_regression_fit threshold."
+        - id: HS-OBS-6
+          semantic: observation
+          condition: "Volume on the head peak is LOWER than volume on the left shoulder peak (classic 3rd-peak volume divergence — buying power exhausting)."
+          anti_inversion_clause: "Volume divergence is descriptive context here; it becomes load-bearing only inside the signal (HS-SIG-4)."
+
+      trigger_conditions:
+        - id: HS-SIG-1
+          semantic: signal
+          condition: "HS-OBS-1 through HS-OBS-5 all hold (full three-peak geometry + neckline)."
+        - id: HS-SIG-2
+          semantic: signal
+          condition: "Close breaks below the neckline by ≥1%."
+        - id: HS-SIG-3
+          semantic: signal
+          condition: "Breakdown-bar volume ≥ 1.3 × avg20 volume ( neckline breaks are often less volume-explosive than flag breaks; bearish-specific)."
+          anti_inversion_clause: "Threshold is calibration-dependent, NOT -1× any bullish value."
+        - id: HS-SIG-4
+          semantic: signal
+          condition: "Head-peak volume < left-shoulder-peak volume (HS-OBS-6 promoted to load-bearing signal element)."
+        - id: HS-SIG-5
+          semantic: signal
+          condition: "Aggregate signal requires structure (HS-SIG-1/2) AND microstructure (HS-SIG-3/4); pattern-only activation rejected."
+
+      confirmation_conditions:
+        - id: HS-CONF-1
+          semantic: confirmation
+          condition: "Neckline break HOLDS: next 5 session closes remain below the neckline (longer hold than flag/pennant because H&S is a reversal, slower to confirm)."
+          independence_clause: "Post-breakdown window, independent of signal inputs."
+        - id: HS-CONF-2
+          semantic: confirmation
+          condition: "Neckline now acts as resistance: a post-breakdown rebound stalls within 3% BELOW the neckline."
+        - id: HS-CONF-3
+          semantic: confirmation
+          condition: "F-VPCI bearish over the post-breakdown window."
+        - id: HS-CONF-4
+          semantic: confirmation
+          condition: "Measured-move projection: the implied downside target (neckline minus pattern height) is reachable and price has begun moving toward it (≥1 session of downward progress)."
+
+      invalidation_conditions:
+        - id: HS-INV-1
+          semantic: invalidation
+          condition: "Within 7 sessions, close returns above the neckline AND holds → voided."
+        - id: HS-INV-2
+          semantic: invalidation
+          condition: "Right shoulder ≥ head (RS ≥ H) → not a head-and-shoulders; structure prerequisite fails."
+        - id: HS-INV-3
+          semantic: invalidation
+          condition: "Peak symmetry fails (|RS - LS|/H > tolerance) → ambiguous structure, voided."
+        - id: HS-INV-4
+          semantic: invalidation
+          condition: "No confirmation within 12 sessions → expired."
+        - id: HS-INV-5
+          semantic: invalidation
+          condition: "Head-peak volume ≥ left-shoulder-peak volume AND neckline break volume < 1.3× avg20 → no divergence, no expansion → voided (protects against the most common H&S false positive)."
+
+      minimum_history:
+        sessions: 90
+        rationale: "Prior uptrend (≥20) + three peaks with spacing + neckline regression + post-breakdown hold window (5) makes this the most history-demanding setup."
+
+      temporal_window:
+        evaluation_lookback: 90
+        signal_window: "full three-peak pattern ending at neckline-break bar"
+        confirmation_window: "next 5 sessions post-breakdown"
+        invalidation_window: "next 7 sessions post-breakdown"
+        expiry_window: "next 12 sessions post-signal"
+
+      precedence_rules:
+        within_bearish: "Ranked by setup_score. A confirmed H&S is typically treated as the PRIMARY bearish attribution when competing with continuation flags/pennants because it implies trend reversal, not merely continuation."
+        vs_bullish: "OPTION_A → A-MIXED (still report both; do not let H&S silently override a strong bullish setup)."
+
+      conflict_rules:
+        same_id: "Cooldown 15 sessions (longest, because reversal patterns should not re-trigger quickly) unless invalidated."
+        with_S_BEAR_RECTANGLE_TOP: "If three peaks form inside a range, prefer H&S when a clear neckline exists; otherwise rectangle top."
+        with_bullish: "Report both; A-MIXED."
+
+      cooldown_or_retrigger_rules:
+        cooldown_sessions: 15
+        retrigger_allowed_on: "Formation of a fresh three-peak structure after prior confirmation/invalidation; never on the same peak set."
+
+      output_fields:
+        - setup_id
+        - setup_score
+        - confirmation_state
+        - neckline_level
+        - neckline_slope_pct_per_bar
+        - neckline_regression_fit_r2
+        - peak_symmetry_metric      # |RS - LS| / H
+        - head_peak_volume_ratio_to_ls   # head_vol / ls_vol, must be < 1
+        - measured_move_target
+        - breakdown_volume_ratio_to_avg20
+
+      severity_semantics:
+        UNCONFIRMED: "Signal present; informational only — H&S false positives are common, do NOT elevate without confirmation."
+        CONFIRMED: "Signal + ≥2 independent confirmations including the 5-session neckline hold."
+        INVALIDATED: "Invalidation fired; void."
+        EXPIRED: "Confirmation window elapsed."
+
+      confidence_semantics:
+        basis: "Neckline regression fit + peak symmetry + head-volume divergence + breakdown volume ratio + confirmation count."
+        prohibited_inputs: "A single negative indicator must not raise confidence; H&S is the setup most prone to false positives, so confirmation weight is highest."
+        floor: "0 when INVALIDATED or EXPIRED. Confidence ceiling capped at 0.7 until HS-CONF-1 (5-session hold) is satisfied."
+
+      provenance_requirements:
+        required_chains:
+          - "neckline_level + neckline_slope + R² → trough-bar OHLC and OLS computation"
+          - "peak_symmetry_metric → LS/H/RS peak OHLC"
+          - "head_peak_volume_ratio → head and LS peak volumes"
+          - "measured_move_target → pattern height computation"
+          - "each confirmation → post-breakdown window bars"
+        anti_inversion_clause: "Provenance must show structural + volume-divergence + breakdown evidence; never 'indicator was negative' alone."
+
+      related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-007]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1, VC-ARCH-AMBIG-1]
+
+      decision: REVISE_BEFORE_FREEZE
+      decision_rationale: >
+        The structure is canonical and the design enforces the three
+        false-positive safeguards that H&S most needs: (1) peak symmetry,
+        (2) head-vs-left-shoulder volume divergence as a load-bearing signal
+        element (HS-SIG-4), and (3) the joint divergence+expansion invalidation
+        (HS-INV-5). These make the detector meaningfully stricter than a
+        naive three-peaks finder. However four parameters are first-order
+        estimates and need VN calibration before freeze: peak_symmetry_tolerance,
+        neckline_regression_fit R² threshold, the 1.3× neckline-break volume ratio,
+        and the 5-session hold requirement. H&S is the most false-positive-prone
+        pattern in the registry, so before freezing: (1) calibrate all four
+        parameters against confirmed VN historical H&S tops AND an explicit set
+        of VN false-positive cases, (2) add a Phase 4Q mutation
+        MUT-BEAR-HS-NO-DIVERGENCE (head volume ≥ left-shoulder volume → must
+        fail-closed), (3) require that confidence stays capped until the 5-session
+        hold (already encoded). Design accepted in principle; thresholds and
+        the dedicated false-positive mutation deferred to calibration evidence.
+
+  # ==================================================================
+  # Archetype feed (answers BEAR-Q5)
+  # ==================================================================
+  archetype_feed:
+    decision: ADD_NEW_ARCHETYPE_A_DISTRIBUTION
+    rationale: >
+      Confirmed bearish setups feed a new archetype A-DISTRIBUTION (Phase 3
+      decision). This keeps A-TRAP-PRONE distinct — trap_prone remains
+      HVB-driven (high_volume_behavior), NOT pattern-driven. Mixing the two
+      would contaminate two genuinely different evidence channels.
+    placement_in_precedence: >
+      A-DISTRIBUTION inserted below A-ACCUMULATION-BREAKOUT and above
+      A-TRAP-PRONE in the precedence order. Exact ordinal freeze is a separate
+      Phase 3 contract (F-ARCHETYPE-PRECEDENCE rationale freeze); this registry
+      only declares the feed relationship, not the final ordinal.
+    trap_prone_boundary: "A bearish setup confirmation alone must NOT trigger A-TRAP-PRONE. A-TRAP-PRONE continues to require HVB evidence."
+
+  # ==================================================================
+  # Denominator policy (answers Phase 2B denominator freeze)
+  # ==================================================================
+  denominator_policy:
+    current_denominator: 8        # 8 bullish only
+    proposed_after_freeze: 13     # 8 bullish + 5 bearish (5 designed here)
+    accepted_after_freeze: 11     # 8 bullish + 3 ACCEPT_AS_PHASE_3 bearish
+    revise_pending: 2             # RECTANGLE-TOP, HEAD-SHOULDERS
+    deferred_to_calibration: true
+    rule: "Denominator frozen ONLY after calibration evidence for the 2 REVISE setups is in hand and Sol signs the Phase 3 freeze. Until then, setup_coverage_status remains INCOMPLETE_BEARISH_COVERAGE."
+    note: "Final bearish count determined by design quality and VN calibration, NOT by parity with the bullish count."
+
+  # ==================================================================
+  # Coverage status trajectory
+  # ==================================================================
+  coverage_status_trajectory:
+    at_phase_3_design:
+      coverage_status: INCOMPLETE_BEARISH_COVERAGE   # design done, not implemented
+      bull_count: 8
+      bear_count_designed: 5
+      bear_count_accepted: 3
+    at_phase_4_implementation:
+      coverage_status: INCOMPLETE_BEARISH_COVERAGE   # until implementation + 4Q mutations pass
+      note: "Coverage status upgrades to COMPLETE_DIRECTIONAL_COVERAGE ONLY after Phase 4Q mutations (VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG) prove detectors do not false-positive or false-negative."
+
+  # ==================================================================
+  # Phase 4Q mutation obligations (preview, derived from this design)
+  # ==================================================================
+  phase_4Q_mutation_obligations:
+    mandatory:
+      - MUT-BEAR-SIGN-FLIP: "Replace bearish rules with sign-inverted bullish → must NOT detect (verifies GDI-1/2)."
+      - MUT-BEAR-NO-VOLUME: "Flag bearish breakdown without volume confirmation → must NOT confirm / must stay UNCONFIRMED."
+      - MUT-BEAR-NO-HOLD: "Bearish breakdown that immediately reverses → must INVALIDATE."
+      - MUT-BEAR-FALSE-POS: "Bearish detector fed uptrend-only data → must NOT fire."
+      - MUT-BEAR-LONE-INDICATOR: "Feed a single negative indicator (e.g. RSI<30) with no structure → must NOT fire (verifies the PROHIBITED ACTIVATION RULE)."
+      - MUT-BEAR-HS-NO-DIVERGENCE: "H&S with head volume ≥ left-shoulder volume → must INVALIDATE (HS-INV-5)."
+      - MUT-BEAR-RT-NO-DISTRIBUTION: "Rectangle break without up_down_volume_ratio>1 → must INVALIDATE (RT-INV-3)."
+
+  # ==================================================================
+  # Open questions resolved by this registry (from Phase 2B open_questions_for_phase_3)
+  # ==================================================================
+  open_questions_resolution:
+    - question_id: BEAR-Q1
+      resolution: "5 candidates sufficient for Phase 3 freeze. 3 ACCEPT, 2 REVISE-pending-calibration. Additional patterns (rising wedge, rounding top) deferred to a later phase if Phase 5 cohort reveals gaps."
+    - question_id: BEAR-Q2
+      resolution: "OPTION_A — report both bullish and bearish; archetype A-MIXED (least information loss)."
+    - question_id: BEAR-Q3
+      resolution: "Continuation breaks (flag/pennant/triangle): 1.5× avg20. Distribution/reversal breaks (rectangle/H&S): 1.3× avg20 (bearish-specific, calibration-pending). Thresholds are NOT derived from any bullish value."
+    - question_id: BEAR-Q4
+      resolution: "Hold period is per-setup: 3 sessions (flag/pennant/triangle), 3 sessions + 7-session invalidation (rectangle), 5 sessions (H&S). General invalidation window 5-7 sessions; expiry 10-12 sessions."
+    - question_id: BEAR-Q5
+      resolution: "Add new archetype A-DISTRIBUTION (pattern-driven); keep A-TRAP-PRONE HVB-driven and distinct."
+
+  # ==================================================================
+  # Verifier obligation coverage
+  # ==================================================================
+  verifier_obligation_coverage:
+    VC-BEARISH-DESIGN-1:  # independent rules, no sign inversion
+      satisfied_by: [GDI-1, GDI-2, GDI-3, GDI-4, every setup's anti_inversion_clause]
+      status: SATISFIED_AT_DESIGN
+    VC-BEARISH-DESIGN-2:  # confirmation + invalidation + min_history each
+      satisfied_by: "every setup has non-empty confirmation_conditions, invalidation_conditions, and minimum_history"
+      status: SATISFIED_AT_DESIGN
+    VC-BEARISH-DESIGN-3:  # bullish+bearish simultaneous match behavior defined
+      satisfied_by: cross_setup_policies.bullish_bearish_conflict
+      status: SATISFIED_AT_DESIGN
+    VC-BEARISH-DESIGN-4:  # denominator frozen after Phase 3 review
+      satisfied_by: denominator_policy
+      status: PARTIALLY_SATISFIED   # freeze deferred to calibration of the 2 REVISE setups
+    VC-BEAR-DETECT-1:     # valid output or NOT_PRESENT
+      to_be_satisfied_in: PHASE_4
+      status: PENDING_IMPLEMENTATION
+    VC-BEAR-FALSE-POS:    # must not fire on bullish-only input
+      to_be_satisfied_in: PHASE_4
+      status: PENDING_IMPLEMENTATION
+      design_safeguards: [GDI-4, GDI-5, RT-INV-3, HS-INV-5, MUT-BEAR-LONE-INDICATOR, MUT-BEAR-FALSE-POS]
+    VC-BEAR-FALSE-NEG:    # must fire on confirmed bearish historical case
+      to_be_satisfied_in: PHASE_4
+      status: PENDING_IMPLEMENTATION
+    VC-BEAR-PROV:         # provenance to volume + price evidence
+      satisfied_by: "every setup's provenance_requirements"
+      status: SATISFIED_AT_DESIGN
+
+  # ==================================================================
+  # Final acceptance gate
+  # ==================================================================
+  acceptance_gate:
+    candidates_reviewed: 5
+    candidates_total: 5
+    candidates_reviewed_ratio: "5/5"
+    decisions_recorded: 5
+    decisions_recorded_ratio: "5/5"
+    decision_breakdown:
+      ACCEPT_AS_PHASE_3: 3      # S-BEAR-FLAG, S-BEAR-PENNANT, S-BEAR-DOWN-TRIANGLE
+      REVISE_BEFORE_FREEZE: 2   # S-BEAR-RECTANGLE-TOP, S-BEAR-HEAD-SHOULDERS
+      DEFER: 0
+      REJECT: 0
+    setups_without_confirmation_logic: 0
+    setups_without_invalidation_logic: 0
+    setups_without_minimum_history: 0
+    ambiguous_trigger_rules: 0
+    sign_inversion_violations: 0
+    lone_indicator_activation_paths: 0
+    setups_feeding_trap_prone_directly: 0   # boundary enforced: bearish patterns → A-DISTRIBUTION, NOT A-TRAP-PRONE
+    gate_status: PASS_AT_DESIGN
+
+  # ==================================================================
+  # Cross-artifact integrity
+  # ==================================================================
+  integrity_check:
+    setup_count: 5
+    canonical_inputs_consulted:
+      - vn-technical-analysis-phase2B/manifests/bearish-setup-phase3-design-input.yaml
+      - vn-technical-analysis-phase2A/requirements/requirement-registry.yaml
+      - vn-technical-analysis-phase2A/manifests/setup-coverage-reconciliation.yaml
+      - vn-technical-analysis-phase3-review/manifests/vta-phase-3-implementation-scope.yaml
+    related_requirements_mapped: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009]
+    related_VCs_mapped: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV]
+    artifact_class: DESIGN_ONLY
+    implementation_code_produced: 0
+    executable_fixtures_produced: 0
+    status: DESIGN_REVIEW_COMPLETE_PENDING_CALIBRATION_FOR_2_REVISE_SETUPS

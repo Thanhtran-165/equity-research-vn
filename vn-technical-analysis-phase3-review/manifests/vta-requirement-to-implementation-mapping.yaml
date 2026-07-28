@@ -1,0 +1,1009 @@
+# VTA Phase 3 Implementation Review — Requirement → Implementation Mapping
+# Per OWNER DIRECTIVE (Implementation Review deliverable)
+#
+# DESIGN ONLY — no implementation code.
+# Maps each of the 15 VTA-REQs to its proposed implementation surface, contracts,
+# linked verifier obligations, formula contracts, bearish setups, fixture classes,
+# mutation classes, and implementation status.
+#
+# Canonical inputs:
+#   - requirement-registry.yaml (15 VTA-REQs, frozen 2026-07-25)
+#   - verifier-obligation-matrix.yaml (65 records → 64 unique after VC-FAB-VAL-1 MERGE)
+#   - vta-vc-duplicate-resolution.yaml (MERGE_TRUE_DUPLICATES)
+#   - vta-phase-3-implementation-scope.yaml (proposed module surfaces)
+
+requirement_to_implementation_mapping:
+  version: "1.0.0"
+  frozen_at: "2026-07-28"
+  phase: PHASE_3_IMPLEMENTATION_REVIEW
+  artifact_class: DESIGN
+
+  canonical_inputs:
+    requirement_registry:
+      path: vn-technical-analysis-phase2A/requirements/requirement-registry.yaml
+      version: "1.0.0"
+      frozen_at: "2026-07-25"
+      total_requirements: 15
+    verifier_obligation_matrix:
+      path: vn-technical-analysis-phase2B/manifests/verifier-obligation-matrix.yaml
+      version: "1.0.0"
+      frozen_at: "2026-07-25"
+      total_records: 65
+      unique_records_after_merge: 64
+    duplicate_resolution:
+      path: vn-technical-analysis-phase3-readiness/manifests/vta-vc-duplicate-resolution.yaml
+      resolution: MERGE_TRUE_DUPLICATES
+      merged_id: VC-FAB-VAL-1
+    implementation_scope:
+      path: vn-technical-analysis-phase3-review/manifests/vta-phase-3-implementation-scope.yaml
+      version: "1.0.0"
+
+  authorization_boundary:
+    implementation_code_authorized: false
+    design_artifact_authorized: true
+    note: >
+      This artifact describes PROPOSED module surfaces and contracts only.
+      No .py modules exist; implementation_status reflects current repository
+      state per vta-requirement-inventory.yaml (14 NOT_IMPLEMENTED + 1 DESIGN_INPUT_READY).
+
+  # ==================================================================
+  # Requirements (15)
+  # ==================================================================
+
+  requirements:
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-001 (HIGH, parent REQ-005)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-001
+      canonical_name: "Technical ACTIVE mode produces valid output"
+      parent_req: REQ-005
+      category: TECHNICAL_ACTIVE
+      controlled_risk: HIGH
+      required_behavior: >
+        Weekly OHLCV input → 6 indicators computed (MA, RSI, MACD, Bollinger,
+        Beta, CMF) → tech_score binary aggregation → ACTIVE output packet
+        satisfying technical-active-output.schema.json.
+      prohibited_behavior:
+        - "Output with insufficient weekly history (<52w)"
+        - "Indicator computation error swallowed silently"
+        - "Output missing any of the 6 indicators without fail-closed error_code"
+        - "NaN propagation into required output fields"
+      acceptance_criteria:
+        - "weekly_history ≥ 52 baseline"
+        - "All 6 indicators present or fail-closed with error_code"
+        - "tech_score ∈ valid verdict band set (no gap at -3)"
+        - "Output satisfies technical-active-output.schema.json"
+        - "No lookahead bias (pattern at index i references only close[0..i])"
+      proposed_modules:
+        - implementation/indicator_engine.py
+        - implementation/runner.py
+        - implementation/output_assembler.py
+      proposed_public_interfaces:
+        - "run_active(ticker, weekly_data) → ActiveOutput"
+        - "compute_rsi / compute_bollinger / compute_ma / compute_macd / compute_beta / compute_cmf"
+        - "assemble_output(mode=ACTIVE, computed_results) → OutputPacket"
+      proposed_input_contracts:
+        - contracts/technical-common-input.schema.json
+        - contracts/market-data-packet-v1.schema.json
+      proposed_output_contracts:
+        - contracts/technical-active-output.schema.json
+        - contracts/status-taxonomy.yaml
+      proposed_failure_modes:
+        - INSUFFICIENT_HISTORY
+        - EMPTY_SERIES
+        - FORMULA_NOT_APPLICABLE
+        - LOOKAHEAD_BIAS
+      mapped_VC_ids:
+        - VC-ACTIVE-VALID-1
+        - VC-ACTIVE-VALID-2
+        - VC-ACTIVE-VALID-3
+        - VC-EMPTY-SERIES-1
+        - VC-INHIST-1
+        - VC-NAN-PROP-1
+        - VC-BENCH-MISALIGN-1
+        - VC-LOOKAHEAD-1
+      formula_contract_ids:
+        - F-MA
+        - F-RSI
+        - F-MACD
+        - F-BOLLINGER
+        - F-BETA
+        - F-CMF
+        - F-ALPHA
+        - F-TECH-SCORE
+      bearish_setup_ids: []
+      fixture_classes:
+        - ACTIVE_POSITIVE_VALID_52W
+        - ACTIVE_NEGATIVE_EMPTY_SERIES
+        - ACTIVE_NEGATIVE_INSUFFICIENT_HISTORY_51W
+        - ACTIVE_BOUNDARY_EXACT_52W
+        - ACTIVE_NEGATIVE_LOOKAHEAD_INJECTION
+      mutation_classes:
+        - MUT-INHIST-ACTIVE
+        - MUT-EMPTY-SERIES
+        - MUT-NAN-PROP
+        - MUT-BENCH-MISALIGN
+        - MUT-LOOKAHEAD
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Window set freeze (21/63/126/252 vs 20/60/120/252) — Phase 3 contract pending"
+        - "MACD EMA seed convention (data[0] vs SMA) — Phase 3 contract pending"
+        - "Beta window length + return basis + benchmark assignment — Phase 3 freeze pending"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-002 (HIGH, parent REQ-006)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-002
+      canonical_name: "Technical PROFILE mode produces valid output"
+      parent_req: REQ-006
+      category: TECHNICAL_PROFILE
+      controlled_risk: HIGH
+      required_behavior: >
+        Daily OHLCV input (≥60 sessions) → 17 PROFILE blocks + 8 bullish setups
+        + 5 bearish setup designs (Phase 3 design, Phase 4 implementation) +
+        archetype classification → PROFILE output satisfying
+        technical-profile-output.schema.json.
+      prohibited_behavior:
+        - "Output with <60 daily sessions"
+        - "Block computation error swallowed silently"
+        - "17 blocks missing without explicit optional-skipped marker"
+        - "setup_coverage_status == NOT_EVALUATED"
+        - "Bearish setups derived by sign inversion of bullish"
+      acceptance_criteria:
+        - "daily_history ≥ 60 sessions enforced"
+        - "17 blocks all present or marked optional-skipped"
+        - "setup_coverage_status explicit (BULLISH_ONLY or INCOMPLETE_BEARISH_COVERAGE until Phase 4)"
+        - "Archetype ∈ {A-TREND-FOLLOWING, A-ACCUMULATION-BREAKOUT, A-TRAP-PRONE, A-MIXED, A-NO-CURRENT-SETUP}"
+        - "Output satisfies technical-profile-output.schema.json"
+        - "Conflicting setups reported transparently, not silently dropped"
+      proposed_modules:
+        - implementation/profile_engine.py
+        - implementation/indicator_engine.py
+        - implementation/runner.py
+        - implementation/output_assembler.py
+      proposed_public_interfaces:
+        - "run_profile(ticker, daily_data) → ProfileOutput"
+        - "compute_profile_block(block_id, normalized_input) → BlockResult"
+        - "detect_setup(setup_id, profile_context) → SetupResult"
+        - "classify_archetype(profile_context) → ArchetypeResult"
+      proposed_input_contracts:
+        - contracts/technical-common-input.schema.json
+        - contracts/market-data-packet-v1.schema.json
+      proposed_output_contracts:
+        - contracts/technical-profile-output.schema.json
+        - contracts/bearish-setup-registry.yaml
+        - contracts/archetype-precedence.yaml
+      proposed_failure_modes:
+        - INSUFFICIENT_HISTORY
+        - EMPTY_SERIES
+        - SCHEMA_VALIDATION_FAILED
+        - CONFLICTING_SETUP_UNRESOLVED
+        - BENCHMARK_UNAVAILABLE
+      mapped_VC_ids:
+        - VC-PROFILE-VALID-1
+        - VC-PROFILE-VALID-2
+        - VC-PROFILE-VALID-3
+        - VC-PROFILE-VALID-4
+        - VC-EMPTY-SERIES-1
+        - VC-INHIST-1
+        - VC-NAN-PROP-1
+        - VC-BENCH-MISALIGN-1
+        - VC-CONFLICT-SETUP-1
+        - VC-UNCONFIRMED-1
+        - VC-FALSE-BREAKOUT-1
+        - VC-ARCH-AMBIG-1
+      formula_contract_ids:
+        - F-VPCI
+        - F-VAR-ES
+        - F-HVB
+        - F-ROLLING-RETURN
+        - F-PERCENTILE
+        - F-REGIME
+        - F-INDUSTRY-PEER
+        - F-HV
+        - F-DOUBLE-BOTTOM
+        - F-ARCHETYPE-PRECEDENCE
+      bearish_setup_ids:
+        - C-BEAR-FLAG
+        - C-BEAR-PENNANT
+        - C-DESCENDING-TRIANGLE
+        - C-RECTANGLE-TOP
+        - C-HEAD-SHOULDERS
+      fixture_classes:
+        - PROFILE_POSITIVE_VALID_60D
+        - PROFILE_NEGATIVE_INSUFFICIENT_HISTORY_59D
+        - PROFILE_BOUNDARY_EXACT_60D
+        - PROFILE_POSITIVE_17_BLOCKS_COMPLETE
+        - PROFILE_POSITIVE_CONFLICTING_SETUPS
+        - PROFILE_NEGATIVE_BENCHMARK_NONE
+      mutation_classes:
+        - MUT-INHIST-PROFILE
+        - MUT-EMPTY-SERIES
+        - MUT-NAN-PROP
+        - MUT-CONFLICT-SETUP
+        - MUT-UNCONFIRMED
+        - MUT-ARCH-AMBIG
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Rolling-return window set freeze (21/63/126/252 vs 20/60/120/252) — Phase 3 pending"
+        - "Percentile method freeze (floor vs linear) — Phase 3 pending"
+        - "F-REGIME threshold calibration against VN market data — Phase 3 pending"
+        - "F-INDUSTRY-PEER peer data source availability — Phase 3 pending"
+        - "Bullish+bearish simultaneous match conflict-resolution option (A/B/C) — Phase 3 freeze pending"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-003 (HIGH, parent REQ-007, HIGHEST precedence)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-003
+      canonical_name: "Non-advice language enforcement"
+      parent_req: REQ-007
+      category: LANGUAGE_POLICY
+      controlled_risk: HIGH
+      required_behavior: >
+        All output text passes 3-layer non-advice check: lexical (regex tokens),
+        semantic (implication rephrasing), imperative (mood detection), with
+        negation-awareness (NOT bullish ≠ bullish).
+      prohibited_behavior:
+        - "Any prohibited token in output (bullish/bearish/tín hiệu/khuyến nghị/nên mua/nên bán/strong buy/strong sell/overbought/oversold)"
+        - "Advice via semantic implication through different phrasing"
+        - "Imperative mood (nên, phải, cần, hãy)"
+        - "Flagging 'NOT bullish' as violation (negation-blind check)"
+        - "BUY/SELL/HOLD verdict tokens"
+      acceptance_criteria:
+        - "Lexical scan: 0 prohibited tokens"
+        - "Semantic scan: 0 advice implications"
+        - "Imperative scan: 0 imperative constructions"
+        - "Negation: 'not bullish' accepted (not flagged)"
+        - "REQ-007 = HIGHEST precedence (overrides any other requirement)"
+      proposed_modules:
+        - implementation/language_verifier.py
+      proposed_public_interfaces:
+        - "check_language(output_text) → LanguageCheckResult"
+      proposed_input_contracts:
+        - contracts/REQ007-semantic-policy.yaml
+      proposed_output_contracts:
+        - contracts/status-taxonomy.yaml
+      proposed_failure_modes:
+        - ADVICE_LANGUAGE_DETECTED
+      mapped_VC_ids:
+        - VC-REQ007-LEXICAL
+        - VC-REQ007-SEMANTIC
+        - VC-REQ007-IMPERATIVE
+        - VC-REQ007-NEGATION
+        - VC-ADV-LANG-1
+      formula_contract_ids:
+        - F-STATUS-TAXONOMY
+      bearish_setup_ids: []
+      fixture_classes:
+        - LANG_POSITIVE_CLEAN_TEXT
+        - LANG_NEGATIVE_LEXICAL_TOKEN
+        - LANG_NEGATIVE_SEMANTIC_ADVICE
+        - LANG_NEGATIVE_IMPERATIVE
+        - LANG_BOUNDARY_NEGATION_PHRASING
+      mutation_classes:
+        - MUT-ADV-LANG
+        - MUT-ADV-LANG-NEG
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Semantic layer may require model-backed or curated-pattern implementation — Phase 4 implementation decision"
+        - "Vietnamese negation token set completeness (chưa/phải không/không) — review at Phase 4 fixture freeze"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-004 (CRITICAL)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-004
+      canonical_name: "Price basis selection per calculation type"
+      category: PRICE_BASIS
+      controlled_risk: CRITICAL
+      required_behavior: >
+        Indicators/patterns use adjusted_OHLCV. Returns/beta use
+        total_return_adjusted_close. Raw OHLCV retained for provenance.
+        Adjustment status field REQUIRED on every input; UNKNOWN or
+        CONFLICTING → fail-closed.
+      prohibited_behavior:
+        - "Indicator computed on raw unadjusted close (creates false patterns from splits)"
+        - "Return computed on adjusted close (drifts under corporate actions)"
+        - "Adjustment status field absent"
+        - "Adjustment status = UNKNOWN silently accepted"
+        - "Adjustment status = CONFLICTING silently resolved"
+      acceptance_criteria:
+        - "Every indicator input tagged with price_basis ∈ {adjusted, total_return_adjusted}"
+        - "Returns/beta use total_return_adjusted_close"
+        - "Indicators/patterns use adjusted OHLCV"
+        - "adjustment_status=UNKNOWN → error envelope, no output"
+        - "adjustment_status=CONFLICTING → error envelope, no output"
+      proposed_modules:
+        - implementation/normalization_engine.py
+      proposed_public_interfaces:
+        - "normalize_input(raw_ohlcv, mode) → NormalizedInput"
+        - "verify_price_basis(input, calculation_type) → PriceBasisResult"
+      proposed_input_contracts:
+        - contracts/technical-common-input.schema.json
+        - contracts/price-basis-policy.yaml
+        - contracts/market-data-packet-v1.schema.json
+      proposed_output_contracts: []
+      proposed_failure_modes:
+        - UNKNOWN_ADJUSTMENT_STATUS
+        - CONFLICTING_ADJUSTMENT_STATUS
+      mapped_VC_ids:
+        - VC-PRICE-BASIS-1
+        - VC-PRICE-BASIS-2
+        - VC-PRICE-BASIS-3
+        - VC-CORP-ACT-1
+      formula_contract_ids:
+        - F-PRICE-BASIS
+      bearish_setup_ids: []
+      fixture_classes:
+        - PRICE_POSITIVE_ADJUSTED_OK
+        - PRICE_NEGATIVE_UNKNOWN_STATUS
+        - PRICE_NEGATIVE_CONFLICTING_STATUS
+        - PRICE_NEGATIVE_CORP_ACTION_SPLIT_DATE
+        - PRICE_BOUNDARY_TOTAL_RETURN_VS_ADJUSTED
+      mutation_classes:
+        - MUT-CORP-ACT-UNADJ
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Collector extension to populate adjustment_status reliably — COLLECTOR_EXTENSION_PROGRAM before Phase 6"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-005 (HIGH)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-005
+      canonical_name: "RSI uses Wilder smoothing"
+      category: FORMULA_DEFINITION
+      controlled_risk: HIGH
+      required_behavior: >
+        RSI computed with Wilder smoothing (period-1 multiplier on the SMMA
+        of up/down moves), seeded per Wilder 1978 reference. Recalibrated
+        against ta-lib Wilder RSI within 1e-6 tolerance.
+      prohibited_behavior:
+        - "Simple (equal-weighted) smoothing for RSI"
+        - "EMA-based RSI without Wilder multiplier"
+        - "Divergence from ta-lib Wilder RSI > 1e-6"
+      acceptance_criteria:
+        - "RSI computed with Wilder period-1 multiplier"
+        - "Calibration against ta-lib Wilder RSI within 1e-6"
+        - "Warmup policy explicitly defined (NaN or backfill or drop)"
+        - "Rounding policy explicitly defined"
+      proposed_modules:
+        - implementation/indicator_engine.py
+      proposed_public_interfaces:
+        - "compute_rsi(close_series, period=14) → RSIResult"
+      proposed_input_contracts:
+        - contracts/technical-common-input.schema.json
+      proposed_output_contracts:
+        - contracts/formula-rsi.yaml
+      proposed_failure_modes:
+        - SMOOTHING_MISMATCH
+        - INSUFFICIENT_HISTORY
+      mapped_VC_ids:
+        - VC-RSI-WILDER-1
+        - VC-RSI-WILDER-2
+        - VC-WRONG-SMOOTH-1
+      formula_contract_ids:
+        - F-RSI
+      bearish_setup_ids: []
+      fixture_classes:
+        - RSI_POSITIVE_WILDER_CALIBRATION
+        - RSI_NEGATIVE_SIMPLE_SMOOTHING_INJECTED
+        - RSI_BOUNDARY_TA_LIB_1E6_TOLERANCE
+      mutation_classes:
+        - MUT-WRONG-SMOOTH
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Wilder seeding method (exact initialization) — Phase 3 contracts/formula-rsi.yaml pending"
+        - "Warmup requirement (minimum bars before output valid) — Phase 3 pending"
+        - "Rounding policy (decimal places) — Phase 3 pending"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-006 (HIGH)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-006
+      canonical_name: "Bollinger uses consistent std convention"
+      category: FORMULA_DEFINITION
+      controlled_risk: HIGH
+      required_behavior: >
+        Shared Bollinger kernel uses ONE std convention (population ÷N OR
+        sample ÷N-1). ACTIVE and PROFILE import from the SAME module.
+        Both modes produce IDENTICAL BB values for identical input.
+      prohibited_behavior:
+        - "ACTIVE using population std while PROFILE uses sample std (mode-kernel divergence)"
+        - "Per-mode std convention (FM-MODE-KERNEL-DIVERGENCE)"
+        - "ACTIVE BB and PROFILE BB differing for identical input"
+      acceptance_criteria:
+        - "Single std convention frozen for shared kernel"
+        - "ACTIVE BB == PROFILE BB for identical input"
+        - "Convention documented in formula contract"
+        - "Recommendation: OPTION_POPULATION (÷N) per Phase 3 input package"
+      proposed_modules:
+        - implementation/indicator_engine.py
+      proposed_public_interfaces:
+        - "compute_bollinger(close_series, window=20, multiplier=2) → BollingerResult"
+      proposed_input_contracts:
+        - contracts/technical-common-input.schema.json
+      proposed_output_contracts:
+        - contracts/formula-bollinger.yaml
+      proposed_failure_modes:
+        - MODE_KERNEL_DIVERGENCE
+        - COMPUTATION_DEGENERATE
+      mapped_VC_ids:
+        - VC-BOLL-1
+        - VC-BOLL-2
+        - VC-MODE-KERNEL-1
+      formula_contract_ids:
+        - F-BOLLINGER
+      bearish_setup_ids: []
+      fixture_classes:
+        - BOLL_POSITIVE_SHARED_KERNEL_IDENTICAL
+        - BOLL_NEGATIVE_MODE_DIVERGENCE_INJECTED
+        - BOLL_BOUNDARY_STD_ZERO_INPUT
+      mutation_classes:
+        - MUT-MODE-DIVERGE
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Std convention freeze (OPTION_POPULATION vs OPTION_SAMPLE) — Phase 3 HIGHEST-PRIORITY freeze pending"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-007 (MEDIUM)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-007
+      canonical_name: "Channel slope normalized to percent per bar"
+      category: FORMULA_DEFINITION
+      controlled_risk: MEDIUM
+      required_behavior: >
+        normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window).
+        Unit: percent per bar. Scale-free across price levels. Classification
+        threshold frozen in Phase 3 contract.
+      prohibited_behavior:
+        - "Raw VND/bar slope (scale-dependent, breaks across price levels)"
+        - "Non-OLS regression slope"
+        - "Hardcoded 100 VND threshold"
+      acceptance_criteria:
+        - "Formula: normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window)"
+        - "Scale-free: same %/bar for 10k and 100k price stocks"
+        - "Classification threshold frozen in contracts/formula-channel-slope.yaml"
+        - "Threshold Phase 3 frozen (currently T-CHANNEL-SLOPE pending)"
+      proposed_modules:
+        - implementation/profile_engine.py
+        - implementation/indicator_engine.py
+      proposed_public_interfaces:
+        - "compute_channel_slope(close_window) → ChannelSlopeResult"
+      proposed_input_contracts:
+        - contracts/technical-common-input.schema.json
+      proposed_output_contracts:
+        - contracts/formula-channel-slope.yaml
+      proposed_failure_modes:
+        - FORMULA_NOT_APPLICABLE
+      mapped_VC_ids:
+        - VC-CHANNEL-1
+        - VC-CHANNEL-2
+      formula_contract_ids:
+        - F-CHANNEL-SLOPE
+      bearish_setup_ids: []
+      fixture_classes:
+        - CHANNEL_POSITIVE_NORMALIZED_SLOPE
+        - CHANNEL_BOUNDARY_EXACT_THRESHOLD
+        - CHANNEL_NEGATIVE_RAW_VND_SLOPE_INJECTED
+      mutation_classes: []
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Classification threshold value freeze (|slope| > X%/bar → trending) — Phase 3 contracts/formula-channel-slope.yaml pending"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-008 (CRITICAL)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-008
+      canonical_name: "No mode contamination in output"
+      category: MODE_SEPARATION
+      controlled_risk: CRITICAL
+      required_behavior: >
+        ACTIVE output contains no PROFILE-only fields (profile_blocks,
+        archetype, setups). PROFILE output contains no ACTIVE-only fields
+        (tech_score, 6_binary_signals). Schema enforces additionalProperties: false.
+      prohibited_behavior:
+        - "ACTIVE output containing profile_blocks key"
+        - "PROFILE output containing tech_score / 6_binary_signals"
+        - "Schema accepts foreign keys (additionalProperties: true)"
+        - "Cross-mode field injection"
+      acceptance_criteria:
+        - "ACTIVE output rejects profile_blocks"
+        - "PROFILE output rejects tech_score / 6_binary_signals"
+        - "Schema validation rejects foreign keys (additionalProperties: false)"
+        - "ACTIVE BB == PROFILE BB for identical input (shared kernel)"
+      proposed_modules:
+        - implementation/output_assembler.py
+      proposed_public_interfaces:
+        - "assemble_output(mode, computed_results) → OutputPacket"
+        - "validate_schema(output_packet, schema) → ValidationResult"
+      proposed_input_contracts: []
+      proposed_output_contracts:
+        - contracts/technical-active-output.schema.json
+        - contracts/technical-profile-output.schema.json
+      proposed_failure_modes:
+        - MODE_CONTAMINATION
+        - SCHEMA_VALIDATION_FAILED
+      mapped_VC_ids:
+        - VC-MODE-SEP-1
+        - VC-MODE-SEP-2
+        - VC-MODE-SEP-3
+        - VC-MODE-CONTAM-1
+        - VC-MODE-KERNEL-1
+      formula_contract_ids: []
+      bearish_setup_ids: []
+      fixture_classes:
+        - MODE_SEP_POSITIVE_CLEAN_ACTIVE
+        - MODE_SEP_POSITIVE_CLEAN_PROFILE
+        - MODE_SEP_NEGATIVE_ACTIVE_WITH_PROFILE_BLOCKS
+        - MODE_SEP_NEGATIVE_PROFILE_WITH_TECH_SCORE
+        - MODE_SEP_NEGATIVE_FOREIGN_KEY
+      mutation_classes:
+        - MUT-MODE-CONTAM
+        - MUT-SCHEMA-DRIFT
+      implementation_status: MISSING
+      unresolved_questions: []
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-009 (MEDIUM)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-009
+      canonical_name: "Setup coverage honestly reported"
+      category: SETUP_COVERAGE
+      controlled_risk: MEDIUM
+      required_behavior: >
+        setup_coverage_status field discloses directional coverage status:
+        BULLISH_ONLY or INCOMPLETE_BEARISH_COVERAGE (before Phase 4 bearish
+        implementation). NOT_EVALUATED prohibited. Absence of bullish setup
+        MUST NOT be reported as bearish evidence.
+      prohibited_behavior:
+        - "setup_coverage_status = NOT_EVALUATED after Phase 4"
+        - "Coverage claim implying completeness when bearish detectors not implemented"
+        - "Inferring bearish from absence of bullish setup"
+        - "Implicit directional completeness"
+      acceptance_criteria:
+        - "setup_coverage_status ∈ {BULLISH_ONLY, INCOMPLETE_BEARISH_COVERAGE, COMPLETE_DIRECTIONAL_COVERAGE}"
+        - "Before Phase 4 bearish implementation: status = INCOMPLETE_BEARISH_COVERAGE"
+        - "Absence of bullish setup ≠ bearish evidence"
+        - "After Phase 4 mutation pass: status may upgrade to COMPLETE_DIRECTIONAL_COVERAGE"
+      proposed_modules:
+        - implementation/profile_engine.py
+        - implementation/output_assembler.py
+      proposed_public_interfaces:
+        - "compute_setup_coverage(setup_results) → CoverageStatus"
+      proposed_input_contracts: []
+      proposed_output_contracts:
+        - contracts/technical-profile-output.schema.json
+      proposed_failure_modes:
+        - SETUP_COVERAGE_MISREPRESENTED
+      mapped_VC_ids:
+        - VC-COV-1
+        - VC-COV-2
+        - VC-PROFILE-VALID-4
+      formula_contract_ids: []
+      bearish_setup_ids: []
+      fixture_classes:
+        - COV_POSITIVE_BULLISH_ONLY_HONEST
+        - COV_POSITIVE_INCOMPLETE_BEARISH
+        - COV_NEGATIVE_BEARISH_FROM_ABSENCE
+        - COV_NEGATIVE_NOT_EVALUATED
+      mutation_classes: []
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Coverage status trajectory: BULLISH_ONLY → INCOMPLETE_BEARISH_COVERAGE → COMPLETE_DIRECTIONAL_COVERAGE gated by Phase 4Q mutations"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-009a (HIGH — Phase 3 design obligation)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-009a
+      canonical_name: "Bearish setup registry (Phase 3 design obligation)"
+      category: SETUP_COVERAGE
+      controlled_risk: HIGH
+      required_behavior: >
+        Bearish setups designed with independent rules (NO sign inversion of
+        bullish), explicit confirmation, invalidation, minimum history.
+        Denominator frozen after Phase 3 review. Mirror-by-sign-inversion
+        PROHIBITED.
+      prohibited_behavior:
+        - "Bearish detector = -1 × bullish detector (sign inversion)"
+        - "Bearish threshold = -1 × bullish threshold"
+        - "Bearish setup without explicit confirmation criteria"
+        - "Bearish setup without explicit invalidation criteria"
+        - "Bearish+bearish simultaneous match behavior undefined"
+        - "Denominator changed after Phase 3 freeze"
+      acceptance_criteria:
+        - "Bearish detector does NOT import/call bullish detector with sign flip"
+        - "Threshold parameters bearish-specific (not -1 × bullish)"
+        - "Volume signature independently designed for distribution (vs accumulation)"
+        - "Each setup has confirmation (volume + hold period)"
+        - "Each setup has invalidation (price threshold + time decay)"
+        - "Each setup has minimum history (65-90 sessions)"
+        - "Bullish+bearish simultaneous match: behavior frozen (recommended OPTION_A: A-MIXED)"
+        - "Denominator frozen after Phase 3 review"
+      proposed_modules:
+        - implementation/profile_engine.py
+      proposed_public_interfaces:
+        - "detect_bearish_setup(setup_id, profile_context) → BearishSetupResult"
+      proposed_input_contracts: []
+      proposed_output_contracts:
+        - contracts/bearish-setup-registry.yaml
+      proposed_failure_modes:
+        - BEARISH_DETECTION_INVALID
+        - BEARISH_SIGN_INVERSION_DETECTED
+      mapped_VC_ids:
+        - VC-BEARISH-DESIGN-1
+        - VC-BEARISH-DESIGN-2
+        - VC-BEARISH-DESIGN-3
+        - VC-BEARISH-DESIGN-4
+        - VC-CONFLICT-SETUP-1
+      formula_contract_ids: []
+      bearish_setup_ids:
+        - C-BEAR-FLAG
+        - C-BEAR-PENNANT
+        - C-DESCENDING-TRIANGLE
+        - C-RECTANGLE-TOP
+        - C-HEAD-SHOULDERS
+      fixture_classes:
+        - BEAR_POSITIVE_INDEPENDENT_DETECTION
+        - BEAR_NEGATIVE_SIGN_INVERSION_INJECTED
+        - BEAR_NEGATIVE_NO_VOLUME_CONFIRMATION
+        - BEAR_NEGATIVE_NO_HOLD_PERIOD
+        - BEAR_BOUNDARY_BULL_BEAR_SIMULTANEOUS
+      mutation_classes:
+        - MUT-BEAR-SIGN-FLIP
+        - MUT-BEAR-NO-VOLUME
+        - MUT-BEAR-NO-HOLD
+        - MUT-BEAR-FALSE-POS
+      implementation_status: EXISTING_INCOMPLETE
+      unresolved_questions:
+        - "Confirm 5 candidates sufficient (BEAR-Q1) — add more if Phase 5 cohort reveals gaps"
+        - "Conflict-resolution option freeze (BEAR-Q2: A/B/C) — recommended OPTION_A"
+        - "Confirmation volume threshold freeze (BEAR-Q3: 1.5× avg20? 2× avg20?)"
+        - "Invalidation hold period freeze (BEAR-Q4: 5 sessions? 10 sessions?)"
+        - "Bearish archetype decision (BEAR-Q5: A-DISTRIBUTION vs expand trap_prone)"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-010 (HIGH)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-010
+      canonical_name: "Provenance present for all output metrics"
+      category: PROVENANCE
+      controlled_risk: HIGH
+      required_behavior: >
+        Every output field traceable to source via provenance chain.
+        Provenance includes timestamp, provider, params. Removal of
+        provenance from any field detected.
+      prohibited_behavior:
+        - "Output field without provenance chain"
+        - "Provenance missing timestamp"
+        - "Provenance missing provider"
+        - "Provenance missing params"
+        - "Provenance stripped silently from one field"
+      acceptance_criteria:
+        - "Every numeric output has source → computation_chain"
+        - "Provenance includes timestamp, provider, params"
+        - "Remove provenance from one field → detection"
+        - "OHLCV provenance chain reaches collector packet"
+      proposed_modules:
+        - implementation/output_assembler.py
+        - implementation/integration_adapter.py
+      proposed_public_interfaces:
+        - "generate_provenance(output_field) → ProvenanceChain"
+      proposed_input_contracts:
+        - contracts/market-data-packet-v1.schema.json
+      proposed_output_contracts:
+        - contracts/technical-active-output.schema.json
+        - contracts/technical-profile-output.schema.json
+      proposed_failure_modes:
+        - PROVENANCE_MISSING
+        - BENCHMARK_UNAVAILABLE
+      mapped_VC_ids:
+        - VC-PROV-1
+        - VC-PROV-2
+        - VC-PROV-MISS-1
+        - VC-BENCH-MISALIGN-1
+      formula_contract_ids: []
+      bearish_setup_ids: []
+      fixture_classes:
+        - PROV_POSITIVE_FULL_CHAIN
+        - PROV_NEGATIVE_FIELD_STRIPPED
+        - PROV_NEGATIVE_TIMESTAMP_MISSING
+        - PROV_NEGATIVE_PROVIDER_MISSING
+        - PROV_BOUNDARY_BENCHMARK_NONE
+      mutation_classes:
+        - MUT-PROV-MISS
+        - MUT-BENCH-MISALIGN
+      implementation_status: MISSING
+      unresolved_questions:
+        - "O-021 None-benchmark crash guard (BENCHMARK_UNAVAILABLE) — Phase 4 implementation pending"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-011 (CRITICAL)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-011
+      canonical_name: "Technical output does not modify valuation"
+      category: BOUNDARY_ENFORCEMENT
+      controlled_risk: CRITICAL
+      required_behavior: >
+        No path exists from technical output to fundamental/valuation fields.
+        Integration adapter has no write path to valuation_* fields. Schema
+        validation rejects valuation_* keys in technical output.
+      prohibited_behavior:
+        - "Integration adapter writes to fundamental/valuation fields"
+        - "Technical output contains valuation_* keys"
+        - "Any technical → valuation data flow"
+      acceptance_criteria:
+        - "Integration adapter has NO write path to fundamental/valuation fields"
+        - "Schema validation rejects valuation_* keys in technical output"
+        - "Integration adapter cannot modify valuation_* fields"
+        - "Boundary enforced at schema + adapter + integration layers"
+      proposed_modules:
+        - implementation/integration_adapter.py
+        - implementation/output_assembler.py
+      proposed_public_interfaces:
+        - "handoff_to_parent(output_packet) → ParentHandoff"
+        - "enforce_valuation_boundary(output_packet) → BoundaryCheck"
+      proposed_input_contracts: []
+      proposed_output_contracts:
+        - contracts/parent-integration-contract.yaml
+      proposed_failure_modes:
+        - VALUATION_OVERRIDE_ATTEMPT
+      mapped_VC_ids:
+        - VC-VAL-BOUND-1
+        - VC-VAL-BOUND-2
+        - VC-VAL-OVERRIDE-1
+      formula_contract_ids: []
+      bearish_setup_ids: []
+      fixture_classes:
+        - VAL_BOUND_POSITIVE_NO_VALUATION_KEYS
+        - VAL_BOUND_NEGATIVE_WRITE_ATTEMPT
+        - VAL_BOUND_NEGATIVE_VALUATION_KEY_IN_OUTPUT
+      mutation_classes:
+        - MUT-VAL-OVERRIDE
+      implementation_status: MISSING
+      unresolved_questions:
+        - "VC-VAL-BOUND-1/2/OVERRIDE-1 are PHASE_6 obligations (integration test phase) — implementation deferred to Phase 6"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-012 (CRITICAL)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-012
+      canonical_name: "No fabricated price data"
+      category: DATA_INTEGRITY
+      controlled_risk: CRITICAL
+      required_behavior: >
+        All OHLCV values sourced from verified provider or collector packet.
+        No placeholder values (0, NaN, NULL) silently injected. Every value
+        traceable to source. Injected fabricated values detected.
+      prohibited_behavior:
+        - "OHLCV value not sourced from verified provider"
+        - "Placeholder 0/NaN/NULL silently injected"
+        - "Synthetic value introduced into computation chain"
+        - "Zero price silently accepted (must fail-closed)"
+        - "OHLCV value without provenance to source"
+      acceptance_criteria:
+        - "Every OHLCV value has provenance chain to source"
+        - "No placeholder values (0, NaN, NULL) silently injected"
+        - "Inject value not in computation chain → detection"
+        - "Input with 0 close → fail-closed"
+        - "All OHLCV from market-data-packet-v1 schema"
+      proposed_modules:
+        - implementation/normalization_engine.py
+        - implementation/output_assembler.py
+      proposed_public_interfaces:
+        - "normalize_input(raw_ohlcv, mode) → NormalizedInput"
+        - "verify_provenance(ohlcv_value) → ProvenanceResult"
+      proposed_input_contracts:
+        - contracts/market-data-packet-v1.schema.json
+        - contracts/source-policy.yaml
+      proposed_output_contracts:
+        - contracts/technical-active-output.schema.json
+        - contracts/technical-profile-output.schema.json
+      proposed_failure_modes:
+        - FABRICATED_VALUE
+        - ZERO_PRICE
+      mapped_VC_ids:
+        - VC-FAB-VAL-1
+        - VC-NO-FAB-1
+        - VC-NO-FAB-2
+        - VC-ZERO-PX-1
+      formula_contract_ids:
+        - F-MARKET-DATA-PACKET
+      bearish_setup_ids: []
+      fixture_classes:
+        - FAB_POSITIVE_VERIFIED_PACKET
+        - FAB_NEGATIVE_FABRICATED_OHLCV
+        - FAB_NEGATIVE_PLACEHOLDER_ZERO
+        - FAB_NEGATIVE_PLACEHOLDER_NAN
+        - FAB_NEGATIVE_ZERO_CLOSE
+      mutation_classes:
+        - MUT-FAB-VAL
+        - MUT-ZERO-PX
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Collector extension to produce market-data-packet-v1 reliably — COLLECTOR_EXTENSION_PROGRAM before Phase 6"
+        - "VC-FAB-VAL-1 cross-listed in OUTPUT_SCHEMA + PROVENANCE (MERGE applied, single canonical record)"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-013 (HIGH)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-013
+      canonical_name: "HVB events_1y uses calendar window not event count"
+      category: FORMULA_DEFINITION
+      controlled_risk: HIGH
+      required_behavior: >
+        events_1y = events where effective_date >= (as_of_date - 365 calendar
+        days). Selection by effective_date calendar window, NOT event-count
+        slice (events[-252:]).
+      prohibited_behavior:
+        - "events_1y = events[-252:] (event-count slice bug, B14_EVENTS_1Y)"
+        - "events_1y = events[-252:] regardless of effective_date"
+        - "Hardcoded event count instead of calendar window"
+      acceptance_criteria:
+        - "events_1y selected by effective_date >= (as_of_date - 365 days)"
+        - "Calendar window selection (NOT event count slice)"
+        - "events_1y logic compatible with B14_EVENTS_1Y fix"
+        - "Recreating original B14 bug → detection (regression mutation)"
+      proposed_modules:
+        - implementation/profile_engine.py
+      proposed_public_interfaces:
+        - "compute_hvb_events_1y(events, as_of_date) → HVBEventsResult"
+      proposed_input_contracts:
+        - contracts/technical-common-input.schema.json
+      proposed_output_contracts:
+        - contracts/formula-hvb.yaml
+      proposed_failure_modes:
+        - EVENTS_1Y_LOGIC_ERROR
+      mapped_VC_ids:
+        - VC-EVENTS-1Y-1
+      formula_contract_ids:
+        - F-HVB-EVENTS-1Y
+      bearish_setup_ids: []
+      fixture_classes:
+        - EVENTS_POSITIVE_CALENDAR_WINDOW
+        - EVENTS_NEGATIVE_EVENT_COUNT_SLICE_INJECTED
+        - EVENTS_BOUNDARY_EXACT_365_DAYS
+      mutation_classes:
+        - MUT-EVENTS-1Y-BUG
+      implementation_status: MISSING
+      unresolved_questions:
+        - "B14_EVENTS_1Y fix obligation — Phase 4 (bug fix) + Phase 4Q (mandatory regression mutation)"
+
+    # ----------------------------------------------------------------
+    # VTA-REQ-014 (HIGH)
+    # ----------------------------------------------------------------
+    - requirement_id: VTA-REQ-014
+      canonical_name: "OBV and VPT computed from separate source series"
+      category: FORMULA_DEFINITION
+      controlled_risk: HIGH
+      required_behavior: >
+        obv_change sourced from OBV series. vpt_change sourced from VPT series.
+        Separate source series mandated. obv_change = vpt_change (copy-paste
+        bug, B12_OBV_VPT_BUG) detected.
+      prohibited_behavior:
+        - "obv_change sourced from VPT series"
+        - "vpt_change sourced from OBV series"
+        - "obv_change = vpt_change (copy-paste mapping)"
+        - "OBV/VPT aliasing in shared computation path"
+      acceptance_criteria:
+        - "obv_change sourced from OBV series"
+        - "vpt_change sourced from VPT series"
+        - "vpt_change_pct sourced from VPT series"
+        - "Source mismatch → OBV_VPT_SERIES_CONTAMINATION error"
+        - "Recreating original B12 bug → detection (regression mutation)"
+      proposed_modules:
+        - implementation/profile_engine.py
+        - implementation/indicator_engine.py
+      proposed_public_interfaces:
+        - "compute_obv_change(obv_series, window) → OBVChangeResult"
+        - "compute_vpt_change(vpt_series, window) → VPTChangeResult"
+      proposed_input_contracts:
+        - contracts/technical-common-input.schema.json
+      proposed_output_contracts:
+        - contracts/formula-vpt.yaml
+        - contracts/formula-ovb.yaml
+      proposed_failure_modes:
+        - OBV_VPT_SERIES_CONTAMINATION
+      mapped_VC_ids:
+        - VC-OBV-VPT-1
+        - VC-OBV-VPT-2
+      formula_contract_ids:
+        - F-OBV-CHANGE
+        - F-VPT-CHANGE
+      bearish_setup_ids: []
+      fixture_classes:
+        - OBV_VPT_POSITIVE_SEPARATE_SERIES
+        - OBV_VPT_NEGATIVE_ALIAS_INJECTED
+        - OBV_VPT_BOUNDARY_PCT_CHANGE
+      mutation_classes:
+        - MUT-OBV-VPT-BUG
+      implementation_status: MISSING
+      unresolved_questions:
+        - "Change method freeze (absolute vs percent) — Phase 3 contracts/formula-vpt.yaml pending"
+        - "B12_OBV_VPT_BUG fix obligation — Phase 4 (bug fix) + Phase 4Q (mandatory regression mutation)"
+
+  # ==================================================================
+  # Integrity gate
+  # ==================================================================
+
+  integrity_gate:
+    requirements_mapped: 15
+    requirements_total: 15
+    requirements_without_module_surface: 0
+    requirements_without_VCs: 0
+    requirements_without_acceptance_path: 0
+
+    module_surface_coverage:
+      implementation/normalization_engine.py: [VTA-REQ-004, VTA-REQ-012]
+      implementation/indicator_engine.py: [VTA-REQ-001, VTA-REQ-005, VTA-REQ-006, VTA-REQ-007, VTA-REQ-014]
+      implementation/profile_engine.py: [VTA-REQ-002, VTA-REQ-007, VTA-REQ-009, VTA-REQ-009a, VTA-REQ-013, VTA-REQ-014]
+      implementation/language_verifier.py: [VTA-REQ-003]
+      implementation/output_assembler.py: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-008, VTA-REQ-009, VTA-REQ-010, VTA-REQ-011, VTA-REQ-012]
+      implementation/integration_adapter.py: [VTA-REQ-010, VTA-REQ-011]
+      implementation/runner.py: [VTA-REQ-001, VTA-REQ-002]
+
+    implementation_status_breakdown:
+      EXISTING_COMPLETE: 0
+      EXISTING_INCOMPLETE: 1   # VTA-REQ-009a (design input ready, design not yet frozen)
+      MISSING: 14
+
+    VC_ids_referenced_unique: 64
+    VC_ids_referenced_total_with_cross_listing: 67   # some VCs cover multiple REQs
+    duplicate_VC_ids_in_this_artifact: 0
+
+    formula_contract_ids_referenced:
+      - F-STATUS-TAXONOMY
+      - F-PRICE-BASIS
+      - F-CHANNEL-SLOPE
+      - F-HVB-EVENTS-1Y
+      - F-OBV-CHANGE
+      - F-VPT-CHANGE
+      - F-MARKET-DATA-PACKET
+      - F-RSI
+      - F-BOLLINGER
+      - F-MA
+      - F-MACD
+      - F-BETA
+      - F-CORRELATION
+      - F-CMF
+      - F-VPCI
+      - F-VAR-ES
+      - F-ROLLING-RETURN
+      - F-PERCENTILE
+      - F-REGIME
+      - F-INDUSTRY-PEER
+      - F-ARCHETYPE-PRECEDENCE
+      - F-DOUBLE-BOTTOM
+      - F-ALPHA
+      - F-HV
+      - F-TECH-SCORE
+
+    bearish_setup_ids_referenced:
+      - C-BEAR-FLAG
+      - C-BEAR-PENNANT
+      - C-DESCENDING-TRIANGLE
+      - C-RECTANGLE-TOP
+      - C-HEAD-SHOULDERS
+
+    fixture_class_count: 73
+    mutation_class_count: 26
+
+    status: PASS
+
+  # ==================================================================
+  # Required chain integrity
+  # ==================================================================
+
+  required_chain_integrity:
+    chain: "Requirement → proposed module → proposed public interface → input/output contract → VC obligation → formula contract → fixture/mutation class → acceptance criteria"
+    chain_complete: true
+    broken_links: []
+    design_authority_note: >
+      All module/interface/contract surfaces are PROPOSED — they describe the
+      Phase 4 implementation target, not existing code. implementation_status
+      reflects current repository state: no .py modules exist. The mapping
+      establishes the traceability contract so Phase 4 implementation can be
+      verified against each requirement without ambiguity.
+
+  cross_artifact_lock:
+    readiness_commit: d75a9a3ac56db642ff8fa5623898ea7f4733222a
+    status: ALIGNED

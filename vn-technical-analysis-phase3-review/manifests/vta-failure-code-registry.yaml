@@ -1,0 +1,627 @@
+# Technical Phase 3 Implementation Review — VTA Failure Code Registry
+# DESIGN ONLY artifact. No code. Predeclares stable primary + diagnostic codes.
+#
+# Canonical inputs:
+#   - phase2B/manifests/verifier-obligation-matrix.yaml      (65 records, 64 unique VCs; VC-FAB-VAL-1 merged)
+#   - phase2B/manifests/failure-mode-coverage-plan.yaml      (failure mode -> VC mapping, 29 FMs)
+#   - phase1/manifests/technical-failure-mode-registry.yaml  (28 failure modes)
+#
+# Every code is a stable machine contract. Message text is human-only and MUST NOT
+# be parsed as a machine contract (see property: no_message_text_as_machine_contract).
+
+vta_failure_code_registry:
+  version: "1.0.0"
+  frozen_at: "2026-07-28"
+  artifact_class: DESIGN
+  produces_code: false
+  review_phase: PHASE_3_IMPLEMENTATION_REVIEW
+
+  # ==================================================================
+  # Design principles (load-bearing properties enforced by the gate)
+  # ==================================================================
+  principles:
+    - id: P-STABLE-ACROSS-RUNS
+      rule: "A code's identity, semantic_definition, and triggering_condition are immutable once frozen. Reordering, renaming, or merging codes is a contract break requiring version bump."
+    - id: P-DETERMINISTIC-PRECEDENCE
+      rule: "When multiple codes fire for one run, the reported primary code is chosen by a total precedence order. Ties are impossible because precedence values are unique within a tier."
+    - id: P-NO-MESSAGE-AS-CONTRACT
+      rule: "Only failure_code + required_context_fields are machine-readable. Free-text messages are diagnostic and may change without notice."
+    - id: P-NO-DUPLICATE-SEMANTICS
+      rule: "Two codes MUST NOT describe the same triggering condition. If overlap exists, one is PRIMARY and the other is a DIAGNOSTIC refine."
+    - id: P-NO-CATCH-ALL
+      rule: "No code may aggregate semantically distinct failures. GENERIC_ERROR / UNKNOWN_FAILURE are PROHIBITED."
+
+  # ==================================================================
+  # Precedence model
+  # ==================================================================
+  # Lower tier number = evaluated earlier = reported first when fatal.
+  # Within a tier, lower precedence value = higher priority.
+  # Tiers exist so that e.g. an INPUT_FATAL pre-flight error suppresses downstream
+  # COMPUTATION codes (which would otherwise fire on garbage input).
+  precedence_model:
+    tiers:
+      - tier: 1
+        name: INPUT_FATAL
+        description: "Pre-flight guards that abort before any computation. Mutually exclusive with all later tiers for the same run (run aborts here)."
+      - tier: 2
+        name: INPUT_RECOVERABLE
+        description: "Pre-flight warnings + normalizations. Run continues; analysis_status degrades to VALID_WITH_WARNINGS."
+      - tier: 3
+        name: COMPUTATION
+        description: "Recompute / kernel / numeric-integrity failures detected during or after computation."
+      - tier: 4
+        name: PATTERN
+        description: "Pattern-detection, archetype, and bearish-setup contract failures."
+      - tier: 5
+        name: OUTPUT_STRUCTURE
+        description: "Schema, mode-separation, and applicability failures on the produced output."
+      - tier: 6
+        name: PROVENANCE_INTEGRITY
+        description: "Provenance-chain and fabrication integrity failures on numeric outputs."
+      - tier: 7
+        name: POLICY
+        description: "Language policy, valuation-boundary, and rounding-policy violations."
+    resolution_rule: "For a single run, the PRIMARY code is the lowest (tier, precedence) pair that fires. DIAGNOSTIC codes from equal or higher tiers MAY co-report in diagnostic_codes[]."
+
+  # ==================================================================
+  # Codes
+  # ==================================================================
+  codes:
+
+    # ----------------------------------------------------------------
+    # TIER 1 — INPUT_FATAL
+    # ----------------------------------------------------------------
+
+    - failure_code: EMPTY_SERIES
+      semantic_definition: "Input OHLCV series has zero rows after load (before any filtering)."
+      triggering_condition: "len(input_rows) == 0 at pre-flight."
+      owning_VC_ids: [VC-EMPTY-SERIES-1]
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      classification: PRIMARY
+      tier: 1
+      precedence: 10
+      mutually_exclusive_with: [INSUFFICIENT_HISTORY]
+      may_coexist_with: []  # fatal; aborts before any other code can fire
+      required_context_fields: [mode, provided_rows, source_provider]
+      linked_failure_modes: [FM-EMPTY-SERIES]
+
+    - failure_code: INSUFFICIENT_HISTORY
+      semantic_definition: "Input series present but below the mode-specific minimum session count."
+      triggering_condition: "(mode=ACTIVE AND weekly_sessions < 52) OR (mode=PROFILE AND daily_sessions < 60)."
+      owning_VC_ids: [VC-INHIST-1]
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      classification: PRIMARY
+      tier: 1
+      precedence: 20
+      mutually_exclusive_with: [EMPTY_SERIES]
+      may_coexist_with: []
+      required_context_fields: [mode, provided_sessions, required_sessions, frequency]
+      linked_failure_modes: [FM-INSUFFICIENT-HISTORY]
+
+    - failure_code: ZERO_PRICE_DETECTED
+      semantic_definition: "An OHLC value in the input is exactly 0, which is never a legitimate VN market price."
+      triggering_condition: "any(OHLC == 0) in input rows used by the run."
+      owning_VC_ids: [VC-ZERO-PX-1]
+      related_requirement_ids: [VTA-REQ-012]
+      classification: PRIMARY
+      tier: 1
+      precedence: 30
+      mutually_exclusive_with: [COMPUTATION_DEGENERATE]
+      may_coexist_with: []
+      required_context_fields: [mode, date, field, observed_value]
+      aliases: [ZERO_PRICE]
+      linked_failure_modes: [FM-ZERO-PRICE]
+
+    - failure_code: UNKNOWN_ADJUSTMENT_STATUS
+      semantic_definition: "Input adjustment_status field is present but equals UNKNOWN; cannot decide raw vs adjusted basis."
+      triggering_condition: "adjustment_status == UNKNOWN on any input row consumed by the run."
+      owning_VC_ids: [VC-CORP-ACT-1, VC-PRICE-BASIS-3]
+      related_requirement_ids: [VTA-REQ-004]
+      classification: PRIMARY
+      tier: 1
+      precedence: 40
+      mutually_exclusive_with: [CONFLICTING_ADJUSTMENT_STATUS]
+      may_coexist_with: []
+      required_context_fields: [mode, date, observed_adjustment_status]
+      linked_failure_modes: [FM-CORPORATE-ACTION-UNADJUSTED]
+
+    - failure_code: CONFLICTING_ADJUSTMENT_STATUS
+      semantic_definition: "Input series mixes adjustment_status values within the same series in a way that makes basis selection ambiguous."
+      triggering_condition: ">1 distinct non-UNKNOWN adjustment_status value observed across rows consumed by one indicator/return computation."
+      owning_VC_ids: [VC-PRICE-BASIS-1, VC-PRICE-BASIS-2]
+      related_requirement_ids: [VTA-REQ-004]
+      classification: PRIMARY
+      tier: 1
+      precedence: 41
+      mutually_exclusive_with: [UNKNOWN_ADJUSTMENT_STATUS]
+      may_coexist_with: []
+      required_context_fields: [mode, distinct_statuses, affected_date_range]
+      linked_failure_modes: [FM-CORPORATE-ACTION-UNADJUSTED]
+
+    - failure_code: BENCHMARK_UNAVAILABLE
+      semantic_definition: "Benchmark series required for a computation is None / not supplied and cannot be substituted."
+      triggering_condition: "benchmark input is None for a calculation whose contract requires a benchmark (Beta, Correlation, Relative-Strength)."
+      owning_VC_ids: [VC-BENCH-MISALIGN-1]
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-010]
+      classification: PRIMARY
+      tier: 1
+      precedence: 50
+      mutually_exclusive_with: [BENCHMARK_MISALIGNED]
+      may_coexist_with: []
+      required_context_fields: [mode, calculation, expected_benchmark]
+      aliases: [O-021-known-defect]
+      linked_failure_modes: [FM-BENCHMARK-MISALIGNED]
+
+    - failure_code: CONFIG_VALIDATION_FAILED
+      semantic_definition: "A configuration value (window, threshold, enum) violates the Phase 3 frozen contract."
+      triggering_condition: "config value not in frozen enum / outside frozen range (e.g., window=22 when contract freezes {20,60,120,252} or {21,63,126,252})."
+      owning_VC_ids: [VC-WRONG-LOOKBACK-1]
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      classification: PRIMARY
+      tier: 1
+      precedence: 60
+      mutually_exclusive_with: []  # config errors are standalone fatal
+      may_coexist_with: []
+      required_context_fields: [config_key, observed_value, allowed_values]
+      aliases: [CONFIG_VALIDATION]
+      linked_failure_modes: [FM-WRONG-LOOKBACK]
+
+    # ----------------------------------------------------------------
+    # TIER 2 — INPUT_RECOVERABLE (diagnostics; run continues)
+    # ----------------------------------------------------------------
+
+    - failure_code: BENCHMARK_MISALIGNED
+      semantic_definition: "Stock and benchmark dates overlap below the 95% threshold; inner-join proceeds on aligned subset."
+      triggering_condition: "date_overlap_ratio(stock, benchmark) < 0.95 AND benchmark is not None."
+      owning_VC_ids: [VC-BENCH-MISALIGN-1]
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-010]
+      classification: DIAGNOSTIC
+      tier: 2
+      precedence: 110
+      mutually_exclusive_with: [BENCHMARK_UNAVAILABLE]
+      may_coexist_with: [MISSING_INTERVAL, DUPLICATE_TIMESTAMP_DEDUPED]
+      required_context_fields: [mode, overlap_ratio, stock_range, benchmark_range]
+      linked_failure_modes: [FM-BENCHMARK-MISALIGNED]
+
+    - failure_code: MISSING_INTERVAL
+      semantic_definition: "Gaps in trading-day sequence exceed 5% of expected sessions; data retained with degraded status."
+      triggering_condition: "actual_trading_days / expected_trading_days < 0.95."
+      owning_VC_ids: [VC-MISS-INT-1]
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      classification: DIAGNOSTIC
+      tier: 2
+      precedence: 120
+      mutually_exclusive_with: []
+      may_coexist_with: [BENCHMARK_MISALIGNED]
+      required_context_fields: [mode, actual_days, expected_days, gap_dates]
+      linked_failure_modes: [FM-MISSING-INTERVAL]
+
+    - failure_code: DUPLICATE_TIMESTAMP_DEDUPED
+      semantic_definition: "Duplicate dates detected; resolved with last-value-wins before computation."
+      triggering_condition: "input.duplicated('date').any() == True."
+      owning_VC_ids: [VC-DUP-TS-1]
+      related_requirement_ids: []
+      classification: DIAGNOSTIC
+      tier: 2
+      precedence: 130
+      mutually_exclusive_with: []
+      may_coexist_with: [UNSORTED_TIMESTAMP_SORTED]
+      required_context_fields: [mode, duplicate_dates, resolution_policy]
+      linked_failure_modes: [FM-DUPLICATE-TIMESTAMP]
+
+    - failure_code: UNSORTED_TIMESTAMP_SORTED
+      semantic_definition: "Input dates not monotonically increasing; sorted ascending before computation."
+      triggering_condition: "input['date'].is_monotonic_increasing == False."
+      owning_VC_ids: [VC-UNSORTED-1]
+      related_requirement_ids: []
+      classification: DIAGNOSTIC
+      tier: 2
+      precedence: 140
+      mutually_exclusive_with: []
+      may_coexist_with: [DUPLICATE_TIMESTAMP_DEDUPED]
+      required_context_fields: [mode, original_order_violation_count]
+      linked_failure_modes: [FM-UNSORTED-TIMESTAMP]
+
+    - failure_code: PARTIAL_WEEK_DROPPED
+      semantic_definition: "Latest weekly bar covers <5 trading days; dropped to avoid partial-week contamination."
+      triggering_condition: "mode=ACTIVE AND latest_weekly_bar_trading_days < 5."
+      owning_VC_ids: [VC-PARTIAL-WEEK-1]
+      related_requirement_ids: []
+      classification: DIAGNOSTIC
+      tier: 2
+      precedence: 150
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, dropped_week_start, trading_days_in_week]
+      linked_failure_modes: [FM-PARTIAL-WEEK]
+
+    - failure_code: ZERO_VOLUME_ACCEPTED
+      semantic_definition: "Zero-volume session detected and accepted as legitimate (suspended/halted session); value field set to 0."
+      triggering_condition: "any(volume == 0) in PROFILE mode input."
+      owning_VC_ids: [VC-ZERO-VOL-1]
+      related_requirement_ids: []
+      classification: DIAGNOSTIC
+      tier: 2
+      precedence: 160
+      mutually_exclusive_with: [ZERO_PRICE_DETECTED]
+      may_coexist_with: []
+      required_context_fields: [mode, date, observed_volume]
+      linked_failure_modes: [FM-ZERO-VOLUME]
+      note: "Never PRIMARY. Zero volume is a legitimate market state; surfaced only as analysis_status context."
+
+    # ----------------------------------------------------------------
+    # TIER 3 — COMPUTATION
+    # ----------------------------------------------------------------
+
+    - failure_code: COMPUTATION_DEGENERATE
+      semantic_definition: "A numeric computation hit a degenerate denominator/state (std=0, close_t-1=0, CMF denominator=0) and could not produce a finite value."
+      triggering_condition: "denominator == 0 OR std == 0 in a ratio/std-based computation, without an input zero-price."
+      owning_VC_ids: [VC-DIV-ZERO-1]
+      related_requirement_ids: []
+      classification: PRIMARY
+      tier: 3
+      precedence: 210
+      mutually_exclusive_with: [ZERO_PRICE_DETECTED]  # zero-price is the root cause when applicable
+      may_coexist_with: [NAN_PROPAGATION]
+      required_context_fields: [mode, formula_id, denominator_field, window]
+      aliases: [COMPUTATION_DEGENERATE_ERROR]
+      linked_failure_modes: [FM-DIVIDE-BY-ZERO]
+
+    - failure_code: NAN_PROPAGATION
+      semantic_definition: "A NaN reached a required output field that must be finite."
+      triggering_condition: "any(required_output_field is NaN) after computation, where the field is non-optional."
+      owning_VC_ids: [VC-NAN-PROP-1]
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      classification: PRIMARY
+      tier: 3
+      precedence: 220
+      mutually_exclusive_with: []
+      may_coexist_with: [COMPUTATION_DEGENERATE]
+      required_context_fields: [mode, field_path, source_nan_date]
+      linked_failure_modes: [FM-NAN-PROPAGATION]
+
+    - failure_code: SMOOTHING_MISMATCH
+      semantic_definition: "Recomputed RSI using Wilder smoothing diverges from engine RSI beyond the 1e-6 tolerance."
+      triggering_condition: "|rsi_engine - rsi_wilder_recompute| > 1e-6 at any aligned index."
+      owning_VC_ids: [VC-RSI-WILDER-1, VC-RSI-WILDER-2, VC-WRONG-SMOOTH-1]
+      related_requirement_ids: [VTA-REQ-005]
+      classification: PRIMARY
+      tier: 3
+      precedence: 230
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, index, engine_value, recompute_value, abs_diff]
+      linked_failure_modes: [FM-WRONG-SMOOTHING]
+
+    - failure_code: OBV_VPT_SERIES_CONTAMINATION
+      semantic_definition: "obv_change sourced from VPT series OR vpt_change sourced from OBV series (B12 regression class)."
+      triggering_condition: "source_series(obv_change) != OBV OR source_series(vpt_change) != VPT."
+      owning_VC_ids: [VC-OBV-VPT-1, VC-OBV-VPT-2]
+      related_requirement_ids: [VTA-REQ-014]
+      classification: PRIMARY
+      tier: 3
+      precedence: 240
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, field, expected_source_series, observed_source_series]
+      linked_failure_modes: [FM-OBV-VPT-BUG]
+
+    - failure_code: EVENTS_1Y_LOGIC_ERROR
+      semantic_definition: "events_1y selected by event-count slicing (events[-N:]) instead of effective_date calendar window (B14 regression class)."
+      triggering_condition: "events_1y selection predicate is index-count-based rather than effective_date >= as_of_date - 365d."
+      owning_VC_ids: [VC-EVENTS-1Y-1]
+      related_requirement_ids: [VTA-REQ-013]
+      classification: PRIMARY
+      tier: 3
+      precedence: 250
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, observed_selection_predicate, expected_selection_predicate]
+      linked_failure_modes: [FM-EVENTS-1Y-BUG]
+
+    - failure_code: MODE_KERNEL_DIVERGENCE
+      semantic_definition: "ACTIVE-mode kernel and PROFILE-mode kernel produce different values for the same input on a shared indicator (Bollinger canonical case)."
+      triggering_condition: "active_kernel(input) != profile_kernel(input) for a shared-kernel indicator within 1e-9 tolerance."
+      owning_VC_ids: [VC-BOLL-1, VC-BOLL-2, VC-MODE-KERNEL-1]
+      related_requirement_ids: [VTA-REQ-006]
+      classification: PRIMARY
+      tier: 3
+      precedence: 260
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [indicator, active_value, profile_value, abs_diff, std_convention_active, std_convention_profile]
+      linked_failure_modes: [FM-MODE-KERNEL-DIVERGENCE]
+
+    - failure_code: CHANNEL_SLOPE_CONTRACT_VIOLATION
+      semantic_definition: "Channel slope normalized formula or classification threshold deviates from the Phase 3 frozen contract (Sol §3)."
+      triggering_condition: "normalized_slope_pct_per_bar != 100 x OLS_slope / median(close_window) OR classification_threshold != frozen Phase-3 value."
+      owning_VC_ids: [VC-CHANNEL-1, VC-CHANNEL-2]
+      related_requirement_ids: [VTA-REQ-007]
+      classification: PRIMARY
+      tier: 3
+      precedence: 270
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, observed_formula, expected_formula, observed_threshold, expected_threshold]
+      linked_failure_modes: []  # contract freeze, not in FM registry
+
+    # ----------------------------------------------------------------
+    # TIER 4 — PATTERN
+    # ----------------------------------------------------------------
+
+    - failure_code: LOOKAHEAD_BIAS_DETECTED
+      semantic_definition: "A pattern-detection function referenced close[i+k] for k>0 (future data) when evaluating index i."
+      triggering_condition: "static-analysis or property test finds a future-index reference inside a pattern detector closure."
+      owning_VC_ids: [VC-LOOKAHEAD-1]
+      related_requirement_ids: [VTA-REQ-001]
+      classification: PRIMARY
+      tier: 4
+      precedence: 310
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, detector_function, evaluation_index, future_reference_offset]
+      linked_failure_modes: [FM-LOOKAHEAD-BIAS]
+
+    - failure_code: FALSE_BREAKOUT_WITHOUT_VOLUME
+      semantic_definition: "Breakout flagged without volume confirmation >= 1.5x avg20."
+      triggering_condition: "breakout flagged AND breakout_volume / avg20_volume < 1.5."
+      owning_VC_ids: [VC-FALSE-BREAKOUT-1]
+      related_requirement_ids: []
+      classification: PRIMARY
+      tier: 4
+      precedence: 320
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, breakout_date, breakout_volume, avg20_volume, ratio]
+      linked_failure_modes: [FM-FALSE-BREAKOUT]
+
+    - failure_code: UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED
+      semantic_definition: "A setup with score in the 62-77 INDEVELOPMENT band was emitted with status=CONFIRMED."
+      triggering_condition: "setup.score in [62, 77] AND setup.status == CONFIRMED."
+      owning_VC_ids: [VC-UNCONFIRMED-1]
+      related_requirement_ids: []
+      classification: PRIMARY
+      tier: 4
+      precedence: 330
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, setup_id, score, emitted_status, expected_status]
+      linked_failure_modes: [FM-UNCONFIRMED-PATTERN]
+
+    - failure_code: SETUP_DROPPED_SILENTLY
+      semantic_definition: "Multiple qualifying setups present but engine returned a silent top-N truncation instead of all setups sorted by score."
+      triggering_condition: "qualifying_setups_count > returned_setups_count AND no truncation disclosed in output."
+      owning_VC_ids: [VC-CONFLICT-SETUP-1]
+      related_requirement_ids: [VTA-REQ-002, VTA-REQ-009a]
+      classification: PRIMARY
+      tier: 4
+      precedence: 340
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, qualifying_count, returned_count, dropped_setup_ids]
+      linked_failure_modes: [FM-CONFLICTING-SETUP]
+
+    - failure_code: ARCHETYPE_AMBIGUITY_FALLBACK
+      semantic_definition: "Archetype assignment could not resolve deterministically; engine fell back to A-NO-CURRENT-SETUP instead of selecting by precedence."
+      triggering_condition: ">=2 archetypes eligible with non-deterministic resolution OR no archetype eligible without explicit fallback reason."
+      owning_VC_ids: [VC-ARCH-AMBIG-1]
+      related_requirement_ids: []
+      classification: PRIMARY
+      tier: 4
+      precedence: 350
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, eligible_archetypes, fallback_reason]
+      linked_failure_modes: [FM-ARCHETYPE-AMBIGUITY]
+
+    - failure_code: BEARISH_SIGN_INVERSION
+      semantic_definition: "A bearish setup detector was implemented as sign-inverted bullish rules (Sol §3 prohibited shortcut)."
+      triggering_condition: "bearish_detector calls bullish_detector with sign flip OR threshold == -1 * bullish_threshold."
+      owning_VC_ids: [VC-BEARISH-DESIGN-1]
+      related_requirement_ids: [VTA-REQ-009a]
+      classification: PRIMARY
+      tier: 4
+      precedence: 360
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [bearish_setup_id, detection_evidence]
+      linked_failure_modes: []  # design-contract failure, not in FM registry
+
+    - failure_code: BEARISH_SETUP_INCOMPLETE
+      semantic_definition: "Bearish registry not yet fully designed/implemented; setup_coverage_status must reflect INCOMPLETE_BEARISH_COVERAGE."
+      triggering_condition: "bearish registry < 5 designed OR denominator not frozen post-Phase-3-review."
+      owning_VC_ids: [VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-COV-1]
+      related_requirement_ids: [VTA-REQ-009, VTA-REQ-009a]
+      classification: PRIMARY
+      tier: 4
+      precedence: 361
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [designed_count, expected_count, coverage_status]
+      linked_failure_modes: []
+
+    - failure_code: BEARISH_FALSE_POSITIVE
+      semantic_definition: "Bearish detector fired on input containing only bullish setups, or absence of bullish setup was reported as bearish evidence."
+      owning_VC_ids: [VC-COV-2]
+      related_requirement_ids: [VTA-REQ-009]
+      semantic_definition_extended: "Two sub-conditions: (a) bearish_detector(bullish_only_input) != NOT_PRESENT; (b) absence_of_bullish_setup reported as bearish evidence."
+      triggering_condition: "bearish_detector fires on bullish-only input OR bearish_evidence cited when no bullish setup present."
+      classification: PRIMARY
+      tier: 4
+      precedence: 362
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, sub_condition, input_description]
+
+    # ----------------------------------------------------------------
+    # TIER 5 — OUTPUT_STRUCTURE
+    # ----------------------------------------------------------------
+
+    - failure_code: SCHEMA_VALIDATION_FAILED
+      semantic_definition: "Output JSON violates the mode-specific output schema (additionalProperties, required, type constraints)."
+      triggering_condition: "output does not validate against technical-active-output.schema.json OR technical-profile-output.schema.json."
+      owning_VC_ids: [VC-ACTIVE-VALID-1, VC-ACTIVE-VALID-2, VC-ACTIVE-VALID-3, VC-PROFILE-VALID-1, VC-PROFILE-VALID-2, VC-PROFILE-VALID-3, VC-PROFILE-VALID-4, VC-SCHEMA-DRIFT-1, VC-MODE-SEP-3, VC-VAL-BOUND-2]
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-008, VTA-REQ-011]
+      classification: PRIMARY
+      tier: 5
+      precedence: 410
+      mutually_exclusive_with: []  # structural; may co-fire with semantic codes
+      may_coexist_with: [MODE_CONTAMINATION, PROVENANCE_MISSING, FABRICATED_VALUE_DETECTED]
+      required_context_fields: [mode, schema_file, json_pointer, schema_violation]
+      aliases: [SCHEMA_VALIDATION_FAILED]
+      linked_failure_modes: [FM-SCHEMA-DRIFT]
+
+    - failure_code: MODE_CONTAMINATION
+      semantic_definition: "Cross-mode keys present (profile_blocks in ACTIVE output, or tech_score/6_binary_signals in PROFILE output)."
+      triggering_condition: "(mode=ACTIVE AND 'profile_blocks' in output) OR (mode=PROFILE AND ('tech_score' in output OR 'binary_signals_6' in output))."
+      owning_VC_ids: [VC-MODE-SEP-1, VC-MODE-SEP-2, VC-MODE-CONTAM-1]
+      related_requirement_ids: [VTA-REQ-008]
+      classification: PRIMARY
+      tier: 5
+      precedence: 420
+      mutually_exclusive_with: []
+      may_coexist_with: [SCHEMA_VALIDATION_FAILED]
+      required_context_fields: [mode, foreign_key, owning_mode_of_key]
+      linked_failure_modes: [FM-MODE-CONTAMINATION]
+
+    - failure_code: FORMULA_NOT_APPLICABLE
+      semantic_definition: "A formula/block cannot be computed for this run because its applicability condition is unmet (conditional block, bearish registry pre-implementation, optional-skipped)."
+      triggering_condition: "formula.applicability == CONDITIONAL AND condition unmet OR block marked optional-skipped by contract."
+      owning_VC_ids: [VC-PROFILE-VALID-3]
+      related_requirement_ids: [VTA-REQ-002, VTA-REQ-009a]
+      classification: DIAGNOSTIC
+      tier: 5
+      precedence: 430
+      mutually_exclusive_with: []
+      may_coexist_with: [BEARISH_SETUP_INCOMPLETE]
+      required_context_fields: [mode, formula_id_or_block, applicability_reason]
+      note: "Not a failure of correctness; surfaced so consumers know why a block is absent."
+
+    # ----------------------------------------------------------------
+    # TIER 6 — PROVENANCE_INTEGRITY
+    # ----------------------------------------------------------------
+
+    - failure_code: PROVENANCE_MISSING
+      semantic_definition: "A required numeric output field has no provenance chain (timestamp, provider, params) attached."
+      triggering_condition: "any(required_numeric_field lacks provenance.{timestamp,provider,params})."
+      owning_VC_ids: [VC-PROV-1, VC-PROV-2, VC-PROV-MISS-1]
+      related_requirement_ids: [VTA-REQ-010]
+      classification: PRIMARY
+      tier: 6
+      precedence: 510
+      mutually_exclusive_with: []  # distinct from fabrication: chain missing vs value untraceable
+      may_coexist_with: [FABRICATED_VALUE_DETECTED]
+      required_context_fields: [mode, field_path, missing_provenance_components]
+      linked_failure_modes: [FM-MISSING-PROVENANCE]
+
+    - failure_code: FABRICATED_VALUE_DETECTED
+      semantic_definition: "An output numeric value has no node in the computation chain that could produce it (untraceable to input)."
+      triggering_condition: "output_value not in computation_chain.value_set for its field."
+      owning_VC_ids: [VC-FAB-VAL-1, VC-NO-FAB-1, VC-NO-FAB-2]
+      related_requirement_ids: [VTA-REQ-012]
+      classification: PRIMARY
+      tier: 6
+      precedence: 520
+      mutually_exclusive_with: []
+      may_coexist_with: [PROVENANCE_MISSING]
+      required_context_fields: [mode, field_path, observed_value, nearest_chain_node]
+      aliases: [FABRICATED_VALUE]
+      linked_failure_modes: [FM-FABRICATED-VALUE]
+
+    # ----------------------------------------------------------------
+    # TIER 7 — POLICY
+    # ----------------------------------------------------------------
+
+    - failure_code: ADVICE_LANGUAGE_DETECTED
+      semantic_definition: "Output text contains advice language prohibited by REQ-007 3-layer policy (lexical / semantic / imperative), negation-unaware match excluded."
+      triggering_condition: "REQ-007 lexical OR semantic OR imperative layer matches a prohibited token, AND negation-aware check confirms it is an affirmative advice statement."
+      owning_VC_ids: [VC-REQ007-LEXICAL, VC-REQ007-SEMANTIC, VC-REQ007-IMPERATIVE, VC-REQ007-NEGATION, VC-ADV-LANG-1]
+      related_requirement_ids: [VTA-REQ-003]
+      classification: PRIMARY
+      tier: 7
+      precedence: 610
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [mode, matched_layer, matched_token, text_span, negation_context]
+      linked_failure_modes: [FM-ADVICE-LANGUAGE]
+
+    - failure_code: VALUATION_OVERRIDE_ATTEMPT
+      semantic_definition: "Integration adapter attempted a write to a fundamental/valuation_* field (boundary violation)."
+      triggering_condition: "integration_adapter.write_target in valuation_* namespace."
+      owning_VC_ids: [VC-VAL-BOUND-1, VC-VAL-OVERRIDE-1]
+      related_requirement_ids: [VTA-REQ-011]
+      classification: PRIMARY
+      tier: 7
+      precedence: 620
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [adapter, attempted_target_field, blocked_by]
+      aliases: [VALUATION_OVERRIDE_ATTEMPT_ERROR]
+      linked_failure_modes: [FM-VALUATION-OVERRIDE]
+
+    - failure_code: ROUNDING_DRIFT
+      semantic_definition: "Same input produced non-byte-identical output across two runs (non-deterministic rounding)."
+      owning_VC_ids: [VC-ROUND-DRIFT-1]
+      related_requirement_ids: []
+      semantic_definition_extended: "Detected by running the same fixture twice and comparing output bytes."
+      triggering_condition: "hash(output_run1) != hash(output_run2) for identical frozen input."
+      classification: DIAGNOSTIC
+      tier: 7
+      precedence: 630
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [run1_hash, run2_hash, differing_fields]
+      linked_failure_modes: [FM-ROUNDING-DRIFT]
+      note: "VC-ROUND-DRIFT-1 is referenced from Phase 2B failure-mode-coverage-plan; the verifier obligation matrix does not list it explicitly but the coverage plan binds it. Registered here so the code exists before any fixture emits it."
+
+  # ==================================================================
+  # Co-reporting rules (clarify non-obvious co-existence)
+  # ==================================================================
+  co_reporting_rules:
+    - rule: "EMPTY_SERIES suppresses every other code; the run aborts at pre-flight."
+    - rule: "INSUFFICIENT_HISTORY suppresses every other code; the run aborts at pre-flight."
+    - rule: "ZERO_PRICE_DETECTED is PRIMARY over COMPUTATION_DEGENERATE when the zero price is the root cause of the degenerate denominator."
+    - rule: "PROVENANCE_MISSING and FABRICATED_VALUE_DETECTED are independent: a field can have a (forged) chain but an untraceable value, or a traceable value with no chain metadata. Both may co-report."
+    - rule: "SCHEMA_VALIDATION_FAILED may co-report with any semantic code whose evidence is a field the schema also rejects."
+    - rule: "MODE_CONTAMINATION implies SCHEMA_VALIDATION_FAILED when the foreign key is rejected by additionalProperties:false; report both, MODE_CONTAMINATION carries the semantic."
+
+  # ==================================================================
+  # Gate (load-bearing)
+  # ==================================================================
+  gate:
+    duplicate_codes: 0          # no two codes share semantic_definition
+    ambiguous_codes: 0          # every code has a unique triggering_condition predicate
+    VCs_without_primary_code: 0 # every one of 64 unique VCs owns or co-owns at least one PRIMARY code
+    diagnostic_codes_without_primary_owner: 0  # every DIAGNOSTIC is co-owned by a VC that also ties to a PRIMARY chain
+    precedence_conflicts: 0     # no two codes share (tier, precedence)
+    catch_all_codes: 0          # no GENERIC/UNKNOWN catch-all
+    message_text_as_machine_contract: false
+
+  # ==================================================================
+  # Integrity summary
+  # ==================================================================
+  integrity_check:
+    total_codes: 36
+    primary_codes: 28
+    diagnostic_codes: 8
+    tier_distribution:
+      INPUT_FATAL: 7            # EMPTY_SERIES, INSUFFICIENT_HISTORY, ZERO_PRICE_DETECTED, UNKNOWN_ADJUSTMENT_STATUS, CONFLICTING_ADJUSTMENT_STATUS, BENCHMARK_UNAVAILABLE, CONFIG_VALIDATION_FAILED
+      INPUT_RECOVERABLE: 6      # BENCHMARK_MISALIGNED, MISSING_INTERVAL, DUPLICATE_TIMESTAMP_DEDUPED, UNSORTED_TIMESTAMP_SORTED, PARTIAL_WEEK_DROPPED, ZERO_VOLUME_ACCEPTED
+      COMPUTATION: 7            # COMPUTATION_DEGENERATE, NAN_PROPAGATION, SMOOTHING_MISMATCH, OBV_VPT_SERIES_CONTAMINATION, EVENTS_1Y_LOGIC_ERROR, MODE_KERNEL_DIVERGENCE, CHANNEL_SLOPE_CONTRACT_VIOLATION
+      PATTERN: 8                # LOOKAHEAD_BIAS_DETECTED, FALSE_BREAKOUT_WITHOUT_VOLUME, UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED, SETUP_DROPPED_SILENTLY, ARCHETYPE_AMBIGUITY_FALLBACK, BEARISH_SIGN_INVERSION, BEARISH_SETUP_INCOMPLETE, BEARISH_FALSE_POSITIVE
+      OUTPUT_STRUCTURE: 3       # SCHEMA_VALIDATION_FAILED, MODE_CONTAMINATION, FORMULA_NOT_APPLICABLE
+      PROVENANCE_INTEGRITY: 2   # PROVENANCE_MISSING, FABRICATED_VALUE_DETECTED
+      POLICY: 3                 # ADVICE_LANGUAGE_DETECTED, VALUATION_OVERRIDE_ATTEMPT, ROUNDING_DRIFT
+      canonical_total: 36
+    primary_diagnostic_reconciliation: "28 PRIMARY + 8 DIAGNOSTIC = 36 total. DIAGNOSTIC codes (8): BENCHMARK_MISALIGNED, MISSING_INTERVAL, DUPLICATE_TIMESTAMP_DEDUPED, UNSORTED_TIMESTAMP_SORTED, PARTIAL_WEEK_DROPPED, ZERO_VOLUME_ACCEPTED (all INPUT_RECOVERABLE), FORMULA_NOT_APPLICABLE (OUTPUT_STRUCTURE), ROUNDING_DRIFT (POLICY)."
+    VC_coverage:
+      unique_VCs_covered: 64
+      unique_VCs_total: 64
+      coverage_ratio: 64/64
+    every_VC_has_primary_or_diagnostic_owner: true
+    every_critical_FM_has_primary_code: true
+    canonical_inputs:
+      verifier_obligation_matrix: "phase2B/manifests/verifier-obligation-matrix.yaml"
+      failure_mode_coverage_plan: "phase2B/manifests/failure-mode-coverage-plan.yaml"
+      failure_mode_registry: "phase1/manifests/technical-failure-mode-registry.yaml"
+    status: PASS

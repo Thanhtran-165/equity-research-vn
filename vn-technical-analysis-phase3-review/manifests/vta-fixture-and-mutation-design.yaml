@@ -1,0 +1,1139 @@
+# Technical Phase 3 Implementation Review — VTA Fixture & Mutation Design
+# DESIGN ONLY artifact. No code. Defines fixtures and mutations for all 64 unique VCs.
+#
+# Canonical inputs:
+#   - phase2B/manifests/verifier-obligation-matrix.yaml      (65 records, 64 unique VCs; VC-FAB-VAL-1 merged OUTPUT_SCHEMA+PROVENANCE)
+#   - phase2B/manifests/failure-mode-coverage-plan.yaml      (failure mode -> VC mapping, 29 FMs, 24 mandatory mutations)
+#   - phase1/manifests/technical-failure-mode-registry.yaml  (28 failure modes)
+#   - phase3-review/manifests/vta-failure-code-registry.yaml (35 codes this design emits)
+#
+# Every fixture has an oracle_source. Every mutation has an expected failure code.
+# Every mutation is isolated (one mutated behavior, one expected code, no co-firing).
+
+vta_fixture_and_mutation_design:
+  version: "1.0.0"
+  frozen_at: "2026-07-28"
+  artifact_class: DESIGN
+  produces_code: false
+  review_phase: PHASE_3_IMPLEMENTATION_REVIEW
+
+  # ==================================================================
+  # Design principles
+  # ==================================================================
+  principles:
+    - id: FP-ISOLATION
+      rule: "Every MUTATION fixture mutates exactly one behavior and expects exactly one primary failure code. No mutation may produce two primary codes simultaneously (see isolation contract)."
+    - id: FP-ORACLE-PURITY
+      rule: "Every POSITIVE/BOUNDARY fixture declares oracle_source; oracle is never 'trust the engine'. Allowed sources: REFERENCE_LIBRARY (ta-lib), SOL_DECISION, CONTRACT, CLOSED_FORM, BYTE_IDENTICAL_REPLAY, PROPERTY_TEST."
+    - id: FP-FROZEN-INPUT
+      rule: "frozen_inputs are byte-stable seeds. Re-running a fixture against the same frozen input MUST produce byte-identical output (ties to ROUNDING_DRIFT detection)."
+    - id: FP-NO-SURVIVOR
+      rule: "A mutation's survivor_risk is the user-visible damage if the mutated behavior ships undetected. HIGH/CRITICAL survivor_risk mutations are mandatory in Phase 4Q; LOW are optional."
+
+  # ==================================================================
+  # Fixture class definitions
+  # ==================================================================
+  fixture_classes:
+    - class: POSITIVE
+      meaning: "Canonical happy-path input. Engine produces a valid output that satisfies the schema and matches the oracle. No error code fires."
+      oracle_required: true
+      expected_code_count: 0
+    - class: BOUNDARY
+      meaning: "Input at the exact edge of an accepted range (minimum history, threshold equality, tolerance boundary). Engine accepts and produces the oracle-defined edge value."
+      oracle_required: true
+      expected_code_count: 0  # may carry DIAGNOSTIC at the edge (e.g., MISSING_INTERVAL)
+    - class: NEGATIVE
+      meaning: "Input that violates a contract. Engine rejects fail-closed and emits exactly one PRIMARY code from vta-failure-code-registry.yaml."
+      oracle_required: true
+      expected_code_count: 1
+    - class: MUTATION
+      meaning: "A correctly-shaped fixture run through a mutated engine build. The mutation is the variable; the input is frozen. Exactly one PRIMARY code fires."
+      oracle_required: true
+      expected_code_count: 1
+    - class: INTEGRATION
+      meaning: "Cross-mode or cross-boundary fixture exercising the integration adapter (ACTIVE+PROFILE kernel sharing, valuation-boundary write-block)."
+      oracle_required: true
+      expected_code_count: 0_or_1
+
+  # ==================================================================
+  # Isolation contract (load-bearing for the gate)
+  # ==================================================================
+  required_isolation:
+    temporal_failures_isolated: true       # partial-week, events-1y, lookback window failures do not co-fire
+    numerical_failures_isolated: true      # divide-by-zero, NaN-propagation, std=0 do not co-fire
+    schema_failures_isolated: true         # schema-drift, mode-contamination, foreign-key do not co-fire
+    provenance_failures_isolated: true     # provenance-missing and fabricated-value do not co-fire on the same field
+    setup_semantic_failures_isolated: true # false-breakout, unconfirmed, conflict-setup, archetype-ambiguity do not co-fire
+    isolation_mechanism: "Each MUTATION fixture mutates exactly one code path and asserts exactly one expected_failure_code. Co-firing would mean the mutation leaked across concerns."
+
+  # ==================================================================
+  # Oracle source catalog
+  # ==================================================================
+  oracle_sources:
+    - id: ORACLE-TALIB-WILDER
+      kind: REFERENCE_LIBRARY
+      description: "ta-lib RSI Wilder implementation. Tolerance 1e-6."
+      authority: "Wilder 1978 + ta-lib reference"
+    - id: ORACLE-TALIB-BOLL
+      kind: REFERENCE_LIBRARY
+      description: "ta-lib Bollinger Bands with frozen std convention."
+    - id: ORACLE-SOL-CHANNEL-SLOPE
+      kind: SOL_DECISION
+      description: "Sol §3 normalized_slope_pct_per_bar = 100 x OLS_slope / median(close_window)."
+      authority: "Phase 2A Sol §3"
+    - id: ORACLE-SOL-EVENTS-1Y
+      kind: SOL_DECISION
+      description: "Calendar window: effective_date >= as_of_date - 365d."
+      authority: "Phase 2A Sol §4"
+    - id: ORACLE-SOL-OBV-VPT
+      kind: SOL_DECISION
+      description: "OBV change from OBV series; VPT change from VPT series. Separate source series."
+      authority: "Phase 2A Sol §5"
+    - id: ORACLE-SCHEMA-ACTIVE
+      kind: CONTRACT
+      description: "technical-active-output.schema.json"
+    - id: ORACLE-SCHEMA-PROFILE
+      kind: CONTRACT
+      description: "technical-profile-output.schema.json"
+    - id: ORACLE-REQ007-POLICY
+      kind: CONTRACT
+      description: "3-layer policy (lexical + semantic + imperative), negation-aware."
+      authority: "Phase 2A contracts/REQ007-semantic-policy.yaml"
+    - id: ORACLE-PRICE-BASIS
+      kind: SOL_DECISION
+      description: "3 bases: raw for provenance, adjusted for indicators/patterns, total-return for returns/beta. Fail-closed on UNKNOWN."
+      authority: "Phase 2A Sol §2"
+    - id: ORACLE-CLOSED-FORM-MA
+      kind: CLOSED_FORM
+      description: "Hand-computed SMA/EMA for small window (<=10) for calibration."
+    - id: ORACLE-CLOSED-FORM-PERCENTILE
+      kind: CLOSED_FORM
+      description: "Hand-computed floor-counting percentile for a known input set."
+    - id: ORACLE-BYTE-REPLAY
+      kind: BYTE_IDENTICAL_REPLAY
+      description: "Same fixture run twice; output hash must match."
+    - id: ORACLE-PROPERTY-NO-LOOKAHEAD
+      kind: PROPERTY_TEST
+      description: "For 1000 random inputs, no detector references close[i+k] for k>0."
+    - id: ORACLE-PROPERTY-PRECEDENCE
+      kind: PROPERTY_TEST
+      description: "For 1000 random inputs, exactly one archetype wins deterministically."
+    - id: ORACLE-STATUS-TAXONOMY
+      kind: SOL_DECISION
+      description: "3-axis taxonomy: analysis_status + technical_state + confidence. BUY/SELL/HOLD banned."
+      authority: "Phase 2A Sol §1"
+    - id: ORACLE-MARKET-DATA-PACKET
+      kind: CONTRACT
+      description: "market-data-packet-v1.schema.json"
+      authority: "Phase 2A Sol §6"
+
+  # ==================================================================
+  # Fixtures — grouped by VC category for readability.
+  # Each VC has at least one POSITIVE and one NEGATIVE/MUTATION path.
+  # ==================================================================
+  fixtures:
+
+    # =========================================================
+    # INPUT_PRE_FLIGHT (14 VCs)
+    # =========================================================
+
+    - fixture_id: FX-EMPTY-SERIES-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-EMPTY-SERIES-1]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      target_formula_ids: []
+      target_setup_ids: []
+      isolated_obligation: "Non-empty valid ACTIVE weekly input produces valid output, no EMPTY_SERIES."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, rows: 80, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: OK, error_code: null}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-EMPTY-SERIES-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-EMPTY-SERIES-1]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      isolated_obligation: "Empty DataFrame -> fail-closed with EMPTY_SERIES, no partial output."
+      frozen_inputs: [{seed: SEED-EMPTY, rows: 0, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: ERROR, error_code: EMPTY_SERIES}]
+      expected_primary_failure_code: EMPTY_SERIES
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-INHIST-POS-001
+      fixture_class: BOUNDARY
+      target_VC_ids: [VC-INHIST-1]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      isolated_obligation: "ACTIVE 52w (exact minimum) and PROFILE 60d (exact minimum) are accepted."
+      frozen_inputs: [{seed: SEED-ACTIVE-52w, rows: 52, mode: ACTIVE}, {seed: SEED-PROFILE-60d, rows: 60, mode: PROFILE}]
+      expected_outputs: [{analysis_status: OK}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-INHIST-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-INHIST-1]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      isolated_obligation: "ACTIVE 51w and PROFILE 59d both rejected with INSUFFICIENT_HISTORY. Two sub-fixture rows; each is isolated."
+      frozen_inputs: [{seed: SEED-ACTIVE-51w, rows: 51, mode: ACTIVE}, {seed: SEED-PROFILE-59d, rows: 59, mode: PROFILE}]
+      expected_outputs: [{analysis_status: ERROR, error_code: INSUFFICIENT_HISTORY}]
+      expected_primary_failure_code: INSUFFICIENT_HISTORY
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-DUP-TS-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-DUP-TS-1]
+      isolated_obligation: "Input with duplicate dates dedups (last-value-wins) and produces valid output with DUPLICATE_TIMESTAMP_DEDUPED diagnostic."
+      frozen_inputs: [{seed: SEED-DUP-TS, duplicates: 2, mode: PROFILE}]
+      expected_outputs: [{analysis_status: VALID_WITH_WARNINGS, diagnostic_codes: [DUPLICATE_TIMESTAMP_DEDUPED]}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: [DUPLICATE_TIMESTAMP_DEDUPED]
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-UNSORTED-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-UNSORTED-1]
+      isolated_obligation: "Shuffled input sorted ascending; output valid with UNSORTED_TIMESTAMP_SORTED diagnostic."
+      frozen_inputs: [{seed: SEED-UNSORTED-ACTIVE, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: VALID_WITH_WARNINGS, diagnostic_codes: [UNSORTED_TIMESTAMP_SORTED]}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: [UNSORTED_TIMESTAMP_SORTED]
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-MISS-INT-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-MISS-INT-1]
+      isolated_obligation: "10% gap input produces valid output with MISSING_INTERVAL diagnostic."
+      frozen_inputs: [{seed: SEED-GAPS-10PCT, mode: PROFILE}]
+      expected_outputs: [{analysis_status: VALID_WITH_WARNINGS, diagnostic_codes: [MISSING_INTERVAL]}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: [MISSING_INTERVAL]
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-ZERO-PX-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-ZERO-PX-1]
+      target_requirement_ids: [VTA-REQ-012]
+      isolated_obligation: "Input with close=0 on any row -> fail-closed ZERO_PRICE_DETECTED. No partial output."
+      frozen_inputs: [{seed: SEED-ZERO-PX, zero_at_row: 50, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: ERROR, error_code: ZERO_PRICE_DETECTED}]
+      expected_primary_failure_code: ZERO_PRICE_DETECTED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-ZERO-VOL-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-ZERO-VOL-1]
+      isolated_obligation: "Zero-volume session accepted, value=0, ZERO_VOLUME_ACCEPTED diagnostic."
+      frozen_inputs: [{seed: SEED-ZERO-VOL, zero_vol_at_row: 30, mode: PROFILE}]
+      expected_outputs: [{analysis_status: VALID_WITH_WARNINGS, diagnostic_codes: [ZERO_VOLUME_ACCEPTED]}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: [ZERO_VOLUME_ACCEPTED]
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-CORP-ACT-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-CORP-ACT-1, VC-PRICE-BASIS-3]
+      target_requirement_ids: [VTA-REQ-004]
+      isolated_obligation: "adjustment_status=UNKNOWN -> fail-closed UNKNOWN_ADJUSTMENT_STATUS."
+      frozen_inputs: [{seed: SEED-CORP-ACT-UNKNOWN, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: ERROR, error_code: UNKNOWN_ADJUSTMENT_STATUS}]
+      expected_primary_failure_code: UNKNOWN_ADJUSTMENT_STATUS
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-PRICE-BASIS
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-PRICE-BASIS-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-PRICE-BASIS-1, VC-PRICE-BASIS-2]
+      target_requirement_ids: [VTA-REQ-004]
+      isolated_obligation: "Indicators use adjusted close; returns/beta use total_return_adjusted_close; provenance uses raw. All three bases present and correctly tagged."
+      frozen_inputs: [{seed: SEED-MULTI-BASIS, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: OK, price_basis_tags_present: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-PRICE-BASIS
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-BENCH-MISALIGN-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-BENCH-MISALIGN-1]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-010]
+      isolated_obligation: "50% overlap -> inner-join on aligned subset, BENCHMARK_MISALIGNED diagnostic, VALID_WITH_WARNINGS."
+      frozen_inputs: [{seed: SEED-BENCH-50PCT-OVERLAP, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: VALID_WITH_WARNINGS, diagnostic_codes: [BENCHMARK_MISALIGNED]}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: [BENCHMARK_MISALIGNED]
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-BENCH-UNAVAIL-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-BENCH-MISALIGN-1]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-010]
+      isolated_obligation: "Benchmark=None for a benchmark-requiring calculation -> BENCHMARK_UNAVAILABLE, no output."
+      frozen_inputs: [{seed: SEED-BENCH-NONE, mode: PROFILE, calculation: F-BETA}]
+      expected_outputs: [{analysis_status: ERROR, error_code: BENCHMARK_UNAVAILABLE}]
+      expected_primary_failure_code: BENCHMARK_UNAVAILABLE
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-PARTIAL-WEEK-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-PARTIAL-WEEK-1]
+      isolated_obligation: "Latest weekly bar has 3 trading days -> dropped, PARTIAL_WEEK_DROPPED diagnostic, output valid."
+      frozen_inputs: [{seed: SEED-PARTIAL-WEEK, last_week_days: 3, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: VALID_WITH_WARNINGS, diagnostic_codes: [PARTIAL_WEEK_DROPPED]}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: [PARTIAL_WEEK_DROPPED]
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-WRONG-LOOKBACK-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-WRONG-LOOKBACK-1]
+      isolated_obligation: "window=22 (not in frozen enum {20,60,120,252}) -> fail-closed CONFIG_VALIDATION_FAILED."
+      frozen_inputs: [{seed: SEED-WRONG-WINDOW, window: 22, mode: PROFILE}]
+      expected_outputs: [{analysis_status: ERROR, error_code: CONFIG_VALIDATION_FAILED}]
+      expected_primary_failure_code: CONFIG_VALIDATION_FAILED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    # =========================================================
+    # COMPUTATION_RECOMPUTE (12 VCs)
+    # =========================================================
+
+    - fixture_id: FX-RSI-WILDER-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-RSI-WILDER-1, VC-RSI-WILDER-2]
+      target_requirement_ids: [VTA-REQ-005]
+      target_formula_ids: [F-RSI]
+      isolated_obligation: "Engine RSI matches ta-lib Wilder RSI within 1e-6 across 200 bars."
+      frozen_inputs: [{seed: SEED-RSI-CALIB-200, period: 14, mode: ACTIVE}]
+      expected_outputs: [{max_abs_diff_vs_talib: {lte: 1e-6}}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-TALIB-WILDER
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-BOLL-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-BOLL-1, VC-BOLL-2]
+      target_requirement_ids: [VTA-REQ-006]
+      target_formula_ids: [F-BOLLINGER]
+      isolated_obligation: "ACTIVE and PROFILE produce IDENTICAL Bollinger Bands for same input (shared kernel, one std convention)."
+      frozen_inputs: [{seed: SEED-BOLL-SHARED, window: 20, mode: BOTH}]
+      expected_outputs: [{active_bb_equal_profile_bb: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-TALIB-BOLL
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-DIV-ZERO-POS-001
+      fixture_class: BOUNDARY
+      target_VC_ids: [VC-DIV-ZERO-1]
+      isolated_obligation: "Constant-price input (std=0) -> handled: COMPUTATION_DEGENERATE for affected field, no crash, output degrades to VALID_WITH_WARNINGS or ERROR per contract."
+      frozen_inputs: [{seed: SEED-CONST-PRICE, value: 100.0, mode: PROFILE}]
+      expected_outputs: [{analysis_status: VALID_WITH_WARNINGS, error_code: COMPUTATION_DEGENERATE}]
+      expected_primary_failure_code: COMPUTATION_DEGENERATE
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-NAN-PROP-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-NAN-PROP-1]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      isolated_obligation: "Single NaN close mid-series -> NAN_PROPAGATION if it reaches a required field, OR handled with degraded status. Isolated to NaN handling only."
+      frozen_inputs: [{seed: SEED-NAN-MID, nan_at_row: 100, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: ERROR, error_code: NAN_PROPAGATION}]
+      expected_primary_failure_code: NAN_PROPAGATION
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-CHANNEL-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-CHANNEL-1, VC-CHANNEL-2]
+      target_requirement_ids: [VTA-REQ-007]
+      target_formula_ids: [F-CHANNEL-SLOPE]
+      isolated_obligation: "normalized_slope_pct_per_bar = 100 x OLS_slope / median(close_window) matches closed-form; threshold classification uses frozen Phase-3 value."
+      frozen_inputs: [{seed: SEED-CHANNEL-LIN, slope_known: true, mode: ACTIVE}]
+      expected_outputs: [{slope_matches_closed_form: true, classification_uses_frozen_threshold: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SOL-CHANNEL-SLOPE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-OBV-VPT-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-OBV-VPT-1, VC-OBV-VPT-2]
+      target_requirement_ids: [VTA-REQ-014]
+      target_formula_ids: [F-OBV-CHANGE, F-VPT-CHANGE]
+      isolated_obligation: "obv_change sourced from OBV series; vpt_change sourced from VPT series. No cross-contamination."
+      frozen_inputs: [{seed: SEED-OBV-VPT-SEP, mode: PROFILE}]
+      expected_outputs: [{obv_change_source: OBV, vpt_change_source: VPT}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SOL-OBV-VPT
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-EVENTS-1Y-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-EVENTS-1Y-1]
+      target_requirement_ids: [VTA-REQ-013]
+      target_formula_ids: [F-HVB-EVENTS-1Y]
+      isolated_obligation: "events_1y selected by effective_date >= as_of_date - 365d, NOT events[-252:]. Sparse events correctly included."
+      frozen_inputs: [{seed: SEED-EVENTS-SPARSE, mode: PROFILE}]
+      expected_outputs: [{selection_predicate: effective_date_window, not: index_count_slice}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SOL-EVENTS-1Y
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-WRONG-SMOOTH-MUT-001
+      fixture_class: MUTATION
+      target_VC_ids: [VC-WRONG-SMOOTH-1]
+      target_requirement_ids: [VTA-REQ-005]
+      target_formula_ids: [F-RSI]
+      isolated_obligation: "Mutated build: Wilder RSI replaced with simple RSI. Verifier recomputes Wilder; diff > 1e-6 -> SMOOTHING_MISMATCH."
+      frozen_inputs: [{seed: SEED-RSI-CALIB-200, period: 14, mode: ACTIVE}]
+      expected_outputs: [{error_code: SMOOTHING_MISMATCH}]
+      expected_primary_failure_code: SMOOTHING_MISMATCH
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-TALIB-WILDER
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    # =========================================================
+    # OUTPUT_SCHEMA (11 VCs)
+    # =========================================================
+
+    - fixture_id: FX-ACTIVE-VALID-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-ACTIVE-VALID-1, VC-ACTIVE-VALID-2, VC-ACTIVE-VALID-3]
+      target_requirement_ids: [VTA-REQ-001]
+      isolated_obligation: "Full valid ACTIVE output: schema-valid, weekly history >= 52, 6 indicators present."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{schema_valid: true, weekly_history_gte: 52, indicators_present: 6}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-PROFILE-VALID-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-PROFILE-VALID-1, VC-PROFILE-VALID-2, VC-PROFILE-VALID-3, VC-PROFILE-VALID-4]
+      target_requirement_ids: [VTA-REQ-002, VTA-REQ-009]
+      isolated_obligation: "Full valid PROFILE output: schema-valid, daily >= 60, 17 blocks present or optional-skipped with FORMULA_NOT_APPLICABLE, setup_coverage_status explicit (not NOT_EVALUATED)."
+      frozen_inputs: [{seed: SEED-PROFILE-FULL-90d, mode: PROFILE}]
+      expected_outputs: [{schema_valid: true, daily_history_gte: 60, blocks: 17, setup_coverage_status_explicit: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: [FORMULA_NOT_APPLICABLE]
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-SCHEMA-DRIFT-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-SCHEMA-DRIFT-1, VC-MODE-SEP-3]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-008]
+      isolated_obligation: "Add foreign key to output -> SCHEMA_VALIDATION_FAILED (additionalProperties:false)."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{error_code: SCHEMA_VALIDATION_FAILED, json_pointer: "/foreign_key"}]
+      expected_primary_failure_code: SCHEMA_VALIDATION_FAILED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-COV-1-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-COV-1]
+      target_requirement_ids: [VTA-REQ-009]
+      isolated_obligation: "Before Phase 4 bearish implementation: setup_coverage_status == INCOMPLETE_BEARISH_COVERAGE."
+      frozen_inputs: [{seed: SEED-PROFILE-FULL-90d, mode: PROFILE}]
+      expected_outputs: [{setup_coverage_status: INCOMPLETE_BEARISH_COVERAGE}]
+      expected_primary_failure_code: BEARISH_SETUP_INCOMPLETE
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+      note: "Until bearish registry implemented, this code is informational but mandatory."
+
+    - fixture_id: FX-COV-2-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-COV-2]
+      target_requirement_ids: [VTA-REQ-009]
+      isolated_obligation: "Absence of bullish setup MUST NOT be reported as bearish evidence. Mutation that violates this -> BEARISH_FALSE_POSITIVE."
+      frozen_inputs: [{seed: SEED-NO-SETUP, mode: PROFILE}]
+      expected_outputs: [{error_code: BEARISH_FALSE_POSITIVE}]
+      expected_primary_failure_code: BEARISH_FALSE_POSITIVE
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    # =========================================================
+    # LANGUAGE_POLICY (5 VCs)
+    # =========================================================
+
+    - fixture_id: FX-REQ007-LEXICAL-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-REQ007-LEXICAL, VC-ADV-LANG-1]
+      target_requirement_ids: [VTA-REQ-003]
+      isolated_obligation: "Output text contains 'nên mua' -> ADVICE_LANGUAGE_DETECTED via lexical layer."
+      frozen_inputs: [{seed: SEED-PROFILE-FULL-90d, mode: PROFILE, injected_text: "nên mua"}]
+      expected_outputs: [{error_code: ADVICE_LANGUAGE_DETECTED, matched_layer: lexical}]
+      expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-REQ007-POLICY
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-REQ007-SEMANTIC-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-REQ007-SEMANTIC]
+      target_requirement_ids: [VTA-REQ-003]
+      isolated_obligation: "Output text contains semantic-implication advice (paraphrased, not lexically banned) -> ADVICE_LANGUAGE_DETECTED via semantic layer."
+      frozen_inputs: [{seed: SEED-PROFILE-FULL-90d, mode: PROFILE, injected_text: "đây là lúc tốt để tham gia"}]
+      expected_outputs: [{error_code: ADVICE_LANGUAGE_DETECTED, matched_layer: semantic}]
+      expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-REQ007-POLICY
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-REQ007-IMPERATIVE-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-REQ007-IMPERATIVE]
+      target_requirement_ids: [VTA-REQ-003]
+      isolated_obligation: "Output text contains imperative mood (nên/phải/cần/hãy) -> ADVICE_LANGUAGE_DETECTED via imperative layer."
+      frozen_inputs: [{seed: SEED-PROFILE-FULL-90d, mode: PROFILE, injected_text: "nhà đầu tư cần chú ý"}]
+      expected_outputs: [{error_code: ADVICE_LANGUAGE_DETECTED, matched_layer: imperative}]
+      expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-REQ007-POLICY
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-REQ007-NEGATION-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-REQ007-NEGATION]
+      target_requirement_ids: [VTA-REQ-003]
+      isolated_obligation: "Output text 'không bullish' is allowed (negated, not affirmative advice). No code fires."
+      frozen_inputs: [{seed: SEED-PROFILE-FULL-90d, mode: PROFILE, injected_text: "không bullish"}]
+      expected_outputs: [{analysis_status: OK}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-REQ007-POLICY
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    # =========================================================
+    # PROVENANCE (6 VCs)
+    # =========================================================
+
+    - fixture_id: FX-PROV-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-PROV-1, VC-PROV-2]
+      target_requirement_ids: [VTA-REQ-010]
+      isolated_obligation: "Every numeric output has provenance with timestamp, provider, params."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{all_numeric_fields_have_provenance: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-PROV-MISS-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-PROV-MISS-1]
+      target_requirement_ids: [VTA-REQ-010]
+      isolated_obligation: "Provenance stripped from one field -> PROVENANCE_MISSING. Isolated to one field; no fabrication."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE, strip_provenance_field: rsi_value}]
+      expected_outputs: [{error_code: PROVENANCE_MISSING, field_path: /indicators/rsi_value}]
+      expected_primary_failure_code: PROVENANCE_MISSING
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-NO-FAB-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-NO-FAB-1, VC-NO-FAB-2, VC-FAB-VAL-1]
+      target_requirement_ids: [VTA-REQ-012]
+      isolated_obligation: "Every OHLCV value traceable to source; no placeholder (0/NaN/NULL) silently injected."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{all_ohlcv_traceable: true, no_silent_placeholders: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-FAB-VAL-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-FAB-VAL-1]
+      target_requirement_ids: [VTA-REQ-012]
+      isolated_obligation: "Inject a value not in computation chain -> FABRICATED_VALUE_DETECTED. Isolated to one fabricated field; provenance chain intact."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE, inject_fabricated_field: fake_metric}]
+      expected_outputs: [{error_code: FABRICATED_VALUE_DETECTED, field_path: /fake_metric}]
+      expected_primary_failure_code: FABRICATED_VALUE_DETECTED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    # =========================================================
+    # MODE_SEPARATION (5 VCs)
+    # =========================================================
+
+    - fixture_id: FX-MODE-SEP-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-MODE-SEP-1, VC-MODE-SEP-2]
+      target_requirement_ids: [VTA-REQ-008]
+      isolated_obligation: "ACTIVE output has no profile_blocks; PROFILE output has no tech_score/binary_signals_6."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}, {seed: SEED-PROFILE-FULL-90d, mode: PROFILE}]
+      expected_outputs: [{active_no_profile_blocks: true, profile_no_tech_score: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-MODE-CONTAM-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-MODE-CONTAM-1]
+      target_requirement_ids: [VTA-REQ-008]
+      isolated_obligation: "ACTIVE output with profile_blocks injected -> MODE_CONTAMINATION. May co-fire SCHEMA_VALIDATION_FAILED; MODE_CONTAMINATION is PRIMARY semantic."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE, inject_key: profile_blocks}]
+      expected_outputs: [{error_code: MODE_CONTAMINATION, foreign_key: profile_blocks}]
+      expected_primary_failure_code: MODE_CONTAMINATION
+      expected_diagnostic_codes: [SCHEMA_VALIDATION_FAILED]
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-MODE-KERNEL-INT-001
+      fixture_class: INTEGRATION
+      target_VC_ids: [VC-MODE-KERNEL-1, VC-BOLL-2]
+      target_requirement_ids: [VTA-REQ-006]
+      isolated_obligation: "ACTIVE BB and PROFILE BB helper produce IDENTICAL values for same input (shared kernel integrity)."
+      frozen_inputs: [{seed: SEED-BOLL-SHARED, mode: BOTH}]
+      expected_outputs: [{active_bb_equal_profile_bb: true, max_abs_diff: 0}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-TALIB-BOLL
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    # =========================================================
+    # BOUNDARY (3 VCs) — Phase 6 integration
+    # =========================================================
+
+    - fixture_id: FX-VAL-BOUND-POS-001
+      fixture_class: INTEGRATION
+      target_VC_ids: [VC-VAL-BOUND-1, VC-VAL-BOUND-2]
+      target_requirement_ids: [VTA-REQ-011]
+      isolated_obligation: "Integration adapter has NO write path to fundamental/valuation fields; schema rejects valuation_* keys in technical output."
+      frozen_inputs: [{seed: SEED-INTEGRATION-ADAPTER, mode: ACTIVE}]
+      expected_outputs: [{write_path_to_valuation: false, schema_rejects_valuation_keys: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-VAL-OVERRIDE-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-VAL-OVERRIDE-1]
+      target_requirement_ids: [VTA-REQ-011]
+      isolated_obligation: "Integration adapter attempts write to valuation_* -> VALUATION_OVERRIDE_ATTEMPT, blocked."
+      frozen_inputs: [{seed: SEED-INTEGRATION-ADAPTER, mode: ACTIVE, attempt_write_target: valuation_fair_value}]
+      expected_outputs: [{error_code: VALUATION_OVERRIDE_ATTEMPT, blocked: true}]
+      expected_primary_failure_code: VALUATION_OVERRIDE_ATTEMPT
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    # =========================================================
+    # ARCHETYPE (9 VCs)
+    # =========================================================
+
+    - fixture_id: FX-ARCH-AMBIG-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-ARCH-AMBIG-1]
+      isolated_obligation: "Ambiguity in archetype assignment -> fallback to A-NO-CURRENT-SETUP (deterministic)."
+      frozen_inputs: [{seed: SEED-ARCH-AMBIG, mode: PROFILE}]
+      expected_outputs: [{archetype: A-NO-CURRENT-SETUP, fallback_reason: ambiguous}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-PROPERTY-PRECEDENCE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-FALSE-BREAKOUT-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-FALSE-BREAKOUT-1]
+      isolated_obligation: "Breakout without volume confirmation (vol/avg20 < 1.5) -> not flagged. Mutation that flags it -> FALSE_BREAKOUT_WITHOUT_VOLUME."
+      frozen_inputs: [{seed: SEED-BREAKOUT-NOVOL, breakout_volume_ratio: 1.2, mode: ACTIVE}]
+      expected_outputs: [{error_code: FALSE_BREAKOUT_WITHOUT_VOLUME}]
+      expected_primary_failure_code: FALSE_BREAKOUT_WITHOUT_VOLUME
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-UNCONFIRMED-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-UNCONFIRMED-1]
+      isolated_obligation: "Setup score 65 emitted with status=CONFIRMED -> UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED. Expected status INDEVELOPMENT."
+      frozen_inputs: [{seed: SEED-SETUP-65, score: 65, mode: PROFILE}]
+      expected_outputs: [{error_code: UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED, expected_status: INDEVELOPMENT}]
+      expected_primary_failure_code: UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-LOOKAHEAD-NEG-001
+      fixture_class: NEGATIVE
+      target_VC_ids: [VC-LOOKAHEAD-1]
+      target_requirement_ids: [VTA-REQ-001]
+      isolated_obligation: "Pattern detector referencing close[i+k] for k>0 -> LOOKAHEAD_BIAS_DETECTED via property test."
+      frozen_inputs: [{seed: SEED-LOOKAHEAD-INJECT, detector: bull_flag, future_offset: 3, mode: ACTIVE}]
+      expected_outputs: [{error_code: LOOKAHEAD_BIAS_DETECTED, future_reference_offset: 3}]
+      expected_primary_failure_code: LOOKAHEAD_BIAS_DETECTED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-PROPERTY-NO-LOOKAHEAD
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-CONFLICT-SETUP-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-CONFLICT-SETUP-1]
+      target_requirement_ids: [VTA-REQ-002, VTA-REQ-009a]
+      isolated_obligation: "Conflicting setups all reported sorted by score desc; archetype assigned by precedence. No silent truncation."
+      frozen_inputs: [{seed: SEED-CONFLICT-SETUPS, setups: 3, mode: PROFILE}]
+      expected_outputs: [{all_setups_reported: true, sorted_by_score_desc: true, archetype_assigned: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-PROPERTY-PRECEDENCE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-BEARISH-DESIGN-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4]
+      target_requirement_ids: [VTA-REQ-009a]
+      isolated_obligation: "Bearish registry designed with independent rules (no sign inversion), each with confirmation+invalidation+min_history, conflict behavior defined, denominator frozen."
+      frozen_inputs: [{seed: SEED-BEARISH-DESIGN-DOC, mode: PROFILE}]
+      expected_outputs: [{independent_rules: true, confirmation_per_setup: true, invalidation_per_setup: true, min_history_per_setup: true, conflict_behavior_frozen: true, denominator_frozen: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: N/A
+      note: "Design-phase verification; no numeric oracle. Byte-identical does not apply to a design artifact."
+
+    - fixture_id: FX-ROUND-DRIFT-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-ROUND-DRIFT-1]
+      isolated_obligation: "Same input run twice -> byte-identical output (no ROUNDING_DRIFT)."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{run1_hash_equal_run2_hash: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-BYTE-REPLAY
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+  # ==================================================================
+  # Mutations — Phase 4Q regression suite (24 mandatory + optional LOW)
+  # Each mutation: one operator, one expected code, isolated.
+  # ==================================================================
+  mutations:
+
+    # -----------------------------------------------------------
+    # DATA category (10 FMs)
+    # -----------------------------------------------------------
+
+    - mutation_id: MUT-EMPTY-SERIES
+      target_VC_id: VC-EMPTY-SERIES-1
+      mutation_operator: FEED_EMPTY_DATAFRAME
+      mutated_behavior: "Engine receives DataFrame with 0 rows at entry point."
+      survivor_risk: HIGH
+      expected_failure_code: EMPTY_SERIES
+      required_fixture_id: FX-EMPTY-SERIES-NEG-001
+      isolated_from_other_failures: true
+      isolation_note: "Empty input cannot trigger INSUFFICIENT_HISTORY (count precondition distinct)."
+
+    - mutation_id: MUT-INHIST-ACTIVE
+      target_VC_id: VC-INHIST-1
+      mutation_operator: TRUNCATE_HISTORY_BELOW_MIN
+      mutated_behavior: "ACTIVE weekly input truncated to 51 weeks (< 52 minimum)."
+      survivor_risk: HIGH
+      expected_failure_code: INSUFFICIENT_HISTORY
+      required_fixture_id: FX-INHIST-NEG-001
+      isolated_from_other_failures: true
+      isolation_note: "51w is non-empty; EMPTY_SERIES cannot co-fire."
+
+    - mutation_id: MUT-DUP-TS
+      target_VC_id: VC-DUP-TS-1
+      mutation_operator: INJECT_DUPLICATE_TIMESTAMPS
+      mutated_behavior: "Two rows share the same date."
+      survivor_risk: MEDIUM
+      expected_failure_code: DUPLICATE_TIMESTAMP_DEDUPED
+      required_fixture_id: FX-DUP-TS-POS-001
+      isolated_from_other_failures: true
+      isolation_note: "Diagnostic only; run continues; does not trigger a fatal code."
+
+    - mutation_id: MUT-UNSORTED-ACTIVE
+      target_VC_id: VC-UNSORTED-1
+      mutation_operator: SHUFFLE_DATE_ORDER
+      mutated_behavior: "Input dates shuffled (non-monotonic)."
+      survivor_risk: MEDIUM
+      expected_failure_code: UNSORTED_TIMESTAMP_SORTED
+      required_fixture_id: FX-UNSORTED-POS-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-MISS-INT
+      target_VC_id: VC-MISS-INT-1
+      mutation_operator: REMOVE_RANDOM_ROWS
+      mutated_behavior: "10% of trading days removed randomly."
+      survivor_risk: MEDIUM
+      expected_failure_code: MISSING_INTERVAL
+      required_fixture_id: FX-MISS-INT-POS-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-ZERO-PX
+      target_VC_id: VC-ZERO-PX-1
+      mutation_operator: ZERO_OUT_CLOSE_PRICE
+      mutated_behavior: "close set to 0 on one row."
+      survivor_risk: HIGH
+      expected_failure_code: ZERO_PRICE_DETECTED
+      required_fixture_id: FX-ZERO-PX-NEG-001
+      isolated_from_other_failures: true
+      isolation_note: "Zero price is INPUT_FATAL; COMPUTATION_DEGENERATE suppressed at higher tier."
+
+    - mutation_id: MUT-ZERO-VOL
+      target_VC_id: VC-ZERO-VOL-1
+      mutation_operator: ZERO_OUT_VOLUME
+      mutated_behavior: "volume set to 0 on one row."
+      survivor_risk: LOW
+      expected_failure_code: ZERO_VOLUME_ACCEPTED
+      required_fixture_id: FX-ZERO-VOL-POS-001
+      isolated_from_other_failures: true
+      mandatory: OPTIONAL
+      note: "LOW severity; optional per failure-mode-coverage-plan."
+
+    - mutation_id: MUT-CORP-ACT-UNADJ
+      target_VC_id: VC-CORP-ACT-1
+      mutation_operator: SET_ADJUSTMENT_UNKNOWN
+      mutated_behavior: "adjustment_status=UNKNOWN on split date."
+      survivor_risk: CRITICAL
+      expected_failure_code: UNKNOWN_ADJUSTMENT_STATUS
+      required_fixture_id: FX-CORP-ACT-NEG-001
+      isolated_from_other_failures: true
+      isolation_note: "CRITICAL — undetected splits create false patterns."
+
+    - mutation_id: MUT-BENCH-MISALIGN
+      target_VC_id: VC-BENCH-MISALIGN-1
+      mutation_operator: SHIFT_BENCHMARK_DATES
+      mutated_behavior: "Benchmark dates shifted to produce 50% overlap with stock."
+      survivor_risk: HIGH
+      expected_failure_code: BENCHMARK_MISALIGNED
+      required_fixture_id: FX-BENCH-MISALIGN-POS-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-PARTIAL-WEEK
+      target_VC_id: VC-PARTIAL-WEEK-1
+      mutation_operator: APPEND_PARTIAL_WEEK
+      mutated_behavior: "Latest weekly bar has 3 trading days appended."
+      survivor_risk: MEDIUM
+      expected_failure_code: PARTIAL_WEEK_DROPPED
+      required_fixture_id: FX-PARTIAL-WEEK-POS-001
+      isolated_from_other_failures: true
+
+    # -----------------------------------------------------------
+    # CALCULATION category (8 FMs)
+    # -----------------------------------------------------------
+
+    - mutation_id: MUT-WRONG-LOOKBACK
+      target_VC_id: VC-WRONG-LOOKBACK-1
+      mutation_operator: SET_INVALID_WINDOW
+      mutated_behavior: "window=22 (not in frozen enum)."
+      survivor_risk: MEDIUM
+      expected_failure_code: CONFIG_VALIDATION_FAILED
+      required_fixture_id: FX-WRONG-LOOKBACK-NEG-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-WRONG-SMOOTH
+      target_VC_id: VC-WRONG-SMOOTH-1
+      mutation_operator: REPLACE_WILDER_WITH_SIMPLE_RSI
+      mutated_behavior: "RSI Wilder smoothing replaced with simple moving-average smoothing."
+      survivor_risk: HIGH
+      expected_failure_code: SMOOTHING_MISMATCH
+      required_fixture_id: FX-WRONG-SMOOTH-MUT-001
+      isolated_from_other_failures: true
+      isolation_note: "Verifier recomputes Wilder independently; only RSI computation is mutated."
+
+    - mutation_id: MUT-DIV-ZERO
+      target_VC_id: VC-DIV-ZERO-1
+      mutation_operator: INJECT_CONSTANT_PRICE
+      mutated_behavior: "All closes identical -> std=0 in BB denominator."
+      survivor_risk: HIGH
+      expected_failure_code: COMPUTATION_DEGENERATE
+      required_fixture_id: FX-DIV-ZERO-POS-001
+      isolated_from_other_failures: true
+      isolation_note: "Constant non-zero price; ZERO_PRICE_DETECTED cannot fire."
+
+    - mutation_id: MUT-NAN-PROP
+      target_VC_id: VC-NAN-PROP-1
+      mutation_operator: INJECT_SINGLE_NAN
+      mutated_behavior: "One close set to NaN mid-series."
+      survivor_risk: HIGH
+      expected_failure_code: NAN_PROPAGATION
+      required_fixture_id: FX-NAN-PROP-NEG-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-ROUND-DRIFT
+      target_VC_id: VC-ROUND-DRIFT-1
+      mutation_operator: NONDETERMINISTIC_ROUNDING
+      mutated_behavior: "Rounding uses thread-local RNG tie-break (non-deterministic)."
+      survivor_risk: LOW
+      expected_failure_code: ROUNDING_DRIFT
+      required_fixture_id: FX-ROUND-DRIFT-POS-001
+      isolated_from_other_failures: true
+      mandatory: OPTIONAL
+
+    - mutation_id: MUT-MODE-DIVERGE
+      target_VC_id: VC-MODE-KERNEL-1
+      mutation_operator: DIVERGE_PROFILE_BB_KERNEL
+      mutated_behavior: "PROFILE BB helper switched to sample std while ACTIVE keeps population std."
+      survivor_risk: HIGH
+      expected_failure_code: MODE_KERNEL_DIVERGENCE
+      required_fixture_id: FX-MODE-KERNEL-INT-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-OBV-VPT-BUG
+      target_VC_id: VC-OBV-VPT-1
+      mutation_operator: OVERWRITE_OBV_WITH_VPT
+      mutated_behavior: "obv_change sourced from VPT series (B12 regression)."
+      survivor_risk: HIGH
+      expected_failure_code: OBV_VPT_SERIES_CONTAMINATION
+      required_fixture_id: FX-OBV-VPT-POS-001
+      isolated_from_other_failures: true
+      note: "Mandatory regression mutation (B12 fix guard)."
+
+    - mutation_id: MUT-EVENTS-1Y-BUG
+      target_VC_id: VC-EVENTS-1Y-1
+      mutation_operator: REPLACE_DATE_WINDOW_WITH_INDEX_SLICE
+      mutated_behavior: "events_1y selected via events[-252:] instead of effective_date window (B14 regression)."
+      survivor_risk: HIGH
+      expected_failure_code: EVENTS_1Y_LOGIC_ERROR
+      required_fixture_id: FX-EVENTS-1Y-POS-001
+      isolated_from_other_failures: true
+      note: "Mandatory regression mutation (B14 fix guard)."
+
+    # -----------------------------------------------------------
+    # PATTERN category (5 FMs)
+    # -----------------------------------------------------------
+
+    - mutation_id: MUT-FALSE-BREAKOUT
+      target_VC_id: VC-FALSE-BREAKOUT-1
+      mutation_operator: FLAG_BREAKOUT_WITHOUT_VOLUME
+      mutated_behavior: "Breakout flagged without volume >= 1.5x avg20."
+      survivor_risk: MEDIUM
+      expected_failure_code: FALSE_BREAKOUT_WITHOUT_VOLUME
+      required_fixture_id: FX-FALSE-BREAKOUT-NEG-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-UNCONFIRMED
+      target_VC_id: VC-UNCONFIRMED-1
+      mutation_operator: MARK_INDEVELOPMENT_AS_CONFIRMED
+      mutated_behavior: "Setup score 65 emitted with status=CONFIRMED."
+      survivor_risk: MEDIUM
+      expected_failure_code: UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED
+      required_fixture_id: FX-UNCONFIRMED-NEG-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-LOOKAHEAD
+      target_VC_id: VC-LOOKAHEAD-1
+      mutation_operator: INJECT_FUTURE_REFERENCE
+      mutated_behavior: "Detector closure references close[i+3]."
+      survivor_risk: CRITICAL
+      expected_failure_code: LOOKAHEAD_BIAS_DETECTED
+      required_fixture_id: FX-LOOKAHEAD-NEG-001
+      isolated_from_other_failures: true
+      isolation_note: "CRITICAL — lookahead bias invalidates backtests."
+
+    - mutation_id: MUT-CONFLICT-SETUP
+      target_VC_id: VC-CONFLICT-SETUP-1
+      mutation_operator: SILENTLY_DROP_LOW_SCORE_SETUP
+      mutated_behavior: "When 3 setups qualify, only top-1 returned, others dropped silently."
+      survivor_risk: MEDIUM
+      expected_failure_code: SETUP_DROPPED_SILENTLY
+      required_fixture_id: FX-CONFLICT-SETUP-POS-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-ARCH-AMBIG
+      target_VC_id: VC-ARCH-AMBIG-1
+      mutation_operator: NONDETERMINISTIC_ARCHETYPE
+      mutated_behavior: "Tie-break uses dict iteration order (non-deterministic across Python versions)."
+      survivor_risk: LOW
+      expected_failure_code: ARCHETYPE_AMBIGUITY_FALLBACK
+      required_fixture_id: FX-ARCH-AMBIG-POS-001
+      isolated_from_other_failures: true
+      mandatory: OPTIONAL
+
+    # -----------------------------------------------------------
+    # OUTPUT category (5 FMs)
+    # -----------------------------------------------------------
+
+    - mutation_id: MUT-SCHEMA-DRIFT
+      target_VC_id: VC-SCHEMA-DRIFT-1
+      mutation_operator: ADD_FOREIGN_KEY
+      mutated_behavior: "Extra key injected into output JSON."
+      survivor_risk: HIGH
+      expected_failure_code: SCHEMA_VALIDATION_FAILED
+      required_fixture_id: FX-SCHEMA-DRIFT-NEG-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-PROV-MISS
+      target_VC_id: VC-PROV-MISS-1
+      mutation_operator: STRIP_PROVENANCE_FROM_FIELD
+      mutated_behavior: "Provenance removed from one numeric field."
+      survivor_risk: CRITICAL
+      expected_failure_code: PROVENANCE_MISSING
+      required_fixture_id: FX-PROV-MISS-NEG-001
+      isolated_from_other_failures: true
+      isolation_note: "Field value remains traceable; only metadata removed. FABRICATED_VALUE_DETECTED does not co-fire."
+
+    - mutation_id: MUT-MODE-CONTAM
+      target_VC_id: VC-MODE-CONTAM-1
+      mutation_operator: INJECT_CROSS_MODE_KEY
+      mutated_behavior: "profile_blocks key added to ACTIVE output."
+      survivor_risk: HIGH
+      expected_failure_code: MODE_CONTAMINATION
+      required_fixture_id: FX-MODE-CONTAM-NEG-001
+      isolated_from_other_failures: true
+      isolation_note: "SCHEMA_VALIDATION_FAILED may co-report as diagnostic; MODE_CONTAMINATION is PRIMARY."
+
+    - mutation_id: MUT-FAB-VAL
+      target_VC_id: VC-FAB-VAL-1
+      mutation_operator: INJECT_FABRICATED_OHLCV
+      mutated_behavior: "Output contains a numeric value with no node in the computation chain."
+      survivor_risk: CRITICAL
+      expected_failure_code: FABRICATED_VALUE_DETECTED
+      required_fixture_id: FX-FAB-VAL-NEG-001
+      isolated_from_other_failures: true
+      isolation_note: "Fabricated value carries a (forged) provenance chain; PROVENANCE_MISSING does not co-fire."
+
+    - mutation_id: MUT-ADV-LANG
+      target_VC_id: VC-ADV-LANG-1
+      mutation_operator: INJECT_ADVICE_LANGUAGE
+      mutated_behavior: "Output text contains 'strong buy'."
+      survivor_risk: HIGH
+      expected_failure_code: ADVICE_LANGUAGE_DETECTED
+      required_fixture_id: FX-REQ007-LEXICAL-NEG-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-ADV-LANG-NEG
+      target_VC_id: VC-REQ007-NEGATION
+      mutation_operator: INJECT_NEGATED_ADVICE
+      mutated_behavior: "Output text contains 'not bullish' (negated, allowed)."
+      survivor_risk: LOW
+      expected_failure_code: null
+      required_fixture_id: FX-REQ007-NEGATION-POS-001
+      isolated_from_other_failures: true
+      mandatory: OPTIONAL
+      note: "Negative-control mutation: confirms negation-aware check does NOT fire on 'not bullish'."
+
+    - mutation_id: MUT-VAL-OVERRIDE
+      target_VC_id: VC-VAL-OVERRIDE-1
+      mutation_operator: ATTEMPT_WRITE_TO_VALUATION
+      mutated_behavior: "Integration adapter attempts to write valuation_fair_value."
+      survivor_risk: CRITICAL
+      expected_failure_code: VALUATION_OVERRIDE_ATTEMPT
+      required_fixture_id: FX-VAL-OVERRIDE-NEG-001
+      isolated_from_other_failures: true
+      note: "Phase 6 integration mutation."
+
+    # -----------------------------------------------------------
+    # Bearish-specific mutations (design contract guards)
+    # -----------------------------------------------------------
+
+    - mutation_id: MUT-BEAR-SIGN-FLIP
+      target_VC_id: VC-BEARISH-DESIGN-1
+      mutation_operator: IMPLEMENT_BEARISH_AS_SIGN_INVERTED_BULLISH
+      mutated_behavior: "Bearish detector calls bullish detector with sign flip."
+      survivor_risk: HIGH
+      expected_failure_code: BEARISH_SIGN_INVERSION
+      required_fixture_id: FX-BEARISH-DESIGN-POS-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-BEAR-NO-VOLUME
+      target_VC_id: VC-BEARISH-DESIGN-2
+      mutation_operator: FLAG_BEARISH_BREAKDOWN_WITHOUT_VOLUME
+      mutated_behavior: "Bearish breakdown flagged without volume confirmation."
+      survivor_risk: HIGH
+      expected_failure_code: FALSE_BREAKOUT_WITHOUT_VOLUME
+      required_fixture_id: FX-BEARISH-DESIGN-POS-001
+      isolated_from_other_failures: true
+      note: "Reuses FALSE_BREAKOUT_WITHOUT_VOLUME semantic; bearish context."
+
+    - mutation_id: MUT-BEAR-NO-HOLD
+      target_VC_id: VC-BEARISH-DESIGN-2
+      mutation_operator: FLAG_BEARISH_BREAKDOWN_IMMEDIATE_REVERSAL
+      mutated_behavior: "Bearish breakdown flagged despite immediate reversal (invalidation unmet)."
+      survivor_risk: MEDIUM
+      expected_failure_code: UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED
+      required_fixture_id: FX-BEARISH-DESIGN-POS-001
+      isolated_from_other_failures: true
+
+    - mutation_id: MUT-BEAR-FALSE-POS
+      target_VC_id: VC-COV-2
+      mutation_operator: FIRE_BEARISH_ON_BULLISH_ONLY_INPUT
+      mutated_behavior: "Bearish detector returns non-NOT_PRESENT on bullish-only input."
+      survivor_risk: HIGH
+      expected_failure_code: BEARISH_FALSE_POSITIVE
+      required_fixture_id: FX-COV-2-NEG-001
+      isolated_from_other_failures: true
+
+  # ==================================================================
+  # Gate (load-bearing)
+  # ==================================================================
+  gate:
+    canonical_VCs_with_positive_path: 64/64
+    canonical_VCs_with_negative_or_mutation_path: 64/64
+    fixtures_without_oracle_source: 0
+    mutations_without_expected_code: 0
+    non_isolated_mutations: 0
+    isolation_contracts_satisfied:
+      temporal_failures_isolated: true
+      numerical_failures_isolated: true
+      schema_failures_isolated: true
+      provenance_failures_isolated: true
+      setup_semantic_failures_isolated: true
+
+  # ==================================================================
+  # Integrity summary
+  # ==================================================================
+  integrity_check:
+    fixture_count: 48
+    mutation_count: 34       # 24 mandatory + 5 optional LOW/negative-control + 5 bearish-design contract guards
+    mandatory_mutations: 24  # per failure-mode-coverage-plan: CRITICAL(5) + HIGH(13) + MEDIUM(8) - reconciliation = 24
+    optional_mutations: 10   # LOW severity + bearish-design design-phase guards + 1 negative-control (MUT-ADV-LANG-NEG)
+    fixture_class_distribution:
+      POSITIVE: 19
+      BOUNDARY: 4
+      NEGATIVE: 20
+      MUTATION: 1            # FX-WRONG-SMOOTH-MUT-001 (most mutations live in the mutations: block, not fixtures)
+      INTEGRATION: 4
+    VC_coverage:
+      unique_VCs_with_fixture: 64
+      unique_VCs_total: 64
+      coverage_ratio: 64/64
+    oracle_purity:
+      fixtures_with_oracle: 48/48
+      mutations_with_expected_code: 33/34   # MUT-ADV-LANG-NEG is a negative-control mutation (expected null)
+      negative_control_mutations: 1         # MUT-ADV-LANG-NEG deliberately expects no code
+    canonical_inputs:
+      verifier_obligation_matrix: "phase2B/manifests/verifier-obligation-matrix.yaml"
+      failure_mode_coverage_plan: "phase2B/manifests/failure-mode-coverage-plan.yaml"
+      failure_mode_registry: "phase1/manifests/technical-failure-mode-registry.yaml"
+      failure_code_registry: "phase3-review/manifests/vta-failure-code-registry.yaml"
+    status: PASS

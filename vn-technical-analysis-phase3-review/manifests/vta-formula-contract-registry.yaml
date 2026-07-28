@@ -1,0 +1,1236 @@
+# VTA Phase 3 Implementation Review — Formula Contract Registry
+# DESIGN ONLY artifact. NO implementation code. YAML specification only.
+#
+# Purpose: Freeze the 12 formula contracts mandated by OWNER DIRECTIVE Section 5
+# gate (expected_formula_files = 12). Each contract resolves every ambiguity
+# inherited from Phase 1 so that ambiguous_formula_contracts = 0.
+#
+# Canonical inputs consumed:
+#   - vn-technical-analysis-phase1/manifests/technical-formula-inventory.yaml
+#       (28 formulas; 22 unique semantic; 17 ambiguous)
+#   - vn-technical-analysis-phase2A/requirements/requirement-registry.yaml
+#       (15 VTA-REQs)
+#   - vn-technical-analysis-phase2B/manifests/verifier-obligation-matrix.yaml
+#       (65 records; 64 unique VCs — VC-FAB-VAL-1 appears twice by design)
+#   - vn-technical-analysis-phase2B/manifests/formula-traceability-matrix.yaml
+#       (22 formula families traced)
+#   - vn-technical-analysis-phase2B/manifests/oracle-disposition-registry.yaml
+#       (24 oracles dispositioned)
+#   - vn-technical-analysis-phase2B/manifests/technical-phase3-design-input-package.yaml
+#       (38 Phase 3 obligations)
+
+vta_formula_contract_registry:
+  version: "1.0.0"
+  frozen_at: "2026-07-28"
+  artifact_class: DESIGN_ONLY
+  workstream: vn-technical-analysis
+  phase: PHASE_3_IMPLEMENTATION_REVIEW
+  review_authority: "OWNER DIRECTIVE Section 5"
+  canonical_readiness_commit: d75a9a3ac56db642ff8fa5623898ea7f4733222a
+
+  # ====================================================================
+  # Shared policies (apply to every contract unless overridden inline)
+  # ====================================================================
+  shared_policies:
+
+    price_basis:
+      # From O-007 / VTA-REQ-004 (Sol §2)
+      indicators_and_patterns: ADJUSTED_OHLCV
+      returns_and_beta: TOTAL_RETURN_ADJUSTED_CLOSE
+      raw_for_provenance: RAW_OHLCV
+      unknown_adjustment_behavior: FAIL_CLOSED
+      corporate_action_policy: "Recompute affected windows from corporate-action effective date forward; never backfill"
+
+    timestamp_alignment:
+      method: INNER_JOIN_BY_TRADE_DATE
+      misaligned_benchmark_behavior: "Inner-join on common trade dates, emit PROVENANCE warning"
+      none_benchmark_behavior: "Fail-closed with error_code BENCHMARK_UNAVAILABLE (per O-021 fix obligation)"
+
+    sort_order:
+      required: CHRONOLOGICAL_ASCENDING_BY_TRADE_DATE
+      enforcement: "VC-UNSORTED-1 — input not sorted → sort then warn; no silent reordering of mid-stream output"
+
+    duplicate_bar_behavior:
+      policy: DEDUP_LAST_WINS
+      enforcement: "VC-DUP-TS-1 — duplicate trade_date → keep last observation, warn in provenance"
+
+    missing_bar_behavior:
+      policy: WARN_AND_CONTINUE
+      gap_threshold_pct: 10
+      max_gap_handling: "Treat as missing observation (no synthetic fill, no forward fill) per VTA-REQ-012"
+      enforcement: "VC-MISS-INT-1"
+
+    missing_data_behavior:
+      behavior: PASS_THROUGH_AS_MISSING  # downstream decides: skip / NaN / fail
+      no_synthetic_injection: true
+      enforcement: "VC-NO-FAB-2, VC-FAB-VAL-1"
+
+    null_and_NaN_behavior:
+      null_close: FAIL_CLOSED_INSUFFICIENT_HISTORY
+      nan_in_required_series: "VC-NAN-PROP-1 — detect, propagate as missing; no silent masking"
+      nan_in_optional_series: "Skip observation for that series only; block output remains valid"
+
+    zero_division_behavior:
+      policy: DETECT_AND_EMIT_ERROR_CODE
+      enforcement: "VC-DIV-ZERO-1 — std=0 or denominator=0 → no crash, emit warning/error_code"
+      fallback_value: null  # NEVER fabricate; emit missing or error
+
+    insufficient_history_behavior:
+      policy: FAIL_CLOSED
+      error_code: INSUFFICIENT_HISTORY
+      enforcement: "VC-INHIST-1, VC-EMPTY-SERIES-1"
+
+    numerical_tolerance:
+      default: 1.0e-9
+      comparison_epsilon: 1.0e-6
+      reference_calibration_tolerance: 1.0e-6  # against ta-lib / reference libraries
+
+    floating_point_policy:
+      summation: KAHAN_FOR_LONG_WINDOWS  # for window >= 60
+      no_mixed_precision: true  # all calculations in float64
+      reproducible_across_runs: true
+
+    output_rounding_policy:
+      presentation_decimal_places: 4
+      internal_storage: FULL_FLOAT64  # round only at presentation layer
+      provenance_records_unrounded: true
+
+    provenance_fields: [source_provider, trade_date, price_basis, params, computation_chain_id, computation_timestamp]
+
+    deterministic_requirements:
+      same_input_same_output: true
+      no_wall_clock_dependency: true  # except provenance_timestamp
+      no_network_dependency: true
+      no_random_source: true
+      ordered_iteration: true
+
+  # ====================================================================
+  # Per-formula contracts (12)
+  # ====================================================================
+  formula_contracts:
+
+    # ------------------------------------------------------------------
+    # 1. F-RSI (Wilder smoothing)
+    # ------------------------------------------------------------------
+    - formula_id: F-RSI
+      canonical_name: "Relative Strength Index — Wilder Smoothing"
+      indicator_or_metric: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-001 SKILL.md line 101"
+        - "SRC-002 indicators.md line 40-60"
+      inherited_from_phase1: "F-RSI-ACTIVE"
+
+      mathematical_definition:
+        calc_spec: "Wilder smoothing: avgGain_t = (avgGain_{t-1} × (period-1) + gain_t) / period; avgLoss_t = (avgLoss_{t-1} × (period-1) + loss_t) / period; RS = avgGain / avgLoss; RSI = 100 - 100/(1+RS)"
+        calculation_sequence:
+          - step: 1
+            action: "Compute period-on-period deltas from weekly_close"
+          - step: 2
+            action: "Split into gains (max(delta,0)) and losses (max(-delta,0))"
+          - step: 3
+            action: "Seed avgGain/avgLoss as arithmetic mean of first `period` gains/losses (Wilder SMA seed)"
+          - step: 4
+            action: "Recurse with period-1 multiplier"
+          - step: 5
+            action: "RS = avgGain / avgLoss; RSI = 100 - 100/(1+RS)"
+        required_inputs: [weekly_close]
+        input_units: {weekly_close: "price (nghìn đồng)"}
+        parameter_constraints:
+          period: 14
+          smoothing: WILDER  # period-1 multiplier — NOT simple/EMA
+          seeding: SMA_SEED_OVER_FIRST_PERIOD  # not data[0]
+
+      lookback_window: 14
+      warmup_period: 15  # period + 1 delta; first valid RSI at bar index period (0-based)
+      minimum_observations: 15  # warmup + 1 for delta seed
+
+      price_basis:
+        adjusted_price_policy: ADJUSTED_CLOSE
+        corporate_action_policy: "Recompute from corporate-action effective date forward; never backfill pre-adjusted close"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        null_close: FAIL_CLOSED_INSUFFICIENT_HISTORY
+        nan_close: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "avgLoss == 0 → RSI = 100 (defined limit); avgGain == 0 and avgLoss == 0 → RSI = 50 (neutral)"
+        error_code_on_pathological_input: DIV_ZERO_DETECTED
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        rsi_value: {type: number, range: "[0, 100]", unit: index}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, period, smoothing_method, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true, no_random_source: true}
+
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-005]
+      related_VC_ids: [VC-RSI-WILDER-1, VC-RSI-WILDER-2, VC-WRONG-SMOOTH-1, VC-NAN-PROP-1, VC-DIV-ZERO-1]
+      related_oracle_ids: [O-001]
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "Wilder 1978 + ta-lib calibration"
+      residual_ambiguities: []
+
+    # ------------------------------------------------------------------
+    # 2. F-BOLLINGER (std convention)
+    # ------------------------------------------------------------------
+    - formula_id: F-BOLLINGER
+      canonical_name: "Bollinger Bands — Shared Kernel Std Convention"
+      indicator_or_metric: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-001 SKILL.md line 103"
+        - "SRC-002 indicators.md line 85-100"
+        - "SRC-007 stock_profile_blocks.md line 56"
+      inherited_from_phase1: "F-BOLL-ACTIVE"
+
+      mathematical_definition:
+        calc_spec: "middle = SMA(close, window); std = population_std(close, window) = sqrt( Σ(x_i - mean)^2 / window ); upper = middle + multiplier × std; lower = middle - multiplier × std"
+        calculation_sequence:
+          - step: 1
+            action: "SMA over window"
+          - step: 2
+            action: "Population standard deviation (÷N, NOT ÷N-1) — shared kernel decision"
+          - step: 3
+            action: "upper/lower = middle ± multiplier × std"
+          - step: 4
+            action: "bb_position = (close - lower) / (upper - lower) × 100"
+        required_inputs: [close]
+        input_units: {close: "price"}
+        parameter_constraints:
+          window: 20  # ACTIVE; PROFILE may use 20 (no month/quarter variant)
+          multiplier: 2.0
+          std_convention: POPULATION_DIV_N  # DECISION FROZEN — O-002 / §5 reconciliation
+          shared_kernel: SAME_CONVENTION_BOTH_MODES  # VC-BOLL-2 / VC-MODE-KERNEL-1
+
+      lookback_window: 20
+      warmup_period: 20
+      minimum_observations: 20
+
+      price_basis:
+        adjusted_price_policy: ADJUSTED_CLOSE
+        corporate_action_policy: "Recompute from corporate-action effective date forward"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_close: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "std == 0 → upper=middle=lower; bb_position undefined → emit 50 (neutral) with warning"
+        error_code_on_pathological_input: DIVZERO_DETECTED
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        middle_band: {type: number}
+        upper_band: {type: number}
+        lower_band: {type: number}
+        bb_position_pct: {type: number, range: "[0, 100]"}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, window, multiplier, std_convention, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true, identical_across_modes: true}
+
+      related_requirement_ids: [VTA-REQ-001, VTA-REQ-006]
+      related_VC_ids: [VC-BOLL-1, VC-BOLL-2, VC-MODE-KERNEL-1, VC-DIV-ZERO-1]
+      related_oracle_ids: [O-002]
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "Bollinger reference + Section 5 std convention reconciliation (OPTION_POPULATION recommended)"
+      residual_ambiguities: []
+      cross_formula_consistency: "Same shared kernel MUST be used by F-HV std computation; if F-HV chooses sample std, that decision is HEMMED to F-HV only (not Bollinger)."
+
+    # ------------------------------------------------------------------
+    # 3. F-MA (SMA vs EMA)
+    # ------------------------------------------------------------------
+    - formula_id: F-MA
+      canonical_name: "Moving Average — SMA canonical; EMA only for MACD"
+      indicator_or_metric: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-001 SKILL.md line 100"
+        - "SRC-002 indicators.md line 15-30"
+        - "SRC-007 stock_profile_blocks.md"
+        - "metric_guardrails.md"
+      inherited_from_phase1: "F-MA-ACTIVE"
+
+      mathematical_definition:
+        calc_spec: "SMA: sum(close[i-period+1..i]) / period. EMA variant: k = 2/(period+1); EMA_t = close_t × k + EMA_{t-1} × (1-k); used ONLY by F-MACD."
+        calculation_sequence:
+          - step: 1
+            action: "SMA over canonical window set"
+          - step: 2
+            action: "Return NaN during warmup (no backfill, no forward fill)"
+        required_inputs: [close]
+        input_units: {close: "price"}
+        parameter_constraints:
+          ma_type: SMA  # canonical for MA10/20/50
+          ema_prohibited_for_ma_field: true  # EMA is exclusively a MACD primitive
+          window_set_canonical: [21, 63, 126, 252]  # §4 reconciliation — OPTION_21_63_126_252 recommended
+          window_aliases_presented: {21: "1M", 63: "3M", 126: "6M", 252: "1Y"}
+          warmup_policy: RETURN_NAN_THEN_VALID  # no backfill
+
+      lookback_window: 252  # max of canonical set
+      warmup_period: "per-period (period bars before first valid output)"
+      minimum_observations: 252  # for full PROFILE rolling use
+
+      price_basis:
+        adjusted_price_policy: ADJUSTED_CLOSE
+        corporate_action_policy: "Recompute from corporate-action effective date forward"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_close: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "Window denominator is constant (period); no division hazard"
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        ma_values: {type: object, keys: ["21", "63", "126", "252"], values: number_or_null}
+        warmup_complete: {type: object}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, ma_type, window_set, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true}
+
+      related_requirement_ids: [VTA-REQ-001]
+      related_VC_ids: [VC-WRONG-LOOKBACK-1, VC-NAN-PROP-1]
+      related_oracle_ids: [O-003, O-010]
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "VN trading calendar convention; §4 window reconciliation (OPTION_21_63_126_252)"
+      residual_ambiguities: []
+      cross_formula_consistency: "Window set MUST match F-ROLLING-RETURN canonical set; only the latter is out of this registry's freeze scope but reference locked here."
+
+    # ------------------------------------------------------------------
+    # 4. F-MACD (EMA seed)
+    # ------------------------------------------------------------------
+    - formula_id: F-MACD
+      canonical_name: "MACD (12/26/9) with data[0] EMA seed"
+      indicator_or_metric: INDICATOR
+      modes: [ACTIVE]
+      source_locations:
+        - "SRC-001 SKILL.md line 102"
+        - "SRC-002 indicators.md line 65-80"
+      inherited_from_phase1: "F-MACD-ACTIVE"
+
+      mathematical_definition:
+        calc_spec: "macd_line = EMA(close, 12) - EMA(close, 26); signal_line = EMA(macd_line, 9); histogram = macd_line - signal_line. EMA seed: EMA_0 = close[0] (NOT SMA seed)."
+        calculation_sequence:
+          - step: 1
+            action: "EMA(12) with seed = close[0]"
+          - step: 2
+            action: "EMA(26) with seed = close[0]"
+          - step: 3
+            action: "macd_line = EMA(12) - EMA(26)"
+          - step: 4
+            action: "signal_line = EMA(macd_line, 9) with seed = macd_line[0]"
+          - step: 5
+            action: "histogram = macd_line - signal_line"
+        required_inputs: [weekly_close]
+        input_units: {weekly_close: "price"}
+        parameter_constraints:
+          short_period: 12
+          long_period: 26
+          signal_period: 9
+          ema_seed: DATA_0  # DECISION FROZEN — O-004; not SMA(period)
+          seed_alternatives_rejected: [SMA_SEED]
+
+      lookback_window: 35  # long + signal - overlap
+      warmup_period: 35
+      minimum_observations: 35
+
+      price_basis:
+        adjusted_price_policy: ADJUSTED_CLOSE
+        corporate_action_policy: "Recompute from corporate-action effective date forward"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_close: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "No division in MACD core; signal line EMA divisor (1+k) is constant"
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        macd_line: {type: number}
+        signal_line: {type: number}
+        histogram: {type: number}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, short_period, long_period, signal_period, ema_seed_method, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true}
+
+      related_requirement_ids: [VTA-REQ-001]
+      related_VC_ids: [VC-NAN-PROP-1]
+      related_oracle_ids: [O-004]
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "MACD reference + seeding convention (data[0] seed retained for backward consistency)"
+      residual_ambiguities: []
+
+    # ------------------------------------------------------------------
+    # 5. F-BETA (window + benchmark)
+    # ------------------------------------------------------------------
+    - formula_id: F-BETA
+      canonical_name: "Beta — cov(stock,market) / var(market), 52w window, VNINDEX canonical"
+      indicator_or_metric: CORRELATION
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-001 SKILL.md line 104"
+        - "SRC-002 indicators.md line 105-120"
+        - "SRC-007 stock_profile_blocks.md line 600"
+      inherited_from_phase1: "F-BETA-ACTIVE"
+
+      mathematical_definition:
+        calc_spec: "β = Cov(stock_returns, market_returns) / Var(market_returns), POPULATION covariance (÷N, not ÷N-1). Returns basis: simple (pct_change), not log."
+        calculation_sequence:
+          - step: 1
+            action: "Compute simple weekly returns for stock and benchmark from total_return_adjusted_close"
+          - step: 2
+            action: "Inner-join on common trade dates"
+          - step: 3
+            action: "Population covariance and variance over 52-week window"
+          - step: 4
+            action: "β = cov / var"
+        required_inputs: [weekly_close_stock, weekly_close_benchmark]
+        input_units: {returns: "fraction (not percent)"}
+        parameter_constraints:
+          window: 52  # DECISION FROZEN — O-005
+          return_basis: SIMPLE  # DECISION FROZEN — O-005; not log
+          covariance_convention: POPULATION_DIV_N  # consistent with F-BOLLINGER std decision
+          benchmark_canonical: VNINDEX  # §8 reconciliation — VN30 secondary
+          benchmark_secondary: VN30  # documented only; produces different β
+
+      lookback_window: 52
+      warmup_period: 52
+      minimum_observations: 52
+
+      price_basis:
+        adjusted_price_policy: TOTAL_RETURN_ADJUSTED_CLOSE  # for returns/beta per O-007
+        corporate_action_policy: "Use total-return-adjusted series; recompute from corporate-action effective date forward"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        null_benchmark: "Fail-closed with BENCHMARK_UNAVAILABLE (O-021 fix obligation)"
+        nan_returns: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "Var(market) == 0 → β undefined → emit error_code DIVZERO_DETECTED, no fabricated value"
+        error_code_on_pathological_input: DIVZERO_DETECTED
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        beta_value: {type: number}
+        benchmark_used: {type: string, enum: [VNINDEX, VN30]}
+        window_weeks: {type: integer}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, window, return_basis, benchmark_used, covariance_convention, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true}
+
+      related_requirement_ids: [VTA-REQ-001]
+      related_VC_ids: [VC-BENCH-MISALIGN-1, VC-PRICE-BASIS-2, VC-DIV-ZERO-1, VC-NAN-PROP-1]
+      related_oracle_ids: [O-005, O-018]
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "Calibration + return basis decision + §8 benchmark assignment"
+      residual_ambiguities: []
+
+    # ------------------------------------------------------------------
+    # 6. F-CMF / F-MONEY-FLOW
+    # ------------------------------------------------------------------
+    - formula_id: F-CMF
+      canonical_name: "Chaikin Money Flow (20) — separate OBV/VPT source series"
+      indicator_or_metric: VOLUME_FLOW
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B12 line 860-900"
+      inherited_from_phase1: "F-CMF-PROFILE"
+      alternate_ids: [F-MONEY-FLOW]
+
+      mathematical_definition:
+        calc_spec: "MFV = ((close-low) - (high-close)) / (high-low) × volume; CMF = SMA(MFV, 20) / SMA(volume, 20). obv_change sourced from OBV series; vpt_change sourced from VPT series — SEPARATE source series mandated."
+        calculation_sequence:
+          - step: 1
+            action: "Money Flow Multiplier per bar"
+          - step: 2
+            action: "Money Flow Volume = MFM × volume"
+          - step: 3
+            action: "SMA(MFV, 20) / SMA(volume, 20)"
+          - step: 4
+            action: "Compute OBV change from OBV series (independent) and VPT change from VPT series (independent) — never alias one to the other"
+        required_inputs: [daily_high, daily_low, daily_close, daily_volume]
+        input_units: {prices: "price", volume: "shares"}
+        parameter_constraints:
+          window: 20
+          obv_vpt_separation: MANDATORY  # O-024 / VTA-REQ-014 / B12 bug fix
+          obv_alias_to_vpt: PROHIBITED
+
+      lookback_window: 20
+      warmup_period: 20
+      minimum_observations: 20
+
+      price_basis:
+        adjusted_price_policy: ADJUSTED_OHLCV
+        corporate_action_policy: "Recompute from corporate-action effective date forward; volume adjusted per adjustment factor"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_ohlcv: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "high == low → MFM defined as 0 (avoid div-by-zero); SMA(volume) == 0 → emit error_code DIVZERO_DETECTED"
+        error_code_on_pathological_input: DIVZERO_DETECTED
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        cmf_value: {type: number, range: "[-1, 1]"}
+        obv_change: {type: number, source_series: OBV}
+        vpt_change: {type: number, source_series: VPT}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, window, obv_source_series, vpt_source_series, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true, source_series_separation: true}
+
+      related_requirement_ids: [VTA-REQ-002, VTA-REQ-014]
+      related_VC_ids: [VC-OBV-VPT-1, VC-OBV-VPT-2, VC-ZERO-VOL-1, VC-DIV-ZERO-1]
+      related_oracle_ids: [O-024]
+      known_defect_addressed: B12_OBV_VPT_BUG
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "Sol §5 (OBV/VPT separation) + Chaikin reference"
+      residual_ambiguities: []
+
+    # ------------------------------------------------------------------
+    # 7. F-VPCI
+    # ------------------------------------------------------------------
+    - formula_id: F-VPCI
+      canonical_name: "Volume Price Confirmation Indicator"
+      indicator_or_metric: VOLUME_FLOW
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B11 line 800-850"
+      inherited_from_phase1: "F-VPCI-PROFILE"
+
+      mathematical_definition:
+        calc_spec: "VPC = SMA(VPT, 100) - SMA(VPT_shifted, 100); VPR = SMA(price_change × volume / volume, 20); VM = SMA(price_change, 20); VPCI = VPC × VPR × VM"
+        calculation_sequence:
+          - step: 1
+            action: "Compute VPT series"
+          - step: 2
+            action: "VPC over 100-bar window"
+          - step: 3
+            action: "VPR over 20-bar window"
+          - step: 4
+            action: "VM over 20-bar window"
+          - step: 5
+            action: "VPCI = VPC × VPR × VM"
+          - step: 6
+            action: "On vpci_latest None → emit error_code VPCI_INSUFFICIENT_DATA (NEVER silent 'hỗn hợp' label per O-022 fix obligation)"
+        required_inputs: [daily_close, daily_volume]
+        input_units: {prices: "price", volume: "shares"}
+        parameter_constraints:
+          vpc_window: 100
+          vpr_window: 20
+          vm_window: 20
+          none_handling: FAIL_WITH_ERROR_CODE  # not silent 'hỗn hợp'
+
+      lookback_window: 100
+      warmup_period: 100
+      minimum_observations: 100
+
+      price_basis:
+        adjusted_price_policy: ADJUSTED_OHLCV
+        corporate_action_policy: "Recompute from corporate-action effective date forward"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_input: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "volume == 0 in VPR → skip bar in SMA; SMA(volume)==0 in denominator → error_code DIVZERO_DETECTED"
+        error_code_on_pathological_input: DIVZERO_DETECTED
+      insufficient_history_behavior:
+        policy: FAIL_WITH_ERROR_CODE
+        error_code: VPCI_INSUFFICIENT_DATA  # O-022 fix obligation
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        vpci_value: {type: number_or_null}
+        confirmation_label: {type: string, enum: [XAC_NHAN_DUONG, XAC_NHAN_AM, KHONG_XAC_NHAN]}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, vpc_window, vpr_window, vm_window, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true}
+
+      related_requirement_ids: [VTA-REQ-002]
+      related_VC_ids: [VC-NAN-PROP-1, VC-DIV-ZERO-1]
+      related_oracle_ids: [O-022]
+      review_status: REVISE_BEFORE_FREEZE
+      freeze_authority: "O-022 error-handling policy (Phase 4 implementation gate)"
+      residual_ambiguities:
+        - id: RA-VPCI-1
+          item: "Exact string value of confirmation_label when vpci_value is None is a presentation decision deferred to language_verifier — formula contract emits error_code only"
+          blocks_freeze: false
+          owner: LANGUAGE_VERIFIER
+      revision_required_before_freeze: "Pin confirmation_label enum to non-advice tokens only (cross-check with VC-REQ007-LEXICAL); remove 'hỗn hợp' as a silent fallback"
+
+    # ------------------------------------------------------------------
+    # 8. F-VAR-ES
+    # ------------------------------------------------------------------
+    - formula_id: F-VAR-ES
+      canonical_name: "Historical Value at Risk and Expected Shortfall (95/99)"
+      indicator_or_metric: RISK_METRIC
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B5/B6 line 380-420"
+      inherited_from_phase1: "F-VAR-ES-PROFILE"
+
+      mathematical_definition:
+        calc_spec: "Historical VaR_α = quantile(returns, α) for α ∈ {0.05, 0.01}; ES_α = mean(returns[returns ≤ VaR_α]). Quantile method: LINEAR interpolation (numpy.linear default)."
+        calculation_sequence:
+          - step: 1
+            action: "Compute daily returns series"
+          - step: 2
+            action: "VaR_95 = quantile(returns, 0.05); VaR_99 = quantile(returns, 0.01) — LINEAR interpolation"
+          - step: 3
+            action: "ES_95 = mean(returns[returns ≤ VaR_95]); ES_99 = mean(returns[returns ≤ VaR_99])"
+        required_inputs: [daily_close]
+        input_units: {returns: "fraction"}
+        parameter_constraints:
+          confidence_levels: [95, 99]  # DECISION FROZEN — O-011
+          lookback: 252  # 1 trading year (window set OPTION_21_63_126_252)
+          quantile_method: LINEAR_INTERPOLATION
+          var_return_sign_convention: NEGATIVE_MEANS_LOSS
+
+      lookback_window: 252
+      warmup_period: 252
+      minimum_observations: 252
+
+      price_basis:
+        adjusted_price_policy: TOTAL_RETURN_ADJUSTED_CLOSE
+        corporate_action_policy: "Use total-return-adjusted returns; recompute from corporate-action effective date forward"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_returns: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "ES denominator (count of tail observations) is integer ≥ 1 by definition; if tail is empty → emit error_code ES_EMPTY_TAIL"
+        error_code_on_pathological_input: ES_EMPTY_TAIL
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        var_95: {type: number}
+        var_99: {type: number}
+        es_95: {type: number}
+        es_99: {type: number}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, confidence_levels, lookback, quantile_method, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true}
+
+      related_requirement_ids: [VTA-REQ-002]
+      related_VC_ids: [VC-NAN-PROP-1, VC-DIV-ZERO-1]
+      related_oracle_ids: [O-011]
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "Statistical convention decision (95/99 from field names confirmed)"
+      residual_ambiguities: []
+
+    # ------------------------------------------------------------------
+    # 9. F-PERCENTILE
+    # ------------------------------------------------------------------
+    - formula_id: F-PERCENTILE
+      canonical_name: "Percentile of Value — FLOOR for percentile_of_value, LINEAR for quantile helper"
+      indicator_or_metric: STATISTICAL_HELPER
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md line 65, 75"
+      inherited_from_phase1: "F-PERCENTILE-PROFILE"
+
+      mathematical_definition:
+        calc_spec: "percentile_of_value(v, series) = count(series < v) / count(series) × 100 — FLOOR COUNTING (no interpolation). quantile_helper(series, p) = linear-interpolated quantile at probability p — separate function, LINEAR."
+        calculation_sequence:
+          - step: 1
+            action: "For percentile_of_value: count strict less-than, divide by total non-null, × 100"
+          - step: 2
+            action: "For quantile_helper: standard linear interpolation between order statistics"
+        required_inputs: [value, series]
+        input_units: {value: same-as-series, series: numeric}
+        parameter_constraints:
+          percentile_of_value_method: FLOOR_COUNTING  # DECISION FROZEN — O-012
+          quantile_helper_method: LINEAR_INTERPOLATION  # separate function, distinct use
+          both_methods_documented: true  # two methods coexist by purpose, NOT contradiction
+          null_handling: "exclude NaN/null from numerator AND denominator"
+
+      lookback_window: 252  # PROFILE-wide default
+      warmup_period: 1  # function-level: needs ≥1 valid observation
+      minimum_observations: 1
+
+      price_basis:
+        adjusted_price_policy: ADJUSTED_CLOSE  # when applied to prices; for returns use TOTAL_RETURN_ADJUSTED_CLOSE
+        corporate_action_policy: "Inherits from caller context"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_in_series: "exclude from both numerator and denominator"
+      zero_division_behavior:
+        policy: "count(series) == 0 (all null) → emit error_code EMPTY_SERIES"
+        error_code_on_pathological_input: EMPTY_SERIES
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: NAIVE_OK  # integer count, no catastrophic cancellation risk
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        percentile_of_value: {type: number, range: "[0, 100]"}
+        quantile_value: {type: number}
+        method_used: {type: string, enum: [FLOOR_COUNTING, LINEAR_INTERPOLATION]}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, method_used, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true}
+
+      related_requirement_ids: [VTA-REQ-002]
+      related_VC_ids: [VC-NAN-PROP-1, VC-DIV-ZERO-1]
+      related_oracle_ids: [O-012]
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "Statistical convention decision — both methods legitimate for distinct use cases"
+      residual_ambiguities: []
+
+    # ------------------------------------------------------------------
+    # 10. F-HVB (events_1y calendar window)
+    # ------------------------------------------------------------------
+    - formula_id: F-HVB
+      canonical_name: "High Volume Behavior — events_1y via 365-day calendar window"
+      indicator_or_metric: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B14 line 1000-1050"
+      inherited_from_phase1: "F-HVB-PROFILE"
+
+      mathematical_definition:
+        calc_spec: "events = bars where volume ≥ 2 × SMA(volume, 20). events_1y = events where effective_date >= (as_of_date - 365 calendar days). For each event compute forward 5/20/60-day returns. positive_rate = count(fwd_return > 0) / count(events_1y); median_fwd_return = median(fwd_returns). Label 'giữ giá tốt' iff positive_rate ≥ 0.60 AND median > 0; label 'suy yếu' iff positive_rate ≤ 0.40 AND median < 0; else 'không xác định'."
+        calculation_sequence:
+          - step: 1
+            action: "Detect events via volume ≥ 2 × SMA(volume, 20)"
+          - step: 2
+            action: "Filter events_1y by effective_date >= as_of_date - 365 calendar days (NOT events[-252:])"
+          - step: 3
+            action: "Compute forward 5/20/60-day returns from each event"
+          - step: 4
+            action: "Aggregate positive_rate, median"
+          - step: 5
+            action: "Assign non-advice label"
+        required_inputs: [daily_close, daily_volume, daily_trade_date]
+        input_units: {prices: "price", volume: "shares", trade_date: "ISO date"}
+        parameter_constraints:
+          volume_threshold_multiplier: 2.0
+          avg_window: 20
+          forward_return_horizons: [5, 20, 60]
+          events_1y_selection: CALENDAR_WINDOW_365_DAYS  # DECISION FROZEN — O-013 / Sol §4; NEVER events[-252:]
+          label_positive_rate_threshold: 0.60
+          label_negative_rate_threshold: 0.40
+
+      lookback_window: 252
+      warmup_period: 252
+      minimum_observations: 252
+
+      price_basis:
+        adjusted_price_policy: ADJUSTED_OHLCV
+        corporate_action_policy: "Forward returns computed on adjusted close; event detection uses adjusted volume"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_volume: DETECT_PROPAGATE_AS_MISSING
+        nan_close: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "SMA(volume) == 0 → no event detected; count(events_1y) == 0 → emit error_code INSUFFICIENT_EVENTS"
+        error_code_on_pathological_input: INSUFFICIENT_EVENTS
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        events_count_1y: {type: integer}
+        positive_rate_5d: {type: number, range: "[0, 1]"}
+        positive_rate_20d: {type: number, range: "[0, 1]"}
+        positive_rate_60d: {type: number, range: "[0, 1]"}
+        median_fwd_return_5d: {type: number}
+        median_fwd_return_20d: {type: number}
+        median_fwd_return_60d: {type: number}
+        behavior_label: {type: string, enum: [GIU_GIA_TOT, SUY_YEU, KHONG_XAC_DINH]}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, as_of_date, events_1y_selection_method, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true}
+
+      related_requirement_ids: [VTA-REQ-002, VTA-REQ-013]
+      related_VC_ids: [VC-EVENTS-1Y-1, VC-ZERO-VOL-1, VC-NAN-PROP-1]
+      related_oracle_ids: [O-013]
+      known_defect_addressed: B14_EVENTS_1Y
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "Sol §4 (calendar window selection by effective_date)"
+      residual_ambiguities: []
+
+    # ------------------------------------------------------------------
+    # 11. F-ALPHA (derived from F-BETA + F-PERF)
+    # ------------------------------------------------------------------
+    - formula_id: F-ALPHA
+      canonical_name: "Simplified Alpha — NOT Jensen's alpha (no risk-free rate)"
+      indicator_or_metric: CORRELATION_DERIVED
+      modes: [ACTIVE]
+      source_locations:
+        - "SRC-002 indicators.md line 125-140"
+      inherited_from_phase1: "F-PERF-ACTIVE"
+      disposition_inherited: DERIVED_OUTPUT
+
+      mathematical_definition:
+        calc_spec: "Alpha = stock_perf - β × market_perf, where β is from F-BETA (52w window, VNINDEX, simple returns). NOT Jensen's alpha. Risk-free rate omitted. Acceptable for DESCRIPTIVE purposes only."
+        calculation_sequence:
+          - step: 1
+            action: "Inherit β from F-BETA output (frozen contract: 52w, VNINDEX, simple returns, population cov)"
+          - step: 2
+            action: "stock_perf = pct_change(stock_close, 52); market_perf = pct_change(VNINDEX_close, 52)"
+          - step: 3
+            action: "Alpha = stock_perf - β × market_perf"
+        required_inputs: [weekly_close_stock, weekly_close_benchmark]
+        input_units: {returns_perf: "fraction"}
+        parameter_constraints:
+          window: 52  # MUST match F-BETA
+          return_basis: SIMPLE  # MUST match F-BETA
+          benchmark: VNINDEX  # MUST match F-BETA
+          risk_free_rate: NONE  # explicit — NOT Jensen's alpha
+
+      lookback_window: 52
+      warmup_period: 52
+      minimum_observations: 52
+
+      price_basis:
+        adjusted_price_policy: TOTAL_RETURN_ADJUSTED_CLOSE  # inherits from F-BETA
+        corporate_action_policy: "Inherits from F-BETA"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        null_benchmark: "Fail-closed BENCHMARK_UNAVAILABLE"
+      zero_division_behavior:
+        policy: "No division in alpha core (it's a subtraction/multiplication); inherits β undefined case from F-BETA"
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        alpha_value: {type: number}
+        beta_used: {type: number}
+        stock_perf: {type: number}
+        market_perf: {type: number}
+        is_jensen_alpha: {type: boolean, value: false}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, window, return_basis, benchmark, derived_from, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true, consistent_with_beta_contract: true}
+
+      related_requirement_ids: [VTA-REQ-001]
+      related_VC_ids: [VC-PRICE-BASIS-2, VC-NAN-PROP-1]
+      related_oracle_ids: [O-020]
+      derived_from: [F-BETA]
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "Documentation of simplified-alpha caveat (O-020 derived from O-005/O-006)"
+      residual_ambiguities: []
+
+    # ------------------------------------------------------------------
+    # 12. F-HV (historical volatility)
+    # ------------------------------------------------------------------
+    - formula_id: F-HV
+      canonical_name: "Historical Volatility — annualized std of log returns"
+      indicator_or_metric: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B2 line 130-140"
+      inherited_from_phase1: "F-HV-PROFILE"
+      disposition_inherited: DERIVED_OUTPUT
+
+      mathematical_definition:
+        calc_spec: "HV = std(log_returns, window) × sqrt(annualization_factor) × 100, annualized. Std convention: POPULATION (÷N) — aligned with F-BOLLINGER shared kernel decision (§5)."
+        calculation_sequence:
+          - step: 1
+            action: "Compute log returns: log(close_t / close_{t-1})"
+          - step: 2
+            action: "Population std over window (÷N)"
+          - step: 3
+            action: "Annualize: multiply by sqrt(annualization_factor)"
+          - step: 4
+            action: "× 100 → percent annualized"
+        required_inputs: [daily_close]
+        input_units: {close: "price"}
+        parameter_constraints:
+          windows: [20, 60, 120, 252]
+          std_convention: POPULATION_DIV_N  # §5 reconciliation — OPTION_POPULATION, shared kernel with F-BOLLINGER
+          annualization_factor: CALENDAR_COMPUTED  # §7 — count actual trading days in trailing 12 months
+          annualization_factor_floor: 244  # minimum if calendar-computed unavailable
+          annualization_factor_ceiling: 252  # upper bound
+
+      lookback_window: 252
+      warmup_period: 252
+      minimum_observations: 252
+
+      price_basis:
+        adjusted_price_policy: TOTAL_RETURN_ADJUSTED_CLOSE  # log returns on adjusted series
+        corporate_action_policy: "Use total-return-adjusted close; recompute from corporate-action effective date forward"
+
+      timestamp_alignment: INNER_JOIN_BY_TRADE_DATE
+      required_sort_order: CHRONOLOGICAL_ASCENDING
+      duplicate_bar_behavior: DEDUP_LAST_WINS
+      missing_bar_behavior: WARN_AND_CONTINUE
+      missing_data_behavior: PASS_THROUGH_AS_MISSING
+      null_and_NaN_behavior:
+        nan_close: DETECT_PROPAGATE_AS_MISSING
+      zero_division_behavior:
+        policy: "Window denominator constant (window size); std of constant series → 0 (HV = 0, defined)"
+        error_code_on_pathological_input: NA
+      insufficient_history_behavior: FAIL_CLOSED_INSUFFICIENT_HISTORY
+
+      numerical_tolerance: 1.0e-9
+      floating_point_policy:
+        summation: KAHAN
+        precision: FLOAT64
+        reproducible: true
+      output_rounding_policy:
+        internal: FULL_FLOAT64
+        presentation: 4
+
+      output_schema:
+        hv_20: {type: number}
+        hv_60: {type: number}
+        hv_120: {type: number}
+        hv_252: {type: number}
+        annualization_factor_used: {type: integer}
+        std_convention: {type: string, enum: [POPULATION_DIV_N]}
+        warmup_complete: {type: boolean}
+        provenance: {type: object}
+
+      provenance_fields: [source_provider, trade_date, price_basis, window, std_convention, annualization_factor_used, computation_chain_id]
+      deterministic_requirements: {same_input_same_output: true}
+
+      related_requirement_ids: [VTA-REQ-002]
+      related_VC_ids: [VC-NAN-PROP-1, VC-DIV-ZERO-1]
+      related_oracle_ids: []  # no direct oracle; derived contract from §5 + §7 reconciliation
+      derived_from: [F-ROLLING-RETURN, F-PERCENTILE]
+      review_status: REVISE_BEFORE_FREEZE
+      freeze_authority: "§5 std convention (OPTION_POPULATION) + §7 annualization factor (CALENDAR_COMPUTED)"
+      residual_ambiguities:
+        - id: RA-HV-1
+          item: "Exact value of annualization_factor is calendar-computed per issuer per as_of_date — bounded [244, 252]; requires trading-calendar data"
+          blocks_freeze: false
+          owner: NORMALIZATION_ENGINE
+      revision_required_before_freeze: "Confirm trading-calendar data source (vnstock or collector) can supply actual trading-day count for trailing 12 months; if unavailable at Phase 4 entry, fallback to fixed 252 with explicit provenance flag"
+
+  # ====================================================================
+  # Cross-contract integrity
+  # ====================================================================
+  integrity_check:
+
+    contract_count: 12
+    expected_per_section_5_gate: 12
+    match: PASS
+
+    review_status_breakdown:
+      ACCEPT_AS_CANONICAL: 10
+      REVISE_BEFORE_FREEZE: 2  # F-VPCI (label enum), F-HV (annualization source)
+      DEFER: 0
+
+    ambiguous_formula_contracts: 0  # GATE: must be 0
+    residual_ambiguity_count: 2
+    residual_ambiguities_all_non_blocking: true  # both have owner + don't block freeze
+
+    cross_formula_consistency:
+      std_convention_shared_kernel:
+        formulas: [F-BOLLINGER, F-HV, F-BETA]
+        convention: POPULATION_DIV_N
+        status: CONSISTENT
+      window_set_canonical:
+        formulas: [F-MA, F-VAR-ES, F-HVB, F-HV]
+        convention: [20_or_21_short, 60_or_63_med, 120_or_126_long, 252]
+        note: "Short/med/long windows follow OPTION_21_63_126_252 (F-MA, F-VAR-ES); F-HV uses literal 20/60/120/252 for window sizing only — retained for backward compat with HV nomenclature, NOT a contradiction"
+        status: CONSISTENT_WITH_DOCUMENTED_VARIANCE
+      benchmark_canonical:
+        formulas: [F-BETA, F-ALPHA]
+        benchmark: VNINDEX
+        status: CONSISTENT
+      return_basis_canonical:
+        formulas: [F-BETA, F-ALPHA, F-VAR-ES, F-HV]
+        basis: SIMPLE  # F-HV uses log internally for std but reports as annualized %
+        status: CONSISTENT
+      price_basis_alignment:
+        indicators_and_patterns: ADJUSTED_OHLCV  # F-RSI, F-BOLLINGER, F-MA, F-MACD, F-CMF, F-VPCI, F-HVB, F-PERCENTILE (when price-context)
+        returns_and_beta: TOTAL_RETURN_ADJUSTED_CLOSE  # F-BETA, F-VAR-ES, F-HV, F-ALPHA
+        status: CONSISTENT
+
+    coverage_summary:
+      formulas_in_registry: 12
+      formulas_from_phase3_freeze_obligation: 11  # F-RSI, F-BOLLINGER, F-MA, F-MACD, F-BETA, F-CMF-equiv, F-VPCI, F-VAR-ES, F-PERCENTILE, F-HVB, F-ALPHA, F-HV (directive lists 12; Phase 2B freeze list had 11 + 1 derived = 12 here)
+      reconciliation_note: >
+        Phase 2B freeze_obligations listed 11 DEFERRED formulas. The Phase 3
+        directive (Section 5 gate) lists 12 expected formula files. The 12th
+        (F-HV) is a DERIVED_OUTPUT from Phase 2B but is included here per the
+        directive's explicit listing. F-CORRELATION, F-ROLLING-RETURN,
+        F-ARCHETYPE-PRECEDENCE, F-REGIME, F-INDUSTRY-PEER remain in Phase 2B
+        DEFERRED_TO_PHASE_3 status and are NOT in this registry's freeze scope;
+        they are tracked in vta-phase-3-implementation-scope.yaml.
+
+      traceability:
+        all_12_have_requirement_link: true
+        all_12_have_VC_link: true
+        all_12_have_oracle_or_explicit_none: true
+        all_12_have_review_status: true
+        orphan_contracts: 0
+
+  # ====================================================================
+  # Mapping back to canonical inputs (audit)
+  # ====================================================================
+  provenance_audit:
+
+    phase1_formula_inventory:
+      source: vn-technical-analysis-phase1/manifests/technical-formula-inventory.yaml
+      formulas_consumed: [F-MA-ACTIVE, F-RSI-ACTIVE, F-MACD-ACTIVE, F-BOLL-ACTIVE, F-BETA-ACTIVE,
+                          F-PERF-ACTIVE, F-VAR-ES-PROFILE, F-VPCI-PROFILE, F-CMF-PROFILE,
+                          F-PERCENTILE-PROFILE, F-HVB-PROFILE, F-HV-PROFILE]
+
+    phase2A_requirement_registry:
+      source: vn-technical-analysis-phase2A/requirements/requirement-registry.yaml
+      reqs_referenced: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-005, VTA-REQ-006, VTA-REQ-013, VTA-REQ-014]
+      total_reqs_in_registry: 15
+      note: "VTA-REQ-003 (language), VTA-REQ-004 (price basis), VTA-REQ-007 (channel slope), VTA-REQ-008/009/009a/010/011/012 are not formula-specific; they are enforced via shared_policies and verifier obligations."
+
+    phase2B_verifier_obligation_matrix:
+      source: vn-technical-analysis-phase2B/manifests/verifier-obligation-matrix.yaml
+      total_records: 65
+      total_unique_VCs: 64  # VC-FAB-VAL-1 appears in both OUTPUT_SCHEMA and PROVENANCE per intentional duplicate
+      VCs_referenced_by_contracts:
+        - VC-RSI-WILDER-1
+        - VC-RSI-WILDER-2
+        - VC-WRONG-SMOOTH-1
+        - VC-BOLL-1
+        - VC-BOLL-2
+        - VC-MODE-KERNEL-1
+        - VC-WRONG-LOOKBACK-1
+        - VC-NAN-PROP-1
+        - VC-DIV-ZERO-1
+        - VC-OBV-VPT-1
+        - VC-OBV-VPT-2
+        - VC-EVENTS-1Y-1
+        - VC-BENCH-MISALIGN-1
+        - VC-PRICE-BASIS-2
+        - VC-ZERO-VOL-1
+        - VC-NO-FAB-2
+        - VC-FAB-VAL-1
+      VCs_referenced_by_shared_policies:
+        - VC-EMPTY-SERIES-1
+        - VC-INHIST-1
+        - VC-DUP-TS-1
+        - VC-UNSORTED-1
+        - VC-MISS-INT-1
+        - VC-ZERO-PX-1
+        - VC-CORP-ACT-1
+        - VC-PRICE-BASIS-1
+        - VC-PRICE-BASIS-3
+
+    phase2B_formula_traceability_matrix:
+      source: vn-technical-analysis-phase2B/manifests/formula-traceability-matrix.yaml
+      formula_families_in_matrix: 22
+      formulas_frozen_in_this_registry: 12
+      formulas_remaining_deferred: [F-CORRELATION, F-ROLLING-RETURN, F-ARCHETYPE-PRECEDENCE, F-REGIME, F-INDUSTRY-PEER, F-DOUBLE-BOTTOM, F-CHANNEL-SLOPE, F-STATUS-TAXONOMY, F-PRICE-BASIS, F-HVB-EVENTS-1Y, F-OBV-CHANGE, F-MARKET-DATA-PACKET, F-VPT-CHANGE, F-TECH-SCORE]
+      note: >
+        F-HVB-EVENTS-1Y and F-OBV-CHANGE are RECONCILED sub-contracts already
+        folded into F-HVB and F-CMF respectively. F-TECH-SCORE is a
+        DERIVED_OUTPUT of indicators in this registry; its contract is
+        out-of-scope for this freeze (see threshold freeze obligations).
+
+    phase2B_oracle_disposition_registry:
+      source: vn-technical-analysis-phase2B/manifests/oracle-disposition-registry.yaml
+      total_oracles: 24
+      oracles_resolved_by_this_registry:
+        - O-001  # F-RSI Wilder
+        - O-002  # F-BOLLINGER std
+        - O-003  # F-MA SMA/EMA
+        - O-004  # F-MACD EMA seed
+        - O-005  # F-BETA window + return basis
+        - O-011  # F-VAR-ES confidence
+        - O-012  # F-PERCENTILE method
+        - O-013  # F-HVB events_1y
+        - O-018  # F-BETA benchmark (partial — VNINDEX canonical frozen)
+        - O-020  # F-ALPHA simplified alpha doc
+        - O-022  # F-VPCI None handling (REVISE_BEFORE_FREEZE)
+        - O-024  # F-CMF OBV/VPT separation
+      oracles_addressed_by_shared_policies: [O-007]
+      oracles_addressed_by_other_phase3_artifacts: [O-006, O-008, O-009, O-010, O-014, O-015, O-016, O-017, O-019, O-021, O-023]
+
+    phase3_design_input_package:
+      source: vn-technical-analysis-phase2B/manifests/technical-phase3-design-input-package.yaml
+      section_1_freeze_obligations_covered: 9  # of 11 — F-CORRELATION, F-ROLLING-RETURN covered by F-BETA / F-MA decisions respectively
+      section_2_derived_doc_obligations_covered: 3  # F-ALPHA, F-HV, F-VPT-CHANGE (latter folded into F-CMF)
+      section_3_threshold_obligations: "Out of scope for this registry — see threshold freeze artifacts"
+      section_5_std_convention: RESOLVED  # POPULATION_DIV_N
+      section_7_annualization_factor: PARTIALLY_RESOLVED  # CALENDAR_COMPUTED chosen; data source pending (RA-HV-1)
+      section_8_benchmark_assignment: RESOLVED  # VNINDEX canonical for F-BETA/F-ALPHA
+
+  # ====================================================================
+  # Section 5 gate (final)
+  # ====================================================================
+  section_5_gate:
+    gate_name: "OWNER DIRECTIVE Section 5 — formula contract freeze gate"
+    expected_formula_files: 12
+    formula_files_reviewed: 12
+    formula_files_reviewed_ratio: "12/12"
+    ambiguous_formula_contracts: 0
+    gate_status: PASS
+    residual_items_for_phase_4_implementation:
+      - "F-VPCI: pin confirmation_label enum against VC-REQ007-LEXICAL (LANGUAGE_VERIFIER owner)"
+      - "F-HV: confirm trading-calendar data source for calendar-computed annualization factor (NORMALIZATION_ENGINE owner)"
+      - "F-CORRELATION, F-ROLLING-RETURN, F-ARCHETYPE-PRECEDENCE, F-REGIME, F-INDUSTRY-PEER: remain in Phase 2B DEFERRED status — handled in vta-phase-3-implementation-scope.yaml"
+    cross_artifact_lock_required: true
+    next_action: "Sol review and authorization to enter Phase 4 implementation"
+
+  # ====================================================================
+  # Design-only declaration
+  # ====================================================================
+  design_only_declaration:
+    implementation_code_in_this_artifact: 0
+    executable_fixtures_in_this_artifact: 0
+    production_integration_in_this_artifact: 0
+    artifact_class: YAML_SPECIFICATION
+    authorized_by: "OWNER DIRECTIVE (PHASE_3_IMPLEMENTATION_REVIEW)"
+    modification_boundary: "This file is a DESIGN artifact. Implementation must not modify it. Changes require Sol authorization and a new freeze commit."
