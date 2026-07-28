@@ -4041,7 +4041,7 @@ vta_fixture_and_mutation_design:
     # -----------------------------------------------------------
 
     - mutation_id: MUT-EMPTY-SERIES
-      target_VC_id: VC-EMPTY-SERIES-1
+      target_VC_ids: [VC-EMPTY-SERIES-1]
       mutation_operator: FEED_EMPTY_DATAFRAME
       mutated_behavior: "Engine receives DataFrame with 0 rows at entry point."
       survivor_risk: HIGH
@@ -4051,7 +4051,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "Empty input cannot trigger INSUFFICIENT_HISTORY (count precondition distinct)."
 
     - mutation_id: MUT-INHIST-ACTIVE
-      target_VC_id: VC-INHIST-1
+      target_VC_ids: [VC-INHIST-1]
       mutation_operator: TRUNCATE_HISTORY_BELOW_MIN
       mutated_behavior: "ACTIVE weekly input truncated to 51 weeks (< 52 minimum)."
       survivor_risk: HIGH
@@ -4061,7 +4061,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "51w is non-empty; EMPTY_SERIES cannot co-fire."
 
     - mutation_id: MUT-DUP-TS
-      target_VC_id: VC-DUP-TS-1
+      target_VC_ids: [VC-DUP-TS-1]
       mutation_operator: INJECT_DUPLICATE_TIMESTAMPS
       mutated_behavior: "Two rows share the same date."
       survivor_risk: MEDIUM
@@ -4071,7 +4071,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "Diagnostic only; run continues; does not trigger a fatal code."
 
     - mutation_id: MUT-UNSORTED-ACTIVE
-      target_VC_id: VC-UNSORTED-1
+      target_VC_ids: [VC-UNSORTED-1]
       mutation_operator: SHUFFLE_DATE_ORDER
       mutated_behavior: "Input dates shuffled (non-monotonic)."
       survivor_risk: MEDIUM
@@ -4080,7 +4080,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-MISS-INT
-      target_VC_id: VC-MISS-INT-1
+      target_VC_ids: [VC-MISS-INT-1]
       mutation_operator: REMOVE_RANDOM_ROWS
       mutated_behavior: "10% of trading days removed randomly."
       survivor_risk: MEDIUM
@@ -4089,7 +4089,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-ZERO-PX
-      target_VC_id: VC-ZERO-PX-1
+      target_VC_ids: [VC-ZERO-PX-1]
       mutation_operator: ZERO_OUT_CLOSE_PRICE
       mutated_behavior: "close set to 0 on one row."
       survivor_risk: HIGH
@@ -4099,7 +4099,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "Zero price is INPUT_FATAL; COMPUTATION_DEGENERATE suppressed at higher tier."
 
     - mutation_id: MUT-ZERO-VOL
-      target_VC_id: VC-ZERO-VOL-1
+      target_VC_ids: [VC-ZERO-VOL-1]
       mutation_operator: ZERO_OUT_VOLUME
       mutated_behavior: "volume set to 0 on one row."
       survivor_risk: LOW
@@ -4110,7 +4110,7 @@ vta_fixture_and_mutation_design:
       note: "LOW severity; optional per failure-mode-coverage-plan."
 
     - mutation_id: MUT-CORP-ACT-UNADJ
-      target_VC_id: VC-CORP-ACT-1
+      target_VC_ids: [VC-CORP-ACT-1]
       mutation_operator: SET_ADJUSTMENT_UNKNOWN
       mutated_behavior: "adjustment_status=UNKNOWN on split date."
       survivor_risk: CRITICAL
@@ -4120,7 +4120,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "CRITICAL — undetected splits create false patterns."
 
     - mutation_id: MUT-BENCH-MISALIGN
-      target_VC_id: VC-BENCH-MISALIGN-1
+      target_VC_ids: [VC-BENCH-MISALIGN-1]
       mutation_operator: SHIFT_BENCHMARK_DATES
       mutated_behavior: "Benchmark dates shifted to produce 50% overlap with stock."
       survivor_risk: HIGH
@@ -4129,7 +4129,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-PARTIAL-WEEK
-      target_VC_id: VC-PARTIAL-WEEK-1
+      target_VC_ids: [VC-PARTIAL-WEEK-1]
       mutation_operator: APPEND_PARTIAL_WEEK
       mutated_behavior: "Latest weekly bar has 3 trading days appended."
       survivor_risk: MEDIUM
@@ -4142,7 +4142,7 @@ vta_fixture_and_mutation_design:
     # -----------------------------------------------------------
 
     - mutation_id: MUT-WRONG-LOOKBACK
-      target_VC_id: VC-WRONG-LOOKBACK-1
+      target_VC_ids: [VC-WRONG-LOOKBACK-1]
       mutation_operator: SET_INVALID_WINDOW
       mutated_behavior: "window=22 (not in frozen enum)."
       survivor_risk: MEDIUM
@@ -4151,7 +4151,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-WRONG-SMOOTH
-      target_VC_id: VC-WRONG-SMOOTH-1
+      target_VC_ids: [VC-WRONG-SMOOTH-1]
       mutation_operator: REPLACE_WILDER_WITH_SIMPLE_RSI
       mutated_behavior: "RSI Wilder smoothing replaced with simple moving-average smoothing."
       survivor_risk: HIGH
@@ -4161,7 +4161,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "Verifier recomputes Wilder independently; only RSI computation is mutated."
 
     - mutation_id: MUT-DIV-ZERO
-      target_VC_id: VC-DIV-ZERO-1
+      target_VC_ids: [VC-DIV-ZERO-1]
       mutation_operator: INJECT_CONSTANT_PRICE
       mutated_behavior: "All closes identical -> std=0 in BB denominator."
       survivor_risk: HIGH
@@ -4171,7 +4171,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "Constant non-zero price; ZERO_PRICE_DETECTED cannot fire."
 
     - mutation_id: MUT-NAN-PROP
-      target_VC_id: VC-NAN-PROP-1
+      target_VC_ids: [VC-NAN-PROP-1]
       mutation_operator: INJECT_SINGLE_NAN
       mutated_behavior: "One close set to NaN mid-series."
       survivor_risk: HIGH
@@ -4180,7 +4180,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-ROUND-DRIFT
-      target_VC_id: VC-ROUND-DRIFT-1
+      target_VC_ids: [VC-ROUND-DRIFT-1]
       mutation_operator: NONDETERMINISTIC_ROUNDING
       mutated_behavior: "Rounding uses thread-local RNG tie-break (non-deterministic)."
       survivor_risk: LOW
@@ -4190,7 +4190,7 @@ vta_fixture_and_mutation_design:
       mandatory: OPTIONAL
 
     - mutation_id: MUT-MODE-DIVERGE
-      target_VC_id: VC-MODE-KERNEL-1
+      target_VC_ids: [VC-MODE-KERNEL-1]
       mutation_operator: DIVERGE_PROFILE_BB_KERNEL
       mutated_behavior: "PROFILE BB helper switched to sample std while ACTIVE keeps population std."
       survivor_risk: HIGH
@@ -4199,7 +4199,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-OBV-VPT-BUG
-      target_VC_id: VC-OBV-VPT-1
+      target_VC_ids: [VC-OBV-VPT-1]
       mutation_operator: OVERWRITE_OBV_WITH_VPT
       mutated_behavior: "obv_change sourced from VPT series (B12 regression)."
       survivor_risk: HIGH
@@ -4209,7 +4209,7 @@ vta_fixture_and_mutation_design:
       note: "Mandatory regression mutation (B12 fix guard)."
 
     - mutation_id: MUT-EVENTS-1Y-BUG
-      target_VC_id: VC-EVENTS-1Y-1
+      target_VC_ids: [VC-EVENTS-1Y-1]
       mutation_operator: REPLACE_DATE_WINDOW_WITH_INDEX_SLICE
       mutated_behavior: "events_1y selected via events[-252:] instead of effective_date window (B14 regression)."
       survivor_risk: HIGH
@@ -4219,7 +4219,7 @@ vta_fixture_and_mutation_design:
       note: "Mandatory regression mutation (B14 fix guard)."
 
     - mutation_id: MUT-CHANNEL-2
-      target_VC_id: VC-CHANNEL-2
+      target_VC_ids: [VC-CHANNEL-2]
       mutation_operator: MUTATE_CHANNEL_SLOPE_THRESHOLD
       mutated_behavior: "Channel slope classification threshold changed from the frozen Phase 3 value (e.g. drift threshold edited at runtime); verifier reads frozen contract value and detects mismatch."
       survivor_risk: MEDIUM
@@ -4233,7 +4233,7 @@ vta_fixture_and_mutation_design:
     # -----------------------------------------------------------
 
     - mutation_id: MUT-FALSE-BREAKOUT
-      target_VC_id: VC-FALSE-BREAKOUT-1
+      target_VC_ids: [VC-FALSE-BREAKOUT-1]
       mutation_operator: FLAG_BREAKOUT_WITHOUT_VOLUME
       mutated_behavior: "Breakout flagged without volume >= 1.5x avg20."
       survivor_risk: MEDIUM
@@ -4242,7 +4242,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-UNCONFIRMED
-      target_VC_id: VC-UNCONFIRMED-1
+      target_VC_ids: [VC-UNCONFIRMED-1]
       mutation_operator: MARK_INDEVELOPMENT_AS_CONFIRMED
       mutated_behavior: "Setup score 65 emitted with status=CONFIRMED."
       survivor_risk: MEDIUM
@@ -4251,7 +4251,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-LOOKAHEAD
-      target_VC_id: VC-LOOKAHEAD-1
+      target_VC_ids: [VC-LOOKAHEAD-1]
       mutation_operator: INJECT_FUTURE_REFERENCE
       mutated_behavior: "Detector closure references close[i+3]."
       survivor_risk: CRITICAL
@@ -4261,7 +4261,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "CRITICAL — lookahead bias invalidates backtests."
 
     - mutation_id: MUT-CONFLICT-SETUP
-      target_VC_id: VC-CONFLICT-SETUP-1
+      target_VC_ids: [VC-CONFLICT-SETUP-1]
       mutation_operator: SILENTLY_DROP_LOW_SCORE_SETUP
       mutated_behavior: "When 3 setups qualify, only top-1 returned, others dropped silently."
       survivor_risk: MEDIUM
@@ -4270,7 +4270,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-ARCH-AMBIG
-      target_VC_id: VC-ARCH-AMBIG-1
+      target_VC_ids: [VC-ARCH-AMBIG-1]
       mutation_operator: NONDETERMINISTIC_ARCHETYPE
       mutated_behavior: "Tie-break uses dict iteration order (non-deterministic across Python versions)."
       survivor_risk: LOW
@@ -4284,7 +4284,7 @@ vta_fixture_and_mutation_design:
     # -----------------------------------------------------------
 
     - mutation_id: MUT-SCHEMA-DRIFT
-      target_VC_id: VC-SCHEMA-DRIFT-1
+      target_VC_ids: [VC-SCHEMA-DRIFT-1]
       mutation_operator: ADD_FOREIGN_KEY
       mutated_behavior: "Extra key injected into output JSON."
       survivor_risk: HIGH
@@ -4293,7 +4293,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-PROV-MISS
-      target_VC_id: VC-PROV-MISS-1
+      target_VC_ids: [VC-PROV-MISS-1]
       mutation_operator: STRIP_PROVENANCE_FROM_FIELD
       mutated_behavior: "Provenance removed from one numeric field."
       survivor_risk: CRITICAL
@@ -4303,7 +4303,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "Field value remains traceable; only metadata removed. FABRICATED_VALUE_DETECTED does not co-fire."
 
     - mutation_id: MUT-MODE-CONTAM
-      target_VC_id: VC-MODE-CONTAM-1
+      target_VC_ids: [VC-MODE-CONTAM-1]
       mutation_operator: INJECT_CROSS_MODE_KEY
       mutated_behavior: "profile_blocks key added to ACTIVE output."
       survivor_risk: HIGH
@@ -4313,7 +4313,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "SCHEMA_VALIDATION_FAILED may co-report as diagnostic; MODE_CONTAMINATION is PRIMARY."
 
     - mutation_id: MUT-FAB-VAL
-      target_VC_id: VC-FAB-VAL-1
+      target_VC_ids: [VC-FAB-VAL-1]
       mutation_operator: INJECT_FABRICATED_OHLCV
       mutated_behavior: "Output contains a numeric value with no node in the computation chain."
       survivor_risk: CRITICAL
@@ -4323,7 +4323,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "Fabricated value carries a (forged) provenance chain; PROVENANCE_MISSING does not co-fire."
 
     - mutation_id: MUT-ADV-LANG
-      target_VC_id: VC-ADV-LANG-1
+      target_VC_ids: [VC-ADV-LANG-1]
       mutation_operator: INJECT_ADVICE_LANGUAGE
       mutated_behavior: "Output text contains 'strong buy'."
       survivor_risk: HIGH
@@ -4332,7 +4332,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-ADV-LANG-NEG
-      target_VC_id: VC-REQ007-NEGATION
+      target_VC_ids: [VC-REQ007-NEGATION]
       mutation_operator: INJECT_NEGATED_ADVICE
       mutated_behavior: "Output text contains 'not bullish' (negated, allowed)."
       survivor_risk: LOW
@@ -4343,7 +4343,7 @@ vta_fixture_and_mutation_design:
       note: "Negative-control mutation: confirms negation-aware check does NOT fire on 'not bullish'."
 
     - mutation_id: MUT-VAL-OVERRIDE
-      target_VC_id: VC-VAL-OVERRIDE-1
+      target_VC_ids: [VC-VAL-OVERRIDE-1]
       mutation_operator: ATTEMPT_WRITE_TO_VALUATION
       mutated_behavior: "Integration adapter attempts to write valuation_fair_value."
       survivor_risk: CRITICAL
@@ -4357,7 +4357,7 @@ vta_fixture_and_mutation_design:
     # -----------------------------------------------------------
 
     - mutation_id: MUT-BEAR-SIGN-FLIP
-      target_VC_id: VC-BEARISH-DESIGN-1
+      target_VC_ids: [VC-BEARISH-DESIGN-1]
       mutation_operator: IMPLEMENT_BEARISH_AS_SIGN_INVERTED_BULLISH
       mutated_behavior: "Bearish detector calls bullish detector with sign flip."
       survivor_risk: HIGH
@@ -4366,7 +4366,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-BEAR-NO-VOLUME
-      target_VC_id: VC-BEARISH-DESIGN-2
+      target_VC_ids: [VC-BEARISH-DESIGN-2]
       mutation_operator: FLAG_BEARISH_BREAKDOWN_WITHOUT_VOLUME
       mutated_behavior: "Bearish breakdown flagged without volume confirmation."
       survivor_risk: HIGH
@@ -4376,7 +4376,7 @@ vta_fixture_and_mutation_design:
       note: "Reuses FALSE_BREAKOUT_WITHOUT_VOLUME semantic; bearish context."
 
     - mutation_id: MUT-BEAR-NO-HOLD
-      target_VC_id: VC-BEARISH-DESIGN-2
+      target_VC_ids: [VC-BEARISH-DESIGN-2]
       mutation_operator: FLAG_BEARISH_BREAKDOWN_IMMEDIATE_REVERSAL
       mutated_behavior: "Bearish breakdown flagged despite immediate reversal (invalidation unmet)."
       survivor_risk: MEDIUM
@@ -4385,7 +4385,7 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
 
     - mutation_id: MUT-BEARISH-DESIGN-4
-      target_VC_id: VC-BEARISH-DESIGN-4
+      target_VC_ids: [VC-BEARISH-DESIGN-4]
       mutation_operator: MUTATE_SETUP_DENOMINATOR
       mutated_behavior: "Setup coverage denominator changed from the frozen Phase 3 value (8 bullish + N bearish); verifier reads frozen registry and detects mismatch."
       survivor_risk: MEDIUM
@@ -4395,7 +4395,7 @@ vta_fixture_and_mutation_design:
       isolation_note: "Mutates only the denominator value; setup completeness (VC-BEARISH-DESIGN-2) and sign-inversion (VC-BEARISH-DESIGN-1) checks do not co-fire."
 
     - mutation_id: MUT-BEAR-FALSE-POS
-      target_VC_id: VC-COV-2
+      target_VC_ids: [VC-COV-2]
       mutation_operator: FIRE_BEARISH_ON_BULLISH_ONLY_INPUT
       mutated_behavior: "Bearish detector returns non-NOT_PRESENT on bullish-only input."
       survivor_risk: HIGH
