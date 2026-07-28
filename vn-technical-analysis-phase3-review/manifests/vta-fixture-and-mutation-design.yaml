@@ -4424,7 +4424,11 @@ vta_fixture_and_mutation_design:
       # ---------- 1 NEGATIVE_CONTROL fixture (reclassified from MUT-ADV-LANG-NEG) ----------
 
       - witness_id: FX-ADV-LANG-NEG-CONTROL
-        witness_kind: FIXTURE
+        source_record_id: MUT-ADV-LANG-NEG
+        source_registry: MUTATION
+        witness_kind: MUTATION_SOURCE
+        final_classification: NEGATIVE_CONTROL
+        final_registry: NONCANONICAL_WITNESS
         fixture_class: NEGATIVE_CONTROL
         target_VC_ids: ["VC-REQ007-NEGATION"]
         isolated_obligation: "Output text contains 'not bullish' (negated, allowed). The negation-aware advice check must NOT fire. Expected behavior: NO_FAILURE."
@@ -4437,10 +4441,12 @@ vta_fixture_and_mutation_design:
         expected_behavior: NO_FAILURE
         oracle_source: "ORACLE-LANGUAGE-POLICY"
         determinism_expectation: "BYTE_IDENTICAL_REPLAY"
-        included_in_mutation_denominator: false
-        included_in_mutations_without_expected_code_check: false
+        excluded_from_fixture_coverage: true
+        excluded_from_mutation_coverage: true
+        excluded_from_canonical_orphan_gate: true
+        subject_to_expected_failure_code_gate: false
         prior_identity: "MUT-ADV-LANG-NEG"
-        reclassification: "RECLASSIFY_AS_NEGATIVE_CONTROL_FIXTURE (R4 directive Section 4)"
+        reclassification: "RECLASSIFY_AS_NEGATIVE_CONTROL (R5 directive Section 3)"
         purpose: "Negative-control witness: confirms the negation-aware advice-language check does NOT fire on the allowed phrase 'not bullish'. By design it must produce NO_FAILURE, so it cannot be a canonical mutation (canonical mutations must carry a non-null expected_failure_code)."
         owner: "VTA Phase 3 fixture design"
         retention_rationale: "Negative-control semantics are preserved here without violating the mutation contract; the canonical VC-REQ007-NEGATION positive path is already covered by FX-NEG-POS-NOT-BULLISH-ALLOWED."
@@ -4448,7 +4454,8 @@ vta_fixture_and_mutation_design:
       # ---------- 2 mutation witnesses ----------
 
       - witness_id: MUT-ROUND-DRIFT
-        witness_kind: MUTATION
+        source_registry: MUTATION
+        witness_kind: MUTATION_SOURCE
         target_VC_ids: ["VC-ROUND-DRIFT-1"]
         mutation_operator: NONDETERMINISTIC_ROUNDING
         mutated_behavior: "Rounding uses thread-local RNG tie-break (non-deterministic)."
@@ -4462,7 +4469,8 @@ vta_fixture_and_mutation_design:
         retention_rationale: "Pre-registered mutation for an out-of-scope VC; retained for Phase 2B failure-mode-coverage-plan continuity."
 
       - witness_id: MUT-BEAR-FALSE-POS
-        witness_kind: MUTATION
+        source_registry: MUTATION
+        witness_kind: MUTATION_SOURCE
         target_VC_ids: ["VC-COV-2"]
         mutation_operator: FIRE_BEARISH_ON_BULLISH_ONLY_INPUT
         mutated_behavior: "Bearish detector returns non-NOT_PRESENT on bullish-only input."
