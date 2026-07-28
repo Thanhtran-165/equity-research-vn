@@ -36,6 +36,29 @@ code, or executable fixtures have been created.
 > fixture refs, 0 orphan fixtures). Full evidence in Section 14C. Commit
 > `6660e02` itself is unchanged.
 
+> **Review-R4 remediation (this revision).** The raw review-R3-field-fix
+> candidate at commit `b9458c8` was preserved as `IMMUTABLE` with verdict
+> `PENDING_ORPHAN_MUTATION_AND_MIGRATION_ACCOUNTING_RECONCILIATION`. This
+> revision applies the OWNER REMEDIATION DIRECTIVE (VTA PHASE 3
+> IMPLEMENTATION REVIEW-R4) on top of `b9458c8` and resolves the three
+> self-contradicting gates R3 had reported as clean: (1) the orphan gate is
+> made genuinely empty by relocating 4 registry-internal fixtures (with no
+> canonical consumer) and the 2 orphan mutations into a new
+> `noncanonical_witness_registry` where `counted_as_fixture_coverage`,
+> `counted_as_mutation_coverage`, and `subject_to_orphan_gate` are all
+> `false`; `FX-WRONG-SMOOTH-MUT-001` (the directive's fifth orphan) is in
+> fact referenced by the canonical mutation `MUT-WRONG-SMOOTH` and is
+> retained in the canonical block as a documented mutation host; (2) `MUT-ADV-LANG-NEG` is
+> reclassified as the `NEGATIVE_CONTROL` witness fixture
+> `FX-ADV-LANG-NEG-CONTROL` (`expected_behavior: NO_FAILURE`,
+> `included_in_mutation_denominator: false`) so the mutation contract
+> `mutations_without_expected_code: []` holds without exception; (3) the
+> migration equation is closed at identity level —
+> `57 + 134 (113 CREATE + 21 SPLIT-extras) - 3 (REMOVE_INVALID_REFERENCE) = 188`,
+> with `records_added` / `records_removed` / `net_record_change` declared
+> per action. Full evidence in Section 14D. Commit `b9458c8` itself is
+> unchanged.
+
 ## Canonical Inputs
 
 ```yaml
@@ -167,16 +190,20 @@ oracle_independence:
 ## Section 8: Fixture and Mutation Design
 
 ```yaml
-fixtures_designed: 48
-fixture_classes: [POSITIVE, BOUNDARY, NEGATIVE, MUTATION, INTEGRATION]
-mutations_designed: 34
-failure_codes_predeclared: 36
+# R4 canonical counts (witnesses excluded; see Section 14D)
+fixtures_designed: 184            # canonical fixtures (188 R3 total - 4 relocated witnesses; FX-WRONG-SMOOTH-MUT-001 retained as canonical mutation host)
+fixture_classes: [POSITIVE, BOUNDARY, NEGATIVE, MUTATION]
+mutations_designed: 33            # canonical mutations only (36 R3 total - 2 orphan mutations - 1 reclassified negative-control)
+failure_codes_predeclared: 43
 
 canonical_VCs_with_positive_path: 64/64
 canonical_VCs_with_negative_or_mutation_path: 64/64
 fixtures_without_oracle_source: 0
 mutations_without_expected_code: 0
 non_isolated_mutations: 0
+
+noncanonical_witness_records: 7   # preserved fixtures (4) + negative-control (1) + mutation witnesses (2)
+noncanonical_witness_counted_as_coverage: false
 
 isolation:
   temporal_failures_isolated: true
@@ -642,6 +669,319 @@ raw_attempts:
 backward_pooling: prohibited
 ```
 
+## Section 14D: Review-R4 Reconciliation Evidence (structured YAML)
+
+The raw review-R3-field-fix candidate at commit `b9458c8` was preserved as
+`IMMUTABLE` with verdict
+`PENDING_ORPHAN_MUTATION_AND_MIGRATION_ACCOUNTING_RECONCILIATION`. This
+revision applies the OWNER REMEDIATION DIRECTIVE (VTA PHASE 3
+IMPLEMENTATION REVIEW-R4) on top of `b9458c8`. Commit `b9458c8` itself is
+unchanged.
+
+R3 had reported three gates as clean which were actually self-contradicting
+against R3's own evidence. R4 resolves each:
+
+```yaml
+R3_self_contradictions_and_R4_resolutions:
+
+  orphan_accounting:
+    R3_evidence_reported:
+      registry_items: {fixtures: 188, mutations: 36, total: 224}
+      orphan_items: {count: 7, preserved_fixture_witnesses: 5, mutation_witnesses: 2}
+    R3_final_gate_claimed: orphan_records: 0          # CONTRADICTS the evidence above
+    root_cause: >
+      A record is only non-orphan if it is referenced by a canonical
+      consumer OR moved to a registry to which the orphan gate does not
+      apply. R3 instead left the 7 records inside the canonical
+      fixture/mutation blocks and asserted orphan=0, which is
+      self-contradictory. Fixtures and mutations must also be audited
+      separately, never summed under one "orphan fixture" label.
+    R4_resolution: SEPARATE_WITNESS_REGISTRY
+
+  mutation_expected_code_integrity:
+    R3_evidence_reported:
+      mutation_id: MUT-ADV-LANG-NEG
+      expected_failure_code: null
+      reason: negative-control mutation
+    R3_final_gate_claimed: mutations_without_expected_code: 0   # CONTRADICTS the null above
+    root_cause: >
+      A record cannot be both a canonical mutation and lack an expected
+      detection code.
+    R4_resolution: RECLASSIFY_AS_NEGATIVE_CONTROL_FIXTURE
+
+  migration_arithmetic:
+    R3_evidence_reported:
+      migration_actions: {MAP_TO_EXISTING_FIXTURE: 35, SPLIT_FROM_EXISTING_FIXTURE: 14,
+                          CREATE_MISSING_DESIGN_RECORD: 113, PRESERVE_AS_IS: 2,
+                          PRESERVE_AS_REDUNDANT_WITNESS: 3, total: 167}
+      net_new_claimed: 131
+      equation_claimed: "113 + 14 + 4"               # but 2 + 3 = 5, so 113+14+5 = 132
+    R3_final_gate_claimed: equation closes at 131     # CONTRADICTS the action counts above
+    root_cause: >
+      Category counts were reported without identity-level accounting of
+      which preservation actions create new records, how many records each
+      split produces, and whether any records are removed.
+    R4_resolution: IDENTITY_LEVEL_MIGRATION_ACCOUNTING
+```
+
+### R4 remediation 1 — Separate non-canonical witness registry
+
+Per directive Section 3 (Witness rule), every preserved witness must choose
+exactly one of two states: `referenced_by_canonical_consumer` or
+`moved_to_noncanonical_witness_registry`. A **canonical consumer** is
+either a direct VC mapping slot (positive/boundary/negative/
+mutation_fixture_ids in `vta-VC-to-verifier-mapping.yaml`) or an indirect
+reference via a canonical mutation's `required_fixture_id` where that
+mutation is itself referenced by a VC mapping slot. The directive's initial
+orphan list named 5 fixtures, but on identity-level inspection only 4 of
+them genuinely have no canonical consumer: `FX-WRONG-SMOOTH-MUT-001` is in
+fact referenced by the canonical mutation `MUT-WRONG-SMOOTH`
+(`required_fixture_id`), and `MUT-WRONG-SMOOTH` is itself referenced by
+`VC-WRONG-SMOOTH-1.mutation_fixture_ids`. The canonical-consumer chain
+`VC mapping -> canonical mutation -> required_fixture_id` makes
+`FX-WRONG-SMOOTH-MUT-001` non-orphan, so it is retained in the canonical
+fixture block as a documented mutation-host record. The 7 records below had
+no canonical consumer and were relocated into a new top-level
+`noncanonical_witness_registry` block in
+`manifests/vta-fixture-and-mutation-design.yaml`. Each entry declares
+`purpose`, `owner`, and `retention_rationale`, and the registry carries the
+uniform witness semantics required by the directive.
+
+```yaml
+noncanonical_witness_registry:
+  counted_as_fixture_coverage: false
+  counted_as_mutation_coverage: false
+  subject_to_orphan_gate: false
+  witness_count: 7
+
+  witnesses:
+    # 4 preserved fixtures (registry-internal role; not slotted in any VC mapping, no canonical consumer)
+    - FX-MODE-KERNEL-INT-001    # INTEGRATION cross-mode sweep; per-VC descriptives carry coverage
+    - FX-VAL-BOUND-POS-001      # INTEGRATION valuation-bound sweep; per-VC descriptives carry coverage
+    - FX-VAL-OVERRIDE-POS-001   # INTEGRATION positive witness; descriptive POSITIVE carries coverage
+    - FX-ROUND-DRIFT-POS-001    # POSITIVE for out-of-scope VC-ROUND-DRIFT-1 (outside canonical 64)
+
+    # 1 NEGATIVE_CONTROL fixture (reclassified from MUT-ADV-LANG-NEG; see remediation 2)
+    - FX-ADV-LANG-NEG-CONTROL
+
+    # 2 mutation witnesses (not referenced by any VC mapping mutation_fixture_ids slot)
+    - MUT-ROUND-DRIFT           # bound to out-of-scope VC-ROUND-DRIFT-1
+    - MUT-BEAR-FALSE-POS        # VC-COV-2 negative coverage carried by FX-COV-2-NEG-BEARISH-FROM-ABSENCE
+
+  retained_in_canonical_registry:
+    - FX-WRONG-SMOOTH-MUT-001   # referenced via canonical mutation MUT-WRONG-SMOOTH (NOT orphan; not relocated)
+```
+
+With the witnesses out of the canonical fixture/mutation blocks, the
+canonical fixture registry now contains **184** records (188 R3 total − 4
+relocated fixtures) and the canonical mutation registry now contains **33**
+records (36 R3 total − 2 relocated mutations − 1 reclassified negative
+control). The orphan gate now operates genuinely over these canonical
+registries.
+
+### R4 remediation 2 — Reclassify MUT-ADV-LANG-NEG as NEGATIVE_CONTROL fixture
+
+Per directive Section 4, `MUT-ADV-LANG-NEG` was reclassified from a canonical
+mutation to a `NEGATIVE_CONTROL` witness fixture (new ID
+`FX-ADV-LANG-NEG-CONTROL`) in the non-canonical witness registry. The
+negative-control semantics (the system must NOT fire on the allowed phrase
+"not bullish") are preserved without violating the mutation contract.
+
+```yaml
+MUT_ADV_LANG_NEG_reclassification:
+  prior_identity: MUT-ADV-LANG-NEG
+  new_identity: FX-ADV-LANG-NEG-CONTROL
+  new_classification: NEGATIVE_CONTROL
+  expected_behavior: NO_FAILURE
+  expected_primary_failure_code: null      # negative-control; NO_FAILURE by design
+  included_in_mutation_denominator: false
+  included_in_mutations_without_expected_code_check: false
+  oracle_source: ORACLE-LANGUAGE-POLICY
+  retained_in: noncanonical_witness_registry
+
+canonical_VC_coverage_unchanged:
+  note: >
+    VC-REQ007-NEGATION positive-path coverage is still carried by the
+    canonical descriptive fixture FX-NEG-POS-NOT-BULLISH-ALLOWED (referenced
+    in vta-VC-to-verifier-mapping.yaml). The negative-control witness
+    duplicates that coverage as a non-canonical witness.
+  failure_code_registry_impact: none
+    # The ADVICE_LANGUAGE_DETECTED code remains owned by the canonical
+    # mutation MUT-ADV-LANG (VC-ADV-LANG-1). The failure-code registry
+    # references codes by owning VC, not by mutation ID, so no change.
+```
+
+### R4 remediation 3 — Identity-level migration accounting
+
+Per directive Section 5, each migration action now declares
+`records_added` / `records_removed` / `net_record_change`, and the required
+identity equation closes exactly.
+
+```yaml
+fixture_migration_accounting:
+  prior_fixture_records: 57
+
+  # Per-action aggregate (full table in vta-fixture-and-mutation-design.yaml)
+  action_accounting:
+    MAP_TO_EXISTING_FIXTURE:        {decisions: 35, records_added: 0,   records_removed: 0, net_record_change: 0}
+    SPLIT_FROM_EXISTING_FIXTURE:    {decisions: 14, records_added: 21,  records_removed: 0, net_record_change: 21}
+      # 14 source fixtures -> 35 canonical IDs; 35 - 14 = 21 net-new records
+    CREATE_MISSING_DESIGN_RECORD:   {decisions: 113, records_added: 113, records_removed: 0, net_record_change: 113}
+    PRESERVE_AS_IS:                 {decisions: 2,  records_added: 0,   records_removed: 0, net_record_change: 0}
+      # PRESERVE actions have net_record_change: 0 (directive requirement)
+    PRESERVE_AS_REDUNDANT_WITNESS:  {decisions: 3,  records_added: 0,   records_removed: 0, net_record_change: 0}
+      # PRESERVE actions have net_record_change: 0 (directive requirement)
+    REMOVE_INVALID_REFERENCE:       {decisions: 3,  records_added: 0,   records_removed: 3, net_record_change: -3}
+      # Pre-R3 numbered fixtures fully superseded by descriptive records
+
+  records_added: 134        # 113 (CREATE) + 21 (SPLIT extras)
+  records_removed: 3        # 3 superseded numbered IDs (FX-BEARISH-DESIGN-4-POS-001, FX-CHANNEL-2-POS-001, FX-FAB-VAL-POS-001)
+  net_record_change: 131
+  final_fixture_records: 188
+  equation: "57 + 134 - 3 = 188"
+  equation_valid: true
+  unexplained_new_records: 0
+  unresolved_source_IDs: []
+  semantic_loss: false
+
+  canonical_records_after_R4_witness_separation: 184
+    # 188 R3 total minus 4 fixtures relocated to noncanonical_witness_registry
+    # (FX-WRONG-SMOOTH-MUT-001 retained as canonical mutation host)
+
+superseded_legacy_fixtures:                # the 3 records_removed (REMOVE_INVALID_REFERENCE)
+  - FX-BEARISH-DESIGN-4-POS-001            # superseded by FX-BEARISH-DESIGN-4-POS-DENOMINATOR-FROZEN
+  - FX-CHANNEL-2-POS-001                   # superseded by FX-CHANNEL-2-POS-THRESHOLD-FROZEN
+  - FX-FAB-VAL-POS-001                     # superseded by FX-NO-FAB-POS-CLEAN
+```
+
+### R4 final structured-validation gate (Python YAML parser walk)
+
+The following counts are produced by a Python `yaml.safe_load` walk of the
+committed artifacts (no grep, no string-counting). Every VC id is resolved
+against the canonical 64-VC set; every cross-artifact reference is checked
+for resolution.
+
+```yaml
+R4_structured_validation_final_gate:
+  fixture_registry:
+    records: 184                                 # canonical (188 R3 - 4 witnesses; FX-WRONG-SMOOTH-MUT-001 retained)
+    unique_ids: 184
+    duplicate_ids: []
+    orphan_fixture_ids: []                       # GATE: empty (was self-contradicting in R3)
+    migration_accounting_closed: true
+
+  mutation_registry:
+    records: 33                                  # canonical (36 R3 - 2 witnesses - 1 reclassified)
+    unique_ids: 33
+    duplicate_ids: []
+    mutations_without_expected_code: []          # GATE: empty (MUT-ADV-LANG-NEG reclassified)
+    orphan_mutation_ids: []                      # GATE: empty
+    non_isolated_mutations: []
+    integrity: PASS
+
+  noncanonical_witness_registry:
+    witness_count: 7                             # 4 fixtures + 1 NEGATIVE_CONTROL + 2 mutations
+    counted_as_fixture_coverage: false
+    counted_as_mutation_coverage: false
+    subject_to_orphan_gate: false
+
+  VC_fixture_coverage:
+    canonical_VCs: 64
+    positive_path: 64/64                         # GATE: 64/64
+    negative_or_mutation_path: 64/64             # GATE: 64/64
+    uncovered_VC_ids: []
+    coverage_using_witness_records: 0            # witnesses are not coverage (decision rule §13)
+
+  fixture_migration:
+    equation: "57 + 134 - 3 = 188"               # GATE: closes exactly
+    equation_valid: true
+    PRESERVE_net_record_change_zero: true
+
+  failure_code_registry:
+    records: 43                                  # unchanged by R4
+    unknown_references: 0
+    semantic_duplicates: 0
+    precedence_conflicts: 0
+
+  formulas: 12/12                                # accepted from R3 (unchanged)
+  bearish_setups: 5/5                            # accepted from R3 (unchanged)
+
+  structured_validation: PASS
+  final_verdict: PASS
+```
+
+### Review-R4 scope of changes
+
+Per directive Section 2, four files were authorized for change. Two
+required substantive edits; the implementation review document (this file)
+is the third. The failure-code registry and the VC mapping required no
+change (the reclassification touches the fixture/mutation design only).
+
+```yaml
+R4_modified_paths:
+  - manifests/vta-fixture-and-mutation-design.yaml
+      # 4 fixtures + 2 mutations + 1 negative-control relocated to new
+      # noncanonical_witness_registry block (FX-WRONG-SMOOTH-MUT-001
+      # retained in the canonical block as the canonical mutation host for
+      # MUT-WRONG-SMOOTH); MUT-ADV-LANG-NEG reclassified as
+      # FX-ADV-LANG-NEG-CONTROL; integrity_check / gate /
+      # VC_fixture_coverage_reconciliation updated; migration summary
+      # corrected to legacy_fixtures_superseded_and_removed: 3 with
+      # per-action records_added/records_removed/net_record_change; 3
+      # REMOVE_INVALID_REFERENCE decisions added.
+  - reports/vta-phase-3-implementation-review.md
+      # this Section 14D added; Section 8 counts updated; executive
+      # summary R4 note added.
+
+R4_unchanged_authorized_paths:
+  - manifests/vta-VC-to-verifier-mapping.yaml
+      # No canonical consumer changed; all VC coverage still carried by
+      # the descriptive records already referenced there.
+  - manifests/vta-failure-code-registry.yaml
+      # ADVICE_LANGUAGE_DETECTED remains owned by MUT-ADV-LANG (VC-ADV-LANG-1).
+      # Failure-code registry references codes by owning VC, not mutation ID.
+
+R4_unauthorized_paths_modified: 0                # GATE: 0
+
+R4_blocked_paths_unchanged:
+  implementation_code_added: 0
+  verifier_code_added: 0
+  executable_fixture_code_added: 0
+  formula_registry_changes: 0
+  bearish_setup_registry_changes: 0
+  requirement_mapping_changes: 0
+  implementation_scope_changes: 0
+  historical_phase_files: 0
+  rendering_files: 0
+  equity_research_files: 0
+```
+
+No implementation code, verifier code, or executable fixtures were added.
+No historical Phase 1 / 2A / 2B artifacts were modified.
+
+### Review-R4 historical verdicts preserved
+
+```yaml
+raw_attempts:
+  1e5b731:
+    verdict: INCOMPLETE_FORMULA_CONTRACT_AND_SETUP_SPECIFICATION
+    status: IMMUTABLE
+  c4582fe:
+    verdict: INCOMPLETE_VERIFIER_DESIGN
+    status: IMMUTABLE
+  6660e02:
+    verdict: FAIL_REVIEW_REGISTRY_INTEGRITY
+    status: IMMUTABLE
+  d71cbaef:
+    verdict: PENDING_FIXTURE_MIGRATION_AND_DIFF_RECONCILIATION
+    status: IMMUTABLE
+  b9458c8:
+    verdict: PENDING_ORPHAN_MUTATION_AND_MIGRATION_ACCOUNTING_RECONCILIATION
+    status: IMMUTABLE
+
+backward_pooling: prohibited
+```
+
 
 
 ```yaml
@@ -726,7 +1066,52 @@ VTA_Phase_3_implementation_review:
     canonical_fixture_coverage: PROVEN                # GATE: 64/64 positive + 64/64 negative
     bidirectional_integrity: PASS                     # GATE: 0 orphans
     structured_reference_validation: PASS
-    final_verdict_R3: PASS
+    final_verdict_R3: PENDING_ORPHAN_MUTATION_AND_MIGRATION_ACCOUNTING_RECONCILIATION
+      # R3 closed the reference-integrity failures from R2 but left three
+      # self-contradicting gates (orphan accounting, mutation expected-code
+      # integrity, migration arithmetic) that R4 had to remediate.
+
+  review_R4_remediation:
+    raw_incomplete_candidate_preserved: b9458c8a0c20f8f5697a5d3b62cd424eebe61c78
+    raw_candidate_verdict: PENDING_ORPHAN_MUTATION_AND_MIGRATION_ACCOUNTING_RECONCILIATION
+    raw_candidate_status: IMMUTABLE
+    formula_semantics: PASS                          # accepted from R3 (no change)
+    bearish_setup_semantics: PASS                    # accepted from R3 (no change)
+    forward_reference_integrity: PASS_AS_REPORTED    # accepted from R3 (no change)
+    VC_fixture_coverage: PASS_AS_REPORTED            # accepted from R3 (no change)
+    failure_code_reference_integrity: PASS_AS_REPORTED # accepted from R3 (no change)
+
+    # R4 remediations
+    orphan_accounting_reconciled: true               # 7 records relocated to noncanonical_witness_registry
+      # 4 preserved fixtures (FX-MODE-KERNEL-INT-001, FX-VAL-BOUND-POS-001,
+      #   FX-VAL-OVERRIDE-POS-001, FX-ROUND-DRIFT-POS-001)
+      # 1 NEGATIVE_CONTROL reclassification (FX-ADV-LANG-NEG-CONTROL, prior MUT-ADV-LANG-NEG)
+      # 2 mutation witnesses (MUT-ROUND-DRIFT, MUT-BEAR-FALSE-POS)
+      # FX-WRONG-SMOOTH-MUT-001 retained in canonical block (canonical mutation host for MUT-WRONG-SMOOTH)
+    mutation_expected_code_integrity_reconciled: true # MUT-ADV-LANG-NEG reclassified as NEGATIVE_CONTROL witness
+      # new fixture_id: FX-ADV-LANG-NEG-CONTROL (expected_behavior: NO_FAILURE)
+    migration_arithmetic_reconciled: true             # 57 + 134 - 3 = 188 (closes exactly)
+      # records_added: 134 (113 CREATE + 21 SPLIT extras)
+      # records_removed: 3 (REMOVE_INVALID_REFERENCE for superseded numbered IDs)
+      # 3 superseded: FX-BEARISH-DESIGN-4-POS-001, FX-CHANNEL-2-POS-001, FX-FAB-VAL-POS-001
+
+    # Final canonical counts (witnesses excluded)
+    canonical_fixture_records: 184                    # 188 R3 total - 4 relocated witnesses
+    canonical_mutation_records: 33                    # 36 R3 total - 2 witnesses - 1 reclassified
+    noncanonical_witness_records: 7
+    noncanonical_witness_counted_as_coverage: false
+
+    # Final gates (all PASS)
+    orphan_fixture_ids: []                            # GATE: empty (canonical registry only)
+    orphan_mutation_ids: []                            # GATE: empty (canonical registry only)
+    mutations_without_expected_code: []                # GATE: empty (no exceptions)
+    VC_positive_path_coverage: 64/64
+    VC_negative_or_mutation_path_coverage: 64/64
+    migration_equation_valid: true                     # 57 + 134 - 3 = 188
+    PRESERVE_net_record_change_zero: true
+
+    structured_validation: PASS
+    final_verdict_R4: PASS
 
   final_verdict: PASS
 ```

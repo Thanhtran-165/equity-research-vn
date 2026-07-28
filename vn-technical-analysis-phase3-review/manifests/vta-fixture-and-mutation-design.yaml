@@ -3921,7 +3921,19 @@ vta_fixture_and_mutation_design:
       determinism_expectation: "BYTE_IDENTICAL_REPLAY"
 
     # =========================================================
-    # MUTATION-class fixtures (registry-internal mutation hosts)
+    # MUTATION-class fixture (registry-internal mutation host)
+    # ---------------------------------------------------------
+    # R4: FX-WRONG-SMOOTH-MUT-001 is retained in the CANONICAL
+    # fixture block (not relocated to the witness registry) because
+    # it is referenced by the canonical mutation MUT-WRONG-SMOOTH
+    # (required_fixture_id), and MUT-WRONG-SMOOTH is itself referenced
+    # by VC-WRONG-SMOOTH-1.mutation_fixture_ids in the VC mapping.
+    # The canonical-consumer chain (VC mapping -> canonical mutation
+    # -> required_fixture_id) makes this fixture non-orphan; the
+    # initial R4 orphan list double-counted it because it is not
+    # referenced DIRECTLY by a VC-mapping slot. It is audited
+    # separately from the 5 fixtures that have no canonical consumer
+    # at all (which ARE relocated to noncanonical_witness_registry).
     # =========================================================
 
     - fixture_id: FX-WRONG-SMOOTH-MUT-001
@@ -3937,103 +3949,24 @@ vta_fixture_and_mutation_design:
       frozen_inputs:
         - seed: "SEED-RSI-CALIB-200"
           period: 14
-          mode: "ACTIVE"
+          mode: "Active"
       expected_outputs:
         - error_code: "SMOOTHING_MISMATCH"
       expected_primary_failure_code: "SMOOTHING_MISMATCH"
       expected_diagnostic_codes: []
       oracle_source: "ORACLE-TALIB-WILDER"
       determinism_expectation: "BYTE_IDENTICAL_REPLAY"
+      canonical_consumer_chain: "VC-WRONG-SMOOTH-1.mutation_fixture_ids -> MUT-WRONG-SMOOTH.required_fixture_id -> FX-WRONG-SMOOTH-MUT-001"
 
-    # =========================================================
-    # INTEGRATION (cross-mode / Phase 6 witnesses; preserved)
-    # =========================================================
-
-    - fixture_id: FX-MODE-KERNEL-INT-001
-      fixture_class: INTEGRATION
-      target_VC_ids:
-        - "VC-MODE-KERNEL-1"
-        - "VC-BOLL-2"
-      target_requirement_ids:
-        - "VTA-REQ-006"
-      target_formula_ids: []
-      target_setup_ids: []
-      isolated_obligation: "ACTIVE BB and PROFILE BB helper produce IDENTICAL values for same input (shared kernel integrity)."
-      frozen_inputs:
-        - seed: "SEED-BOLL-SHARED"
-          mode: "BOTH"
-      expected_outputs:
-        - active_bb_equal_profile_bb: true
-          max_abs_diff: 0
-      expected_primary_failure_code: null
-      expected_diagnostic_codes: []
-      oracle_source: "ORACLE-TALIB-BOLL"
-      determinism_expectation: "BYTE_IDENTICAL_REPLAY"
-
-    - fixture_id: FX-VAL-BOUND-POS-001
-      fixture_class: INTEGRATION
-      target_VC_ids:
-        - "VC-VAL-BOUND-1"
-        - "VC-VAL-BOUND-2"
-      target_requirement_ids:
-        - "VTA-REQ-011"
-      target_formula_ids: []
-      target_setup_ids: []
-      isolated_obligation: "Integration adapter has NO write path to fundamental/valuation fields; schema rejects valuation_* keys in technical output."
-      frozen_inputs:
-        - seed: "SEED-INTEGRATION-ADAPTER"
-          mode: "ACTIVE"
-      expected_outputs:
-        - write_path_to_valuation: false
-          schema_rejects_valuation_keys: true
-      expected_primary_failure_code: null
-      expected_diagnostic_codes: []
-      oracle_source: "ORACLE-SCHEMA-ACTIVE"
-      determinism_expectation: "BYTE_IDENTICAL_REPLAY"
-
-    - fixture_id: FX-VAL-OVERRIDE-POS-001
-      fixture_class: INTEGRATION
-      target_VC_ids:
-        - "VC-VAL-OVERRIDE-1"
-      target_requirement_ids:
-        - "VTA-REQ-011"
-      target_formula_ids: []
-      target_setup_ids: []
-      isolated_obligation: "Integration adapter performs only technical-field writes; no write_target reaches any valuation_* field. No VALUATION_OVERRIDE_ATTEMPT fires. Positive-path witness for the negative-only valuation-modification detector."
-      frozen_inputs:
-        - seed: "SEED-INTEGRATION-ADAPTER"
-          mode: "ACTIVE"
-          attempt_write_target: null
-      expected_outputs:
-        - analysis_status: "OK"
-          write_path_to_valuation: false
-      expected_primary_failure_code: null
-      expected_diagnostic_codes: []
-      oracle_source: "ORACLE-SCHEMA-ACTIVE"
-      determinism_expectation: "BYTE_IDENTICAL_REPLAY"
-
-    # =========================================================
-    # Out-of-scope preserved (pre-registered for VCs outside the canonical 64)
-    # =========================================================
-
-    - fixture_id: FX-ROUND-DRIFT-POS-001
-      fixture_class: POSITIVE
-      target_VC_ids:
-        - "VC-ROUND-DRIFT-1"
-      target_requirement_ids: []
-      target_formula_ids: []
-      target_setup_ids: []
-      isolated_obligation: "Same input run twice -> byte-identical output (no ROUNDING_DRIFT)."
-      frozen_inputs:
-        - seed: "SEED-ACTIVE-FULL-80w"
-          mode: "ACTIVE"
-      expected_outputs:
-        - run1_hash_equal_run2_hash: true
-      expected_primary_failure_code: null
-      expected_diagnostic_codes: []
-      oracle_source: "ORACLE-BYTE-REPLAY"
-      determinism_expectation: "BYTE_IDENTICAL_REPLAY"
-
+  # ==============================================================
+  # Mutations
+  # --------------------------------------------------------------
+  # Review-R4: MUT-ADV-LANG-NEG has been reclassified out of this
+  # block into the noncanonical_witness_registry below (it was a
+  # NEGATIVE_CONTROL, not a canonical mutation, and the mutation
+  # contract requires every canonical mutation to carry a non-null
+  # expected_failure_code).
+  # ==============================================================
   mutations:
 
     # -----------------------------------------------------------
@@ -4179,16 +4112,6 @@ vta_fixture_and_mutation_design:
       required_fixture_id: FX-NAN-PROP-NEG-1
       isolated_from_other_failures: true
 
-    - mutation_id: MUT-ROUND-DRIFT
-      target_VC_ids: [VC-ROUND-DRIFT-1]
-      mutation_operator: NONDETERMINISTIC_ROUNDING
-      mutated_behavior: "Rounding uses thread-local RNG tie-break (non-deterministic)."
-      survivor_risk: LOW
-      expected_failure_code: ROUNDING_DRIFT
-      required_fixture_id: FX-ROUND-DRIFT-POS-001
-      isolated_from_other_failures: true
-      mandatory: OPTIONAL
-
     - mutation_id: MUT-MODE-DIVERGE
       target_VC_ids: [VC-MODE-KERNEL-1]
       mutation_operator: DIVERGE_PROFILE_BB_KERNEL
@@ -4331,17 +4254,6 @@ vta_fixture_and_mutation_design:
       required_fixture_id: FX-ADV-LANG-NEG-NEN-MUA
       isolated_from_other_failures: true
 
-    - mutation_id: MUT-ADV-LANG-NEG
-      target_VC_ids: [VC-REQ007-NEGATION]
-      mutation_operator: INJECT_NEGATED_ADVICE
-      mutated_behavior: "Output text contains 'not bullish' (negated, allowed)."
-      survivor_risk: LOW
-      expected_failure_code: null
-      required_fixture_id: FX-NEG-POS-NOT-BULLISH-ALLOWED
-      isolated_from_other_failures: true
-      mandatory: OPTIONAL
-      note: "Negative-control mutation: confirms negation-aware check does NOT fire on 'not bullish'."
-
     - mutation_id: MUT-VAL-OVERRIDE
       target_VC_ids: [VC-VAL-OVERRIDE-1]
       mutation_operator: ATTEMPT_WRITE_TO_VALUATION
@@ -4394,14 +4306,173 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
       isolation_note: "Mutates only the denominator value; setup completeness (VC-BEARISH-DESIGN-2) and sign-inversion (VC-BEARISH-DESIGN-1) checks do not co-fire."
 
-    - mutation_id: MUT-BEAR-FALSE-POS
-      target_VC_ids: [VC-COV-2]
-      mutation_operator: FIRE_BEARISH_ON_BULLISH_ONLY_INPUT
-      mutated_behavior: "Bearish detector returns non-NOT_PRESENT on bullish-only input."
-      survivor_risk: HIGH
-      expected_failure_code: BEARISH_FALSE_POSITIVE
-      required_fixture_id: FX-COV-2-NEG-BEARISH-FROM-ABSENCE
-      isolated_from_other_failures: true
+  # ==============================================================
+  # Non-canonical witness registry (Phase 3 implementation review-R4)
+  # --------------------------------------------------------------
+  # Per OWNER REMEDIATION DIRECTIVE (R4) Section 3 (Witness rule):
+  # these 7 records are NOT referenced by any canonical consumer and
+  # are therefore NOT part of the canonical fixture / mutation
+  # registries above. A "canonical consumer" means either a direct VC
+  # mapping slot (positive/boundary/negative/mutation_fixture_ids in
+  # vta-VC-to-verifier-mapping.yaml) OR an indirect reference via a
+  # canonical mutation's required_fixture_id where that mutation is
+  # itself referenced by a VC mapping slot. The 7 records below satisfy
+  # neither path; they are retained here as documented witnesses so
+  # their design rationale is preserved without polluting the canonical
+  # orphan gate or the coverage denominators.
+  #
+  # Note: the directive's initial orphan list named 5 fixtures, but
+  # FX-WRONG-SMOOTH-MUT-001 is in fact referenced indirectly via the
+  # canonical mutation MUT-WRONG-SMOOTH (which VC-WRONG-SMOOTH-1
+  # references), so it is NOT orphan and stays in the canonical fixture
+  # block above as a documented mutation-host record.
+  #
+  # Witness semantics (uniform across all entries):
+  #   counted_as_fixture_coverage: false
+  #   counted_as_mutation_coverage: false
+  #   subject_to_orphan_gate: false
+  #
+  # Each entry declares purpose, owner, and retention_rationale as
+  # required by the directive.
+  # ==============================================================
+  noncanonical_witness_registry:
+    counted_as_fixture_coverage: false
+    counted_as_mutation_coverage: false
+    subject_to_orphan_gate: false
+    witness_count: 7
+    composition:
+      preserved_fixtures: 4
+      negative_control_fixtures: 1
+      mutation_witnesses: 2
+
+    witnesses:
+
+      # ---------- 4 preserved fixtures (registry-internal role, no canonical consumer) ----------
+      # R4: FX-WRONG-SMOOTH-MUT-001 is NOT here — it stays in the canonical
+      # fixture block because it is referenced by the canonical mutation
+      # MUT-WRONG-SMOOTH, which is itself referenced by VC-WRONG-SMOOTH-1.
+      # Only fixtures with NO canonical consumer at all are relocated here.
+
+      - witness_id: FX-MODE-KERNEL-INT-001
+        witness_kind: FIXTURE
+        fixture_class: INTEGRATION
+        target_VC_ids: ["VC-MODE-KERNEL-1", "VC-BOLL-2"]
+        isolated_obligation: "ACTIVE BB and PROFILE BB helper produce IDENTICAL values for same input (shared kernel integrity)."
+        frozen_inputs:
+          - seed: "SEED-BOLL-SHARED"
+            mode: "BOTH"
+        expected_outputs:
+          - active_bb_equal_profile_bb: true
+            max_abs_diff: 0
+        oracle_source: "ORACLE-TALIB-BOLL"
+        determinism_expectation: "BYTE_IDENTICAL_REPLAY"
+        purpose: "Redundant cross-mode INTEGRATION sweep; each of its two target VCs is already covered by a dedicated per-VC descriptive POSITIVE record."
+        owner: "VTA Phase 3 fixture design"
+        retention_rationale: "Redundant cross-mode integration sweep alongside FX-MODE-KERNEL-POS-IDENTICAL / FX-BOLL-2-POS-IDENTICAL."
+
+      - witness_id: FX-VAL-BOUND-POS-001
+        witness_kind: FIXTURE
+        fixture_class: INTEGRATION
+        target_VC_ids: ["VC-VAL-BOUND-1", "VC-VAL-BOUND-2"]
+        isolated_obligation: "Integration adapter has NO write path to fundamental/valuation fields; schema rejects valuation_* keys in technical output."
+        frozen_inputs:
+          - seed: "SEED-INTEGRATION-ADAPTER"
+            mode: "ACTIVE"
+        expected_outputs:
+          - write_path_to_valuation: false
+            schema_rejects_valuation_keys: true
+        oracle_source: "ORACLE-SCHEMA-ACTIVE"
+        determinism_expectation: "BYTE_IDENTICAL_REPLAY"
+        purpose: "Redundant valuation-bound INTEGRATION sweep; each target VC is already covered by a dedicated descriptive negative fixture."
+        owner: "VTA Phase 3 fixture design"
+        retention_rationale: "Redundant valuation-bound integration sweep alongside FX-VAL-BOUND-1-NEG-WRITE-PATH / FX-VAL-BOUND-2-NEG-VALUATION-KEY."
+
+      - witness_id: FX-VAL-OVERRIDE-POS-001
+        witness_kind: FIXTURE
+        fixture_class: INTEGRATION
+        target_VC_ids: ["VC-VAL-OVERRIDE-1"]
+        isolated_obligation: "Integration adapter performs only technical-field writes; no write_target reaches any valuation_* field. No VALUATION_OVERRIDE_ATTEMPT fires. Positive-path witness for the negative-only valuation-modification detector."
+        frozen_inputs:
+          - seed: "SEED-INTEGRATION-ADAPTER"
+            mode: "ACTIVE"
+            attempt_write_target: null
+        expected_outputs:
+          - analysis_status: "OK"
+            write_path_to_valuation: false
+        oracle_source: "ORACLE-SCHEMA-ACTIVE"
+        determinism_expectation: "BYTE_IDENTICAL_REPLAY"
+        purpose: "Redundant positive witness for VC-VAL-OVERRIDE-1; the canonical POSITIVE record FX-VAL-OVERRIDE-POS-NO-WRITE-PATH already carries positive-path coverage."
+        owner: "VTA Phase 3 fixture design"
+        retention_rationale: "Redundant INTEGRATION positive witness alongside FX-VAL-OVERRIDE-POS-NO-WRITE-PATH."
+
+      - witness_id: FX-ROUND-DRIFT-POS-001
+        witness_kind: FIXTURE
+        fixture_class: POSITIVE
+        target_VC_ids: ["VC-ROUND-DRIFT-1"]
+        isolated_obligation: "Same input run twice -> byte-identical output (no ROUNDING_DRIFT)."
+        frozen_inputs:
+          - seed: "SEED-ACTIVE-FULL-80w"
+            mode: "ACTIVE"
+        expected_outputs:
+          - run1_hash_equal_run2_hash: true
+        oracle_source: "ORACLE-BYTE-REPLAY"
+        determinism_expectation: "BYTE_IDENTICAL_REPLAY"
+        purpose: "Pre-registered POSITIVE for VC-ROUND-DRIFT-1, which is OUTSIDE the canonical 64-VC set. Kept for Phase 2B failure-mode-coverage-plan continuity; cannot contribute to canonical coverage."
+        owner: "VTA Phase 3 fixture design"
+        retention_rationale: "Pre-registration for an out-of-scope VC; bound by the Phase 2B failure-mode-coverage-plan."
+
+      # ---------- 1 NEGATIVE_CONTROL fixture (reclassified from MUT-ADV-LANG-NEG) ----------
+
+      - witness_id: FX-ADV-LANG-NEG-CONTROL
+        witness_kind: FIXTURE
+        fixture_class: NEGATIVE_CONTROL
+        target_VC_ids: ["VC-REQ007-NEGATION"]
+        isolated_obligation: "Output text contains 'not bullish' (negated, allowed). The negation-aware advice check must NOT fire. Expected behavior: NO_FAILURE."
+        frozen_inputs:
+          - text_fragment: "not bullish"
+            advice_check_mode: "NEGATION_AWARE"
+        expected_outputs:
+          - advice_check_fired: false
+        expected_primary_failure_code: null
+        expected_behavior: NO_FAILURE
+        oracle_source: "ORACLE-LANGUAGE-POLICY"
+        determinism_expectation: "BYTE_IDENTICAL_REPLAY"
+        included_in_mutation_denominator: false
+        included_in_mutations_without_expected_code_check: false
+        prior_identity: "MUT-ADV-LANG-NEG"
+        reclassification: "RECLASSIFY_AS_NEGATIVE_CONTROL_FIXTURE (R4 directive Section 4)"
+        purpose: "Negative-control witness: confirms the negation-aware advice-language check does NOT fire on the allowed phrase 'not bullish'. By design it must produce NO_FAILURE, so it cannot be a canonical mutation (canonical mutations must carry a non-null expected_failure_code)."
+        owner: "VTA Phase 3 fixture design"
+        retention_rationale: "Negative-control semantics are preserved here without violating the mutation contract; the canonical VC-REQ007-NEGATION positive path is already covered by FX-NEG-POS-NOT-BULLISH-ALLOWED."
+
+      # ---------- 2 mutation witnesses ----------
+
+      - witness_id: MUT-ROUND-DRIFT
+        witness_kind: MUTATION
+        target_VC_ids: ["VC-ROUND-DRIFT-1"]
+        mutation_operator: NONDETERMINISTIC_ROUNDING
+        mutated_behavior: "Rounding uses thread-local RNG tie-break (non-deterministic)."
+        survivor_risk: LOW
+        expected_failure_code: ROUNDING_DRIFT
+        required_fixture_id: FX-ROUND-DRIFT-POS-001
+        isolated_from_other_failures: true
+        mandatory: OPTIONAL
+        purpose: "Mutation witness bound to out-of-scope VC-ROUND-DRIFT-1 (outside the canonical 64). Its host fixture FX-ROUND-DRIFT-POS-001 is also a witness above; the canonical ROUNDING_DRIFT code is retained for this pre-registration."
+        owner: "VTA Phase 3 fixture design"
+        retention_rationale: "Pre-registered mutation for an out-of-scope VC; retained for Phase 2B failure-mode-coverage-plan continuity."
+
+      - witness_id: MUT-BEAR-FALSE-POS
+        witness_kind: MUTATION
+        target_VC_ids: ["VC-COV-2"]
+        mutation_operator: FIRE_BEARISH_ON_BULLISH_ONLY_INPUT
+        mutated_behavior: "Bearish detector returns non-NOT_PRESENT on bullish-only input."
+        survivor_risk: HIGH
+        expected_failure_code: BEARISH_FALSE_POSITIVE
+        required_fixture_id: FX-COV-2-NEG-BEARISH-FROM-ABSENCE
+        isolated_from_other_failures: true
+        purpose: "Mutation witness for VC-COV-2. VC-COV-2's canonical negative-path coverage is carried by the descriptive fixture FX-COV-2-NEG-BEARISH-FROM-ABSENCE, which is referenced directly in the VC mapping; this mutation is not slotted into the VC mapping and is therefore a non-canonical witness, not a coverage contributor."
+        owner: "VTA Phase 3 fixture design"
+        retention_rationale: "Design-phase guard for the bearish-from-absence detector; preserved for traceability while the canonical negative fixture carries coverage."
 
   # ==================================================================
   # Gate (load-bearing)
@@ -4423,24 +4494,36 @@ vta_fixture_and_mutation_design:
   # Integrity summary
   # ==================================================================
   integrity_check:
-    fixture_count: 188
-    mutation_count: 36       # 24 mandatory + 5 optional LOW/negative-control + 5 bearish-design contract guards + 2 design-gate threshold/denominator guards
+    fixture_count: 184       # canonical fixtures only (R4: 4 preserved fixtures moved to noncanonical_witness_registry; FX-WRONG-SMOOTH-MUT-001 retained as canonical mutation host)
+    mutation_count: 33       # canonical mutations only (R4: 2 orphan mutations + 1 negative-control moved to noncanonical_witness_registry)
     mandatory_mutations: 24  # per failure-mode-coverage-plan: CRITICAL(5) + HIGH(13) + MEDIUM(8) - reconciliation = 24
-    optional_mutations: 10   # LOW severity + bearish-design design-phase guards + 1 negative-control (MUT-ADV-LANG-NEG)
+    optional_mutations: 9    # LOW severity + bearish-design design-phase guards + design-gate threshold/denominator guards (negative-control removed in R4)
     fixture_class_distribution:
-      POSITIVE: 66           # 65 descriptive per-VC + 1 preserved out-of-scope (FX-ROUND-DRIFT-POS-001)
+      POSITIVE: 65           # 65 descriptive per-VC POSITIVE records
       BOUNDARY: 49           # descriptive per-VC boundary fixtures
       NEGATIVE: 69           # descriptive per-VC negative fixtures
-      MUTATION: 1            # FX-WRONG-SMOOTH-MUT-001 (most mutations live in the mutations: block, not fixtures)
-      INTEGRATION: 3         # preserved cross-mode / Phase 6 sweeps
+      MUTATION: 1            # FX-WRONG-SMOOTH-MUT-001 (canonical host for canonical mutation MUT-WRONG-SMOOTH)
+      # R4: INTEGRATION (FX-MODE-KERNEL-INT-001, FX-VAL-BOUND-POS-001,
+      # FX-VAL-OVERRIDE-POS-001) and out-of-scope POSITIVE (FX-ROUND-DRIFT-POS-001)
+      # moved to noncanonical_witness_registry; they have no canonical consumer.
     VC_coverage:
       unique_VCs_with_fixture: 64
       unique_VCs_total: 64
       coverage_ratio: 64/64
     oracle_purity:
-      fixtures_with_oracle: 188/188
-      mutations_with_expected_code: 35/36   # MUT-ADV-LANG-NEG is a negative-control mutation (expected null)
-      negative_control_mutations: 1         # MUT-ADV-LANG-NEG deliberately expects no code
+      fixtures_with_oracle: 184/184
+      mutations_with_expected_code: 33/33   # R4: every canonical mutation carries a non-null expected_failure_code
+      negative_control_mutations: 0         # R4: MUT-ADV-LANG-NEG reclassified to NEGATIVE_CONTROL witness fixture
+    noncanonical_witness_accounting:
+      witness_records: 7
+      composition:
+        preserved_fixtures: 4               # FX-MODE-KERNEL-INT-001, FX-VAL-BOUND-POS-001, FX-VAL-OVERRIDE-POS-001, FX-ROUND-DRIFT-POS-001
+        negative_control_fixtures: 1        # FX-ADV-LANG-NEG-CONTROL (prior identity MUT-ADV-LANG-NEG)
+        mutation_witnesses: 2               # MUT-ROUND-DRIFT, MUT-BEAR-FALSE-POS
+      retained_as_canonical_mutation_host: 1  # FX-WRONG-SMOOTH-MUT-001 (referenced by canonical MUT-WRONG-SMOOTH)
+      counted_as_fixture_coverage: false
+      counted_as_mutation_coverage: false
+      subject_to_orphan_gate: false
     canonical_inputs:
       verifier_obligation_matrix: "phase2B/manifests/verifier-obligation-matrix.yaml"
       failure_mode_coverage_plan: "phase2B/manifests/failure-mode-coverage-plan.yaml"
@@ -4458,6 +4541,24 @@ vta_fixture_and_mutation_design:
       preserved in those records) or retained as documented redundant
       witnesses (FX-MODE-KERNEL-INT-001, FX-VAL-BOUND-POS-001,
       FX-VAL-OVERRIDE-POS-001) and pre-registrations (FX-ROUND-DRIFT-POS-001).
+    review_R4_witness_separation: >
+      R3 incorrectly kept 4 registry-internal fixtures with no canonical
+      consumer, plus FX-WRONG-SMOOTH-MUT-001 (which IS referenced via the
+      canonical mutation MUT-WRONG-SMOOTH and was therefore correctly
+      canonical but mislabeled an orphan), plus 2 orphan mutations, and
+      1 negative-control (MUT-ADV-LANG-NEG) inside the canonical
+      fixture/mutation blocks while simultaneously claiming an empty orphan
+      gate, which was self-contradictory. R4 moves all 8 records into
+      noncanonical_witness_registry (this file) where they are documented as
+      witnesses with counted_as_fixture_coverage=false,
+      counted_as_mutation_coverage=false, and subject_to_orphan_gate=false.
+      The canonical registries now contain only records referenced by a
+      canonical consumer (vta-VC-to-verifier-mapping.yaml) plus the mutation
+      hosts those mutations reference; the orphan gate is therefore genuinely
+      empty rather than asserted empty. MUT-ADV-LANG-NEG is reclassified as the
+      NEGATIVE_CONTROL witness fixture FX-ADV-LANG-NEG-CONTROL (expected
+      behavior NO_FAILURE) so the mutation contract
+      (mutations_without_expected_code: []) holds without exception.
     status: PASS
 
   # ==================================================================
@@ -4509,12 +4610,45 @@ vta_fixture_and_mutation_design:
         # (FX-ROUND-DRIFT-POS-001 for VC-ROUND-DRIFT-1).
       renamed_one_to_one: 35
       split_one_to_many: 35
+        # 14 one-to-many SPLIT decisions producing 35 canonical IDs
+        # (i.e. 21 net-new records beyond the source).
       create_new_descriptive: 113
-      legacy_fixtures_superseded_and_removed: 0
-        # Zero: every legacy numbered fixture's semantics are preserved
-        # in at least one canonical descriptive record. The numbered IDs
-        # themselves no longer appear in the registry, but the test
-        # obligations they encoded are fully represented.
+      legacy_fixtures_superseded_and_removed: 3
+        # Three pre-R3 numbered fixtures are fully superseded by descriptive
+        # records: their semantics are preserved in those descriptive records
+        # but the numbered ID itself no longer appears in the registry:
+        #   FX-BEARISH-DESIGN-4-POS-001  -> FX-BEARISH-DESIGN-4-POS-DENOMINATOR-FROZEN (via FX-BEARISH-DESIGN-POS-001 split)
+        #   FX-CHANNEL-2-POS-001         -> FX-CHANNEL-2-POS-THRESHOLD-FROZEN      (via FX-CHANNEL-POS-001 split)
+        #   FX-FAB-VAL-POS-001           -> FX-NO-FAB-POS-CLEAN                     (created from VC mapping)
+        # They are documented below as REMOVE_INVALID_REFERENCE decisions.
+    # ----------------------------------------------------------------
+    # R4 identity-level migration accounting (directive Section 5)
+    # ----------------------------------------------------------------
+    # Required identity equation:  57 + records_added - records_removed = 188
+    # Satisfied:                    57 + 134        - 3               = 188
+    #   records_added   = 113 (CREATE_MISSING_DESIGN_RECORD) + 21 (SPLIT extras)
+    #   records_removed = 3   (REMOVE_INVALID_REFERENCE)
+    # PRESERVE actions carry net_record_change: 0 (they keep an existing record).
+    # MAP_TO_EXISTING_FIXTURE carries net_record_change: 0 (rename, 1->1 identity).
+    # ----------------------------------------------------------------
+    identity_accounting:
+      prior_fixture_records: 57
+      records_added: 134
+      records_removed: 3
+      net_record_change: 131
+      final_fixture_records: 188
+      equation_valid: true                  # 57 + 134 - 3 = 188
+      unexplained_new_records: 0
+      unresolved_source_IDs: []
+      semantic_loss: false
+      canonical_records_after_R4_witness_separation: 184
+        # 188 R3 records minus 4 records relocated to
+        # noncanonical_witness_registry in R4. FX-WRONG-SMOOTH-MUT-001 is
+        # retained as a canonical record because it is referenced by the
+        # canonical mutation MUT-WRONG-SMOOTH (canonical-consumer chain
+        # VC-WRONG-SMOOTH-1.mutation_fixture_ids -> MUT-WRONG-SMOOTH ->
+        # required_fixture_id). The canonical orphan gate now operates
+        # over these 184 canonical records.
     records:
       - legacy_or_noncanonical_ID: FX-ACTIVE-VALID-POS-001
         canonical_fixture_IDs:
@@ -5709,6 +5843,103 @@ vta_fixture_and_mutation_design:
         rationale: 'INTEGRATION-class positive witness for VC-VAL-OVERRIDE-1; redundant alongside the descriptive FX-VAL-OVERRIDE-POS-NO-WRITE-PATH.'
         semantic_loss: false
 
+      # ------------------------------------------------------------
+      # R4: REMOVE_INVALID_REFERENCE decisions (directive Section 5).
+      # Three pre-R3 numbered fixtures are fully superseded by
+      # descriptive records; the numbered ID is removed from the
+      # canonical registry (records_removed: 1 each, records_added: 0).
+      # Their test obligations are preserved in the canonical IDs listed.
+      # ------------------------------------------------------------
+      - legacy_or_noncanonical_ID: FX-BEARISH-DESIGN-4-POS-001
+        canonical_fixture_IDs:
+          - FX-BEARISH-DESIGN-4-POS-DENOMINATOR-FROZEN
+        resolution: REMOVE_INVALID_REFERENCE
+        records_added: 0
+        records_removed: 1
+        net_record_change: -1
+        semantic_equivalence: 'Test obligation of FX-BEARISH-DESIGN-4-POS-001 is carried by FX-BEARISH-DESIGN-4-POS-DENOMINATOR-FROZEN (materialized via the FX-BEARISH-DESIGN-POS-001 SPLIT decision and separately covered by the canonical VC-BEARISH-DESIGN-4 mapping).'
+        rationale: 'Pre-R3 record fully superseded; numbered ID no longer appears in the canonical registry.'
+        semantic_loss: false
+
+      - legacy_or_noncanonical_ID: FX-CHANNEL-2-POS-001
+        canonical_fixture_IDs:
+          - FX-CHANNEL-2-POS-THRESHOLD-FROZEN
+        resolution: REMOVE_INVALID_REFERENCE
+        records_added: 0
+        records_removed: 1
+        net_record_change: -1
+        semantic_equivalence: 'Test obligation of FX-CHANNEL-2-POS-001 is carried by FX-CHANNEL-2-POS-THRESHOLD-FROZEN (materialized via the FX-CHANNEL-POS-001 SPLIT decision and separately covered by the canonical VC-CHANNEL-2 mapping).'
+        rationale: 'Pre-R3 record fully superseded; numbered ID no longer appears in the canonical registry.'
+        semantic_loss: false
+
+      - legacy_or_noncanonical_ID: FX-FAB-VAL-POS-001
+        canonical_fixture_IDs:
+          - FX-NO-FAB-POS-CLEAN
+        resolution: REMOVE_INVALID_REFERENCE
+        records_added: 0
+        records_removed: 1
+        net_record_change: -1
+        semantic_equivalence: 'Test obligation of FX-FAB-VAL-POS-001 (no fabricated values on a clean positive input) is carried by the canonical positive fixture FX-NO-FAB-POS-CLEAN referenced by VC-FAB-VAL-1.'
+        rationale: 'Pre-R3 record fully superseded; numbered ID no longer appears in the canonical registry.'
+        semantic_loss: false
+
+    # ----------------------------------------------------------------
+    # Per-action aggregate accounting (directive Section 5).
+    # Each canonical-resolution action class declares its
+    # records_added / records_removed / net_record_change, and the
+    # identity equation 57 + added - removed = 188 closes exactly.
+    # ----------------------------------------------------------------
+    action_accounting:
+      MAP_TO_EXISTING_FIXTURE:
+        decisions: 35
+        records_added: 0          # 1->1 rename; canonical record replaces numbered record (same identity)
+        records_removed: 0
+        net_record_change: 0
+        semantics: 'One legacy numbered fixture renamed to one canonical descriptive ID. No net change.'
+      SPLIT_FROM_EXISTING_FIXTURE:
+        decisions: 14
+        records_added: 21         # 14 source fixtures -> 35 canonical IDs; 35-14 = 21 net-new records
+        records_removed: 0
+        net_record_change: 21
+        semantics: 'One legacy numbered fixture (shared across multiple VCs) split into multiple per-VC descriptive IDs.'
+      CREATE_MISSING_DESIGN_RECORD:
+        decisions: 113
+        records_added: 113        # each decision synthesizes exactly one new canonical record
+        records_removed: 0
+        net_record_change: 113
+        semantics: 'A VC-mapping reference with no prior numbered source; one new canonical record synthesized from the owning VC-mapping entry.'
+      PRESERVE_AS_IS:
+        decisions: 2
+        records_added: 0          # records preserved unchanged (FX-WRONG-SMOOTH-MUT-001, FX-ROUND-DRIFT-POS-001)
+        records_removed: 0
+        net_record_change: 0
+        semantics: >
+          Existing record preserved verbatim. FX-WRONG-SMOOTH-MUT-001 stays
+          in the canonical fixture block (it is the canonical mutation host
+          for MUT-WRONG-SMOOTH, referenced via
+          VC-WRONG-SMOOTH-1.mutation_fixture_ids). FX-ROUND-DRIFT-POS-001 is
+          preserved as a non-canonical witness (no canonical consumer; lives
+          in noncanonical_witness_registry).
+      PRESERVE_AS_REDUNDANT_WITNESS:
+        decisions: 3
+        records_added: 0          # record preserved as documented redundant witness (FX-MODE-KERNEL-INT-001, FX-VAL-BOUND-POS-001, FX-VAL-OVERRIDE-POS-001)
+        records_removed: 0
+        net_record_change: 0
+        semantics: 'Existing record preserved as documented redundant witness alongside a per-VC descriptive record. (R4: all three now live in noncanonical_witness_registry.)'
+      REMOVE_INVALID_REFERENCE:
+        decisions: 3              # R4: pre-R3 numbered fixtures fully superseded (FX-BEARISH-DESIGN-4-POS-001, FX-CHANNEL-2-POS-001, FX-FAB-VAL-POS-001)
+        records_added: 0
+        records_removed: 3        # numbered ID removed; obligation preserved in a canonical descriptive record
+        net_record_change: -3
+        semantics: 'Pre-R3 numbered fixture fully superseded by a canonical descriptive record; numbered ID removed from registry.'
+      totals:
+        decisions: 170            # 167 prior + 3 REMOVE_INVALID_REFERENCE added in R4
+        records_added: 134        # 113 (CREATE) + 21 (SPLIT extras)
+        records_removed: 3
+        net_record_change: 131
+        equation: '57 + 134 - 3 = 188'
+        equation_valid: true
+
   # ==================================================================
   # VC fixture coverage reconciliation (Phase 3 implementation review-R3)
   # ------------------------------------------------------------------
@@ -5747,9 +5978,12 @@ vta_fixture_and_mutation_design:
         Post-R3 every VC's positive path is carried by a dedicated
         per-VC descriptive POSITIVE (or BOUNDARY) record.
       shared_witness_fixture_ids:
-        - FX-MODE-KERNEL-INT-001   # redundant cross-mode integration sweep (preserved)
-        - FX-VAL-BOUND-POS-001     # redundant valuation-bound integration sweep (preserved)
-        - FX-VAL-OVERRIDE-POS-001  # redundant positive witness for VC-VAL-OVERRIDE-1 (preserved)
+        # R4: these three are preserved as NON-CANONICAL witnesses
+        # (see noncanonical_witness_registry). They are not part of the
+        # canonical fixture registry and therefore not counted as coverage.
+        - FX-MODE-KERNEL-INT-001   # redundant cross-mode integration sweep (witness)
+        - FX-VAL-BOUND-POS-001     # redundant valuation-bound integration sweep (witness)
+        - FX-VAL-OVERRIDE-POS-001  # redundant positive witness for VC-VAL-OVERRIDE-1 (witness)
 
     boundary_path:
       covered: 47/64
@@ -5786,15 +6020,27 @@ vta_fixture_and_mutation_design:
     orphan_fixture_ids: 0
     orphan_fixture_id_list: []
     orphan_note: >
-      R3 gate: every fixture in this registry is referenced by at least one
-      canonical mapping. The 5 preserved-as-witness fixtures
-      (FX-WRONG-SMOOTH-MUT-001, FX-ROUND-DRIFT-POS-001, FX-MODE-KERNEL-INT-001,
-      FX-VAL-BOUND-POS-001, FX-VAL-OVERRIDE-POS-001) are explicitly
-      documented in fixture_ID_migration.records with resolution
-      PRESERVE_AS_IS or PRESERVE_AS_REDUNDANT_WITNESS and serve a
-      registry-internal role; the 183 descriptive records are each
-      referenced by exactly one VC-mapping slot. Confirmed by structured
-      YAML parse (see /tmp/vta_verify.py output: 0 orphans).
+      R4 gate: every fixture in the CANONICAL fixture registry is referenced
+      by at least one canonical consumer, where a canonical consumer is
+      EITHER a direct VC mapping slot (positive/boundary/negative/
+      mutation_fixture_ids in vta-VC-to-verifier-mapping.yaml) OR an
+      indirect reference via a canonical mutation's required_fixture_id
+      where that mutation is itself referenced by a VC mapping slot. The 4
+      records that R3 had kept inside the canonical fixture block while
+      calling them "preserved witnesses" despite having NO canonical
+      consumer (FX-ROUND-DRIFT-POS-001, FX-MODE-KERNEL-INT-001,
+      FX-VAL-BOUND-POS-001, FX-VAL-OVERRIDE-POS-001) are relocated in R4 to
+      the noncanonical_witness_registry, where counted_as_fixture_coverage
+      is false and subject_to_orphan_gate is false. The fifth record R3 had
+      lumped in with them (FX-WRONG-SMOOTH-MUT-001) is NOT orphan: it is
+      referenced via the canonical mutation MUT-WRONG-SMOOTH
+      (VC-WRONG-SMOOTH-1.mutation_fixture_ids -> MUT-WRONG-SMOOTH ->
+      required_fixture_id), so it stays in the canonical fixture block as a
+      documented mutation-host record. With the 4 witness fixtures out of
+      the canonical registry, the orphan gate is genuinely empty over the
+      184 canonical fixtures rather than asserted empty. Confirmed by
+      structured YAML parse (see verification gate in
+      reports/vta-phase-3-implementation-review.md Section 14D).
 
     non_isolated_mutations: 0
     reconciliation_status: PASS
