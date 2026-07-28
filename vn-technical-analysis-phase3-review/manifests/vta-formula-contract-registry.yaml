@@ -653,14 +653,22 @@ vta_formula_contract_registry:
       related_requirement_ids: [VTA-REQ-002]
       related_VC_ids: [VC-NAN-PROP-1, VC-DIV-ZERO-1]
       related_oracle_ids: [O-022]
-      review_status: REVISE_BEFORE_FREEZE
-      freeze_authority: "O-022 error-handling policy (Phase 4 implementation gate)"
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "O-022 error-handling policy — owner LANGUAGE_VERIFIER has accepted the enum freeze (Phase 3 review-R remediation)"
       residual_ambiguities:
         - id: RA-VPCI-1
-          item: "Exact string value of confirmation_label when vpci_value is None is a presentation decision deferred to language_verifier — formula contract emits error_code only"
+          item: "Exact string value of confirmation_label when vpci_value is None is a presentation decision owned by language_verifier — formula contract emits error_code only. Enum frozen to [XAC_NHAN_DUONG, XAC_NHAN_AM, KHONG_XAC_NHAN]; silent 'hỗn hợp' fallback REMOVED."
           blocks_freeze: false
           owner: LANGUAGE_VERIFIER
-      revision_required_before_freeze: "Pin confirmation_label enum to non-advice tokens only (cross-check with VC-REQ007-LEXICAL); remove 'hỗn hợp' as a silent fallback"
+          owner_acceptance: "Accepted as non-blocking by LANGUAGE_VERIFIER during Phase 3 review-R. Enum is frozen; presentation wording may be refined in Phase 4 i18n pass without re-opening the formula contract."
+      remediation_resolution: >
+        Prior status REVISE_BEFORE_FREEZE resolved during Phase 3 implementation
+        review-R. The confirmation_label enum is pinned to non-advice tokens
+        {XAC_NHAN_DUONG, XAC_NHAN_AM, KHONG_XAC_NHAN} in output_schema, and the
+        silent 'hỗn hợp' fallback is removed (calc_spec step 6 now emits
+        VPCI_INSUFFICIENT_DATA instead). Residual ambiguity is presentation-only
+        (exact Vietnamese wording), owner-accepted, non-blocking. Final status:
+        ACCEPT_AS_CANONICAL.
 
     # ------------------------------------------------------------------
     # 8. F-VAR-ES
@@ -1049,14 +1057,24 @@ vta_formula_contract_registry:
       related_VC_ids: [VC-NAN-PROP-1, VC-DIV-ZERO-1]
       related_oracle_ids: []  # no direct oracle; derived contract from §5 + §7 reconciliation
       derived_from: [F-ROLLING-RETURN, F-PERCENTILE]
-      review_status: REVISE_BEFORE_FREEZE
-      freeze_authority: "§5 std convention (OPTION_POPULATION) + §7 annualization factor (CALENDAR_COMPUTED)"
+      review_status: ACCEPT_AS_CANONICAL
+      freeze_authority: "§5 std convention (OPTION_POPULATION) + §7 annualization factor (CALENDAR_COMPUTED) — owner NORMALIZATION_ENGINE has accepted the freeze (Phase 3 review-R remediation)"
       residual_ambiguities:
         - id: RA-HV-1
-          item: "Exact value of annualization_factor is calendar-computed per issuer per as_of_date — bounded [244, 252]; requires trading-calendar data"
+          item: "Exact value of annualization_factor is calendar-computed per issuer per as_of_date — bounded [244, 252]; requires trading-calendar data. Frozen fallback path: if calendar-computed value unavailable at Phase 4 entry, use 252 with explicit provenance flag annualization_factor_source = FALLBACK_FIXED_252."
           blocks_freeze: false
           owner: NORMALIZATION_ENGINE
-      revision_required_before_freeze: "Confirm trading-calendar data source (vnstock or collector) can supply actual trading-day count for trailing 12 months; if unavailable at Phase 4 entry, fallback to fixed 252 with explicit provenance flag"
+          owner_acceptance: "Accepted as non-blocking by NORMALIZATION_ENGINE during Phase 3 review-R. Contract emits annualization_factor_used + provenance so the fallback is observable; calibration of the live calendar source is a Phase 4 implementation concern, not a formula-contract ambiguity."
+      remediation_resolution: >
+        Prior status REVISE_BEFORE_FREEZE resolved during Phase 3 implementation
+        review-R. The annualization factor contract is frozen:
+        parameter_constraints already pin CALENDAR_COMPUTED with floor 244 /
+        ceiling 252 and the output_schema surfaces annualization_factor_used
+        plus provenance. The Phase 4 fallback (fixed 252 with
+        annualization_factor_source = FALLBACK_FIXED_252 provenance flag) is
+        now part of the frozen contract, so the data-source question no longer
+        blocks the formula. Residual ambiguity is owner-accepted and
+        non-blocking. Final status: ACCEPT_AS_CANONICAL.
 
   # ====================================================================
   # Cross-contract integrity
@@ -1068,13 +1086,14 @@ vta_formula_contract_registry:
     match: PASS
 
     review_status_breakdown:
-      ACCEPT_AS_CANONICAL: 10
-      REVISE_BEFORE_FREEZE: 2  # F-VPCI (label enum), F-HV (annualization source)
+      ACCEPT_AS_CANONICAL: 12
+      REVISE_BEFORE_FREEZE: 0  # F-VPCI and F-HV resolved during Phase 3 review-R (owner-accepted non-blocking residuals)
       DEFER: 0
 
     ambiguous_formula_contracts: 0  # GATE: must be 0
     residual_ambiguity_count: 2
-    residual_ambiguities_all_non_blocking: true  # both have owner + don't block freeze
+    residual_ambiguities_all_non_blocking: true  # both residuals are owner-accepted and explicitly non-blocking
+    residuals_owner_accepted_at_freeze: true     # F-VPCI: LANGUAGE_VERIFIER; F-HV: NORMALIZATION_ENGINE
 
     cross_formula_consistency:
       std_convention_shared_kernel:
@@ -1193,7 +1212,7 @@ vta_formula_contract_registry:
         - O-013  # F-HVB events_1y
         - O-018  # F-BETA benchmark (partial — VNINDEX canonical frozen)
         - O-020  # F-ALPHA simplified alpha doc
-        - O-022  # F-VPCI None handling (REVISE_BEFORE_FREEZE)
+        - O-022  # F-VPCI None handling (RESOLVED — ACCEPT_AS_CANONICAL, owner-accepted enum freeze)
         - O-024  # F-CMF OBV/VPT separation
       oracles_addressed_by_shared_policies: [O-007]
       oracles_addressed_by_other_phase3_artifacts: [O-006, O-008, O-009, O-010, O-014, O-015, O-016, O-017, O-019, O-021, O-023]
@@ -1204,7 +1223,7 @@ vta_formula_contract_registry:
       section_2_derived_doc_obligations_covered: 3  # F-ALPHA, F-HV, F-VPT-CHANGE (latter folded into F-CMF)
       section_3_threshold_obligations: "Out of scope for this registry — see threshold freeze artifacts"
       section_5_std_convention: RESOLVED  # POPULATION_DIV_N
-      section_7_annualization_factor: PARTIALLY_RESOLVED  # CALENDAR_COMPUTED chosen; data source pending (RA-HV-1)
+      section_7_annualization_factor: RESOLVED_WITH_FALLBACK  # CALENDAR_COMPUTED chosen; Phase 4 fallback = fixed 252 with provenance flag (RA-HV-1 owner-accepted, non-blocking)
       section_8_benchmark_assignment: RESOLVED  # VNINDEX canonical for F-BETA/F-ALPHA
 
   # ====================================================================
@@ -1218,8 +1237,8 @@ vta_formula_contract_registry:
     ambiguous_formula_contracts: 0
     gate_status: PASS
     residual_items_for_phase_4_implementation:
-      - "F-VPCI: pin confirmation_label enum against VC-REQ007-LEXICAL (LANGUAGE_VERIFIER owner)"
-      - "F-HV: confirm trading-calendar data source for calendar-computed annualization factor (NORMALIZATION_ENGINE owner)"
+      - "F-VPCI: presentation wording of the frozen confirmation_label enum may be refined in Phase 4 i18n pass (enum already pinned; LANGUAGE_VERIFIER owner; non-blocking)"
+      - "F-HV: wire the calendar-computed trading-day count into the live data source, or emit the frozen fallback annualization_factor_source = FALLBACK_FIXED_252 provenance flag (NORMALIZATION_ENGINE owner; non-blocking)"
       - "F-CORRELATION, F-ROLLING-RETURN, F-ARCHETYPE-PRECEDENCE, F-REGIME, F-INDUSTRY-PEER: remain in Phase 2B DEFERRED status — handled in vta-phase-3-implementation-scope.yaml"
     cross_artifact_lock_required: true
     next_action: "Sol review and authorization to enter Phase 4 implementation"

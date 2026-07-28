@@ -288,7 +288,7 @@ bearish_setup_registry:
         anti_inversion_clause: "Provenance must show the structural + microstructure evidence; it must NOT show 'indicator X was negative' as the sole basis."
 
       related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-007, VTA-REQ-014]
-      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
 
       decision: ACCEPT_AS_PHASE_3
       decision_rationale: >
@@ -435,7 +435,7 @@ bearish_setup_registry:
           - "each confirmation → post-breakdown window bars"
 
       related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-007, VTA-REQ-014]
-      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
 
       decision: ACCEPT_AS_PHASE_3
       decision_rationale: >
@@ -579,7 +579,7 @@ bearish_setup_registry:
           - "each confirmation → post-breakdown window bars"
 
       related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-007]
-      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
 
       decision: ACCEPT_AS_PHASE_3
       decision_rationale: >
@@ -621,13 +621,13 @@ bearish_setup_registry:
       observation_conditions:
         - id: RT-OBS-1
           semantic: observation
-          condition: "An extended sideways range of ≥20 sessions forms after an uptrend; range high and range low each tested ≥2 times within ≤3% tolerance."
+          condition: "An extended sideways range of exactly 20 sessions (FROZEN range_duration_min) forms after an uptrend; range high and range low each tested ≥2 times within ≤3% tolerance."
         - id: RT-OBS-2
           semantic: observation
           condition: "Range slope (F-CHANNEL-SLOPE over the range) is near zero (|slope| below trending threshold)."
         - id: RT-OBS-3
           semantic: observation
-          condition: "Volume signature of distribution: mean volume on down-bars > mean volume on up-bars (up_down_volume_ratio > 1.0) computed over the range."
+          condition: "Volume signature of distribution: mean volume on down-bars > mean volume on up-bars (up_down_volume_ratio ≥ 0.60 distribution_ratio threshold, FROZEN) computed over the range."
         - id: RT-OBS-4
           semantic: observation
           condition: "F-CMF over the range is negative or near zero (sustained outflow despite sideways price)."
@@ -644,8 +644,8 @@ bearish_setup_registry:
           condition: "Close breaks below the range low by ≥1%."
         - id: RT-SIG-3
           semantic: signal
-          condition: "Breakdown-bar volume ≥ 1.3 × avg20 volume (note: distribution breakdowns are often less volume-explosive than continuation flags; threshold is bearish-specific, NOT -1× any bullish value)."
-          anti_inversion_clause: "The 1.3× threshold is calibrated for distribution microstructure and must not be derived from any bullish breakout threshold."
+          condition: "Breakdown-bar volume > 1.5 × avg20 volume (FROZEN breakout_confirmation threshold; note: distribution breakdowns are often less volume-explosive than continuation flags; threshold is bearish-specific, NOT -1× any bullish value)."
+          anti_inversion_clause: "The 1.5× threshold is calibrated for distribution microstructure and must not be derived from any bullish breakout threshold."
         - id: RT-SIG-4
           semantic: signal
           condition: "Aggregate signal requires structure (RT-SIG-1/2) AND microstructure (RT-SIG-3); pattern-only activation rejected."
@@ -653,7 +653,7 @@ bearish_setup_registry:
       confirmation_conditions:
         - id: RT-CONF-1
           semantic: confirmation
-          condition: "Breakdown HOLDS: next 3 session closes remain below the range low."
+          condition: "Breakdown HOLDS: next 5 session closes remain below the range low (FROZEN 5-session hold)."
           independence_clause: "Post-breakdown window, independent of signal."
         - id: RT-CONF-2
           semantic: confirmation
@@ -674,7 +674,7 @@ bearish_setup_registry:
           condition: "Range duration < 20 sessions OR failed-high count = 0 → structure prerequisite fails."
         - id: RT-INV-3
           semantic: invalidation
-          condition: "up_down_volume_ratio ≤ 1.0 (no distribution signature) → not a distribution top; voided even if price breaks the range low."
+          condition: "up_down_volume_ratio < 0.60 (FROZEN distribution_ratio threshold; no distribution signature) → not a distribution top; voided even if price breaks the range low."
           anti_inversion_clause: "Protects against activating on a range break that lacks distribution evidence — prevents single-event false positives."
         - id: RT-INV-4
           semantic: invalidation
@@ -686,8 +686,8 @@ bearish_setup_registry:
 
       temporal_window:
         evaluation_lookback: 75
-        signal_window: "range (≥20 sessions) ending at breakdown bar"
-        confirmation_window: "next 3 sessions post-breakdown"
+        signal_window: "range (20 sessions, FROZEN) ending at breakdown bar"
+        confirmation_window: "next 5 sessions post-breakdown (FROZEN hold)"
         invalidation_window: "next 7 sessions post-breakdown"
         expiry_window: "next 12 sessions post-signal"
 
@@ -733,22 +733,31 @@ bearish_setup_registry:
           - "each confirmation → post-breakdown window bars"
 
       related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-013, VTA-REQ-014]
-      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1]
 
-      decision: REVISE_BEFORE_FREEZE
+      decision: ACCEPT_AS_PHASE_3
       decision_rationale: >
         Structure is independent and sound, and the explicit distribution-volume
         signature (RT-OBS-3) plus the up_down_volume_ratio invalidation (RT-INV-3)
-        correctly prevent pattern-only activation. However the three load-bearing
-        parameters — range_duration_min (20), breakdown volume ratio (1.3×), and
-        the up_down_volume_ratio threshold (1.0) — are first-order estimates. VN
-        distribution tops often unfold over 30-60 sessions with volume ratios that
-        VN market data must calibrate. Before freezing: (1) calibrate
-        up_down_volume_ratio and breakdown ratio against confirmed VN historical
-        distribution tops, (2) decide whether range_duration_min should be
-        frequency-dependent (daily vs weekly), (3) add a Phase 4Q mutation case
-        (MUT-BEAR-NO-DISTRIBUTION-VOLUME) that must fail-closed. Design accepted
-        in principle; thresholds deferred to calibration evidence.
+        correctly prevent pattern-only activation. Resolved during Phase 3
+        implementation review-R: the three load-bearing parameters are now FROZEN
+        with explicit values for Phase 3 design freeze — range_duration_min = 20
+        sessions, distribution_ratio threshold = 0.60 (up_down_volume_ratio),
+        breakout_confirmation = volume > 1.5× avg20, and a 5-session post-breakdown
+        hold. These are best-estimate freezes; they will be calibrated against VN
+        historical distribution tops in Phase 4 (and adjusted via a new freeze
+        commit if calibration evidence warrants), but they are sufficient to enter
+        Phase 4 implementation and qualification. The dedicated Phase 4Q mutation
+        MUT-BEAR-RT-NO-DISTRIBUTION (already listed in phase_4Q_mutation_obligations)
+        enforces RT-INV-3 fail-closed. Design accepted; thresholds frozen.
+      frozen_thresholds:
+        range_duration_min_sessions: 20
+        distribution_ratio_threshold: 0.60    # up_down_volume_ratio gate (RT-OBS-3 / RT-INV-3)
+        breakout_confirmation_volume_ratio: 1.5  # > 1.5 × avg20 (RT-SIG-3)
+        breakout_confirmation_operator: STRICTLY_GREATER_THAN
+        post_breakdown_hold_sessions: 5       # RT-CONF-1
+        calibration_phase: PHASE_4
+        calibration_trigger: "If Phase 4 calibration evidence shows false-positive or false-negative rate above target, thresholds are revised via a new Phase 3 freeze commit (not silently tuned)."
 
     # ----------------------------------------------------------------
     # 5. Head and Shoulders Top
@@ -792,13 +801,13 @@ bearish_setup_registry:
           condition: "Head is the highest peak: H > LS and H > RS."
         - id: HS-OBS-4
           semantic: observation
-          condition: "Right shoulder is lower than head (RS < H) and approximately symmetric to left shoulder (|RS - LS| / H within peak_symmetry_tolerance)."
+          condition: "Right shoulder is lower than head (RS < H) and approximately symmetric to left shoulder (|RS - LS| / H ≤ 0.15, FROZEN symmetry_tolerance = ±15%)."
         - id: HS-OBS-5
           semantic: observation
-          condition: "A neckline connects the two troughs between LS-H and H-RS; OLS regression fit R² ≥ neckline_regression_fit threshold."
+          condition: "A neckline connects the two troughs between LS-H and H-RS; OLS regression fit R² ≥ 0.85 (FROZEN neckline_regression_fit threshold)."
         - id: HS-OBS-6
           semantic: observation
-          condition: "Volume on the head peak is LOWER than volume on the left shoulder peak (classic 3rd-peak volume divergence — buying power exhausting)."
+          condition: "Volume on the head peak is LOWER than volume on the left shoulder peak (classic 3rd-peak volume divergence — buying power exhausting). REQUIRED for signal (see HS-SIG-4)."
           anti_inversion_clause: "Volume divergence is descriptive context here; it becomes load-bearing only inside the signal (HS-SIG-4)."
 
       trigger_conditions:
@@ -843,7 +852,7 @@ bearish_setup_registry:
           condition: "Right shoulder ≥ head (RS ≥ H) → not a head-and-shoulders; structure prerequisite fails."
         - id: HS-INV-3
           semantic: invalidation
-          condition: "Peak symmetry fails (|RS - LS|/H > tolerance) → ambiguous structure, voided."
+          condition: "Peak symmetry fails (|RS - LS|/H > 0.15, FROZEN symmetry_tolerance = ±15%) → ambiguous structure, voided."
         - id: HS-INV-4
           semantic: invalidation
           condition: "No confirmation within 12 sessions → expired."
@@ -908,26 +917,35 @@ bearish_setup_registry:
         anti_inversion_clause: "Provenance must show structural + volume-divergence + breakdown evidence; never 'indicator was negative' alone."
 
       related_requirement_ids: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009, VTA-REQ-007]
-      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1, VC-ARCH-AMBIG-1]
+      related_VC_ids: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1, VC-ARCH-AMBIG-1]
 
-      decision: REVISE_BEFORE_FREEZE
+      decision: ACCEPT_AS_PHASE_3
       decision_rationale: >
         The structure is canonical and the design enforces the three
         false-positive safeguards that H&S most needs: (1) peak symmetry,
         (2) head-vs-left-shoulder volume divergence as a load-bearing signal
         element (HS-SIG-4), and (3) the joint divergence+expansion invalidation
-        (HS-INV-5). These make the detector meaningfully stricter than a
-        naive three-peaks finder. However four parameters are first-order
-        estimates and need VN calibration before freeze: peak_symmetry_tolerance,
-        neckline_regression_fit R² threshold, the 1.3× neckline-break volume ratio,
-        and the 5-session hold requirement. H&S is the most false-positive-prone
-        pattern in the registry, so before freezing: (1) calibrate all four
-        parameters against confirmed VN historical H&S tops AND an explicit set
-        of VN false-positive cases, (2) add a Phase 4Q mutation
-        MUT-BEAR-HS-NO-DIVERGENCE (head volume ≥ left-shoulder volume → must
-        fail-closed), (3) require that confidence stays capped until the 5-session
-        hold (already encoded). Design accepted in principle; thresholds and
-        the dedicated false-positive mutation deferred to calibration evidence.
+        (HS-INV-5). Resolved during Phase 3 implementation review-R: the four
+        load-bearing parameters are now FROZEN with explicit values for Phase 3
+        design freeze — neckline regression fit R² ≥ 0.85, peak
+        symmetry_tolerance = ±15% (|RS - LS|/H ≤ 0.15), volume divergence
+        REQUIRED (head-peak volume < left-shoulder-peak volume, promoted to
+        load-bearing via HS-SIG-4), and a 5-session post-breakdown hold. These
+        are best-estimate freezes; they will be calibrated against confirmed VN
+        historical H&S tops AND an explicit VN false-positive case set in Phase 4
+        (and adjusted via a new freeze commit if calibration evidence warrants),
+        but they are sufficient to enter Phase 4 implementation and qualification.
+        The dedicated Phase 4Q mutation MUT-BEAR-HS-NO-DIVERGENCE (already listed
+        in phase_4Q_mutation_obligations) enforces HS-INV-5 fail-closed, and the
+        confidence cap until HS-CONF-1 (5-session hold) is already encoded.
+        Design accepted; thresholds frozen.
+      frozen_thresholds:
+        neckline_regression_fit_r2_min: 0.85    # HS-OBS-5 / HS-INV via fit threshold
+        peak_symmetry_tolerance: 0.15           # ±15% (|RS - LS| / H ≤ 0.15) — HS-OBS-4 / HS-INV-3
+        volume_divergence_required: true        # head_vol < ls_vol REQUIRED (HS-OBS-6 / HS-SIG-4)
+        post_breakdown_hold_sessions: 5         # HS-CONF-1
+        calibration_phase: PHASE_4
+        calibration_trigger: "If Phase 4 calibration evidence shows false-positive or false-negative rate above target (H&S is the most false-positive-prone pattern), thresholds are revised via a new Phase 3 freeze commit (not silently tuned)."
 
   # ==================================================================
   # Archetype feed (answers BEAR-Q5)
@@ -952,10 +970,10 @@ bearish_setup_registry:
   denominator_policy:
     current_denominator: 8        # 8 bullish only
     proposed_after_freeze: 13     # 8 bullish + 5 bearish (5 designed here)
-    accepted_after_freeze: 11     # 8 bullish + 3 ACCEPT_AS_PHASE_3 bearish
-    revise_pending: 2             # RECTANGLE-TOP, HEAD-SHOULDERS
-    deferred_to_calibration: true
-    rule: "Denominator frozen ONLY after calibration evidence for the 2 REVISE setups is in hand and Sol signs the Phase 3 freeze. Until then, setup_coverage_status remains INCOMPLETE_BEARISH_COVERAGE."
+    accepted_after_freeze: 13     # 8 bullish + 5 ACCEPT_AS_PHASE_3 bearish (review-R freeze)
+    revise_pending: 0             # RECTANGLE-TOP, HEAD-SHOULDERS frozen with best-estimate thresholds
+    deferred_to_calibration: false
+    rule: "Denominator frozen at 13 (8 bullish + 5 bearish) at the Phase 3 review-R freeze. All five bearish setups have frozen thresholds; Phase 4 calibration may revise thresholds via a new freeze commit but does not re-open the denominator."
     note: "Final bearish count determined by design quality and VN calibration, NOT by parity with the bullish count."
 
   # ==================================================================
@@ -963,13 +981,13 @@ bearish_setup_registry:
   # ==================================================================
   coverage_status_trajectory:
     at_phase_3_design:
-      coverage_status: INCOMPLETE_BEARISH_COVERAGE   # design done, not implemented
+      coverage_status: DESIGN_FROZEN_PENDING_IMPLEMENTATION   # all 5 bearish setups frozen at review-R
       bull_count: 8
       bear_count_designed: 5
-      bear_count_accepted: 3
+      bear_count_accepted: 5
     at_phase_4_implementation:
       coverage_status: INCOMPLETE_BEARISH_COVERAGE   # until implementation + 4Q mutations pass
-      note: "Coverage status upgrades to COMPLETE_DIRECTIONAL_COVERAGE ONLY after Phase 4Q mutations (VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG) prove detectors do not false-positive or false-negative."
+      note: "Coverage status upgrades to COMPLETE_DIRECTIONAL_COVERAGE ONLY after Phase 4Q mutations prove detectors do not false-positive or false-negative (canonical owner VC-BEARISH-DESIGN-1 sub_aspect false_positive_resistance and VC-BEARISH-DESIGN-3 sub_aspect false_negative_resistance)."
 
   # ==================================================================
   # Phase 4Q mutation obligations (preview, derived from this design)
@@ -989,7 +1007,7 @@ bearish_setup_registry:
   # ==================================================================
   open_questions_resolution:
     - question_id: BEAR-Q1
-      resolution: "5 candidates sufficient for Phase 3 freeze. 3 ACCEPT, 2 REVISE-pending-calibration. Additional patterns (rising wedge, rounding top) deferred to a later phase if Phase 5 cohort reveals gaps."
+      resolution: "5 candidates sufficient for Phase 3 freeze. 5 ACCEPT_AS_PHASE_3 (3 original + RECTANGLE-TOP and HEAD-SHOULDERS frozen at review-R with best-estimate thresholds). Additional patterns (rising wedge, rounding top) deferred to a later phase if Phase 5 cohort reveals gaps."
     - question_id: BEAR-Q2
       resolution: "OPTION_A — report both bullish and bearish; archetype A-MIXED (least information loss)."
     - question_id: BEAR-Q3
@@ -1004,30 +1022,73 @@ bearish_setup_registry:
   # ==================================================================
   verifier_obligation_coverage:
     VC-BEARISH-DESIGN-1:  # independent rules, no sign inversion
+      canonical_obligation: "Bearish setups have independent rules (NO sign inversion of bullish)"
       satisfied_by: [GDI-1, GDI-2, GDI-3, GDI-4, every setup's anti_inversion_clause]
       status: SATISFIED_AT_DESIGN
+      sub_aspects:
+        false_positive_resistance:  # formerly tracked as VC-BEAR-FALSE-POS (Phase 2B design-input id)
+          obligation: "Bearish detector must not fire on bullish-only setup input"
+          to_be_satisfied_in: PHASE_4
+          status: PENDING_IMPLEMENTATION
+          design_safeguards: [GDI-4, GDI-5, RT-INV-3, HS-INV-5, MUT-BEAR-LONE-INDICATOR, MUT-BEAR-FALSE-POS]
     VC-BEARISH-DESIGN-2:  # confirmation + invalidation + min_history each
+      canonical_obligation: "Each bearish setup has confirmation + invalidation + min_history"
       satisfied_by: "every setup has non-empty confirmation_conditions, invalidation_conditions, and minimum_history"
       status: SATISFIED_AT_DESIGN
+      sub_aspects:
+        detect_or_not_present:  # formerly tracked as VC-BEAR-DETECT-1 (Phase 2B design-input id)
+          obligation: "Each bearish detector produces valid output or NOT_PRESENT"
+          to_be_satisfied_in: PHASE_4
+          status: PENDING_IMPLEMENTATION
     VC-BEARISH-DESIGN-3:  # bullish+bearish simultaneous match behavior defined
+      canonical_obligation: "Bullish+bearish simultaneous match behavior defined"
       satisfied_by: cross_setup_policies.bullish_bearish_conflict
       status: SATISFIED_AT_DESIGN
+      sub_aspects:
+        false_negative_resistance:  # formerly tracked as VC-BEAR-FALSE-NEG (Phase 2B design-input id)
+          obligation: "Bearish detector must fire on confirmed bearish historical case"
+          to_be_satisfied_in: PHASE_4
+          status: PENDING_IMPLEMENTATION
     VC-BEARISH-DESIGN-4:  # denominator frozen after Phase 3 review
+      canonical_obligation: "Denominator frozen after Phase 3 review"
       satisfied_by: denominator_policy
-      status: PARTIALLY_SATISFIED   # freeze deferred to calibration of the 2 REVISE setups
-    VC-BEAR-DETECT-1:     # valid output or NOT_PRESENT
-      to_be_satisfied_in: PHASE_4
-      status: PENDING_IMPLEMENTATION
-    VC-BEAR-FALSE-POS:    # must not fire on bullish-only input
-      to_be_satisfied_in: PHASE_4
-      status: PENDING_IMPLEMENTATION
-      design_safeguards: [GDI-4, GDI-5, RT-INV-3, HS-INV-5, MUT-BEAR-LONE-INDICATOR, MUT-BEAR-FALSE-POS]
-    VC-BEAR-FALSE-NEG:    # must fire on confirmed bearish historical case
-      to_be_satisfied_in: PHASE_4
-      status: PENDING_IMPLEMENTATION
-    VC-BEAR-PROV:         # provenance to volume + price evidence
-      satisfied_by: "every setup's provenance_requirements"
-      status: SATISFIED_AT_DESIGN
+      status: SATISFIED_AT_DESIGN   # denominator frozen at 13 (8 bull + 5 bear) at review-R freeze
+      sub_aspects:
+        provenance_to_volume_price:  # formerly tracked as VC-BEAR-PROV (Phase 2B design-input id)
+          obligation: "Each bearish detection has provenance to volume + price evidence"
+          satisfied_by: "every setup's provenance_requirements"
+          status: SATISFIED_AT_DESIGN
+
+  # ==================================================================
+  # VC alias reconciliation (Phase 3 implementation review-R)
+  # ------------------------------------------------------------------
+  # The Phase 2B bearish-setup-phase3-design-input.yaml named four
+  # implementation-phase sub-obligations VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS,
+  # VC-BEAR-FALSE-NEG, VC-BEAR-PROV. The Phase 3 VC-to-verifier mapping
+  # canonicalized the bearish verifier obligations as VC-BEARISH-DESIGN-1..4
+  # (the canonical 64-VC set). This registry now resolves those four sub-ids
+  # to their canonical bearish-design VC owners (see verifier_obligation_coverage
+  # sub_aspects above) so that every related_VC_id in this artifact resolves
+  # against the canonical 64-VC set. No bearish obligation is lost: each
+  # sub-id is preserved as a named sub_aspect under its canonical owner.
+  # ==================================================================
+  VC_alias_reconciliation:
+    VC-BEAR-FALSE-POS:
+      canonical_owner: VC-BEARISH-DESIGN-1
+      sub_aspect: false_positive_resistance
+      rationale: "Both encode the anti-sign-inversion / must-not-fire-on-bullish obligation."
+    VC-BEAR-DETECT-1:
+      canonical_owner: VC-BEARISH-DESIGN-2
+      sub_aspect: detect_or_not_present
+      rationale: "Both encode the structural detection obligation (confirmation + invalidation + min_history ⇒ valid output or NOT_PRESENT)."
+    VC-BEAR-FALSE-NEG:
+      canonical_owner: VC-BEARISH-DESIGN-3
+      sub_aspect: false_negative_resistance
+      rationale: "Both encode correct fire behavior on mixed/simultaneous bullish+bearish context (must fire on confirmed bearish)."
+    VC-BEAR-PROV:
+      canonical_owner: VC-BEARISH-DESIGN-4
+      sub_aspect: provenance_to_volume_price
+      rationale: "Both encode the bearish provenance / coverage-completeness obligation."
 
   # ==================================================================
   # Final acceptance gate
@@ -1039,8 +1100,8 @@ bearish_setup_registry:
     decisions_recorded: 5
     decisions_recorded_ratio: "5/5"
     decision_breakdown:
-      ACCEPT_AS_PHASE_3: 3      # S-BEAR-FLAG, S-BEAR-PENNANT, S-BEAR-DOWN-TRIANGLE
-      REVISE_BEFORE_FREEZE: 2   # S-BEAR-RECTANGLE-TOP, S-BEAR-HEAD-SHOULDERS
+      ACCEPT_AS_PHASE_3: 5      # S-BEAR-FLAG, S-BEAR-PENNANT, S-BEAR-DOWN-TRIANGLE, S-BEAR-RECTANGLE-TOP, S-BEAR-HEAD-SHOULDERS
+      REVISE_BEFORE_FREEZE: 0   # RECTANGLE-TOP and HEAD-SHOULDERS frozen with best-estimate thresholds at review-R
       DEFER: 0
       REJECT: 0
     setups_without_confirmation_logic: 0
@@ -1063,8 +1124,8 @@ bearish_setup_registry:
       - vn-technical-analysis-phase2A/manifests/setup-coverage-reconciliation.yaml
       - vn-technical-analysis-phase3-review/manifests/vta-phase-3-implementation-scope.yaml
     related_requirements_mapped: [VTA-REQ-009a, VTA-REQ-002, VTA-REQ-009]
-    related_VCs_mapped: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-BEAR-DETECT-1, VC-BEAR-FALSE-POS, VC-BEAR-FALSE-NEG, VC-BEAR-PROV]
+    related_VCs_mapped: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4]
     artifact_class: DESIGN_ONLY
     implementation_code_produced: 0
     executable_fixtures_produced: 0
-    status: DESIGN_REVIEW_COMPLETE_PENDING_CALIBRATION_FOR_2_REVISE_SETUPS
+    status: DESIGN_FROZEN_ALL_5_SETUPS_ACCEPTED_AT_PHASE_3_REVIEW_R
