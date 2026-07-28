@@ -212,7 +212,7 @@ vc_to_verifier_mapping:
       positive_fixture_ids: [FX-ZERO-VOL-POS-1]
       boundary_fixture_ids: [FX-ZERO-VOL-BND-1]
       negative_fixture_ids: []
-      mutation_fixture_ids: []
+      mutation_fixture_ids: [MUT-ZERO-VOL]
       expected_PASS_condition: "Zero volume session accepted, value=0, no warning (legitimate suspended session)"
       expected_primary_failure_code: NONE
       expected_diagnostic_codes: []
@@ -423,7 +423,7 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/formula_conformance.py
         proposed_verifier_function: "detect_simple_smoothing_injection"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-WRONG-SMOOTH-POS-WILDER-CLEAN]
       boundary_fixture_ids: []
       negative_fixture_ids: [FX-WRONG-SMOOTH-NEG-SIMPLE-INJECTED]
       mutation_fixture_ids: [MUT-WRONG-SMOOTH]
@@ -549,10 +549,10 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/formula_conformance.py
         proposed_verifier_function: "assert_channel_threshold_frozen"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-CHANNEL-2-POS-THRESHOLD-FROZEN]
       boundary_fixture_ids: [FX-CHANNEL-2-BND-EXACT-THRESHOLD]
       negative_fixture_ids: []
-      mutation_fixture_ids: []
+      mutation_fixture_ids: [MUT-CHANNEL-2]
       expected_PASS_condition: "contracts/formula-channel-slope.yaml threshold value frozen and applied"
       expected_primary_failure_code: THRESHOLD_NOT_FROZEN
       expected_diagnostic_codes: [CHANNEL_THRESHOLD_PENDING]
@@ -784,7 +784,7 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/schema_conformance.py
         proposed_verifier_function: "detect_schema_drift"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-SCHEMA-POS-VALID]
       boundary_fixture_ids: []
       negative_fixture_ids: [FX-SCHEMA-DRIFT-NEG-FOREIGN-KEY]
       mutation_fixture_ids: [MUT-SCHEMA-DRIFT]
@@ -806,7 +806,7 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/provenance_integrity.py
         proposed_verifier_function: "detect_fabricated_value"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-FAB-VAL-POS-ALL-TRACEABLE]
       boundary_fixture_ids: []
       negative_fixture_ids: [FX-FAB-VAL-NEG-INJECTED-VALUE]
       mutation_fixture_ids: [MUT-FAB-VAL]
@@ -961,7 +961,7 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/language_policy.py
         proposed_verifier_function: "detect_injected_advice_phrase"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-ADV-LANG-POS-CLEAN]
       boundary_fixture_ids: []
       negative_fixture_ids: [FX-ADV-LANG-NEG-NEN-MUA]
       mutation_fixture_ids: [MUT-ADV-LANG]
@@ -1028,7 +1028,7 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/provenance_integrity.py
         proposed_verifier_function: "detect_single_field_provenance_stripped"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-PROV-MISS-POS-FULL-CHAIN]
       boundary_fixture_ids: []
       negative_fixture_ids: [FX-PROV-MISS-NEG-ONE-FIELD-STRIPPED]
       mutation_fixture_ids: [MUT-PROV-MISS]
@@ -1158,7 +1158,7 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/schema_conformance.py
         proposed_verifier_function: "detect_mode_contamination"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-MODE-CONTAM-POS-CLEAN-ACTIVE]
       boundary_fixture_ids: []
       negative_fixture_ids: [FX-MODE-CONTAM-NEG-1]
       mutation_fixture_ids: [MUT-MODE-CONTAM]
@@ -1246,7 +1246,7 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/boundary_enforcement.py
         proposed_verifier_function: "detect_valuation_modification_attempt"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-VAL-OVERRIDE-POS-NO-WRITE-PATH]
       boundary_fixture_ids: []
       negative_fixture_ids: [FX-VAL-OVERRIDE-NEG-WRITE-ATTEMPT]
       mutation_fixture_ids: [MUT-VAL-OVERRIDE]
@@ -1439,10 +1439,10 @@ vc_to_verifier_mapping:
       implementation_surface:
         proposed_verifier_module: verifier/setup_semantics.py
         proposed_verifier_function: "assert_denominator_frozen"
-      positive_fixture_ids: []
+      positive_fixture_ids: [FX-BEARISH-DESIGN-4-POS-DENOMINATOR-FROZEN]
       boundary_fixture_ids: [FX-BEARISH-DESIGN-4-BND-DENOMINATOR]
       negative_fixture_ids: []
-      mutation_fixture_ids: []
+      mutation_fixture_ids: [MUT-BEARISH-DESIGN-4]
       expected_PASS_condition: "Setup denominator frozen (8 bullish + N bearish) after Phase 3 review"
       expected_primary_failure_code: DENOMINATOR_NOT_FROZEN
       expected_diagnostic_codes: [DENOMINATOR_PENDING_PHASE_3_REVIEW]
@@ -1491,16 +1491,18 @@ vc_to_verifier_mapping:
       semantic_loss: false
 
     fixture_design_coverage:
-      positive_fixture_count: 124
-      boundary_fixture_count: 78
-      negative_fixture_count: 96
-      mutation_fixture_count: 26
-      total_fixture_slots: 324
+      positive_fixture_count: 65
+      boundary_fixture_count: 49
+      negative_fixture_count: 69
+      mutation_fixture_count: 43
+      total_fixture_slots: 226
       note: >
         Fixture IDs are DESIGN placeholders (FX-* / MUT-*). Per Phase 3 scope,
-        executable fixtures are Phase 4. Counts reflect design coverage: each
-        VC has at least one fixture slot in its required class (positive VCs
-        may have empty negative_fixture_ids for negative-only checks).
+        executable fixtures are Phase 4. Counts reflect design coverage: every
+        VC has at least one positive_fixture_ids slot AND at least one
+        negative_fixture_ids OR mutation_fixture_ids slot (post coverage-gap
+        fix). The negative-only / design-gate VCs each carry a dedicated
+        POSITIVE witness fixture plus their existing NEGATIVE/MUTATION slot.
 
     verifier_module_coverage:
       verifier/schema_conformance.py: 23   # INPUT_PRE_FLIGHT (14) + OUTPUT_SCHEMA (11) - overlaps + MODE_SEP schema

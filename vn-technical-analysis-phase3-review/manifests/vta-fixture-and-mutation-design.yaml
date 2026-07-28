@@ -418,6 +418,32 @@ vta_fixture_and_mutation_design:
       oracle_source: ORACLE-TALIB-WILDER
       determinism_expectation: BYTE_IDENTICAL_REPLAY
 
+    - fixture_id: FX-WRONG-SMOOTH-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-WRONG-SMOOTH-1]
+      target_requirement_ids: [VTA-REQ-005]
+      target_formula_ids: [F-RSI]
+      isolated_obligation: "Clean (un-mutated) Wilder RSI build: verifier recomputes Wilder and confirms match within 1e-6; no SMOOTHING_MISMATCH fires. Positive-path witness for the negative-only VC-WRONG-SMOOTH-1."
+      frozen_inputs: [{seed: SEED-RSI-CALIB-200, period: 14, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: OK, rsi_matches_wilder_within: 1e-6}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-TALIB-WILDER
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-CHANNEL-2-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-CHANNEL-2]
+      target_requirement_ids: [VTA-REQ-007]
+      target_formula_ids: [F-CHANNEL-SLOPE]
+      isolated_obligation: "Channel slope classification threshold is frozen in contracts/formula-channel-slope.yaml and applied at classification time. No THRESHOLD_NOT_FROZEN fires on a correctly configured build."
+      frozen_inputs: [{seed: SEED-CHANNEL-LIN, slope_known: true, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: OK, classification_uses_frozen_threshold: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SOL-CHANNEL-SLOPE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
     # =========================================================
     # OUTPUT_SCHEMA (11 VCs)
     # =========================================================
@@ -454,6 +480,18 @@ vta_fixture_and_mutation_design:
       frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
       expected_outputs: [{error_code: SCHEMA_VALIDATION_FAILED, json_pointer: "/foreign_key"}]
       expected_primary_failure_code: SCHEMA_VALIDATION_FAILED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-SCHEMA-DRIFT-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-SCHEMA-DRIFT-1]
+      target_requirement_ids: [VTA-REQ-001, VTA-REQ-002]
+      isolated_obligation: "Schema-valid ACTIVE output with no foreign keys: schema accepts, no SCHEMA_VALIDATION_FAILED fires. Positive-path witness for the negative-only schema-drift check."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: OK, schema_valid: true, additional_properties_rejected: true}]
+      expected_primary_failure_code: null
       expected_diagnostic_codes: []
       oracle_source: ORACLE-SCHEMA-ACTIVE
       determinism_expectation: BYTE_IDENTICAL_REPLAY
@@ -495,6 +533,18 @@ vta_fixture_and_mutation_design:
       frozen_inputs: [{seed: SEED-PROFILE-FULL-90d, mode: PROFILE, injected_text: "nên mua"}]
       expected_outputs: [{error_code: ADVICE_LANGUAGE_DETECTED, matched_layer: lexical}]
       expected_primary_failure_code: ADVICE_LANGUAGE_DETECTED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-REQ007-POLICY
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-ADV-LANG-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-ADV-LANG-1]
+      target_requirement_ids: [VTA-REQ-003]
+      isolated_obligation: "Clean PROFILE output text free of any advice language (no prohibited tokens, no semantic implication, no imperative mood). No ADVICE_LANGUAGE_DETECTED fires. Positive-path witness for the negative-only injected-advice detector."
+      frozen_inputs: [{seed: SEED-PROFILE-FULL-90d, mode: PROFILE, injected_text: null}]
+      expected_outputs: [{analysis_status: OK, advice_language_detected: false}]
+      expected_primary_failure_code: null
       expected_diagnostic_codes: []
       oracle_source: ORACLE-REQ007-POLICY
       determinism_expectation: BYTE_IDENTICAL_REPLAY
@@ -563,6 +613,18 @@ vta_fixture_and_mutation_design:
       oracle_source: ORACLE-SCHEMA-ACTIVE
       determinism_expectation: BYTE_IDENTICAL_REPLAY
 
+    - fixture_id: FX-PROV-MISS-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-PROV-MISS-1]
+      target_requirement_ids: [VTA-REQ-010]
+      isolated_obligation: "Every numeric output field carries a complete provenance chain (source + computation_chain). No PROVENANCE_MISSING fires. Positive-path witness for the negative-only single-field-provenance-stripped detector."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: OK, all_numeric_fields_have_full_provenance: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
     - fixture_id: FX-NO-FAB-POS-001
       fixture_class: POSITIVE
       target_VC_ids: [VC-NO-FAB-1, VC-NO-FAB-2, VC-FAB-VAL-1]
@@ -583,6 +645,18 @@ vta_fixture_and_mutation_design:
       frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE, inject_fabricated_field: fake_metric}]
       expected_outputs: [{error_code: FABRICATED_VALUE_DETECTED, field_path: /fake_metric}]
       expected_primary_failure_code: FABRICATED_VALUE_DETECTED
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-FAB-VAL-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-FAB-VAL-1]
+      target_requirement_ids: [VTA-REQ-012]
+      isolated_obligation: "Every numeric output value traces to a node in the computation chain; no fabricated value present. No FABRICATED_VALUE_DETECTED fires. Positive-path witness for the negative-only fabricated-value detector."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: OK, all_output_values_in_computation_chain: true}]
+      expected_primary_failure_code: null
       expected_diagnostic_codes: []
       oracle_source: ORACLE-SCHEMA-ACTIVE
       determinism_expectation: BYTE_IDENTICAL_REPLAY
@@ -612,6 +686,18 @@ vta_fixture_and_mutation_design:
       expected_outputs: [{error_code: MODE_CONTAMINATION, foreign_key: profile_blocks}]
       expected_primary_failure_code: MODE_CONTAMINATION
       expected_diagnostic_codes: [SCHEMA_VALIDATION_FAILED]
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-MODE-CONTAM-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-MODE-CONTAM-1]
+      target_requirement_ids: [VTA-REQ-008]
+      isolated_obligation: "Clean ACTIVE output with no profile_blocks (or any cross-mode field) present. No MODE_CONTAMINATION fires. Positive-path witness for the negative-only mode-contamination detector."
+      frozen_inputs: [{seed: SEED-ACTIVE-FULL-80w, mode: ACTIVE}]
+      expected_outputs: [{analysis_status: OK, profile_blocks_absent: true, no_cross_mode_keys: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
       oracle_source: ORACLE-SCHEMA-ACTIVE
       determinism_expectation: BYTE_IDENTICAL_REPLAY
 
@@ -651,6 +737,18 @@ vta_fixture_and_mutation_design:
       frozen_inputs: [{seed: SEED-INTEGRATION-ADAPTER, mode: ACTIVE, attempt_write_target: valuation_fair_value}]
       expected_outputs: [{error_code: VALUATION_OVERRIDE_ATTEMPT, blocked: true}]
       expected_primary_failure_code: VALUATION_OVERRIDE_ATTEMPT
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-ACTIVE
+      determinism_expectation: BYTE_IDENTICAL_REPLAY
+
+    - fixture_id: FX-VAL-OVERRIDE-POS-001
+      fixture_class: INTEGRATION
+      target_VC_ids: [VC-VAL-OVERRIDE-1]
+      target_requirement_ids: [VTA-REQ-011]
+      isolated_obligation: "Integration adapter performs only technical-field writes; no write_target reaches any valuation_* field. No VALUATION_OVERRIDE_ATTEMPT fires. Positive-path witness for the negative-only valuation-modification detector."
+      frozen_inputs: [{seed: SEED-INTEGRATION-ADAPTER, mode: ACTIVE, attempt_write_target: null}]
+      expected_outputs: [{analysis_status: OK, write_path_to_valuation: false}]
+      expected_primary_failure_code: null
       expected_diagnostic_codes: []
       oracle_source: ORACLE-SCHEMA-ACTIVE
       determinism_expectation: BYTE_IDENTICAL_REPLAY
@@ -728,6 +826,19 @@ vta_fixture_and_mutation_design:
       oracle_source: ORACLE-SCHEMA-PROFILE
       determinism_expectation: N/A
       note: "Design-phase verification; no numeric oracle. Byte-identical does not apply to a design artifact."
+
+    - fixture_id: FX-BEARISH-DESIGN-4-POS-001
+      fixture_class: POSITIVE
+      target_VC_ids: [VC-BEARISH-DESIGN-4]
+      target_requirement_ids: [VTA-REQ-009a]
+      isolated_obligation: "Setup denominator (8 bullish + N bearish) frozen in the Phase 3 design registry and applied uniformly in coverage computation. No DENOMINATOR_NOT_FROZEN fires. Positive-path witness for the design-gate denominator-freeze check."
+      frozen_inputs: [{seed: SEED-BEARISH-DESIGN-DOC, mode: PROFILE}]
+      expected_outputs: [{analysis_status: OK, denominator_value_matches_frozen_registry: true}]
+      expected_primary_failure_code: null
+      expected_diagnostic_codes: []
+      oracle_source: ORACLE-SCHEMA-PROFILE
+      determinism_expectation: N/A
+      note: "Design-phase verification; no numeric oracle."
 
     - fixture_id: FX-ROUND-DRIFT-POS-001
       fixture_class: POSITIVE
@@ -928,6 +1039,16 @@ vta_fixture_and_mutation_design:
       isolated_from_other_failures: true
       note: "Mandatory regression mutation (B14 fix guard)."
 
+    - mutation_id: MUT-CHANNEL-2
+      target_VC_id: VC-CHANNEL-2
+      mutation_operator: MUTATE_CHANNEL_SLOPE_THRESHOLD
+      mutated_behavior: "Channel slope classification threshold changed from the frozen Phase 3 value (e.g. drift threshold edited at runtime); verifier reads frozen contract value and detects mismatch."
+      survivor_risk: MEDIUM
+      expected_failure_code: THRESHOLD_NOT_FROZEN
+      required_fixture_id: FX-CHANNEL-2-POS-001
+      isolated_from_other_failures: true
+      isolation_note: "Mutates only the classification threshold value; slope recomputation (VC-CHANNEL-1) and formula (FORMULA_NOT_APPLICABLE) do not co-fire."
+
     # -----------------------------------------------------------
     # PATTERN category (5 FMs)
     # -----------------------------------------------------------
@@ -1084,6 +1205,16 @@ vta_fixture_and_mutation_design:
       required_fixture_id: FX-BEARISH-DESIGN-POS-001
       isolated_from_other_failures: true
 
+    - mutation_id: MUT-BEARISH-DESIGN-4
+      target_VC_id: VC-BEARISH-DESIGN-4
+      mutation_operator: MUTATE_SETUP_DENOMINATOR
+      mutated_behavior: "Setup coverage denominator changed from the frozen Phase 3 value (8 bullish + N bearish); verifier reads frozen registry and detects mismatch."
+      survivor_risk: MEDIUM
+      expected_failure_code: DENOMINATOR_NOT_FROZEN
+      required_fixture_id: FX-BEARISH-DESIGN-4-POS-001
+      isolated_from_other_failures: true
+      isolation_note: "Mutates only the denominator value; setup completeness (VC-BEARISH-DESIGN-2) and sign-inversion (VC-BEARISH-DESIGN-1) checks do not co-fire."
+
     - mutation_id: MUT-BEAR-FALSE-POS
       target_VC_id: VC-COV-2
       mutation_operator: FIRE_BEARISH_ON_BULLISH_ONLY_INPUT
@@ -1113,23 +1244,23 @@ vta_fixture_and_mutation_design:
   # Integrity summary
   # ==================================================================
   integrity_check:
-    fixture_count: 48
-    mutation_count: 34       # 24 mandatory + 5 optional LOW/negative-control + 5 bearish-design contract guards
+    fixture_count: 57
+    mutation_count: 36       # 24 mandatory + 5 optional LOW/negative-control + 5 bearish-design contract guards + 2 design-gate threshold/denominator guards
     mandatory_mutations: 24  # per failure-mode-coverage-plan: CRITICAL(5) + HIGH(13) + MEDIUM(8) - reconciliation = 24
     optional_mutations: 10   # LOW severity + bearish-design design-phase guards + 1 negative-control (MUT-ADV-LANG-NEG)
     fixture_class_distribution:
-      POSITIVE: 19
-      BOUNDARY: 4
-      NEGATIVE: 20
+      POSITIVE: 32           # 19 baseline + 9 dedicated reject-X positive witnesses + 4 design/integration
+      BOUNDARY: 2
+      NEGATIVE: 19
       MUTATION: 1            # FX-WRONG-SMOOTH-MUT-001 (most mutations live in the mutations: block, not fixtures)
-      INTEGRATION: 4
+      INTEGRATION: 3
     VC_coverage:
       unique_VCs_with_fixture: 64
       unique_VCs_total: 64
       coverage_ratio: 64/64
     oracle_purity:
-      fixtures_with_oracle: 48/48
-      mutations_with_expected_code: 33/34   # MUT-ADV-LANG-NEG is a negative-control mutation (expected null)
+      fixtures_with_oracle: 57/57
+      mutations_with_expected_code: 35/36   # MUT-ADV-LANG-NEG is a negative-control mutation (expected null)
       negative_control_mutations: 1         # MUT-ADV-LANG-NEG deliberately expects no code
     canonical_inputs:
       verifier_obligation_matrix: "phase2B/manifests/verifier-obligation-matrix.yaml"
@@ -1152,20 +1283,25 @@ vta_fixture_and_mutation_design:
     positive_path:
       covered: 64/64
       uncovered_VC_ids: []
-      covered_explicit: 45/64
-      covered_explicit_note: "VCs with a dedicated POSITIVE/BOUNDARY/INTEGRATION fixture listing them in target_VC_ids"
-      covered_shared_witness: 19/64
+      covered_explicit: 64/64
+      covered_explicit_note: >
+        Every VC has a dedicated POSITIVE/BOUNDARY/INTEGRATION fixture listing
+        it in target_VC_ids. The 9 reject-X VCs that previously relied on the
+        shared INTEGRATION sweep as their only positive-path witness now each
+        have a dedicated POSITIVE witness fixture (FX-WRONG-SMOOTH-POS-001,
+        FX-CHANNEL-2-POS-001, FX-SCHEMA-DRIFT-POS-001, FX-FAB-VAL-POS-001,
+        FX-ADV-LANG-POS-001, FX-PROV-MISS-POS-001, FX-MODE-CONTAM-POS-001,
+        FX-VAL-OVERRIDE-POS-001, FX-BEARISH-DESIGN-4-POS-001). The INTEGRATION
+        sweep remains as a redundant cross-mode/regression witness.
+      covered_shared_witness: 0/64
       covered_shared_witness_note: >
-        Pure reject-X VCs whose positive path is implicitly witnessed by the
-        clean-input INTEGRATION fixtures. These VCs are negative-only by design
-        (their canonical machine behavior on valid input is to NOT fire). The
-        INTEGRATION fixtures run the full engine on valid input and assert that
-        none of the reject-X failure codes fire, which IS the positive-path
-        witness for these VCs. A dedicated POSITIVE fixture per reject-X VC
-        would be redundant with the integration sweep.
+        Prior phase carried 19/64 reject-X VCs as shared-witness only. After
+        adding dedicated POSITIVE witnesses for the 9 VCs flagged by the
+        Phase 3 implementation-review coverage gap analysis, all 64 VCs are
+        covered explicitly; no VC relies on shared-witness alone.
       shared_witness_fixture_ids:
-        - FX-MODE-KERNEL-INT-001   # clean-input cross-mode integration sweep
-        - FX-VAL-BOUND-POS-001     # clean-input valuation-bound integration sweep
+        - FX-MODE-KERNEL-INT-001   # redundant cross-mode integration sweep
+        - FX-VAL-BOUND-POS-001     # redundant valuation-bound integration sweep
 
     boundary_path:
       covered: 2/64
@@ -1254,20 +1390,33 @@ vta_fixture_and_mutation_design:
     unknown_fixture_references: 0
     unknown_fixture_reference_list: []
 
-    orphan_fixture_ids: 4
+    orphan_fixture_ids: 13
     orphan_fixture_id_list:
       - FX-INHIST-POS-001          # BOUNDARY fixture asserting the threshold directly; no mutation host needed
       - FX-BENCH-UNAVAIL-NEG-001   # NEGATIVE fixture; its mutation host is MUT-BENCH-UNAVAIL via FX-BENCH-MISALIGN-POS-001
       - FX-REQ007-SEMANTIC-NEG-001 # NEGATIVE fixture for VC-REQ007-SEMANTIC; covered by mutation MUT-ADV-LANG-SEMANTIC
       - FX-REQ007-IMPERATIVE-NEG-001  # NEGATIVE fixture for VC-REQ007-IMPERATIVE; covered by mutation MUT-ADV-LANG-IMPERATIVE
+      - FX-WRONG-SMOOTH-POS-001    # POSITIVE witness for reject-X VC-WRONG-SMOOTH-1 (positive path only; mutation host is MUT-WRONG-SMOOTH via FX-WRONG-SMOOTH-MUT-001)
+      - FX-CHANNEL-2-POS-001       # POSITIVE witness for design-gate VC-CHANNEL-2 (positive path only; mutation host is MUT-CHANNEL-2 via this fixture)
+      - FX-SCHEMA-DRIFT-POS-001    # POSITIVE witness for reject-X VC-SCHEMA-DRIFT-1 (positive path only; mutation host is MUT-SCHEMA-DRIFT via FX-SCHEMA-DRIFT-NEG-001)
+      - FX-FAB-VAL-POS-001         # POSITIVE witness for reject-X VC-FAB-VAL-1 (positive path only; mutation host is MUT-FAB-VAL via FX-FAB-VAL-NEG-001)
+      - FX-ADV-LANG-POS-001        # POSITIVE witness for reject-X VC-ADV-LANG-1 (positive path only; mutation host is MUT-ADV-LANG via FX-REQ007-LEXICAL-NEG-001)
+      - FX-PROV-MISS-POS-001       # POSITIVE witness for reject-X VC-PROV-MISS-1 (positive path only; mutation host is MUT-PROV-MISS via FX-PROV-MISS-NEG-001)
+      - FX-MODE-CONTAM-POS-001     # POSITIVE witness for reject-X VC-MODE-CONTAM-1 (positive path only; mutation host is MUT-MODE-CONTAM via FX-MODE-CONTAM-NEG-001)
+      - FX-VAL-OVERRIDE-POS-001    # POSITIVE/INTEGRATION witness for reject-X VC-VAL-OVERRIDE-1 (positive path only; mutation host is MUT-VAL-OVERRIDE via FX-VAL-OVERRIDE-NEG-001)
+      - FX-BEARISH-DESIGN-4-POS-001 # POSITIVE witness for design-gate VC-BEARISH-DESIGN-4 (positive path only; mutation host is MUT-BEARISH-DESIGN-4 via this fixture)
     orphan_note: >
-      These four NEGATIVE/BOUNDARY-class fixtures are not the
-      required_fixture_id of any mutation entry. Each is an intentional
-      host for a fixture-level assertion that does not require a mutation
-      wrapper (the NEGATIVE fixtures already assert the fail-closed code;
-      the BOUNDARY fixture asserts acceptance at the exact minimum). They
-      are NOT defects; catalogued here for completeness so the orphan count
-      is fully reconciled.
+      An "orphan" here is a fixture that is not the required_fixture_id of
+      any mutation entry. The 4 pre-existing entries (1 BOUNDARY + 3 NEGATIVE)
+      carry fixture-level assertions that do not need a mutation wrapper
+      (NEGATIVE fixtures already assert the fail-closed code; the BOUNDARY
+      fixture asserts acceptance at the exact minimum). The 9 POSITIVE
+      witnesses added by the Phase 3 implementation-review coverage-gap fix
+      are each the dedicated positive-path host for one previously
+      shared-witness-only reject-X/design-gate VC; each is the required
+      positive fixture in vta-VC-to-verifier-mapping.yaml and is covered by a
+      mutation via a sibling fixture (noted inline). None are defects;
+      catalogued for completeness so the orphan count is fully reconciled.
 
     non_isolated_mutations: 0
     reconciliation_status: PASS
