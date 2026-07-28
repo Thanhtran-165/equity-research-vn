@@ -1,0 +1,214 @@
+# VTA Phase 3 Specification Acceptance Evidence
+# Per OWNER DIRECTIVE Section 14
+
+acceptance_evidence:
+  version: "1.0.0"
+  date: '2026-07-28'
+  canonical_input_commit: b789d9e458ca76442d41d60bb2d4655efd090f1f
+
+  input_hash_verification:
+    vta-phase-3-implementation-scope.yaml: 00bc2e046d3819eca7d7eab6abea5ca9684cfd1bb68bbec4faab63d19f450299
+    vta-requirement-to-implementation-mapping.yaml: d4ae02b34390e66f4e38f0bda6095b1b16c52f1d6bd33d3cc319475322567aee
+    vta-VC-to-verifier-mapping.yaml: 3feb0d9435eda5fbf754108a9398bd12236837c54726e35176939cd7ea240dc1
+    vta-formula-contract-registry.yaml: b9ca1c53cb1c41b1b58596b48a53b053c99e25d47cf5c931211b094090d5b40a
+    vta-bearish-setup-registry.yaml: 1bc669e65c1eb393fdb946056db842f97f5df7a1e31e1273c686b7400ef8642f
+    vta-fixture-and-mutation-design.yaml: 0f5988c406e78fdeedc6c540731e9080eede8efbea448a87f96b346c58cbeadd
+    vta-failure-code-registry.yaml: 18b2eb526faa76d8392b95a5d1dbd37319d1f0b88547cb2ec834019c461b0127
+    vta-phase-3-implementation-review.md: d30b9406e2527931e4b8d92aefb6ad4922c439152fa2cc2244f6c2669ec5dff2
+    all_hashes_match: true
+    count: 8/8
+
+  structured_registry_validation:
+    requirements:
+      records: 15
+      unique_ids: 15
+      duplicates: []
+    verifier_obligations:
+      records: 64
+      unique_ids: 64
+      duplicates: []
+    formulas:
+      records: 12
+      unique_ids: 12
+      duplicates: []
+    bearish_setups:
+      records: 5
+      unique_ids: 5
+      duplicates: []
+    canonical_fixtures:
+      records: 184
+      unique_ids: 184
+      duplicates: []
+      orphans: []
+    canonical_mutations:
+      records: 33
+      unique_ids: 33
+      duplicates: []
+      orphans: []
+      mutations_without_expected_code: []
+    witness_registry:
+      records: 7
+      fixture_source: 4
+      mutation_source: 3
+      unknown_source_registry: []
+      counted_as_coverage: []
+    failure_codes:
+      records: 43
+      unique_codes: 43
+      unknown_references: []
+
+  requirement_acceptance:
+    count: 15
+    accepted: 15
+    rejected: 0
+    records:
+      - id: VTA-REQ-001
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/indicator_engine.py + implementation/runner.py
+        mapped_VCs: [VC-ACTIVE-VALID-1, VC-ACTIVE-VALID-2, VC-ACTIVE-VALID-3, VC-EMPTY-SERIES-1, VC-INHIST-1]
+      - id: VTA-REQ-002
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/profile_engine.py + implementation/runner.py
+        mapped_VCs: [VC-PROFILE-VALID-1..4]
+      - id: VTA-REQ-003
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/language_verifier.py
+        mapped_VCs: [VC-REQ007-LEXICAL, VC-REQ007-SEMANTIC, VC-REQ007-NEGATION, VC-REQ007-IMPERATIVE, VC-ADV-LANG-1]
+      - id: VTA-REQ-004
+        risk: CRITICAL
+        decision: ACCEPT
+        implementation_surface: implementation/normalization_engine.py
+        mapped_VCs: [VC-PRICE-BASIS-1..3, VC-CORP-ACT-1]
+      - id: VTA-REQ-005
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/indicator_engine.py
+        mapped_VCs: [VC-RSI-WILDER-1, VC-RSI-WILDER-2, VC-WRONG-SMOOTH-1]
+      - id: VTA-REQ-006
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/indicator_engine.py
+        mapped_VCs: [VC-BOLL-1, VC-BOLL-2]
+      - id: VTA-REQ-007
+        risk: MEDIUM
+        decision: ACCEPT
+        implementation_surface: implementation/pattern_detector.py
+        mapped_VCs: [VC-CHANNEL-1, VC-CHANNEL-2]
+      - id: VTA-REQ-008
+        risk: CRITICAL
+        decision: ACCEPT
+        implementation_surface: implementation/output_assembler.py
+        mapped_VCs: [VC-MODE-CONTAM-1, VC-MODE-SEP-1..3, VC-MODE-KERNEL-1]
+      - id: VTA-REQ-009
+        risk: MEDIUM
+        decision: ACCEPT
+        implementation_surface: implementation/profile_engine.py
+        mapped_VCs: [VC-COV-1, VC-COV-2]
+      - id: VTA-REQ-009a
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/profile_engine.py (bearish registry)
+        mapped_VCs: [VC-BEARISH-DESIGN-1..4]
+      - id: VTA-REQ-010
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/output_assembler.py
+        mapped_VCs: [VC-PROV-1, VC-PROV-2, VC-PROV-MISS-1]
+      - id: VTA-REQ-011
+        risk: CRITICAL
+        decision: ACCEPT
+        implementation_surface: implementation/integration_adapter.py
+        mapped_VCs: [VC-VAL-BOUND-1, VC-VAL-BOUND-2, VC-VAL-OVERRIDE-1]
+      - id: VTA-REQ-012
+        risk: CRITICAL
+        decision: ACCEPT
+        implementation_surface: implementation/normalization_engine.py
+        mapped_VCs: [VC-FAB-VAL-1, VC-NO-FAB-1, VC-NO-FAB-2, VC-ZERO-PX-1]
+      - id: VTA-REQ-013
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/profile_engine.py (B14 fix)
+        mapped_VCs: [VC-EVENTS-1Y-1]
+      - id: VTA-REQ-014
+        risk: HIGH
+        decision: ACCEPT
+        implementation_surface: implementation/indicator_engine.py (B12 fix)
+        mapped_VCs: [VC-OBV-VPT-1, VC-OBV-VPT-2]
+
+  VC_acceptance:
+    count: 64
+    accepted: 64
+    rejected: 0
+    all_with_verifier_function: true
+    all_with_positive_path: true
+    all_with_negative_or_mutation_path: true
+    all_with_primary_failure_code: true
+    all_with_oracle_source: true
+    all_with_resolved_precedence: true
+
+  formula_acceptance:
+    count: 12
+    accepted: 12
+    rejected: 0
+    F-VPCI_residual_note:
+      nonblocking: true
+      creates_implementation_discretion: false
+    F-HV_residual_note:
+      nonblocking: true
+      creates_implementation_discretion: false
+
+  bearish_setup_acceptance:
+    count: 5
+    accepted: 5
+    rejected: 0
+    all_with_independent_confirmation: true
+    all_with_invalidation: true
+    all_with_minimum_history: true
+    none_triggered_by_single_indicator: true
+
+  fixture_mutation_witness_acceptance:
+    canonical_fixtures: 184 accepted
+    canonical_mutations: 33 accepted
+    witnesses: 7 accepted (excluded from coverage)
+    VC_coverage_positive: 64/64
+    VC_coverage_negative_or_mutation: 64/64
+    coverage_using_witness_records: 0
+    coverage_using_unknown_IDs: 0
+
+  failure_code_acceptance:
+    records: 43
+    accepted: 43
+    unknown_references: []
+    duplicate_codes: []
+    semantic_duplicates: []
+    precedence_conflicts: []
+
+  architecture_acceptance:
+    formula_calculation_separated: true
+    setup_evaluation_separated: true
+    schema_validation_separated: true
+    provenance_handling_separated: true
+    deterministic_serialization_separated: true
+    independent_verifier_separated: true
+    production_verifier_shared_decision_logic: false
+    runtime_generated_oracle: false
+    network_dependent_oracle: false
+    mutable_external_oracle: false
+    modules_without_interface: 0
+    modules_without_failure_modes: 0
+    modules_with_overlapping_decision_authority: 0
+
+  implementation_readiness:
+    specification_is_complete: true
+    specification_is_deterministic: true
+    specification_is_internally_consistent: true
+    specification_is_machine_verifiable: true
+    implementation_agents_may_select_new_semantics: false
+    implementation_agents_may_change_fixture_oracles: false
+    implementation_agents_may_change_failure_codes: false
+    implementation_agents_may_change_formula_contracts: false
+    implementation_agents_may_change_setup_rules: false
+    accepted_as_sole_implementation_authority: true
