@@ -1,0 +1,59 @@
+# VTA Verifier Check Duplicate Resolution
+# Per READINESS-R DIRECTIVE Section 4
+
+duplicate_resolution:
+  duplicate_id: VC-FAB-VAL-1
+  resolution_date: '2026-07-28'
+  resolution: MERGE_TRUE_DUPLICATES
+
+  record_1:
+    source: vn-technical-analysis-phase2B/manifests/verifier-obligation-matrix.yaml
+    category: OUTPUT_SCHEMA
+    obligation: "Inject value not in computation chain → detection"
+    linked_fms: [FM-FABRICATED-VALUE]
+    linked_reqs: [VTA-REQ-012]
+    implementation_phase: PHASE_4
+
+  record_2:
+    source: vn-technical-analysis-phase2B/manifests/verifier-obligation-matrix.yaml
+    category: PROVENANCE
+    obligation: "Inject value not in computation chain → detection (cross-ref OUTPUT_SCHEMA)"
+    linked_fms: [FM-FABRICATED-VALUE]
+    linked_reqs: [VTA-REQ-012]
+    implementation_phase: PHASE_4
+
+  analysis: >
+    Both records describe the SAME obligation: detect injected/fabricated
+    values not in the computation chain. The second record is explicitly
+    labeled "(cross-ref OUTPUT_SCHEMA)" — it is a cross-listing in the
+    PROVENANCE category, not a distinct check. The obligation, linked FMs,
+    linked REQs, and implementation phase are identical.
+
+  decision: MERGE
+  rationale: >
+    Since both records describe the same verification obligation with
+    identical semantics, they are true duplicates (cross-listed in two
+    categories). Merge into a single record. The merged record retains
+    VC-FAB-VAL-1 as its ID and notes the cross-listing.
+
+  merged_record:
+    id: VC-FAB-VAL-1
+    primary_category: OUTPUT_SCHEMA
+    cross_listed_categories: [PROVENANCE]
+    obligation: "Inject value not in computation chain → detection"
+    linked_fms: [FM-FABRICATED-VALUE]
+    linked_reqs: [VTA-REQ-012]
+    implementation_phase: PHASE_4
+
+  semantic_loss: false
+  mapping:
+    old_id: VC-FAB-VAL-1
+    new_ids: [VC-FAB-VAL-1]  # single ID retained after merge
+    note: "No ID change needed — duplicate record removed, not renamed."
+
+post_resolution_counts:
+  total_records: 64  # was 65, removed 1 duplicate
+  unique_VC_ids: 64
+  duplicate_VC_ids: 0
+  orphan_VCs: 0
+  conflicting_obligations: 0

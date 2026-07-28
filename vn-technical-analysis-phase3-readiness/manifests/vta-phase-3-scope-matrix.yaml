@@ -1,0 +1,190 @@
+# VTA Phase 3 — Scope Matrix
+# Per OWNER DIRECTIVE Section 7
+# Classifies what Phase 3 candidate scope includes and current status
+
+phase_3_scope_matrix:
+  scope_basis: vn-technical-analysis-phase2B/manifests/technical-phase3-design-input-package.yaml
+  readiness_date: '2026-07-28'
+
+  phase_3_candidate_scope:
+
+    # === Contracts (freeze formula contracts) ===
+    contracts:
+      - item: contracts/formula-rsi.yaml (Wilder freeze)
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input package (F-RSI freeze)
+        proposed_phase_3_action: CREATE — freeze Wilder seeding, warmup, rounding
+      - item: contracts/formula-bollinger.yaml (std convention freeze)
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input package (F-BOLLINGER freeze, HIGHEST PRIORITY)
+        proposed_phase_3_action: CREATE — freeze std convention for shared kernel
+      - item: contracts/formula-ma.yaml (SMA vs EMA)
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-MA)
+        proposed_phase_3_action: CREATE
+      - item: contracts/formula-macd.yaml (EMA seed)
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-MACD)
+        proposed_phase_3_action: CREATE
+      - item: contracts/formula-beta.yaml (window + benchmark)
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-BETA)
+        proposed_phase_3_action: CREATE — freeze 52w window, VNINDEX benchmark
+      - item: contracts/formula-cmf.yaml (OBV/VPT separation)
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-CMF, B12 bug fix)
+        proposed_phase_3_action: CREATE
+      - item: contracts/formula-vpci.yaml
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-VPCI)
+        proposed_phase_3_action: CREATE
+      - item: contracts/formula-var-es.yaml
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-VAR-ES)
+        proposed_phase_3_action: CREATE
+      - item: contracts/formula-percentile.yaml
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-PERCENTILE)
+        proposed_phase_3_action: CREATE
+      - item: contracts/formula-hvb.yaml (events_1y calendar window)
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-HVB, B14 bug fix)
+        proposed_phase_3_action: CREATE
+      - item: contracts/formula-alpha.yaml
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-ALPHA)
+        proposed_phase_3_action: CREATE
+      - item: contracts/formula-hv.yaml
+        already_exists: false
+        status: MISSING
+        source: Phase 3 design input (F-HV)
+        proposed_phase_3_action: CREATE
+      existing_contracts_count: 10 (from Phase 2A: schemas, policies, error-codes)
+      new_contracts_planned: 12 (formula freezes)
+
+    # === Implementation modules (NOT Phase 3 — Phase 4) ===
+    implementation_modules:
+      - item: implementation/indicators.py
+        already_exists: false
+        status: MISSING
+        source: Phase 1 audit (code embedded in markdown)
+        proposed_phase_3_action: NONE — Phase 4 implementation
+      - item: implementation/pattern_detector.py
+        already_exists: false
+        status: MISSING
+        proposed_phase_3_action: NONE — Phase 4
+      - item: implementation/profile_engine.py
+        already_exists: false
+        status: MISSING
+        proposed_phase_3_action: NONE — Phase 4
+      - item: implementation/runner.py
+        already_exists: false
+        status: MISSING
+        proposed_phase_3_action: NONE — Phase 4
+      note: >
+        Phase 3 is DESIGN FREEZE, not implementation. Per directive Section 7:
+        "Do not self-design implementation during readiness."
+
+    # === Independent verifier (NOT Phase 3 — Phase 4) ===
+    independent_verifier:
+      - item: implementation/verifier/ (independent verifier module)
+        already_exists: false
+        status: MISSING
+        source: Phase 1 audit ("No verifier exists")
+        proposed_phase_3_action: NONE — Phase 4
+        note: >
+          The verifier-obligation-matrix.yaml documents 65 VC records but
+          after VC-FAB-VAL-1 duplicate resolution (MERGE), 64 unique VCs.
+          is NOT an implementation. Phase 4 will create the actual verifier.
+
+    # === Fixtures (NOT Phase 3 — Phase 4) ===
+    fixtures:
+      - item: fixtures/positive/ (valid input/output pairs)
+        already_exists: false
+        status: MISSING
+        proposed_phase_3_action: NONE — Phase 4
+      - item: fixtures/negative/ (failure mode inputs)
+        already_exists: false
+        status: MISSING
+        proposed_phase_3_action: NONE — Phase 4
+
+    # === Mutation suite (NOT Phase 3 — Phase 4Q) ===
+    mutation_suite:
+      - item: mutations/ (mutation testing suite)
+        already_exists: false
+        status: MISSING
+        proposed_phase_3_action: NONE — Phase 4Q
+
+    # === Deterministic qualification (NOT Phase 3) ===
+    deterministic_qualification:
+      - item: D-R4/E-R2/F-R equivalent for VTA
+        already_exists: false
+        status: MISSING
+        proposed_phase_3_action: NONE — Phase 4Q+
+
+    # === Integration boundaries (Phase 3 design) ===
+    integration_boundaries:
+      - item: contracts/parent-integration-contract.yaml (Phase 4a/4b handoff)
+        already_exists: true
+        status: COMPLETE (from Phase 2A)
+        proposed_phase_3_action: REVIEW — verify still valid
+      - item: contracts/bearish-setup-registry.yaml
+        already_exists: false
+        status: MISSING
+        source: Phase 2B design input (5 candidates)
+        proposed_phase_3_action: CREATE — design 5 bearish setups with independent rules
+
+    # === Bearish setup registry (Phase 3 PRIMARY) ===
+    bearish_setup_registry:
+      - item: contracts/bearish-setups/double-top.yaml
+        already_exists: false
+        status: DESIGN_INPUT_READY
+        source: Phase 2B bearish-setup-phase3-design-input.yaml
+        proposed_phase_3_action: DESIGN — independent rules, confirmation, invalidation
+      - item: contracts/bearish-setups/head-and-shoulders.yaml
+        already_exists: false
+        status: DESIGN_INPUT_READY
+        proposed_phase_3_action: DESIGN
+      - item: contracts/bearish-setups/rising-wedge.yaml
+        already_exists: false
+        status: DESIGN_INPUT_READY
+        proposed_phase_3_action: DESIGN
+      - item: contracts/bearish-setups/distribution-top.yaml
+        already_exists: false
+        status: DESIGN_INPUT_READY
+        proposed_phase_3_action: DESIGN
+      - item: contracts/bearish-setups/bearish-flag.yaml
+        already_exists: false
+        status: DESIGN_INPUT_READY
+        proposed_phase_3_action: DESIGN
+
+  scope_summary:
+    phase_3_primary:
+      - "Freeze 11 DEFERRED formula contracts (create 12 formula YAML files)"
+      - "Design 5 bearish setups (independent rules, no sign inversion)"
+      - "Resolve VC-FAB-VAL-1 duplicate"
+      - "Add expected failure codes for all 64 unique VCs"
+      - "Reconcile window conflicts (21/63/126/252 vs 20/60/120/252)"
+      - "Decide std convention for shared kernel"
+      - "Resolve benchmark assignment (VNINDEX vs VN30)"
+      - "Lock annualization factor (252 vs 244-248)"
+    phase_3_secondary:
+      - "Documentation for DERIVED_OUTPUT formulas"
+      - "Rationale freeze for archetype precedence"
+    phase_3_excluded:
+      - "Implementation modules (Phase 4)"
+      - "Independent verifier (Phase 4)"
+      - "Fixtures (Phase 4)"
+      - "Mutation suite (Phase 4Q)"
+      - "Deterministic qualification (Phase 4Q+)"

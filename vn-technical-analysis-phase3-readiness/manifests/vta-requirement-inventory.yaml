@@ -1,0 +1,203 @@
+# VTA Phase 3 — Requirement Inventory
+# Per OWNER DIRECTIVE Section 3
+# Canonical source: vn-technical-analysis-phase2A/requirements/requirement-registry.yaml
+
+requirement_inventory:
+  canonical_registry_path: vn-technical-analysis-phase2A/requirements/requirement-registry.yaml
+  registry_version: "1.0.0"
+  registry_frozen_at: '2026-07-25'
+  total_requirements: 15
+  critical: 5
+  high: 8
+  medium: 2
+
+  requirement_ids:
+    - VTA-REQ-001
+    - VTA-REQ-002
+    - VTA-REQ-003
+    - VTA-REQ-004
+    - VTA-REQ-005
+    - VTA-REQ-006
+    - VTA-REQ-007
+    - VTA-REQ-008
+    - VTA-REQ-009
+    - VTA-REQ-009a
+    - VTA-REQ-010
+    - VTA-REQ-011
+    - VTA-REQ-012
+    - VTA-REQ-013
+    - VTA-REQ-014
+
+  duplicate_ids: 0
+  missing_ids: 0
+  orphan_requirements: 0
+  requirements_without_acceptance_criteria: 0
+
+  requirements:
+    - id: VTA-REQ-001
+      canonical_name: "Technical ACTIVE mode produces valid output"
+      source_location: requirement-registry.yaml line 11
+      parent_req: REQ-005
+      controlled_risk: HIGH
+      required_behavior: "Weekly data → 6 indicators → tech_score → valid output"
+      prohibited_behavior: "Output with insufficient history or computation error"
+      acceptance_criteria: "pass_condition documented in registry"
+      current_implementation: ABSENT (no .py modules)
+      current_tests: ABSENT
+      current_verifier_obligations: [VC-ACTIVE-VALID-1, VC-ACTIVE-VALID-2, VC-ACTIVE-VALID-3, VC-EMPTY-SERIES-1, VC-INHIST-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-002
+      canonical_name: "Technical PROFILE mode produces valid output"
+      source_location: requirement-registry.yaml line 21
+      parent_req: REQ-006
+      controlled_risk: HIGH
+      required_behavior: "Daily data → 17 blocks + 8 setups + archetype → valid output"
+      prohibited_behavior: "Output with <60 sessions or block error"
+      acceptance_criteria: "pass_condition documented"
+      current_implementation: ABSENT
+      current_tests: ABSENT
+      current_verifier_obligations: [VC-PROFILE-VALID-1, VC-PROFILE-VALID-2, VC-PROFILE-VALID-3, VC-PROFILE-VALID-4]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-003
+      canonical_name: "Non-advice language enforcement"
+      source_location: requirement-registry.yaml line 31
+      parent_req: REQ-007
+      controlled_risk: HIGH
+      required_behavior: "3-layer check (lexical + semantic + imperative)"
+      prohibited_behavior: "Any advice language"
+      acceptance_criteria: "All output passes 3-layer check"
+      current_implementation: ABSENT (only grep-based check in SKILL.md)
+      current_tests: ABSENT
+      current_verifier_obligations: [VC-REQ007-LEXICAL, VC-REQ007-SEMANTIC, VC-REQ007-NEGATION, VC-REQ007-IMPERATIVE, VC-ADV-LANG-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-004
+      canonical_name: "Price basis selection per calculation type"
+      source_location: requirement-registry.yaml line 44
+      controlled_risk: CRITICAL
+      required_behavior: "Indicators use adjusted_OHLCV; returns/beta use total_return_adjusted_close"
+      prohibited_behavior: "UNKNOWN or CONFLICTING adjustment status"
+      acceptance_criteria: "Adjustment status verified per field"
+      current_implementation: ABSENT
+      current_tests: ABSENT
+      current_verifier_obligations: [VC-PRICE-BASIS-1, VC-PRICE-BASIS-2, VC-PRICE-BASIS-3, VC-CORP-ACT-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-005
+      canonical_name: "RSI uses Wilder smoothing"
+      source_location: requirement-registry.yaml line 54
+      controlled_risk: HIGH
+      required_behavior: "Wilder smoothing (period-1 multiplier)"
+      acceptance_criteria: "RSI matches Wilder 1978 reference"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-RSI-WILDER-1, VC-RSI-WILDER-2, VC-WRONG-SMOOTH-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-006
+      canonical_name: "Bollinger uses consistent std convention"
+      source_location: requirement-registry.yaml line 61
+      controlled_risk: HIGH
+      required_behavior: "Population std (÷N) for ACTIVE, Sample std (÷N-1) for PROFILE"
+      acceptance_criteria: "Both modes documented, shared kernel consistent"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-BOLL-1, VC-BOLL-2]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-007
+      canonical_name: "Channel slope normalized to percent per bar"
+      source_location: requirement-registry.yaml line 68
+      controlled_risk: MEDIUM
+      required_behavior: "normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window)"
+      acceptance_criteria: "Threshold frozen at Phase 3"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-CHANNEL-1, VC-CHANNEL-2]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-008
+      canonical_name: "No mode contamination in output"
+      source_location: requirement-registry.yaml line 78
+      controlled_risk: CRITICAL
+      required_behavior: "ACTIVE output has no PROFILE-only fields and vice versa"
+      acceptance_criteria: "Schema validation enforces mode separation"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-MODE-CONTAM-1, VC-MODE-SEP-1, VC-MODE-SEP-2, VC-MODE-SEP-3, VC-MODE-KERNEL-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-009
+      canonical_name: "Setup coverage honestly reported"
+      source_location: requirement-registry.yaml line 88
+      controlled_risk: MEDIUM
+      required_behavior: "coverage field discloses BULLISH_ONLY or INCOMPLETE_BEARISH_COVERAGE"
+      acceptance_criteria: "No implied completeness when bearish missing"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-COV-1, VC-COV-2]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-009a
+      canonical_name: "Bearish setup registry (Phase 3 design obligation)"
+      source_location: requirement-registry.yaml line 95
+      controlled_risk: HIGH
+      required_behavior: "Bearish setups with independent rules, confirmation, invalidation"
+      acceptance_criteria: "5 candidates designed (Phase 3), implemented (Phase 4)"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-BEARISH-DESIGN-1, VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4]
+      status: DESIGN_INPUT_READY (Phase 2B produced design input package)
+
+    - id: VTA-REQ-010
+      canonical_name: "Provenance present for all output metrics"
+      source_location: requirement-registry.yaml line 105
+      controlled_risk: HIGH
+      required_behavior: "Every output field traceable to source"
+      acceptance_criteria: "Provenance chain complete"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-PROV-1, VC-PROV-2, VC-PROV-MISS-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-011
+      canonical_name: "Technical output does not modify valuation"
+      source_location: requirement-registry.yaml line 115
+      controlled_risk: CRITICAL
+      required_behavior: "No path from technical output to fundamental/valuation fields"
+      acceptance_criteria: "Boundary enforcement verified"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-VAL-BOUND-1, VC-VAL-BOUND-2, VC-VAL-OVERRIDE-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-012
+      canonical_name: "No fabricated price data"
+      source_location: requirement-registry.yaml line 125
+      controlled_risk: CRITICAL
+      required_behavior: "All OHLCV from verified provider or collector packet"
+      acceptance_criteria: "Source verification per value"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-FAB-VAL-1, VC-NO-FAB-1, VC-NO-FAB-2, VC-ZERO-PX-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-013
+      canonical_name: "HVB events_1y uses calendar window not event count"
+      source_location: requirement-registry.yaml line 135
+      controlled_risk: HIGH
+      required_behavior: "events_1y = events where effective_date >= (as_of_date - 365 days)"
+      acceptance_criteria: "Calendar window, not event count slice"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-EVENTS-1Y-1]
+      status: NOT_IMPLEMENTED
+
+    - id: VTA-REQ-014
+      canonical_name: "OBV and VPT computed from separate source series"
+      source_location: requirement-registry.yaml line 145
+      controlled_risk: HIGH
+      required_behavior: "obv_change from OBV series, vpt_change from VPT series"
+      acceptance_criteria: "No copy-paste field mapping"
+      current_implementation: ABSENT
+      current_verifier_obligations: [VC-OBV-VPT-1, VC-OBV-VPT-2]
+      status: NOT_IMPLEMENTED
+
+  summary:
+    total: 15
+    not_implemented: 14
+    design_input_ready: 1  # VTA-REQ-009a
+    implemented: 0
+    acceptance_criteria_present: 15/15

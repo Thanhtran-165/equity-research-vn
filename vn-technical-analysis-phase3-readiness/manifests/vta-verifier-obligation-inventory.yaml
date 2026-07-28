@@ -1,0 +1,92 @@
+# VTA Phase 3 Readiness-R — Verifier Obligation Inventory
+# Per READINESS-R DIRECTIVE Section 4
+# After VC-FAB-VAL-1 duplicate resolution (MERGE)
+
+verifier_obligation_inventory:
+  canonical_matrix_path: vn-technical-analysis-phase2B/manifests/verifier-obligation-matrix.yaml
+  matrix_version: "1.0.0"
+  matrix_frozen_at: '2026-07-25'
+  duplicate_resolution_path: vn-technical-analysis-phase3-readiness/manifests/vta-vc-duplicate-resolution.yaml
+
+  total_records: 64  # was 65, removed 1 duplicate (VC-FAB-VAL-1 merge)
+  unique_VC_ids: 64
+  duplicate_VC_ids: 0  # RESOLVED
+  orphan_VC_checks: 0
+  conflicting_obligations: 0
+
+  by_category:
+    INPUT_PRE_FLIGHT: 14
+    COMPUTATION_RECOMPUTE: 12
+    OUTPUT_SCHEMA: 11
+    LANGUAGE_POLICY: 5
+    PROVENANCE: 5  # was 6, removed VC-FAB-VAL-1 cross-listing
+    MODE_SEPARATION: 5
+    BOUNDARY: 3
+    ARCHETYPE: 9
+
+  requirements_mapped: 15/15
+  requirements_unmapped: 0
+
+  implementation_surface:
+    present: false
+    note: >
+      No .py verifier files exist. The matrix is a DOCUMENT of obligations,
+      not an implementation. Per directive Section 9: "Do not consider
+      matrix as verifier implementation."
+
+  direct_chain_completeness:
+    chain_complete: false
+    broken_links:
+      - "VC → implementation_surface: ABSENT for all 64 VCs"
+      - "VC → fixture: ABSENT for all 64 VCs"
+      - "VC → expected_failure_code: PARTIAL"
+    complete_links:
+      - "VTA requirement → VC obligation: COMPLETE (15/15 REQs mapped)"
+
+  duplicate_resolution_summary:
+    duplicate_found: VC-FAB-VAL-1
+    resolution: MERGE_TRUE_DUPLICATES
+    records_before: 65
+    records_after: 64
+    unique_ids: 64
+    semantic_loss: false
+
+  VC_listing_summary:
+    INPUT_PRE_FLIGHT:
+      count: 14
+      ids: [VC-EMPTY-SERIES-1, VC-INHIST-1, VC-DUP-TS-1, VC-UNSORTED-1, VC-MISS-INT-1,
+            VC-ZERO-PX-1, VC-ZERO-VOL-1, VC-CORP-ACT-1, VC-BENCH-MISALIGN-1, VC-PARTIAL-WEEK-1,
+            VC-LOOKAHEAD-1, VC-FAB-VAL-1, VC-NO-FAB-1, VC-NO-FAB-2]
+    COMPUTATION_RECOMPUTE:
+      count: 12
+      ids: [VC-RSI-WILDER-1, VC-RSI-WILDER-2, VC-WRONG-SMOOTH-1, VC-BOLL-1, VC-BOLL-2,
+            VC-CHANNEL-1, VC-CHANNEL-2, VC-WRONG-LOOKBACK-1, VC-DIV-ZERO-1, VC-NAN-PROP-1,
+            VC-EVENTS-1Y-1, VC-OBV-VPT-1]
+    OUTPUT_SCHEMA:
+      count: 11
+      ids: [VC-SCHEMA-DRIFT-1, VC-MODE-CONTAM-1, VC-MODE-SEP-1, VC-MODE-SEP-2, VC-MODE-SEP-3,
+            VC-MODE-KERNEL-1, VC-PRICE-BASIS-1, VC-PRICE-BASIS-2, VC-PRICE-BASIS-3,
+            VC-ACTIVE-VALID-1, VC-PROFILE-VALID-1]
+    LANGUAGE_POLICY:
+      count: 5
+      ids: [VC-REQ007-LEXICAL, VC-REQ007-SEMANTIC, VC-REQ007-NEGATION,
+            VC-REQ007-IMPERATIVE, VC-ADV-LANG-1]
+    PROVENANCE:
+      count: 5  # was 6, VC-FAB-VAL-1 merged out
+      ids: [VC-PROV-1, VC-PROV-2, VC-PROV-MISS-1, VC-NO-FAB-1, VC-NO-FAB-2]
+    MODE_SEPARATION:
+      count: 5
+      ids: [VC-MODE-CONTAM-1, VC-MODE-SEP-1, VC-MODE-SEP-2, VC-MODE-SEP-3, VC-MODE-KERNEL-1]
+    BOUNDARY:
+      count: 3
+      ids: [VC-VAL-BOUND-1, VC-VAL-BOUND-2, VC-VAL-OVERRIDE-1]
+    ARCHETYPE:
+      count: 9
+      ids: [VC-ACTIVE-VALID-2, VC-ACTIVE-VALID-3, VC-PROFILE-VALID-2, VC-PROFILE-VALID-3,
+            VC-PROFILE-VALID-4, VC-CONFLICT-SETUP-1, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1,
+            VC-ARCH-AMBIG-1]
+
+  note_on_cross_listing: >
+    Some VCs appear in multiple categories because they serve multiple
+    purposes (e.g., VC-NO-FAB-1 covers both PROVENANCE and INPUT_PRE_FLIGHT).
+    Cross-listed VCs are counted ONCE in their primary category.
