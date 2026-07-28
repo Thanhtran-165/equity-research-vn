@@ -1,0 +1,381 @@
+# Technical Phase 2B — Phase 3 Design Input Package
+# Consolidates ALL Phase 3 obligations into single package.
+# Phase 3 must address every item below. No item may be silently dropped.
+
+technical_phase3_design_input_package:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+  package_purpose: "Single source of truth for Phase 3 design obligations"
+  package_authority: "Phase 2B cross-artifact lock"
+
+  # ====================================================================
+  # Phase 3 scope summary
+  # ====================================================================
+
+  scope:
+    primary_objectives:
+      - "Freeze all formula contracts (currently 11 DEFERRED_TO_PHASE_3)"
+      - "Calibrate thresholds against VN market data"
+      - "Design bearish setup registry (5 candidates → independent rules)"
+      - "Reconcile window conflicts (21/63/126/252 vs 20/60/120/252)"
+      - "Decide std convention for shared kernel (population ÷N vs sample ÷N-1)"
+      - "Resolve benchmark assignment per calculation (VNINDEX vs VN30)"
+      - "Lock annualization factor (252 vs 244-248 VN trading days)"
+    secondary_objectives:
+      - "Documentation for DERIVED_OUTPUT formulas (F-ALPHA, F-HV)"
+      - "Rationale freeze for archetype precedence order"
+
+  # ====================================================================
+  # Section 1 — Formula freeze obligations (11 DEFERRED formulas)
+  # ====================================================================
+
+  formula_freeze_obligations:
+    count: 11
+    source: manifests/formula-traceability-matrix.yaml
+
+    freezes_required:
+
+      - formula_id: F-RSI
+        authority_required: "Wilder 1978 reference + ta-lib calibration"
+        items_to_freeze:
+          - "Wilder seeding method (period-1 multiplier)"
+          - "Warmup requirement (minimum bars before output valid)"
+          - "Rounding policy (decimal places)"
+        linked_oracle: O-001
+        linked_req: VTA-REQ-005
+        target_artifact: "Phase 3: contracts/formula-rsi.yaml"
+
+      - formula_id: F-BOLLINGER
+        authority_required: "Bollinger reference + consistency decision"
+        items_to_freeze:
+          - "Std convention: POPULATION (÷N) OR SAMPLE (÷N-1) for SHARED KERNEL"
+          - "Window length (20 confirmed)"
+          - "Band multiplier (2σ confirmed)"
+        linked_oracle: O-002
+        linked_req: VTA-REQ-006
+        target_artifact: "Phase 3: contracts/formula-bollinger.yaml"
+        note: "This is the HIGHEST-PRIORITY freeze — directly affects FM-MODE-KERNEL-DIVERGENCE"
+
+      - formula_id: F-MA
+        authority_required: "VN trading calendar convention"
+        items_to_freeze:
+          - "Window set: 20/60/120/252 vs 21/63/126/252"
+          - "Warmup policy (return NaN OR backfill OR drop)"
+        linked_oracles: [O-003, O-010]
+        linked_req: VTA-REQ-001
+        target_artifact: "Phase 3: contracts/formula-ma.yaml"
+
+      - formula_id: F-MACD
+        authority_required: "MACD reference + seeding convention"
+        items_to_freeze:
+          - "EMA seed: data[0] (current) vs SMA(period)"
+          - "Short/long/signal windows (12/26/9 confirmed)"
+        linked_oracle: O-004
+        linked_req: VTA-REQ-001
+        target_artifact: "Phase 3: contracts/formula-macd.yaml"
+
+      - formula_id: F-BETA
+        authority_required: "Calibration + return basis decision"
+        items_to_freeze:
+          - "Window length (52w? 104w? full sample?)"
+          - "Return basis (log vs simple)"
+          - "Benchmark (VNINDEX canonical, VN30 secondary — per-calc assignment)"
+        linked_oracles: [O-005, O-018]
+        linked_req: VTA-REQ-001
+        target_artifact: "Phase 3: contracts/formula-beta.yaml"
+
+      - formula_id: F-CORRELATION
+        authority_required: "Same as Beta window decision"
+        items_to_freeze:
+          - "Window length (linked to Beta)"
+        linked_oracle: O-006
+        linked_req: VTA-REQ-001
+        target_artifact: "Phase 3: contracts/formula-correlation.yaml"
+
+      - formula_id: F-ROLLING-RETURN
+        authority_required: "Trading day convention"
+        items_to_freeze:
+          - "Window set: 20/60/120/252 vs 21/63/126/252"
+        linked_oracle: O-010
+        linked_req: VTA-REQ-002
+        target_artifact: "Phase 3: contracts/formula-rolling-return.yaml"
+
+      - formula_id: F-PERCENTILE
+        authority_required: "Statistical convention decision"
+        items_to_freeze:
+          - "Method: FLOOR counting OR LINEAR interpolation (pick ONE for shared kernel)"
+        linked_oracle: O-012
+        linked_req: VTA-REQ-002
+        target_artifact: "Phase 3: contracts/formula-percentile.yaml"
+
+      - formula_id: F-ARCHETYPE-PRECEDENCE
+        authority_required: "Methodology justification"
+        items_to_freeze:
+          - "Rationale for priority order (momentum > accumulation > trap > mixed > none)"
+        linked_oracle: O-014
+        linked_req: VTA-REQ-002
+        target_artifact: "Phase 3: contracts/archetype-precedence.yaml"
+        note: "Precedence itself already deterministic. Only rationale needs freeze."
+
+      - formula_id: F-REGIME
+        authority_required: "Calibration against VN market data"
+        items_to_freeze:
+          - "Threshold values (dd≤-18%, r60≤-12%, vol_rank≥75 etc.)"
+          - "O(n²) bug fix design (B9)"
+        linked_req: VTA-REQ-002
+        target_artifact: "Phase 3: contracts/formula-regime.yaml"
+        note: "Thresholds currently from reference file; VN calibration required"
+
+      - formula_id: F-INDUSTRY-PEER
+        authority_required: "Peer data availability from collector or vnstock"
+        items_to_freeze:
+          - "Industry peer data source"
+          - "Minimum peer count"
+          - "Sector classification"
+        linked_req: VTA-REQ-002
+        target_artifact: "Phase 3: contracts/formula-industry-peer.yaml"
+        applicability: CONDITIONAL
+
+  # ====================================================================
+  # Section 2 — DERIVED_OUTPUT documentation obligations (4)
+  # ====================================================================
+
+  derived_output_documentation_obligations:
+    count: 4
+
+    obligations:
+      - formula_id: F-ALPHA
+        documentation_required: "Explicitly state NOT Jensen's alpha. Risk-free rate omitted. Acceptable for descriptive purposes only."
+        linked_oracle: O-020
+
+      - formula_id: F-TECH-SCORE
+        documentation_required: "Reconcile gap at score=-3. Define RSI 45-55 zone handling. Define BB exactly 50% handling."
+        linked_oracle: O-023
+
+      - formula_id: F-HV
+        documentation_required: "Lock annualization factor. √252 assumes US calendar. VN has ~244-248 trading days. Choose canonical factor."
+        target_artifact: "Phase 3: contracts/formula-hv.yaml"
+
+      - formula_id: F-VPT-CHANGE
+        documentation_required: "Lock change method (absolute vs percent). Confirm separate source series from OBV."
+        linked_oracle: O-024
+
+  # ====================================================================
+  # Section 3 — Threshold freeze obligations
+  # ====================================================================
+
+  threshold_freeze_obligations:
+    count: 7
+    source: manifests/oracle-disposition-registry.yaml
+
+    thresholds_to_freeze:
+
+      - threshold_id: T-CHANNEL-SLOPE
+        formula: F-CHANNEL-SLOPE
+        current_state: "normalized_slope_pct_per_bar formula DEFINITE; threshold value NOT frozen"
+        items_to_freeze: "Classification threshold (e.g., |slope| > X% → trending)"
+        linked_oracle: O-009
+        linked_req: VTA-REQ-007
+
+      - threshold_id: T-DOUBLE-BOTTOM-PARAMS
+        formula: F-DOUBLE-BOTTOM
+        current_state: "RECONCILED with mode_parameterization; freeze parameter values"
+        items_to_freeze:
+          - "ACTIVE: tolerance_pct=3, min_spacing_weeks=5 (current)"
+          - "PROFILE: tolerance_pct=8, min_spacing_sessions=12 (current)"
+        linked_oracle: O-008
+        note: "Already reconciled. Phase 3 = formal freeze."
+
+      - threshold_id: T-VAR-ES-CONFIDENCE
+        formula: N/A (B5/B6)
+        items_to_freeze: "95% and 99% (currently implied by field names)"
+        linked_oracle: O-011
+
+      - threshold_id: T-SETUP-SCORE-BANDS
+        formula: F-TECH-SCORE
+        current_state: "55/62/78 thresholds from reference; top-N conflict (6 vs 8)"
+        items_to_freeze:
+          - "Score bands (55/62/78)"
+          - "Top-N policy (recommend: ALL ≥55, no truncation)"
+        linked_oracle: O-015
+
+      - threshold_id: T-TECH-SCORE-VERDICT-BANDS
+        formula: F-TECH-SCORE
+        current_state: "+4-6/+1-3/-1-0/-2to-3/-4to-6 with gap at -3"
+        items_to_freeze: "Reconcile gap at score=-3"
+        linked_oracle: O-023
+
+      - threshold_id: T-REGIME-THRESHOLDS
+        formula: F-REGIME
+        current_state: "dd≤-18%, r60≤-12% etc. from reference file"
+        items_to_freeze: "Calibrate against VN market data"
+        linked_req: VTA-REQ-002
+
+      - threshold_id: T-RSI-NEUTRAL-ZONE
+        formula: F-RSI
+        current_state: "45-55 zone ambiguous in tech_score mapping"
+        items_to_freeze: "Define RSI 45-55 handling in tech_score binary signal"
+
+  # ====================================================================
+  # Section 4 — Window reconciliation (cross-formula)
+  # ====================================================================
+
+  window_reconciliation:
+    conflict: "metric_guardrails.md says 20D/60D/120D/252D. stock_profile_blocks.md uses 21/63/126/252."
+    decision_required: "Pick ONE canonical window set for shared kernel"
+    options:
+      - OPTION_20_60_120_252:
+          rationale: "Round numbers, easy to communicate"
+          drawback: "Loose approximation of trading months"
+      - OPTION_21_63_126_252:
+          rationale: "Trading-day accurate (21≈1 month, 63≈1 quarter, 126≈half-year)"
+          drawback: "Less intuitive for non-technical readers"
+      - OPTION_HYBRID:
+          rationale: "Use trading-day accurate for calculations, present as 1M/3M/6M/1Y in output"
+          drawback: "Requires mapping table"
+    recommendation: OPTION_21_63_126_252
+    affected_formulas: [F-MA, F-ROLLING-RETURN, F-BOLLINGER (window=20 only)]
+    authority: "Sol decision required"
+
+  # ====================================================================
+  # Section 5 — Std convention reconciliation
+  # ====================================================================
+
+  std_convention_reconciliation:
+    conflict: "indicators.md uses population std (÷N). stock_profile_blocks.md uses sample std (÷N-1)."
+    decision_required: "Pick ONE std convention for shared kernel"
+    options:
+      - OPTION_POPULATION:
+          rationale: "Treat window as complete population (current ACTIVE behavior)"
+          impact: "BB bands slightly tighter"
+      - OPTION_SAMPLE:
+          rationale: "Treat window as sample of larger distribution (current PROFILE behavior)"
+          impact: "BB bands slightly wider; standard statistical convention"
+    recommendation: OPTION_POPULATION
+    rationale_for_recommendation: "Indicators operate on a fixed window (treated as population). Sample std is for inference, which indicators don't do."
+    affected_formulas: [F-BOLLINGER, F-HV]
+    authority: "Sol decision required"
+    note: "Once decided, BOTH ACTIVE and PROFILE must use the SAME convention in shared kernel."
+
+  # ====================================================================
+  # Section 6 — Bearish setup registry design
+  # ====================================================================
+
+  bearish_setup_registry_design:
+    full_spec: manifests/bearish-setup-phase3-design-input.yaml
+    summary:
+      candidates: 5  # C-BEAR-FLAG, C-BEAR-PENNANT, C-DESCENDING-TRIANGLE, C-RECTANGLE-TOP, C-HEAD-SHOULDERS
+      design_obligations: 6  # independent, confirmation, invalidation, min_history, conflict, no_setup
+      open_questions_for_sol: 5
+      prohibited: "Mirror by sign inversion (Sol §3)"
+    authority: "Sol (after Phase 3 design review)"
+    implementation_phase: PHASE_4
+
+  # ====================================================================
+  # Section 7 — Annualization factor
+  # ====================================================================
+
+  annualization_factor_reconciliation:
+    conflict: "F-HV uses √252 (US calendar). VN has ~244-248 trading days."
+    decision_required: "Lock canonical annualization factor"
+    options:
+      - "252 (US standard, current)"
+      - "248 (VN typical)"
+      - "244 (VN conservative)"
+      - "Calendar-computed (count actual trading days in last 12 months)"
+    recommendation: "Calendar-computed (most accurate)"
+    authority: "Sol decision required"
+    affected_formulas: [F-HV, F-BETA (if return-basis = log)]
+
+  # ====================================================================
+  # Section 8 — Benchmark assignment per calculation
+  # ====================================================================
+
+  benchmark_assignment:
+    conflict: "VNINDEX vs VN30 — different benchmarks → different Beta"
+    current_state: "Both used; canonical unclear"
+    decision_required: "Per-calculation benchmark assignment"
+    proposed_assignment:
+      F-BETA: VNINDEX
+      F-CORRELATION: VNINDEX
+      F-RELATIVE-STRENGTH: VN30  # for sector-relative strength
+    authority: "Sol decision required"
+
+  # ====================================================================
+  # Section 9 — Verifier obligations activated in Phase 3
+  # ====================================================================
+
+  verifier_obligations_phase_3:
+    count: 7
+    source: manifests/verifier-obligation-matrix.yaml
+    obligations:
+      - VC-BOLL-1: "Assert shared kernel uses ONE std convention"
+      - VC-CHANNEL-2: "Threshold value frozen in Phase 3 contract"
+      - VC-WRONG-LOOKBACK-1: "Window=22 (invalid) → fail-closed"
+      - VC-BEARISH-DESIGN-1: "Bearish setups have independent rules"
+      - VC-BEARISH-DESIGN-2: "Each bearish setup has confirmation + invalidation + min_history"
+      - VC-BEARISH-DESIGN-3: "Bullish+bearish simultaneous match behavior defined"
+      - VC-BEARISH-DESIGN-4: "Denominator frozen after Phase 3 review"
+
+  # ====================================================================
+  # Section 10 — Phase 3 deliverables preview
+  # ====================================================================
+
+  phase_3_deliverables_preview:
+    formula_contracts:
+      count: 11  # one per DEFERRED formula
+      pattern: "contracts/formula-{name}.yaml"
+    threshold_freezes:
+      count: 7  # one per threshold
+      pattern: "contracts/threshold-{name}.yaml"
+    bearish_registry:
+      count: 1
+      pattern: "contracts/bearish-setup-registry.yaml"
+    window_reconciliation_record:
+      count: 1
+      pattern: "manifests/phase3-window-reconciliation.yaml"
+    std_convention_record:
+      count: 1
+      pattern: "manifests/phase3-std-convention.yaml"
+    consolidated_report:
+      count: 1
+      pattern: "reports/technical-phase3-design-freeze.md"
+    total: 22
+
+  # ====================================================================
+  # Section 11 — Phase 3 entry criteria
+  # ====================================================================
+
+  phase_3_entry_criteria:
+    criteria:
+      - "Phase 2B cross-artifact lock PASS (this package)"
+      - "All 18 Phase 2A artifacts validated (phase2A-artifact-validation-results.yaml)"
+      - "All 11 Phase 2B deliverables complete"
+      - "Sol authorization to enter Phase 3"
+    status: PENDING_SOL_AUTHORIZATION
+
+  # ====================================================================
+  # Section 12 — Phase 3 exit criteria (preview)
+  # ====================================================================
+
+  phase_3_exit_criteria:
+    - "All 11 formula contracts frozen with authority cited"
+    - "All 7 thresholds frozen with calibration evidence"
+    - "Bearish setup registry designed (5 candidates with independent rules)"
+    - "Window reconciliation decided (one canonical set)"
+    - "Std convention decided (one for shared kernel)"
+    - "Annualization factor locked"
+    - "Benchmark assignment per calculation frozen"
+    - "All Phase 3 verifier obligations satisfied (VC-BOLL-1, VC-CHANNEL-2, VC-WRONG-LOOKBACK-1, VC-BEARISH-DESIGN-1..4)"
+    - "Cross-artifact lock PASS for Phase 3"
+
+  # ====================================================================
+  # Cross-artifact integrity
+  # ====================================================================
+
+  integrity_check:
+    obligations_total: 38  # 11 formula + 4 derived doc + 7 thresholds + bearish + window + std + annual + benchmark + 7 verifier
+    obligations_resolved_in_phase_3: 0  # all PENDING
+    obligations_complete_after_phase_3: 38  # target
+    cross_artifact_lock: manifests/technical-phase2B-cross-artifact-lock.yaml
+    status: PACKAGE_READY_FOR_PHASE_3

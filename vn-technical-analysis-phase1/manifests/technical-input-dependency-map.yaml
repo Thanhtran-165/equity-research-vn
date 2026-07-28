@@ -1,0 +1,119 @@
+# Technical Phase 1 — Input Dependency Map
+# READ_ONLY audit artifact. Not a production contract.
+
+inputs:
+  total: 12
+
+  fields:
+    - name: weekly_close
+      type: float
+      frequency: WEEKLY
+      required_by: [F-MA-ACTIVE, F-RSI-ACTIVE, F-MACD-ACTIVE, F-BOLL-ACTIVE, F-BETA-ACTIVE, F-CORR-ACTIVE, P-SWING, P-DB-ACTIVE, P-CHANNEL, P-CANDLE, P-DIVERGENCE]
+      nullable: false
+      units: "nghìn đồng (vnstock returns nghìn, must ×1000 for calculations)"
+      adjustment_status: AMBIGUOUS
+      source: vnstock Quote.history(interval='1W')
+      fallback: none
+      failure_behavior: dropna(subset=['close'])
+
+    - name: weekly_open
+      type: float
+      frequency: WEEKLY
+      required_by: [P-CANDLE]
+      nullable: false
+      units: "nghìn đồng"
+      adjustment_status: AMBIGUOUS
+      source: vnstock
+      failure_behavior: dropna
+
+    - name: weekly_high
+      type: float
+      frequency: WEEKLY
+      required_by: [P-CANDLE, P-CHANNEL]
+      units: "nghìn đồng"
+      adjustment_status: AMBIGUOUS
+
+    - name: weekly_low
+      type: float
+      frequency: WEEKLY
+      required_by: [P-CANDLE, P-CHANNEL, P-DB-ACTIVE]
+      units: "nghìn đồng"
+      adjustment_status: AMBIGUOUS
+
+    - name: weekly_volume
+      type: int
+      frequency: WEEKLY
+      required_by: []
+      units: "shares count"
+      failure_behavior: "not used in ACTIVE indicators, only for pattern confirmation"
+
+    - name: daily_close
+      type: float
+      frequency: DAILY
+      required_by: [ALL_PROFILE_BLOCKS, ALL_SETUPS]
+      nullable: false
+      units: "nghìn đồng"
+      adjustment_status: AMBIGUOUS
+      source: vnstock Quote.history(interval='1D')
+      failure_behavior: "dropna(subset=['close']), sort by time"
+
+    - name: daily_volume
+      type: int
+      frequency: DAILY
+      required_by: [B4, B7, B11, B12, B13, B14, B16, S-ALL]
+      units: "shares count (thousands from vnstock?)"
+      failure_behavior: "if None → value = 0"
+
+    - name: daily_value
+      type: float
+      frequency: DAILY
+      required_by: [B4, B7, B10, B11, B12, B13, B14]
+      units: "đồng (computed: close × volume × 1000)"
+      computation: "value = close × volume × 1000"
+      ambiguity: "assumes volume in thousands. If volume already in units → value off by 1000×."
+
+    - name: vnindex_weekly
+      type: float
+      frequency: WEEKLY
+      required_by: [F-BETA-ACTIVE, F-CORR-ACTIVE, F-PERF-ACTIVE]
+      source: "Quote(symbol='VNINDEX', source='VCI')"
+      alignment: AMBIGUOUS (no explicit date alignment check)
+
+    - name: vnindex_daily
+      type: float
+      frequency: DAILY
+      required_by: [B8, B9]
+      source: "Quote(symbol='VNINDEX', source='VCI')"
+      alignment: AMBIGUOUS
+      failure_behavior: "orchestrator does NOT guard None → crash"
+
+    - name: vn30_daily
+      type: float
+      frequency: DAILY
+      required_by: [B8]
+      source: "Quote(symbol='VN30', source='VCI')"
+      alignment: AMBIGUOUS
+      failure_behavior: "optional, None accepted by B8"
+
+    - name: company_overview
+      type: dict
+      frequency: N/A
+      required_by: [ACTIVE_step_1]
+      fields_used: [market_cap, issue_share, target_price, highest_price1_year, lowest_price1_year]
+      source: "Company(symbol).overview()"
+
+edge_cases:
+  timestamp_timezone: "AMBIGUOUS — vnstock returns time field, format assumed YYYY-MM-DD from str(r['time'])[:10]"
+  exchange_calendar: "AMBIGUOUS — 252 sessions/year (US) vs ~244 (VN)? HV uses √252"
+  missing_trading_days: "dropna(subset=['close']) — suspended sessions dropped silently"
+  suspended_sessions: "AMBIGUOUS — no explicit handling beyond dropna"
+  duplicate_dates: "AMBIGUOUS — no dedup logic"
+  zero_volume: "value = close × 0 × 1000 = 0 — accepted silently"
+  zero_price: "AMBIGUOUS — not handled, would produce NaN in indicators"
+  negative_volume: "AMBIGUOUS — not handled"
+  corporate_actions: "AMBIGUOUS — adjusted vs unadjusted not specified"
+  adjusted_unadjusted: "AMBIGUOUS — SKILL.md uses df['close'] without specifying adj_close"
+  benchmark_alignment: "AMBIGUOUS — no explicit date alignment between stock and VNINDEX/VN30"
+  daily_to_weekly_aggregation: "NOT NEEDED — ACTIVE fetches weekly directly, PROFILE fetches daily directly"
+  partial_current_week: "AMBIGUOUS — if current week is incomplete, included or excluded?"
+  insufficient_warmup: "ACTIVE: AMBIGUOUS. PROFILE: <60 sessions → hard error. <252 → degraded but accepted."

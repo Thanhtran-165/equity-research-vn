@@ -1,0 +1,164 @@
+# Technical Phase 2A — Requirement Registry
+# Maps parent REQ-005/006/007 + adds technical-specific requirements
+
+requirement_registry:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+
+  requirements:
+
+    # === Parent-inherited ===
+
+    - id: VTA-REQ-001
+      title: "Technical ACTIVE mode produces valid output"
+      parent_req: REQ-005
+      category: TECHNICAL_ACTIVE
+      severity: HIGH
+      primary_owner: INDICATOR_ENGINE
+      pass_condition: "Weekly data → 6 indicators computed → tech_score → output valid"
+      fail_condition: "Insufficient weekly data or indicator computation error"
+      error_codes: [INSUFFICIENT_HISTORY, EMPTY_SERIES, FORMULA_NOT_APPLICABLE]
+
+    - id: VTA-REQ-002
+      title: "Technical PROFILE mode produces valid output"
+      parent_req: REQ-006
+      category: TECHNICAL_PROFILE
+      severity: HIGH
+      primary_owner: PROFILE_ENGINE
+      pass_condition: "Daily data → 17 blocks + 8 setups + archetype → output valid"
+      fail_condition: "Insufficient daily data (<60 sessions) or block computation error"
+      error_codes: [INSUFFICIENT_HISTORY, EMPTY_SERIES]
+
+    - id: VTA-REQ-003
+      title: "Non-advice language enforcement"
+      parent_req: REQ-007
+      category: LANGUAGE_POLICY
+      severity: HIGH
+      primary_owner: LANGUAGE_VERIFIER
+      pass_condition: "All output text passes 3-layer check (lexical + semantic + imperative)"
+      fail_condition: "Any prohibited language detected"
+      error_codes: [ADVICE_LANGUAGE_DETECTED]
+      precedence: HIGHEST
+
+    # === Price basis ===
+
+    - id: VTA-REQ-004
+      title: "Price basis selection per calculation type"
+      category: PRICE_BASIS
+      severity: CRITICAL
+      primary_owner: NORMALIZATION_ENGINE
+      pass_condition: "Indicators use adjusted_OHLCV; returns/beta use total_return_adjusted_close"
+      fail_condition: "Adjustment status UNKNOWN or CONFLICTING"
+      error_codes: [UNKNOWN_ADJUSTMENT_STATUS, CONFLICTING_ADJUSTMENT_STATUS]
+
+    # === Formula integrity ===
+
+    - id: VTA-REQ-005
+      title: "RSI uses Wilder smoothing"
+      category: FORMULA_DEFINITION
+      severity: HIGH
+      primary_owner: INDICATOR_ENGINE
+      pass_condition: "RSI computed with Wilder smoothing (period-1 multiplier)"
+      note: "Reconciled from ambiguity O-001"
+
+    - id: VTA-REQ-006
+      title: "Bollinger uses consistent std convention"
+      category: FORMULA_DEFINITION
+      severity: HIGH
+      primary_owner: INDICATOR_ENGINE
+      pass_condition: "Population std (÷N) for ACTIVE, Sample std (÷N-1) for PROFILE — both documented"
+      note: "Reconciled from ambiguity O-002. Both modes must use SAME convention in shared kernel."
+
+    - id: VTA-REQ-007
+      title: "Channel slope normalized to percent per bar"
+      category: FORMULA_DEFINITION
+      severity: MEDIUM
+      primary_owner: PATTERN_ENGINE
+      pass_condition: "normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window)"
+      note: "Reconciled from ambiguity O-009. Threshold frozen at Phase 3."
+
+    # === Mode separation ===
+
+    - id: VTA-REQ-008
+      title: "No mode contamination in output"
+      category: MODE_SEPARATION
+      severity: CRITICAL
+      primary_owner: OUTPUT_ASSEMBLER
+      pass_condition: "ACTIVE output contains no PROFILE-only fields and vice versa"
+      error_codes: [MODE_CONTAMINATION]
+
+    # === Setup coverage ===
+
+    - id: VTA-REQ-009
+      title: "Setup coverage honestly reported"
+      category: SETUP_COVERAGE
+      severity: MEDIUM
+      primary_owner: PROFILE_ENGINE
+      pass_condition: "setup_coverage field discloses directional coverage status (BULLISH_ONLY or INCOMPLETE_BEARISH_COVERAGE)"
+      fail_condition: "Coverage claim implies completeness when bearish detectors not implemented"
+      note: "Before Phase 4 bearish implementation: coverage_status must be INCOMPLETE_BEARISH_COVERAGE. Absence of bullish setup must NOT be used as bearish evidence."
+
+    - id: VTA-REQ-009a
+      title: "Bearish setup registry (Phase 3 design obligation)"
+      category: SETUP_COVERAGE
+      severity: HIGH
+      primary_owner: PATTERN_ENGINE
+      pass_condition: "Bearish setups designed with independent rules, confirmation, invalidation, minimum history"
+      note: "Decision: ADD_BEARISH_SETUP_REGISTRY (Sol §3). Mirror by sign inversion PROHIBITED. Denominator frozen after Phase 3."
+      phase_for_design: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    # === Provenance ===
+
+    - id: VTA-REQ-010
+      title: "Provenance present for all output metrics"
+      category: PROVENANCE
+      severity: HIGH
+      primary_owner: PROVENANCE_ENGINE
+      pass_condition: "Every output field traceable to source via provenance chain"
+      error_codes: [PROVENANCE_MISSING]
+
+    # === Valuation boundary ===
+
+    - id: VTA-REQ-011
+      title: "Technical output does not modify valuation"
+      category: BOUNDARY_ENFORCEMENT
+      severity: CRITICAL
+      primary_owner: INTEGRATION_ADAPTER
+      pass_condition: "No path exists from technical output to fundamental/valuation fields"
+      error_codes: [VALUATION_OVERRIDE_ATTEMPT]
+
+    # === Data integrity ===
+
+    - id: VTA-REQ-012
+      title: "No fabricated price data"
+      category: DATA_INTEGRITY
+      severity: CRITICAL
+      primary_owner: NORMALIZATION_ENGINE
+      pass_condition: "All OHLCV values sourced from verified provider or collector packet"
+      note: "Aligns with SKILL.md principle: KHÔNG NGỤY TẠO DATA"
+
+    # === Events_1y correctness ===
+
+    - id: VTA-REQ-013
+      title: "HVB events_1y uses calendar window not event count"
+      category: FORMULA_DEFINITION
+      severity: HIGH
+      primary_owner: PROFILE_ENGINE
+      pass_condition: "events_1y = events where effective_date >= (as_of_date - 365 calendar days)"
+      note: "Reconciled from ambiguity O-013 / Sol decision §4"
+
+    # === OBV/VPT separation ===
+
+    - id: VTA-REQ-014
+      title: "OBV and VPT computed from separate source series"
+      category: FORMULA_DEFINITION
+      severity: HIGH
+      primary_owner: PROFILE_ENGINE
+      pass_condition: "obv_change sourced from OBV series, vpt_change sourced from VPT series"
+      note: "Reconciled from ambiguity O-024 / Sol decision §5. B12 bug fix obligation."
+
+  total: 15
+  critical: 5
+  high: 8
+  medium: 2

@@ -1,0 +1,75 @@
+# Technical Phase 2A — Setup Coverage Reconciliation
+
+setup_coverage_reconciliation:
+  legacy_setup_registry:
+    total: 8
+    directional_coverage: BULLISH_ONLY
+    audited_detectors: 8
+    duplicate: 0
+    undefined: 0
+
+    setups:
+      - {id: S-BULL-FLAG, name: "Bull Flag", direction: BULLISH, min_history: 65}
+      - {id: S-BULL-PENNANT, name: "Bull Pennant", direction: BULLISH, min_history: 65}
+      - {id: S-HIGH-TIGHT-FLAG, name: "High Tight Flag", direction: BULLISH, min_history: 65}
+      - {id: S-MEASURED-MOVE-UP, name: "Measured Move Up", direction: BULLISH, min_history: 65}
+      - {id: S-TRIANGLE-ASC, name: "Ascending Triangle", direction: BULLISH, min_history: 65}
+      - {id: S-TRIANGLE-SYM, name: "Symmetrical Triangle", direction: BULLISH, min_history: 65}
+      - {id: S-CUP-HANDLE, name: "Cup with Handle", direction: BULLISH, min_history: 75}
+      - {id: S-DB-PROFILE, name: "Double Bottom (Daily)", direction: BULLISH, min_history: 65}
+
+    top_n_returned: 6
+    top_n_vs_claimed_conflict: "Code comment says top 6. SKILL.md header says 8. Contract must explicitly define: return ALL setups ≥55 score, sorted desc. No silent top-N truncation."
+
+  bearish_gap:
+    status: "NO_BEARISH_DETECTORS_EXIST"
+    existing_dict_entries: "DOWNSIDE_PATTERNS dict in pattern_scoring.md has bear_flag, bear_pennant, triangles_descending, rectangle_tops, head_and_shoulders — but NO detector functions"
+    impact: "archetype 'trap_prone' only triggers via high_volume_behavior (B14), never via bearish pattern detection"
+
+  bearish_setup_policy_decision:
+    decision: ADD_BEARISH_SETUP_REGISTRY
+    decided_by: OWNER (Sol Phase 2A-R §3)
+    rationale: "8 bullish-only setups insufficient for balanced technical assessment. Engine must support BEARISH, MIXED states."
+    design_phase: PHASE_3
+    implementation_phase: PHASE_4
+    symmetric_sign_inversion: PROHIBITED
+    complete_directional_coverage_claim_allowed_before_bearish_registry_PASS: false
+
+  coverage_contract:
+    bullish_coverage: true
+    bearish_coverage: false
+    neutral_or_no_setup_behavior: "no_current_setup archetype handles empty case"
+    coverage_status: BULLISH_ONLY
+
+  output_fields_required:
+    setup_coverage:
+      bullish_coverage: "boolean — are bullish detectors implemented?"
+      bearish_coverage: "boolean — are bearish detectors implemented?"
+      neutral_or_no_setup_behavior: "string — what happens when no setups ≥55?"
+    setup_coverage_status:
+      field: "DEDICATED FIELD independent from analysis_status"
+      enum: ["COMPLETE_DIRECTIONAL_COVERAGE", "INCOMPLETE_BEARISH_COVERAGE", "NOT_EVALUATED"]
+      note: "NOT part of analysis_status enum. analysis_status describes validity; setup_coverage_status describes directional engine scope."
+
+  mandatory_output_status_before_bearish_implementation:
+    coverage_status: INCOMPLETE_BEARISH_COVERAGE
+    note: "Technical output MUST report INCOMPLETE_BEARISH_COVERAGE until bearish registry is designed (Phase 3) and implemented (Phase 4)"
+    prohibited: "Using absence of bullish setup as evidence of bearish conditions"
+
+  phase_3_obligations:
+    bearish_setup_requirements:
+      minimum_registry_size: NOT_YET_FROZEN
+      independent_rule_design: required
+      confirmation_rules: required
+      invalidation_rules: required
+      minimum_history: required
+      conflict_resolution: required
+      bullish_bearish_simultaneous_match_behavior: required
+      no_setup_behavior: required
+    denominator_freeze: "Only after Phase 3 design review"
+
+  double_bottom_threshold_conflict:
+    active: "P-DB-ACTIVE: <3% tolerance, ≥5 weeks spacing (weekly)"
+    profile: "S-DB-PROFILE: <8% tolerance, ≥12 sessions spacing (daily)"
+    resolution: "Both are LEGITIMATE — different frequencies require different thresholds. Document explicitly in formula contract."
+    phase_for_freeze: PHASE_3

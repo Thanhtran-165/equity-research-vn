@@ -1,0 +1,75 @@
+# Technical Phase 2A-R3 — Formula Disposition Delta Manifest
+# Tracks every formula's disposition across R1 → R2 → R3 with change reasons
+
+formula_delta:
+  records: 22
+  unexplained_changes: 0
+  missing_formula_ids: 0
+  duplicate_formula_ids: 0
+
+  formulas:
+
+    # === Stable formulas (no changes across R1→R2→R3) ===
+
+    - {formula_id: F-STATUS-TAXONOMY, R1: RECONCILED, R2: RECONCILED, R3: RECONCILED, changed: false}
+    - {formula_id: F-PRICE-BASIS, R1: RECONCILED, R2: RECONCILED, R3: RECONCILED, changed: false}
+    - {formula_id: F-CHANNEL-SLOPE, R1: RECONCILED, R2: RECONCILED, R3: RECONCILED, changed: false}
+    - {formula_id: F-HVB-EVENTS-1Y, R1: RECONCILED, R2: RECONCILED, R3: RECONCILED, changed: false}
+    - {formula_id: F-OBV-CHANGE, R1: RECONCILED, R2: RECONCILED, R3: RECONCILED, changed: false}
+      # F-OBV-CHANGE: source_series=OBV, independent_from_VPT=true, distinct_formula_definitions=true
+    - {formula_id: F-MARKET-DATA-PACKET, R1: RECONCILED, R2: RECONCILED, R3: RECONCILED, changed: false}
+
+    - {formula_id: F-RSI, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-BOLLINGER, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-MA, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-MACD, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-BETA, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-CORRELATION, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-ROLLING-RETURN, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-PERCENTILE, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-ARCHETYPE-PRECEDENCE, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+    - {formula_id: F-REGIME, R1: DEFERRED_TO_PHASE_3, R2: DEFERRED_TO_PHASE_3, R3: DEFERRED_TO_PHASE_3, changed: false}
+
+    - {formula_id: F-ALPHA, R1: DERIVED_OUTPUT, R2: DERIVED_OUTPUT, R3: DERIVED_OUTPUT, changed: false}
+    - {formula_id: F-TECH-SCORE, R1: DERIVED_OUTPUT, R2: DERIVED_OUTPUT, R3: DERIVED_OUTPUT, changed: false}
+    - {formula_id: F-HV, R1: DERIVED_OUTPUT, R2: DERIVED_OUTPUT, R3: DERIVED_OUTPUT, changed: false}
+
+    # === Changed formulas ===
+
+    - formula_id: F-DOUBLE-BOTTOM
+      R1: DUPLICATE_SEMANTIC
+      R2: RECONCILED
+      R3: RECONCILED
+      changed: true
+      change_reason: "R2: Sol Phase 2A-R2 §2 — DUPLICATE_SEMANTIC invalid when parameters differ by frequency. Reclassified to RECONCILED with mode_parameterization."
+
+    - formula_id: F-INDUSTRY-PEER
+      R1: NOT_APPLICABLE
+      R2: DEFERRED_TO_PHASE_3
+      R3: DEFERRED_TO_PHASE_3
+      changed: true
+      change_reason: "R2: Sol Phase 2A-R2 §3 — NOT_APPLICABLE invalid for optional formula. Runtime NOT_APPLICABLE is result, not disposition. Reclassified to DEFERRED_TO_PHASE_3 with runtime applicability."
+
+    - formula_id: F-VPT-CHANGE
+      R1: ALIAS
+      R2: ALIAS
+      R3: DERIVED_OUTPUT
+      changed: true
+      change_reason: "R3: Sol Phase 2A-R3 §1 — ALIAS to F-OBV-CHANGE self-contradicts with independence requirement. VPT and OBV have distinct accumulation formulas. VPT is derived from VPT series (not OBV). Reclassified to DERIVED_OUTPUT (derived_from=F-VPT)."
+
+  # === Final R3 disposition totals (computed from 22 records) ===
+  final_totals:
+    RECONCILED: 7
+    DEFERRED_TO_PHASE_3: 11
+    ALIAS: 0
+    DERIVED_OUTPUT: 4
+    DUPLICATE_SEMANTIC: 0
+    NOT_APPLICABLE: 0
+    total: 22
+
+  delta_gate:
+    formula_records: "22/22"
+    unexplained_changes: 0
+    missing_formula_ids: 0
+    duplicate_formula_ids: 0
+    unreported_transitions: 0

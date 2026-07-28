@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "technical-active-output",
+  "title": "Technical Analysis ACTIVE Output",
+  "description": "Output schema for ACTIVE mode (weekly indicators + patterns + tech_score)",
+  "type": "object",
+  "required": ["schema_version", "ticker", "as_of_date", "data_source", "analysis_status", "technical_state", "indicators", "tech_score", "price_basis_used", "provenance"],
+  "properties": {
+    "schema_version": {"type": "string", "const": "technical-active-v1"},
+    "ticker": {"type": "string"},
+    "as_of_date": {"type": "string", "format": "date"},
+    "data_source": {"type": "string"},
+    "data_period": {"type": "string"},
+    "analysis_status": {"type": "string", "enum": ["VALID", "VALID_WITH_WARNINGS", "INPUT_INCOMPLETE", "NOT_APPLICABLE", "ERROR"]},
+    "technical_state": {"type": "string", "enum": ["BULLISH", "BEARISH", "NEUTRAL", "MIXED", "UNDETERMINED"]},
+    "confidence": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "NOT_ESTABLISHED"]},
+    "price_basis_used": {"type": "string", "enum": ["VERIFIED_ADJUSTED", "VERIFIED_NO_ACTION_REQUIRED"]},
+    "price_current": {"type": "number"},
+    "performance_1y_pct": {"type": "number"},
+    "high_52w": {"type": "number"},
+    "low_52w": {"type": "number"},
+    "indicators": {
+      "type": "object",
+      "properties": {
+        "ma10": {"type": "number"},
+        "ma20": {"type": "number"},
+        "ma50": {"type": "number"},
+        "rsi14": {"type": "number", "minimum": 0, "maximum": 100},
+        "macd": {"type": "number"},
+        "signal": {"type": "number"},
+        "macd_histogram": {"type": "number"},
+        "bollinger_middle": {"type": "number"},
+        "bollinger_upper": {"type": "number"},
+        "bollinger_lower": {"type": "number"},
+        "bollinger_position_pct": {"type": "number", "minimum": 0, "maximum": 100},
+        "price_vs_ma10": {"type": "number", "enum": [-1, 0, 1]},
+        "price_vs_ma20": {"type": "number", "enum": [-1, 0, 1]},
+        "price_vs_ma50": {"type": "number", "enum": [-1, 0, 1]}
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "properties": {
+        "beta_vnindex": {"type": "number"},
+        "beta_vn30": {"type": "number"},
+        "corr_vnindex": {"type": "number", "minimum": -1, "maximum": 1},
+        "corr_vn30": {"type": "number", "minimum": -1, "maximum": 1},
+        "alpha_1y": {"type": "number"},
+        "outperform_market": {"type": "boolean"},
+        "r_squared": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "patterns_detected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "status"],
+        "properties": {
+          "type": {"type": "string"},
+          "status": {"type": "string", "enum": ["potential", "confirmed", "failed"]},
+          "neckline": {"type": "number"},
+          "target": {"type": "number"},
+          "trend": {"type": "string"},
+          "date": {"type": "string"},
+          "evidence": {"type": "string"}
+        }
+      }
+    },
+    "divergence": {
+      "type": "object",
+      "properties": {
+        "has_divergence": {"type": "boolean"},
+        "direction": {"type": "string", "enum": ["bullish", "bearish", "none"]},
+        "note": {"type": "string"}
+      }
+    },
+    "tech_score": {
+      "type": "object",
+      "required": ["value", "signals"],
+      "properties": {
+        "value": {"type": "integer", "minimum": -6, "maximum": 6},
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {"type": "string"},
+              "value": {"type": "integer", "enum": [-1, 0, 1]},
+              "threshold": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "support_resistance": {
+      "type": "object",
+      "properties": {
+        "resistance": {"type": "array", "items": {"type": "object"}},
+        "support": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_id", "source_date", "fetch_params"],
+      "properties": {
+        "source_id": {"type": "string"},
+        "source_date": {"type": "string"},
+        "source_type": {"type": "string"},
+        "fetch_params": {"type": "object"},
+        "adjustment_verified": {"type": "boolean"},
+        "data_hash": {"type": "string"}
+      }
+    },
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "errors": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -1,0 +1,125 @@
+# Technical Phase 2A-R4 — Formula Disposition Delta (corrected)
+# Computed directly from 22 records in formula-disposition-registry.yaml
+# R2 reporting error identified and corrected
+
+computed_disposition_summary:
+  source: manifests/formula-disposition-registry.yaml
+  computed_at: "2026-07-25"
+  method: "Programmatic parse of all 22 formula_id:canonical_status pairs"
+
+  RECONCILED:
+    count: 7
+    formula_ids:
+      - F-CHANNEL-SLOPE
+      - F-DOUBLE-BOTTOM
+      - F-HVB-EVENTS-1Y
+      - F-MARKET-DATA-PACKET
+      - F-OBV-CHANGE
+      - F-PRICE-BASIS
+      - F-STATUS-TAXONOMY
+
+  DEFERRED_TO_PHASE_3:
+    count: 11
+    formula_ids:
+      - F-ARCHETYPE-PRECEDENCE
+      - F-BETA
+      - F-BOLLINGER
+      - F-CORRELATION
+      - F-INDUSTRY-PEER
+      - F-MA
+      - F-MACD
+      - F-PERCENTILE
+      - F-REGIME
+      - F-ROLLING-RETURN
+      - F-RSI
+
+  ALIAS:
+    count: 0
+    formula_ids: []
+
+  DERIVED_OUTPUT:
+    count: 4
+    formula_ids:
+      - F-ALPHA
+      - F-HV
+      - F-TECH-SCORE
+      - F-VPT-CHANGE
+
+  DUPLICATE_SEMANTIC:
+    count: 0
+    formula_ids: []
+
+  NOT_APPLICABLE:
+    count: 0
+    formula_ids: []
+
+  total: 22
+
+summary_gate:
+  listed_formula_ids: 22
+  unique_formula_ids: 22
+  duplicate_formula_ids: 0
+  missing_formula_ids: 0
+  counts_equal_list_lengths: true
+  total: 22
+
+# === Delta lineage (corrected) ===
+
+R1_to_R2_changes:
+  count: 2
+  records:
+    - formula_id: F-DOUBLE-BOTTOM
+      from: DUPLICATE_SEMANTIC
+      to: RECONCILED
+      reason: "Sol R2 §2: DUPLICATE_SEMANTIC invalid when parameters differ by frequency"
+
+    - formula_id: F-INDUSTRY-PEER
+      from: NOT_APPLICABLE
+      to: DEFERRED_TO_PHASE_3
+      reason: "Sol R2 §3: NOT_APPLICABLE invalid for optional formula. Runtime result, not disposition."
+
+R2_to_R3_changes:
+  count: 1
+  records:
+    - formula_id: F-VPT-CHANGE
+      from: ALIAS
+      to: DERIVED_OUTPUT
+      reason: "Sol R3 §1: ALIAS to F-OBV-CHANGE self-contradicts with VPT/OBV independence"
+
+# === R2 reporting error identification ===
+reporting_correction:
+  affected_phase_report: "Phase 2A-R2"
+  problem: "R2 report claimed RECONCILED=8 but actual record count was 7. The error: R2 counts were computed as R1_counts + changes, but R1 itself had RECONCILED=6 and R2 added F-DOUBLE-BOTTOM (+1=7), not 8. The extra +1 was a manual arithmetic error in the R2 summary header, NOT a formula record change."
+  
+  incorrect_R2_summary:
+    RECONCILED: 8
+    DEFERRED_TO_PHASE_3: 11
+    ALIAS: 1
+    DERIVED_OUTPUT: 2
+  
+  correct_R2_summary_from_records:
+    RECONCILED: 7
+    DEFERRED_TO_PHASE_3: 11
+    ALIAS: 1
+    DERIVED_OUTPUT: 3
+  
+  formula_record_changes_in_R2: 2
+  actual_R2_RECONCILED_count: 7
+  R2_reported_RECONCILED_count: 8
+  discrepancy: "1 — R2 header arithmetic error, not a formula transition"
+  
+  no_additional_formula_transitioned: "There is NO second formula that moved RECONCILED→DERIVED_OUTPUT. The count discrepancy was purely a reporting error in the R2 summary header."
+
+# === Corrected delta totals ===
+delta_lineage:
+  real_formula_transitions:
+    R1_to_R2: 2
+    R2_to_R3: 1
+    total_real_transitions: 3
+
+  reporting_corrections:
+    R2_header_error: "RECONCILED reported as 8, actual 7 (+1 arithmetic error)"
+    R2_DERIVED_OUTPUT_reported: 2
+    R2_DERIVED_OUTPUT_actual: 3
+
+  unexplained_count_movements: 0

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "market-data-packet-v1",
+  "title": "Market Data Packet v1 (Collector → Technical)",
+  "description": "OHLCV + benchmark + metadata packet produced by vn-financial-data-collector for vn-technical-analysis",
+  "type": "object",
+  "required": ["identity", "series", "metadata"],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "required": ["ticker", "exchange", "as_of_date", "source_snapshot_hash", "collector_evidence_hash"],
+      "properties": {
+        "ticker": {"type": "string"},
+        "exchange": {"type": "string"},
+        "as_of_date": {"type": "string", "format": "date"},
+        "source_snapshot_hash": {"type": "string"},
+        "collector_evidence_hash": {"type": "string"}
+      }
+    },
+    "series": {
+      "type": "object",
+      "properties": {
+        "daily_raw_OHLCV": {"type": "array", "items": {"type": "object"}},
+        "daily_adjusted_OHLCV": {"type": "array", "items": {"type": "object"}},
+        "weekly_raw_OHLCV": {"type": "array", "items": {"type": "object"}},
+        "weekly_adjusted_OHLCV": {"type": "array", "items": {"type": "object"}},
+        "total_return_adjusted_close": {"type": "array", "items": {"type": "object"}},
+        "benchmark_series": {
+          "type": "object",
+          "properties": {
+            "VNINDEX": {"type": "array"},
+            "VN30": {"type": "array"}
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["adjustment_status"],
+      "properties": {
+        "corporate_actions": {"type": "array"},
+        "adjustment_status": {"type": "string", "enum": ["VERIFIED_ADJUSTED", "VERIFIED_NO_ACTION_REQUIRED", "UNKNOWN", "CONFLICTING"]},
+        "trading_status": {"type": "array"},
+        "exchange_calendar": {"type": "array"},
+        "partial_week": {"type": "boolean"},
+        "missing_intervals": {"type": "array"}
+      }
+    }
+  },
+  "producer": "vn-financial-data-collector",
+  "consumer": "vn-technical-analysis",
+  "note": "This contract DEFINES what collector must produce. Collector does NOT currently produce this packet. A separate collector_market_data_extension program is required before Technical Phase 6."
+}

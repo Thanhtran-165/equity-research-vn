@@ -1,0 +1,54 @@
+# Technical Phase 2A — Parent Integration Contract
+
+parent_integration_contract:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+
+  handoff:
+    destination: PARENT_SYNTHESIS_ONLY
+    prohibited_destinations:
+      - vn_valuation_engine
+      - fundamental_metric_store
+      - valuation_applicability_registry
+      - source_financial_facts
+
+  prohibited_modifications:
+    - "modify EPS"
+    - "modify BVPS"
+    - "modify ROE/ROA/NPM"
+    - "modify valuation results"
+    - "create target_price"
+    - "change fundamental status"
+    - "override source financial facts"
+    - "add premium/discount to valuation"
+
+  allowed_contributions:
+    - "market_state description"
+    - "trend observation"
+    - "momentum observation"
+    - "volatility measurement"
+    - "timing_context"
+    - "risk_flags"
+    - "pattern_observations (with evidence)"
+
+  context_binding:
+    required_fields:
+      - ticker
+      - exchange
+      - as_of_date
+      - market_data_type
+      - technical_mode
+      - source_snapshot_hash
+      - collector_evidence_hash
+    hash_binding: "All fields hash-bound in research_context envelope"
+
+  pipeline_position:
+    upstream: "vn-financial-data-collector (market_data_packet_v1)"
+    downstream: "parent_synthesis_layer"
+    siblings: "vn-fundamental-analysis, vn-valuation-engine, vn-news-digest"
+    data_flow: "collector → technical_input_adapter → indicator_kernel → pattern_engine → verifier → parent_synthesis"
+
+  shadow_mode:
+    initial: SHADOW
+    activation_prerequisite: "canaries PASS + post-activation replays stable"
+    user_facing_output_changed_in_shadow: false

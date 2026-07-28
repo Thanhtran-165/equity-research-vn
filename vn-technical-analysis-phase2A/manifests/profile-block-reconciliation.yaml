@@ -1,0 +1,57 @@
+# Technical Phase 2A — Profile Block Reconciliation
+
+profile_block_reconciliation:
+  canonical_denominator: 17
+  documentation_claim: 15
+  actual_baseline: 17
+  reconciled: 17/17
+
+  blocks:
+    - {id: B1, name: price_behavior, optional: false, implementation_source: "SRC-007 line 240-310"}
+    - {id: B2, name: volatility, optional: false, implementation_source: "SRC-007 line 310-380"}
+    - {id: B3, name: drawdown, optional: false, implementation_source: "SRC-007 line 180-250"}
+    - {id: B4, name: liquidity, optional: false, implementation_source: "SRC-007 line 310-360"}
+    - {id: B5, name: return_distribution, optional: false, implementation_source: "SRC-007 line 380-450"}
+    - {id: B6, name: tail_risk, optional: false, implementation_source: "SRC-007 line 380-420"}
+    - {id: B7, name: liquidity_risk, optional: false, implementation_source: "SRC-007 line 420-480"}
+    - {id: B8, name: relative_strength, optional: false, implementation_source: "SRC-007 line 600-680"}
+    - {id: B9, name: regime, optional: false, implementation_source: "SRC-007 line 700-730"}
+    - {id: B10, name: volume_price, optional: false, implementation_source: "SRC-007 line 480-540"}
+    - {id: B11, name: vpci, optional: false, implementation_source: "SRC-007 line 800-850"}
+    - {id: B12, name: money_flow, optional: false, implementation_source: "SRC-007 line 860-900"}
+    - {id: B13, name: effort_result, optional: false, implementation_source: "SRC-007 line 900-950"}
+    - {id: B14, name: high_volume_behavior, optional: false, implementation_source: "SRC-007 line 1000-1050"}
+    - {id: B15, name: pvi_nvi, optional: false, implementation_source: "SRC-007 line 1050-1100"}
+    - {id: B16, name: volume_at_price, optional: true, implementation_source: "SRC-007 line 1100-1180"}
+    - {id: B17, name: industry_peer, optional: true, implementation_source: "SRC-007 line 1180-1230"}
+
+  known_defects:
+    B9:
+      issue: O_N_SQUARED_COMPLEXITY
+      description: "realized_vol_history recomputed in loop over every i → O(n²) with 537 sessions"
+      severity: MEDIUM
+      phase_for_fix: PHASE_4
+      fix_obligation: "Replace with incremental computation or pre-computed array"
+
+    B12:
+      issue: OBV_FIELD_MAPPED_TO_VPT_CHANGE
+      description: "obv_20d_change_pct = vpt_chg (copy-paste). OBV change computed but unused."
+      severity: HIGH
+      phase_for_fix: PHASE_4
+      fix_obligation: "Use separate source series for OBV and VPT"
+      vta_requirement: VTA-REQ-014
+      phase4q_mutation_required: true
+
+    B14:
+      issue: EVENTS_1Y_SLICES_252_EVENTS
+      description: "events[-252:] cuts 252 sporadic events (not sessions) → wrong 1-year window"
+      severity: HIGH
+      phase_for_fix: PHASE_4
+      fix_obligation: "Use calendar window: effective_date >= as_of_date - 365 days"
+      vta_requirement: VTA-REQ-013
+
+  window_reconciliation:
+    conflict: "metric_guardrails.md says 20D/60D/120D/252D. stock_profile_blocks.md uses 21/63/126/252."
+    resolution_deferred: true
+    phase_for_resolution: PHASE_3
+    note: "21/63/126/252 = trading days approximation. 20/60/120/252 = round numbers. Must pick one canonical set."

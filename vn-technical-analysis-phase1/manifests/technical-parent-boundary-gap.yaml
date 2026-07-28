@@ -1,0 +1,81 @@
+# Technical Phase 1 — Parent Boundary Gap
+# READ_ONLY audit artifact. Not a production contract.
+
+integration_boundary:
+  current:
+    phase_4a_call:
+      source: "equity-research-vn/phases/phase4a-tech-active.md"
+      mechanism: "subagent reads SKILL.md + references, executes workflow manually"
+      data_passed: "task-state.json → phases.phase1_data.result.files (price_weekly.json)"
+      context_binding: "NONE — no hash binding, no context envelope"
+      output_validation: "REQ-005 artifact_check (verifier checks HTML for tech_score + verdict)"
+      direct_provider_calls: "YES — subagent fetches directly from vnstock"
+      parent_recomputation: "NO — parent does not recompute technical indicators"
+    
+    phase_4b_call:
+      source: "equity-research-vn/phases/phase4b-tech-profile.md"
+      mechanism: "subagent reads SKILL.md + references, executes profile workflow manually"
+      data_passed: "task-state.json → phases.phase1_data.result.files (price_daily.json)"
+      context_binding: "NONE"
+      output_validation: "REQ-006 + REQ-007 artifact_check"
+      direct_provider_calls: "YES"
+      parent_recomputation: "NO"
+
+  target_constraints:
+    collector_packet_only: true
+    direct_provider_fetch: false
+    parent_synthesis_only: true
+    valuation_modification: false
+    context_binding: HASH_BOUND_ENVELOPE
+
+  collector_sufficiency:
+    weekly_ohlcv: "GAP — collector currently provides income/balance/cashflow/overview. Price data (weekly OHLCV) fetched separately by technical skill, NOT via collector packet."
+    daily_ohlcv: "GAP — same as weekly. Collector does not produce daily price series."
+    benchmark_series: "GAP — VNINDEX/VN30 weekly and daily not in collector output."
+    corporate_action_adjustment: "GAP — collector has events.csv but no adjustment flag on price data."
+    trading_status_metadata: "GAP — no suspended/halted session metadata from collector."
+    
+    summary: |
+      MAJOR INTEGRATION GAP: Collector (vn-financial-data-collector) currently
+      provides FUNDAMENTAL data (revenue, NPAT, equity, etc.) but NOT market
+      price data (OHLCV). Technical-analysis requires daily + weekly price
+      series + benchmark data.
+      
+      Options:
+      A) Extend collector to also produce price data packets
+      B) Allow technical-analysis to fetch price data directly (violates integration boundary)
+      C) Create a separate market-data-collector child
+      
+      This gap must be resolved BEFORE Phase 6 integration design.
+      For standalone (Phase 1-5), direct fetch is acceptable.
+
+  integration_blockers:
+    - blocker_id: IB-001
+      description: "No price data in collector output"
+      severity: CRITICAL
+      resolution_required_before: "Phase 6 integration"
+      
+    - blocker_id: IB-002
+      description: "No context binding (ticker, period, hash) between collector and technical"
+      severity: HIGH
+      resolution_required_before: "Phase 6 integration"
+      
+    - blocker_id: IB-003
+      description: "Verdict enum conflict between SKILL.md v2.2.0 and phase4a/REQ-005"
+      severity: HIGH
+      resolution_required_before: "Phase 2 contract freeze"
+      
+    - blocker_id: IB-004
+      description: "REQ-006 negation-unaware vs REQ-007 negation-aware inconsistency"
+      severity: MEDIUM
+      resolution_required_before: "Phase 2 contract freeze"
+      
+    - blocker_id: IB-005
+      description: "No provenance tracking in current technical output"
+      severity: HIGH
+      resolution_required_before: "Phase 4 implementation"
+
+  valuation_override_risk:
+    current_risk: "NONE — technical output goes to parent synthesis only, does not modify valuation"
+    target_risk: "NONE — boundary constraint: technical may NOT modify fundamental_metrics, valuation_results, source_financial_facts"
+    enforcement: "NOT IMPLEMENTED — no guard exists. Must be added in Phase 6 integration adapter."

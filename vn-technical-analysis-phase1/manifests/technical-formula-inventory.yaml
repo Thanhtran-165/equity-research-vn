@@ -1,0 +1,260 @@
+# Technical Phase 1 — Formula Inventory
+# READ_ONLY audit artifact. Not a production contract.
+# Every formula from SKILL.md + references with exact definitions where available.
+
+formulas:
+  total: 28
+  unique_semantic: 24
+  ambiguous: 17
+
+  # === ACTIVE mode indicators (6 families) ===
+
+  - formula_id: F-MA-ACTIVE
+    display_name: "Moving Average (MA10/20/50)"
+    modes_used: [ACTIVE]
+    mathematical_definition: "SMA (Simple Moving Average) — indicators.md line 15: sum(period)/period. EMA variant also defined: k=2/(period+1), seed=out[0]=data[0]"
+    input_series: [weekly_close]
+    input_frequency: WEEKLY
+    lookback_window: [10, 20, 50]
+    warmup_requirement: AMBIGUOUS
+    missing_data_policy: AMBIGUOUS
+    zero_value_policy: AMBIGUOUS
+    adjustment_policy: AMBIGUOUS (adjusted vs unadjusted not specified)
+    rounding_policy: AMBIGUOUS
+    output_unit: "price (nghìn đồng)"
+    threshold_logic: "price > MA = bullish signal +1, price < MA = bearish signal -1"
+    source_location: "SRC-001 line 100, SRC-002 line 15-30"
+    ambiguity: "SKILL.md says 'trung bình động' without specifying SMA or EMA. indicators.md defines both."
+
+  - formula_id: F-RSI-ACTIVE
+    display_name: "RSI(14) Wilder Smoothing"
+    modes_used: [ACTIVE]
+    mathematical_definition: "Wilder smoothing: avgGain=(avgGain*(period-1)+gain)/period, RS=avgGain/avgLoss, RSI=100-100/(1+RS)"
+    input_series: [weekly_close]
+    input_frequency: WEEKLY
+    lookback_window: 14
+    warmup_requirement: AMBIGUOUS (≥14 needed but seeding method not specified)
+    missing_data_policy: AMBIGUOUS
+    zero_value_policy: AMBIGUOUS
+    adjustment_policy: AMBIGUOUS
+    rounding_policy: AMBIGUOUS
+    output_unit: "index 0-100"
+    threshold_logic: "<30 oversold, >70 overbought, 45-55 neutral zone"
+    source_location: "SRC-001 line 101, SRC-002 line 40-60"
+    ambiguity: "SKILL.md only says 'Relative Strength Index'. Wilder confirmed in indicators.md."
+
+  - formula_id: F-MACD-ACTIVE
+    display_name: "MACD (12/26/9)"
+    modes_used: [ACTIVE]
+    mathematical_definition: "macdLine=EMA(12)-EMA(26), signalLine=EMA(macdLine,9)"
+    input_series: [weekly_close]
+    input_frequency: WEEKLY
+    lookback_window: [12, 26, 9]
+    warmup_requirement: AMBIGUOUS
+    missing_data_policy: AMBIGUOUS
+    zero_value_policy: AMBIGUOUS
+    adjustment_policy: AMBIGUOUS
+    rounding_policy: AMBIGUOUS
+    output_unit: "price diff"
+    threshold_logic: "MACD > Signal = bullish +1, MACD < Signal = bearish -1"
+    source_location: "SRC-001 line 102, SRC-002 line 65-80"
+    ambiguity: "EMA seeding: indicators.md uses out[0]=data[0] (not SMA seed). Not stated in SKILL.md."
+
+  - formula_id: F-BOLL-ACTIVE
+    display_name: "Bollinger Bands (MA20 ± 2σ)"
+    modes_used: [ACTIVE]
+    mathematical_definition: "middle=MA(20), upper=middle+2σ, lower=middle-2σ. σ uses population std (÷N, not ÷N-1)"
+    input_series: [weekly_close]
+    input_frequency: WEEKLY
+    lookback_window: 20
+    warmup_requirement: AMBIGUOUS
+    missing_data_policy: AMBIGUOUS
+    zero_value_policy: AMBIGUOUS
+    adjustment_policy: AMBIGUOUS
+    rounding_policy: AMBIGUOUS
+    output_unit: "price"
+    threshold_logic: "BB position >50% = +1, <50% = -1. <20% oversold, >80% overbought"
+    source_location: "SRC-001 line 103, SRC-002 line 85-100"
+    ambiguity: "SKILL.md says 'MA20 ± 2σ' without population/sample. indicators.md uses ÷period (population). stock_profile_blocks.md helpers use ÷(n-1) (sample). INCONSISTENT between modes."
+
+  - formula_id: F-BETA-ACTIVE
+    display_name: "Beta (cov/var)"
+    modes_used: [ACTIVE]
+    mathematical_definition: "β = Cov(stock,market)/Var(market), population covariance (÷N not ÷N-1)"
+    input_series: [weekly_close_stock, weekly_close_market]
+    input_frequency: WEEKLY
+    lookback_window: AMBIGUOUS (52 weeks implied but not explicit)
+    warmup_requirement: AMBIGUOUS
+    missing_data_policy: AMBIGUOUS
+    zero_value_policy: AMBIGUOUS
+    adjustment_policy: "AMBIGUOUS — adjusted vs unadjusted not specified"
+    rounding_policy: AMBIGUOUS
+    output_unit: "ratio"
+    threshold_logic: ">1 aggressive, =1 market, <1 defensive, <0 inverse"
+    source_location: "SRC-001 line 104, SRC-002 line 105-120"
+    ambiguity: "Return basis (log vs simple), window length, benchmark selection not explicit in SKILL.md"
+
+  - formula_id: F-CORR-ACTIVE
+    display_name: "Pearson Correlation"
+    modes_used: [ACTIVE]
+    mathematical_definition: "Pearson r = cov(x,y)/(σ_x × σ_y)"
+    input_series: [weekly_close_stock, weekly_close_index]
+    input_frequency: WEEKLY
+    lookback_window: AMBIGUOUS
+    warmup_requirement: AMBIGUOUS
+    missing_data_policy: AMBIGUOUS
+    zero_value_policy: AMBIGUOUS
+    adjustment_policy: AMBIGUOUS
+    rounding_policy: AMBIGUOUS
+    output_unit: "coefficient -1 to 1"
+    threshold_logic: "none explicit"
+    source_location: "SRC-001 line 105, SRC-002 line 120-130"
+    ambiguity: "Window length not specified"
+
+  - formula_id: F-PERF-ACTIVE
+    display_name: "Performance & Alpha"
+    modes_used: [ACTIVE]
+    mathematical_definition: "Alpha = stock_perf - beta × market_perf (simplified, no risk-free rate)"
+    input_series: [weekly_close_stock, weekly_close_market]
+    input_frequency: WEEKLY
+    lookback_window: 52
+    warmup_requirement: 52 weeks
+    output_unit: "percentage"
+    source_location: "SRC-002 line 125-140"
+    ambiguity: "Not CAPM alpha (no risk-free rate). SKILL.md does not define alpha formula."
+
+  - formula_id: F-TECH-SCORE
+    display_name: "Tech Score (6 signals × ±1)"
+    modes_used: [ACTIVE]
+    mathematical_definition: "sum of 6 binary signals: price_vs_MA10(+1/-1), price_vs_MA20(+1/-1), price_vs_MA50(+1/-1), RSI(>55=+1,<45=-1), MACD_vs_Signal(+1/-1), BB_position(>50%=+1,<50%=-1)"
+    input_series: [computed indicators]
+    lookback_window: N/A
+    output_unit: "integer -6 to +6"
+    threshold_logic: "+4to6 STRONG_BULLISH, +1to3 BULLISH, -1to0 NEUTRAL, -3to-2 BEARISH, -6to-4 STRONG_BEARISH"
+    source_location: "SRC-001 line 175-192"
+    ambiguity: "Score -3 falls between BEARISH[-3,-2] and STRONG_BEARISH[-6,-4] — gap at (-4,-3). RSI 45-55 zone gives 0 but not explicitly stated. BB position exactly 50% undefined."
+
+  # === PROFILE mode formulas (17 blocks → 17 formula families) ===
+
+  - formula_id: F-HV-PROFILE
+    display_name: "Historical Volatility (HV20/60/120/252)"
+    modes_used: [PROFILE]
+    mathematical_definition: "HV = std_dev(log_returns, window) × √252 × 100 (annualized)"
+    input_series: [daily_close]
+    lookback_window: [20, 60, 120, 252]
+    warmup_requirement: 252 for HV252
+    output_unit: "percentage annualized"
+    source_location: "SRC-007 line 130-140"
+    ambiguity: "Uses √252 for daily (PROFILE) vs √52 for weekly (ACTIVE in indicators.md). Consistent with frequency but not cross-referenced."
+
+  - formula_id: F-DD-PROFILE
+    display_name: "Drawdown Series"
+    modes_used: [PROFILE]
+    mathematical_definition: "dd[i] = (close[i] / running_max(close[:i+1]) - 1) × 100"
+    lookback_window: full_sample
+    output_unit: "percentage negative"
+    source_location: "SRC-007 line 180-210"
+    ambiguity: "Drawdown episodes logic has potential variable assignment bug (peak_at_start scope)"
+
+  - formula_id: F-VAR-ES-PROFILE
+    display_name: "VaR & Expected Shortfall (95/99)"
+    modes_used: [PROFILE]
+    mathematical_definition: "Historical VaR = quantile(returns, 0.05/0.01), ES = mean(returns[returns <= VaR])"
+    lookback_window: full_sample or 252
+    output_unit: "percentage"
+    source_location: "SRC-007 line 380-420"
+    ambiguity: "Confidence level assumed 95/99 from field names but not stated in SKILL.md"
+
+  - formula_id: F-VPCI-PROFILE
+    display_name: "Volume Price Confirmation Indicator"
+    modes_used: [PROFILE]
+    mathematical_definition: "VPC = SMA(VPT,100) - SMA(VPT[shifted],100), VPR = SMA(price_change×volume/volume,20), VM = SMA(price_change,20), VPCI = VPC × VPR × VM"
+    lookback_window: [20, 100]
+    output_unit: "index"
+    source_location: "SRC-007 line 800-850"
+    ambiguity: "Confirmation label returns 'hỗn hợp' when vpci_latest is None instead of error"
+
+  - formula_id: F-CMF-PROFILE
+    display_name: "Chaikin Money Flow (20d)"
+    modes_used: [PROFILE]
+    mathematical_definition: "MFV = ((close-low)-(high-close))/(high-low)×volume, CMF = SMA(MFV,20)/SMA(volume,20)"
+    lookback_window: 20
+    output_unit: "ratio -1 to 1"
+    threshold_logic: ">0.03 dương, <-0.03 âm"
+    source_location: "SRC-007 line 860-900"
+    ambiguity: "B12 has OBV bug: obv_20d_change_pct = vpt_chg (copy-paste error)"
+
+  - formula_id: F-REGIME-PROFILE
+    display_name: "Regime Classification"
+    modes_used: [PROFILE]
+    mathematical_definition: "stress: dd≤-18% or (r60≤-12% & vol_rank≥75); uptrend: r60>6% & r120>8% & dd>-8%; recovery: r60>4% & r120≤8% & dd>-14%; sideways: default"
+    lookback_window: [20, 60, 120, 252]
+    output_unit: "enum: stress/uptrend/recovery/sideways"
+    source_location: "SRC-007 line 700-730"
+    ambiguity: "O(n²) complexity from recomputing vol_history in loop. Performance risk with 537 sessions."
+
+  - formula_id: F-ROLLING-RET-PROFILE
+    display_name: "Rolling Returns (21/63/126/252)"
+    modes_used: [PROFILE]
+    mathematical_definition: "pct_change(close, window) × 100"
+    lookback_window: [21, 63, 126, 252]
+    output_unit: "percentage"
+    source_location: "SRC-007 line 255-290"
+    ambiguity: "Window 21/63/126/252 contradicts metric_guardrails.md 20D/60D/120D/252D"
+
+  - formula_id: F-PERCENTILE-PROFILE
+    display_name: "Percentile of Value"
+    modes_used: [PROFILE]
+    mathematical_definition: "count(values < current) / count(values) × 100 (floor counting)"
+    output_unit: "percentage 0-100"
+    source_location: "SRC-007 line 75-85"
+    ambiguity: "Method: floor counting (not linear interpolation). Quantile helper uses linear interpolation. Two different methods in same file."
+
+  - formula_id: F-HVB-PROFILE
+    display_name: "High Volume Behavior"
+    modes_used: [PROFILE]
+    mathematical_definition: "After volume ≥ 2×avg20 events, compute forward returns 5/20/60d. positive_rate≥60% & median>0 → 'giữ giá tốt'; ≤40% & <0 → 'suy yếu'"
+    lookback_window: 252
+    output_unit: "label + rates"
+    source_location: "SRC-007 line 1000-1050"
+    ambiguity: "events_1y = events[-252:] cuts 252 EVENTS (sporadic), not 252 SESSIONS → may span multiple years"
+
+  - formula_id: F-SKEW-KURT-PROFILE
+    display_name: "Skewness & Excess Kurtosis"
+    modes_used: [PROFILE]
+    mathematical_definition: "skew = m3/m2^1.5, excess_kurt = m4/m2^2 - 3 (sample adjusted)"
+    output_unit: "coefficient"
+    source_location: "SRC-007 line 60-70"
+    ambiguity: "Sample moments used but not explicitly stated as biased/unbiased"
+
+  - formula_id: F-PVI-NVI-PROFILE
+    display_name: "PVI/NVI Participation"
+    modes_used: [PROFILE]
+    mathematical_definition: "PVI: if volume > prev_volume then PVI×(1+return) else PVI unchanged. NVI: if volume < prev_volume then NVI×(1+return) else unchanged. Base=1000."
+    output_unit: "index base 1000"
+    source_location: "SRC-007 line 1050-1100"
+    ambiguity: "none major"
+
+  - formula_id: F-EFFORT-RESULT-PROFILE
+    display_name: "Effort-Result (Wyckoff)"
+    modes_used: [PROFILE]
+    mathematical_definition: "effort=avg(vol_ratio, val_ratio), result=max(|ret|, range_pct). high_effort≥2, low_rhe≤median, high_rhe≥p75"
+    output_unit: "label"
+    source_location: "SRC-007 line 900-950"
+    ambiguity: "Wyckoff framework interpretation not fully specified"
+
+  - formula_id: F-VAP-PROFILE
+    display_name: "Volume at Price"
+    modes_used: [PROFILE]
+    mathematical_definition: "12 bins over 252 sessions, typical_price=(h+l+c)/3, assign volume to price bins. POC = bin with highest volume."
+    output_unit: "price bins + volume"
+    source_location: "SRC-007 line 1100-1180"
+    ambiguity: "Bin width = (max-min)/12. Number of bins fixed at 12."
+
+  - formula_id: F-RS-BENCHMARK-PROFILE
+    display_name: "Relative Strength vs Benchmark"
+    modes_used: [PROFILE]
+    mathematical_definition: "beta/corr/r²/hit_rate computed on 60/120/252 windows vs VNINDEX and VN30"
+    output_unit: "coefficients + rates"
+    source_location: "SRC-007 line 600-680"
+    ambiguity: "orchestrator passes vnindex_rows=None without guard → crash risk"

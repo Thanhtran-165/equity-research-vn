@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "technical-profile-output",
+  "title": "Technical Analysis PROFILE Output",
+  "description": "Output schema for PROFILE mode (17 blocks + 8 setups + archetype)",
+  "type": "object",
+  "required": ["schema_version", "symbol", "generated_at", "language_policy", "analysis_status", "archetype", "price_basis_used", "provenance"],
+  "properties": {
+    "schema_version": {"type": "string", "const": "vn-technical-profile-v2"},
+    "symbol": {"type": "string"},
+    "generated_at": {"type": "string"},
+    "language_policy": {"type": "string", "const": "neutral_descriptive_non_advice"},
+    "analysis_status": {"type": "string", "enum": ["VALID", "VALID_WITH_WARNINGS", "INPUT_INCOMPLETE", "NOT_APPLICABLE", "ERROR"]},
+    "price_basis_used": {"type": "string", "enum": ["VERIFIED_ADJUSTED", "VERIFIED_NO_ACTION_REQUIRE"]},
+    "stock_identity": {
+      "type": "object",
+      "properties": {
+        "symbol": {"type": "string"},
+        "sample_size": {"type": "integer", "minimum": 60}
+      }
+    },
+
+    "price_behavior_profile": {
+      "type": "object",
+      "properties": {
+        "latest_close": {"type": "number"},
+        "return_1m_pct": {"type": "number"},
+        "return_3m_pct": {"type": "number"},
+        "return_6m_pct": {"type": "number"},
+        "return_1y_pct": {"type": "number"},
+        "high_52w": {"type": "number"},
+        "low_52w": {"type": "number"},
+        "distance_from_52w_high_pct": {"type": "number"},
+        "rolling_returns": {"type": "array", "items": {"type": "object"}},
+        "interpretation_guardrail": {"type": "string"}
+      }
+    },
+
+    "volatility_profile": {
+      "type": "object",
+      "properties": {
+        "hv20_pct": {"type": "number"},
+        "hv60_pct": {"type": "number"},
+        "hv120_pct": {"type": "number"},
+        "hv252_pct": {"type": "number"},
+        "hv60_percentile_1y": {"type": "number"},
+        "range_pct_median_63d": {"type": "number"},
+        "range_pct_p90_63d": {"type": "number"},
+        "volatility_label": {"type": "string"}
+      }
+    },
+
+    "drawdown_profile": {
+      "type": "object",
+      "properties": {
+        "current_drawdown_pct": {"type": "number"},
+        "max_drawdown_pct": {"type": "number"},
+        "underwater_days": {"type": "integer"},
+        "deep_drawdown_episodes": {"type": "array"}
+      }
+    },
+
+    "liquidity_profile": {
+      "type": "object",
+      "properties": {
+        "avg_value_20d": {"type": "number"},
+        "avg_value_60d": {"type": "number"},
+        "latest_value_percentile": {"type": "number"},
+        "spike_days_count": {"type": "integer"}
+      }
+    },
+
+    "return_distribution_profile": {
+      "type": "object",
+      "properties": {
+        "histogram_bins": {"type": "array"},
+        "skewness": {"type": "number"},
+        "excess_kurtosis": {"type": "number"}
+      }
+    },
+
+    "tail_risk_profile": {
+      "type": "object",
+      "properties": {
+        "var_95": {"type": "number"},
+        "var_99": {"type": "number"},
+        "es_95": {"type": "number"},
+        "es_99": {"type": "number"},
+        "down_5pct_days": {"type": "integer"},
+        "down_10pct_days": {"type": "integer"}
+      }
+    },
+
+    "liquidity_risk_profile": {
+      "type": "object",
+      "properties": {
+        "drought_threshold": {"type": "number"},
+        "severe_threshold": {"type": "number"},
+        "liquidity_risk_label": {"type": "string"}
+      }
+    },
+
+    "relative_strength_profile": {
+      "type": "object",
+      "properties": {
+        "beta_60d": {"type": "number"},
+        "beta_120d": {"type": "number"},
+        "beta_252d": {"type": "number"},
+        "corr_vnindex": {"type": "number"},
+        "r_squared": {"type": "number"},
+        "hit_rate_60d": {"type": "number"},
+        "hit_rate_120d": {"type": "number"},
+        "hit_rate_252d": {"type": "number"}
+      }
+    },
+
+    "regime_profile": {
+      "type": "object",
+      "properties": {
+        "current_regime": {"type": "string", "enum": ["stress", "uptrend", "recovery", "sideways"]},
+        "regime_confidence": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "NOT_ESTABLISHED"]}
+      }
+    },
+
+    "volume_price_profile": {
+      "type": "object",
+      "properties": {
+        "up_down_value_ratio": {"type": "number"},
+        "abs_return_value_corr": {"type": "number"}
+      }
+    },
+
+    "volume_price_confirmation_profile": {
+      "type": "object",
+      "properties": {
+        "vpci_latest": {"type": "number"},
+        "confirmation_label": {"type": "string"}
+      }
+    },
+
+    "money_flow_pressure_profile": {
+      "type": "object",
+      "properties": {
+        "cmf_20d": {"type": "number"},
+        "obv_20d_change_pct": {"type": "number"},
+        "vpt_20d_change_pct": {"type": "number"},
+        "money_flow_label": {"type": "string"}
+      }
+    },
+
+    "effort_result_profile": {
+      "type": "object",
+      "properties": {
+        "effort_latest": {"type": "number"},
+        "result_latest": {"type": "number"},
+        "effort_result_label": {"type": "string"}
+      }
+    },
+
+    "high_volume_behavior_profile": {
+      "type": "object",
+      "properties": {
+        "events_count_1y": {"type": "integer"},
+        "positive_rate_5d": {"type": "number"},
+        "positive_rate_20d": {"type": "number"},
+        "median_return_20d": {"type": "number"},
+        "hvb_label": {"type": "string"}
+      }
+    },
+
+    "pvi_nvi_participation_profile": {
+      "type": "object",
+      "properties": {
+        "pvi_latest": {"type": "number"},
+        "nvi_latest": {"type": "number"},
+        "participation_label": {"type": "string"}
+      }
+    },
+
+    "volume_at_price_profile": {
+      "type": "object",
+      "properties": {
+        "bins": {"type": "array"},
+        "poc_price": {"type": "number"},
+        "acceptance_label": {"type": "string"}
+      }
+    },
+
+    "industry_peer_profile": {
+      "type": ["object", "null"],
+      "description": "Optional — only if industry peer data available"
+    },
+
+    "setups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pattern_id", "pattern_name", "completion_score", "setup_status"],
+        "properties": {
+          "pattern_id": {"type": "string"},
+          "pattern_name": {"type": "string"},
+          "completion_score": {"type": "number", "minimum": 0, "maximum": 100},
+          "setup_status": {"type": "string"},
+          "reader_note": {"type": "string"}
+        }
+      }
+    },
+
+    "setup_coverage": {
+      "type": "object",
+      "properties": {
+        "bullish_coverage": {"type": "boolean"},
+        "bearish_coverage": {"type": "boolean"},
+        "neutral_or_no_setup_behavior": {"type": "string"}
+      }
+    },
+
+    "setup_coverage_status": {
+      "type": "string",
+      "enum": ["COMPLETE_DIRECTIONAL_COVERAGE", "INCOMPLETE_BEARISH_COVERAGE", "NOT_EVALUATED"],
+      "description": "Dedicated field for setup directional coverage. Independent from analysis_status."
+    },
+
+    "archetype": {
+      "type": "object",
+      "required": ["primary", "reader_note"],
+      "properties": {
+        "primary": {"type": "string", "enum": ["trend_following", "accumulation_breakout", "trap_prone", "mixed", "no_current_setup"]},
+        "reader_note": {"type": "string"}
+      }
+    },
+
+    "non_conclusion": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 2
+    },
+
+    "provenance": {
+      "type": "object",
+      "required": ["source_id", "source_date"],
+      "properties": {
+        "source_id": {"type": "string"},
+        "source_date": {"type": "string"},
+        "source_type": {"type": "string"},
+        "data_hash": {"type": "string"},
+        "adjustment_verified": {"type": "boolean"}
+      }
+    },
+
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "errors": {"type": "array", "items": {"type": "string"}}
+  }
+}

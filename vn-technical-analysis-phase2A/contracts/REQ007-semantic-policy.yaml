@@ -1,0 +1,129 @@
+# Technical Phase 2A — REQ-007 Semantic Policy
+# 3-layer verification: lexical + semantic implication + imperative mood
+# REQ-007 has HIGHEST precedence over REQ-005/006
+
+REQ007_semantic_policy:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+
+  precedence:
+    REQ_007_NON_ADVICE: HIGHEST
+    description: "If REQ-005 or REQ-006 contain recommendation semantics, REQ-007 overrides."
+
+  three_layer_verification:
+
+    layer_1_lexical:
+      description: "Keyword and phrase matching"
+      clearly_prohibited_lexical:
+        - "nên mua"
+        - "nên bán"
+        - "khuyến nghị"
+        - "khuyến nghị giao dịch"
+        - "khuyến nghị mua"
+        - "khuyến nghị bán"
+        - "bullish"
+        - "bearish"
+        - "strong buy"
+        - "strong sell"
+        - "target giá"
+        - "target price"
+        - "cắt lỗ tại"
+        - "dừng lỗ tại"
+        - "phân bổ tỷ trọng"
+        - "giải ngân"
+        - "tích lũy (in imperative context)"
+        - "thoát vị thế"
+        - "breakout sắp xảy ra"
+        - "overbought"
+        - "oversold"
+
+      clearly_allowed_lexical:
+        - "xu hướng tăng"
+        - "xu hướng giảm"
+        - "động lượng suy yếu"
+        - "giá nằm trên MA20"
+        - "rủi ro điều chỉnh tăng"
+        - "điều kiện kỹ thuật chưa được xác nhận"
+        - "đang hình thành"
+        - "không phải tín hiệu giao dịch"
+        - "KHÔNG phải khuyến nghị"
+        - "không kết luận"
+
+      negation_awareness:
+        description: "Phrases containing negation of prohibited words ARE allowed"
+        examples:
+          allowed: "'không phải tín hiệu', 'KHÔNG phải khuyến nghị mua', 'không nên hiểu là lời gọi giao dịch'"
+          prohibited: "'tín hiệu: MUA', 'Verdict: STRONG BUY'"
+        implementation: "grep with grep -vE 'không phải|KHÔNG|không nên hiểu|không kết luận' applied BEFORE flagging"
+
+    layer_2_semantic_implication:
+      description: "Detect advisory meaning even when exact keywords are absent"
+      prohibited_patterns:
+        - pattern: "attractiveness assertion"
+          examples: ["đây là vùng giá hấp dẫn để tham gia", "cơ hội tốt để tích lũy", "đáng theo dõi để vào lệnh"]
+          detection: "Phrase implies the reader should act (buy/sell) based on attractiveness"
+        
+        - pattern: "prediction assertion"
+          examples: ["chắc chắn tăng", "sẽ breakout mạnh", "dự báo đạt mốc"]
+          detection: "Phrase makes deterministic prediction about future price movement"
+        
+        - pattern: "comparative advantage assertion"
+          examples: ["tốt hơn thị trường", "đi tốt hơn peers", "nổi trội hơn"]
+          detection: "Phrase asserts superiority in investment-implicit terms"
+
+      implementation_note: "Semantic layer requires contextual analysis. Phase 2A defines policy; Phase 4 implements checker."
+
+    layer_3_imperative_mood:
+      description: "Detect imperative/mandative language structures"
+      prohibited_patterns:
+        - pattern: "direct imperative"
+          examples: ["chờ điều chỉnh rồi giải ngân", "nên theo dõi điểm vào", "giữ vị thế hiện tại"]
+          detection: "Verb in imperative mood directing reader action"
+        
+        - pattern: "conditional imperative"
+          examples: ["nếu giá về MA20 thì可以考虑 mua", "khi RSI < 30 nên chú ý"]
+          detection: "Conditional clause containing advisory action"
+
+      implementation_note: "Vietnamese imperative detection requires mood analysis. Phase 2A defines policy; Phase 4 implements."
+
+  context_dependent_rules:
+    - word: "tăng"
+      allowed_context: "giá tăng 5% (descriptive)"
+      prohibited_context: "nên tăng vị thế (advisory)"
+    
+    - word: "giảm"
+      allowed_context: "khối lượng giao dịch giảm (descriptive)"
+      prohibited_context: "nên giảm tỷ trọng (advisory)"
+    
+    - word: "mua"
+      allowed_context: "không phải lệnh mua (negation)"
+      prohibited_context: "điểm mua tốt (advisory)"
+
+  forced_translations:
+    - {from: "Drawdown", to: "Mức giảm"}
+    - {from: "Volume", to: "Khối lượng"}
+    - {from: "Value", to: "Giá trị giao dịch"}
+    - {from: "Volatility", to: "Biến động"}
+    - {from: "Range", to: "Biên dao động"}
+    - {from: "Regime", to: "Trạng thái"}
+    - {from: "Outperform", to: "Đi tốt hơn"}
+    - {from: "Underperform", to: "Đi kém hơn"}
+    - {from: "Hit rate", to: "Tỷ lệ vượt mốc"}
+    - {from: "Confirmation", to: "Xác nhận"}
+    - {from: "Setup", to: "Cấu trúc đang hình thành"}
+    - {from: "Pattern", to: "Mẫu hình"}
+
+  non_conclusion_panel:
+    canonical_version: "metric_guardrails.md version (4 points)"
+    required_points:
+      - "Không kết luận đây là khuyến nghị hoặc lời gọi giao dịch."
+      - "Tỷ lệ trong quá khứ không đảm bảo lặp lại trong tương lai."
+      - "Không đọc so sánh rổ/ngành như lịch sử đầy đủ nếu chỉ snapshot hiện tại."
+      - "Không dùng kết quả dài hạn nếu chưa kiểm chứng corporate actions."
+    minimum_required: 2  # points 1 and 2 always mandatory
+    conflict_resolution: "Use metric_guardrails.md version. stock_profile_blocks.md orchestrator version (different point 3) is SUPERSEDED."
+
+  REQ006_REQ007_reconciliation:
+    rule: "Both REQs check non-advice language. REQ-006 regex MUST be updated to be negation-aware (matching REQ-007 standard)."
+    current_gap: "REQ-006 is negation-unaware → false positive on 'không phải tín hiệu'"
+    resolution: "Phase 2A contract: both REQs use same 3-layer policy. No dual-standard."

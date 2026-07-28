@@ -1,0 +1,416 @@
+# Technical Phase 2B — Oracle Disposition Registry
+# Disposition all 24 implicit oracles from Phase 1 implicit-oracle-registry
+# Every oracle MUST have: explicit_status + authority + phase_for_resolution + linked artifact
+
+oracle_disposition_registry:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+  baseline:
+    total_oracles: 24
+    authority_breakdown:
+      REFERENCE_FILE: 9
+      REFERENCE_FILES_CONTRADICTORY: 1
+      IMPLIED: 4
+      CODE_BEHAVIOR: 1
+      CONTRADICTORY: 1
+      CODE_BUG: 1
+      SKILL_FILE: 1
+      PARENT_REQ: 4   # O-019 (REQ-007), O-017 (REQ-source), O-018 (REQ-benchmark), O-020 (REQ-perf)
+      OTHER: 2
+
+  disposition_summary:
+    RESOLVED_BY_SOL_DECISION: 6    # O-016, O-007, O-009, O-013, O-024, O-017
+    RESOLVED_BY_CONTRACT: 2        # O-019, O-018
+    DEFERRED_TO_PHASE_3: 13        # O-001, O-002, O-003, O-004, O-005, O-006, O-008, O-010, O-011, O-012, O-014, O-015, O-023
+    DEFERRED_TO_PHASE_4: 1         # O-022 (VPCI bug)
+    DEFERRED_TO_COLLECTOR_EXTENSION: 0
+    DERIVED_FROM_OTHER_ORACLE: 1   # O-020 (depends on O-005/O-006 decisions)
+    ACCEPTED_AS_KNOWN_DEFECT_PHASE_4_FIX: 1  # O-021 (RS benchmark None crash)
+    total: 24
+    fully_dispositioned: 24
+
+  # ====================================================================
+  # Per-oracle dispositions
+  # ====================================================================
+
+  oracles:
+
+    # ----------------------------------------------------------------
+    # RESOLVED BY SOL DECISION (6) — Phase 2A critical ambiguities
+    # ----------------------------------------------------------------
+
+    - oracle_id: O-016
+      category: OUTPUT_STATUS
+      ambiguity: "TECH_SCORE verdict enum contradiction SKILL vs phase4a vs REQ-005"
+      original_authority: CONTRADICTORY
+      assumed_correct_value: "TECHNICAL STRONG BULLISH/BEARISH"
+      disposition: RESOLVED_BY_SOL_DECISION
+      resolution_authority: "Sol §1 (Phase 2A)"
+      resolution: "BUY/SELL/HOLD banned. New 3-axis taxonomy: analysis_status + technical_state + confidence."
+      linked_artifacts:
+        - contracts/status-taxonomy.yaml
+        - manifests/critical-ambiguity-resolution.yaml (AMB-001)
+      linked_formulas: [F-STATUS-TAXONOMY]
+      linked_reqs: [VTA-REQ-001, VTA-REQ-003]
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4
+      risk_if_unresolved: HIGH
+
+    - oracle_id: O-007
+      category: ADJUSTMENT_POLICY
+      ambiguity: "Adjusted vs unadjusted close prices (vnstock default unadjusted)"
+      original_authority: IMPLIED
+      assumed_correct_value: "Unadjusted close"
+      disposition: RESOLVED_BY_SOL_DECISION
+      resolution_authority: "Sol §2 (Phase 2A)"
+      resolution: "3 bases: raw for provenance, adjusted for indicators/patterns, total-return for returns/beta. Fail-closed on UNKNOWN."
+      linked_artifacts:
+        - contracts/price-basis-policy.yaml
+        - manifests/critical-ambiguity-resolution.yaml (AMB-002)
+      linked_formulas: [F-PRICE-BASIS]
+      linked_reqs: [VTA-REQ-004]
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4
+      risk_if_unresolved: HIGH (splits create false patterns)
+
+    - oracle_id: O-009
+      category: THRESHOLD
+      ambiguity: "Channel slope change >100 VND hardcoded — not scale-free"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "100 VND"
+      disposition: RESOLVED_BY_SOL_DECISION
+      resolution_authority: "Sol §3 (Phase 2A)"
+      resolution: "normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window). Unit: percent/bar."
+      linked_artifacts:
+        - manifests/critical-ambiguity-resolution.yaml (AMB-003)
+      linked_formulas: [F-CHANNEL-SLOPE]
+      linked_reqs: [VTA-REQ-007]
+      unresolved_subitem: "Threshold value for classification — Phase 3 freeze"
+      phase_for_resolution: PHASE_3 (threshold freeze)
+      phase_for_implementation: PHASE_3 + PHASE_4
+      risk_if_unresolved: HIGH
+
+    - oracle_id: O-013
+      category: THRESHOLD
+      ambiguity: "HVB events_1y cuts 252 events not sessions (logic error)"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "events[-252:]"
+      disposition: RESOLVED_BY_SOL_DECISION
+      resolution_authority: "Sol §4 (Phase 2A)"
+      resolution: "Calendar window: as_of_date - 365 days. Selection by effective_date."
+      linked_artifacts:
+        - manifests/critical-ambiguity-resolution.yaml (AMB-004)
+      linked_formulas: [F-HVB-EVENTS-1Y]
+      linked_reqs: [VTA-REQ-013]
+      known_defect: B14_EVENTS_1Y
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4 (B14 fix)
+      risk_if_unresolved: HIGH
+
+    - oracle_id: O-024
+      category: FORMULA_DEFINITION
+      ambiguity: "B12 obv_20d_change_pct = vpt_chg (copy-paste bug)"
+      original_authority: CODE_BUG
+      assumed_correct_value: "obv_change = vpt_change (buggy)"
+      disposition: RESOLVED_BY_SOL_DECISION
+      resolution_authority: "Sol §5 (Phase 2A)"
+      resolution: "OBV change from OBV series. VPT change from VPT series. Separate source series mandated."
+      linked_artifacts:
+        - manifests/critical-ambiguity-resolution.yaml (AMB-005)
+      linked_formulas: [F-OBV-CHANGE, F-VPT-CHANGE]
+      linked_reqs: [VTA-REQ-014]
+      known_defect: B12_OBV_VPT_BUG
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4 (B12 fix) + PHASE_4Q (mutation regression)
+      risk_if_unresolved: HIGH
+
+    - oracle_id: O-017
+      category: SOURCE_PRIORITY
+      ambiguity: "VCI primary vs TCBS/DNSE/Yahoo — priority unclear + collector OHLCV gap"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "vnstock VCI primary"
+      disposition: RESOLVED_BY_SOL_DECISION
+      resolution_authority: "Sol §6 (Phase 2A)"
+      resolution: "VCI primary, fail-closed in integrated mode. market-data-packet-v1 contract defined. Collector extension required."
+      linked_artifacts:
+        - contracts/source-policy.yaml
+        - contracts/market-data-packet-v1.schema.json
+        - manifests/critical-ambiguity-resolution.yaml (AMB-006)
+      linked_formulas: [F-MARKET-DATA-PACKET]
+      linked_reqs: [VTA-REQ-012]
+      phase_for_resolution: COMPLETE (contract) — EXTENSION_BLOCKED (collector)
+      phase_for_implementation: COLLECTOR_EXTENSION_PROGRAM (between Phase 5 and Phase 6)
+      risk_if_unresolved: HIGH
+
+    # ----------------------------------------------------------------
+    # RESOLVED BY CONTRACT (2)
+    # ----------------------------------------------------------------
+
+    - oracle_id: O-019
+      category: LANGUAGE_CLASSIFICATION
+      ambiguity: "REQ-007 forbidden list vs REQ-006 regex mismatch"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "REQ-007 forbidden list"
+      disposition: RESOLVED_BY_CONTRACT
+      resolution_authority: "Phase 2A contracts/REQ007-semantic-policy.yaml + contracts/status-taxonomy.yaml"
+      resolution: "3-layer policy (lexical + semantic + imperative), negation-aware. REQ-007 = HIGHEST precedence."
+      linked_artifacts:
+        - contracts/REQ007-semantic-policy.yaml
+        - requirements/REQ005-REQ006-REQ007-compatibility-matrix.yaml
+      linked_reqs: [VTA-REQ-003]
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4
+      risk_if_unresolved: HIGH
+
+    - oracle_id: O-018
+      category: BENCHMARK_SELECTION
+      ambiguity: "VNINDEX vs VN30 as canonical Beta benchmark"
+      original_authority: IMPLIED
+      assumed_correct_value: "VNINDEX primary, VN30 secondary"
+      disposition: RESOLVED_BY_CONTRACT
+      resolution_authority: "Phase 2A contracts/source-policy.yaml + price-basis-policy.yaml"
+      resolution: "VNINDEX canonical for Beta. VN30 documented as secondary (different result → different Beta). Phase 3 will lock benchmark for each calculation."
+      linked_artifacts:
+        - contracts/source-policy.yaml
+      linked_formulas: [F-BETA, F-CORRELATION]
+      linked_reqs: [VTA-REQ-001]
+      unresolved_subitem: "Per-calculation benchmark assignment — Phase 3 freeze"
+      phase_for_resolution: PHASE_3 (per-calc assignment)
+      phase_for_implementation: PHASE_4
+      risk_if_unresolved: MEDIUM
+
+    # ----------------------------------------------------------------
+    # DEFERRED TO PHASE 3 (13) — calibration / authority required
+    # ----------------------------------------------------------------
+
+    - oracle_id: O-001
+      category: FORMULA_DEFINITION
+      ambiguity: "RSI Wilder vs simple smoothing (SKILL.md doesn't specify)"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "Wilder smoothing"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Wilder 1978 reference + calibration against ta-lib"
+      linked_formulas: [F-RSI]
+      linked_reqs: [VTA-REQ-005]
+      unresolved_subitems: ["warmup requirement", "Wilder seeding method", "rounding policy"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: HIGH
+
+    - oracle_id: O-002
+      category: FORMULA_DEFINITION
+      ambiguity: "Bollinger std: population (÷N) ACTIVE vs sample (÷N-1) PROFILE"
+      original_authority: REFERENCE_FILES_CONTRADICTORY
+      assumed_correct_value: "Population ACTIVE, Sample PROFILE"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Bollinger reference + consistency decision for shared kernel"
+      linked_formulas: [F-BOLLINGER]
+      linked_reqs: [VTA-REQ-006]
+      unresolved_subitems: ["which std convention for shared kernel"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: HIGH
+
+    - oracle_id: O-003
+      category: FORMULA_DEFINITION
+      ambiguity: "MA: SMA vs EMA (SKILL.md says 'trung bình động')"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "SMA for MA, EMA only for MACD"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Trading calendar convention"
+      linked_formulas: [F-MA]
+      linked_reqs: [VTA-REQ-001]
+      unresolved_subitems: ["window set", "warmup policy"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - oracle_id: O-004
+      category: SMOOTHING_METHOD
+      ambiguity: "MACD EMA seed: data[0] vs SMA(period)"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "data[0]"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "MACD reference + seeding convention"
+      linked_formulas: [F-MACD]
+      linked_reqs: [VTA-REQ-001]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - oracle_id: O-005
+      category: WINDOW_OR_SMOOTHING
+      ambiguity: "Beta window length (52w? full sample? other?)"
+      original_authority: IMPLIED
+      assumed_correct_value: "52 weeks"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Calibration + return basis decision"
+      linked_formulas: [F-BETA]
+      linked_reqs: [VTA-REQ-001]
+      unresolved_subitems: ["window length", "return basis (log vs simple)"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: HIGH
+
+    - oracle_id: O-006
+      category: WINDOW_OR_SMOOTHING
+      ambiguity: "Correlation window length"
+      original_authority: IMPLIED
+      assumed_correct_value: "Same as Beta"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Same as Beta window decision"
+      linked_formulas: [F-CORRELATION]
+      linked_reqs: [VTA-REQ-001]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - oracle_id: O-008
+      category: THRESHOLD
+      ambiguity: "Double Bottom: ACTIVE 3%/5w vs PROFILE 8%/12d"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "Both legitimate (different frequencies)"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Parameter freeze (already reconciled as RECONCILED with mode_parameterization)"
+      linked_formulas: [F-DOUBLE-BOTTOM]
+      linked_reqs: [VTA-REQ-002]
+      unresolved_subitems: ["mode_parameters_frozen = false"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - oracle_id: O-010
+      category: WINDOW_OR_SMOOTHING
+      ambiguity: "Rolling return windows 21/63/126/252 vs 20/60/120/252"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "21/63/126/252"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Trading day convention decision"
+      linked_formulas: [F-ROLLING-RETURN, F-MA]
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - oracle_id: O-011
+      category: THRESHOLD
+      ambiguity: "VaR/ES confidence levels (95% and 99%)"
+      original_authority: IMPLIED
+      assumed_correct_value: "95% and 99%"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Statistical convention decision"
+      linked_formulas: []
+      linked_reqs: [VTA-REQ-002]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: LOW
+
+    - oracle_id: O-012
+      category: FORMULA_DEFINITION
+      ambiguity: "Percentile: floor counting vs linear interpolation"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "Floor for percentile_of_value, linear for quantile helper"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Statistical convention decision"
+      linked_formulas: [F-PERCENTILE]
+      linked_reqs: [VTA-REQ-002]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - oracle_id: O-014
+      category: ARCHETYPE_PRECEDENCE
+      ambiguity: "Archetype priority order rationale"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "trend_following > accumulation_breakout > trap_prone > mixed > no_current_setup"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Methodology justification"
+      linked_formulas: [F-ARCHETYPE-PRECEDENCE]
+      linked_reqs: [VTA-REQ-002]
+      unresolved_subitems: ["rationale for priority order"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+      note: "Precedence deterministic per archetype-precedence-reconciliation.yaml. Rationale freeze Phase 3."
+
+    - oracle_id: O-015
+      category: PATTERN_THRESHOLD
+      ambiguity: "Setup score top-N: 6 (code) vs 8 (header)"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "top 6 returned"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Sol decision (recommend: ALL setups ≥55, no top-N)"
+      linked_formulas: [F-TECH-SCORE]
+      linked_reqs: [VTA-REQ-002]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: LOW
+
+    - oracle_id: O-023
+      category: THRESHOLD
+      ambiguity: "Tech score bands: gap at -3, RSI 45-55, BB exactly 50%"
+      original_authority: SKILL_FILE
+      assumed_correct_value: "6 signals × ±1, bands +4-6/+1-3/-1-0/-2to-3/-4to-6"
+      disposition: DEFERRED_TO_PHASE_3
+      resolution_authority_required: "Threshold reconciliation"
+      linked_formulas: [F-TECH-SCORE]
+      linked_reqs: [VTA-REQ-001]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: LOW
+
+    # ----------------------------------------------------------------
+    # DEFERRED TO PHASE 4 (1) — bug fix
+    # ----------------------------------------------------------------
+
+    - oracle_id: O-022
+      category: FORMULA_DEFINITION
+      ambiguity: "VPCI returns 'hỗn hợp' when vpci_latest is None (silent failure)"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "Returns 'hỗn hợp' instead of error"
+      disposition: DEFERRED_TO_PHASE_4
+      resolution_authority_required: "Error handling policy"
+      linked_formulas: []
+      linked_reqs: [VTA-REQ-002]
+      phase_for_resolution: PHASE_4
+      risk_if_unresolved: MEDIUM
+
+    # ----------------------------------------------------------------
+    # DERIVED FROM OTHER ORACLE (1)
+    # ----------------------------------------------------------------
+
+    - oracle_id: O-020
+      category: FORMULA_DEFINITION
+      ambiguity: "Alpha = stock_perf - beta × market_perf (no risk-free rate, not Jensen's)"
+      original_authority: REFERENCE_FILE
+      assumed_correct_value: "Simplified alpha, no risk-free rate"
+      disposition: DERIVED_FROM_OTHER_ORACLE
+      derived_from_oracles: [O-005, O-006]
+      resolution: "Alpha depends on Beta (window, return basis). Once O-005/O-006 resolved in Phase 3, Alpha contract follows."
+      linked_formulas: [F-ALPHA]
+      linked_reqs: [VTA-REQ-001]
+      phase_for_resolution: PHASE_3 (documentation)
+      risk_if_unresolved: LOW
+
+    # ----------------------------------------------------------------
+    # ACCEPTED AS KNOWN DEFECT, PHASE 4 FIX (1)
+    # ----------------------------------------------------------------
+
+    - oracle_id: O-021
+      category: ERROR_BEHAVIOR
+      ambiguity: "RS benchmark profile: no guard for None benchmark → crash"
+      original_authority: CODE_BEHAVIOR
+      assumed_correct_value: "Crash on None"
+      disposition: ACCEPTED_AS_KNOWN_DEFECT_PHASE_4_FIX
+      resolution_authority_required: "None-guard implementation"
+      linked_formulas: []
+      linked_reqs: [VTA-REQ-002, VTA-REQ-010]
+      linked_failure_modes: [FM-BENCHMARK-MISALIGNED]
+      phase_for_resolution: PHASE_4 (None-guard + error_code BENCHMARK_UNAVAILABLE)
+      risk_if_unresolved: HIGH
+
+  # ====================================================================
+  # Integrity check
+  # ====================================================================
+
+  integrity_check:
+    oracle_count: 24
+    disposition_breakdown:
+      RESOLVED_BY_SOL_DECISION: 6
+      RESOLVED_BY_CONTRACT: 2
+      DEFERRED_TO_PHASE_3: 13
+      DEFERRED_TO_PHASE_4: 1
+      DERIVED_FROM_OTHER_ORACLE: 1
+      ACCEPTED_AS_KNOWN_DEFECT_PHASE_4_FIX: 1
+      total: 24
+    fully_dispositioned: 24/24
+    orphaned_oracles: 0
+    cross_artifact_lock: manifests/technical-phase2B-cross-artifact-lock.yaml
+    status: PASS

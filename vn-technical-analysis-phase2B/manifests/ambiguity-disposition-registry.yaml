@@ -1,0 +1,302 @@
+# Technical Phase 2B — Ambiguity Disposition Registry
+# Disposition the 18 remaining ambiguities (after 6 critical resolved in Phase 2A critical-ambiguity-resolution.yaml)
+# Source: implicit-oracle-registry (24) − 6 resolved by Sol = 18 remaining
+# Every ambiguity MUST have: explicit_status + linked_oracle + phase_for_resolution
+
+ambiguity_disposition_registry:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+  baseline:
+    total_ambiguities: 24
+    resolved_in_phase_2A: 6  # AMB-001 through AMB-006 (see critical-ambiguity-resolution.yaml)
+    remaining_for_phase_2B: 18
+    fully_dispositioned: 18
+
+  disposition_summary:
+    DEFERRED_TO_PHASE_3: 13   # require calibration / authority decision
+    DEFERRED_TO_PHASE_4: 2    # bug fixes (O-021 None crash, O-022 VPCI silent)
+    DERIVED_FROM_OTHER: 1     # O-020 Alpha depends on Beta decisions
+    RESOLVED_BY_CONTRACT: 2   # O-019 REQ-007, O-018 benchmark policy
+    total: 18
+
+  # ====================================================================
+  # Per-ambiguity dispositions (AMR-007 through AMR-024, mapping to oracles O-001..O-024)
+  # 6 critical (AMB-001..006) excluded — already in critical-ambiguity-resolution.yaml
+  # ====================================================================
+
+  ambiguities:
+
+    # ----------------------------------------------------------------
+    # RESOLVED BY CONTRACT (2) — Phase 2A contracts already cover these
+    # ----------------------------------------------------------------
+
+    - ambiguity_id: AMR-019
+      linked_oracle: O-019
+      category: LANGUAGE_CLASSIFICATION
+      affected_mode: BOTH
+      ambiguity: "REQ-007 forbidden list vs REQ-006 regex mismatch. REQ-006 negation-unaware."
+      conflicting_sources:
+        - "SRC-005 metric_guardrails.md line 283 (forbidden list)"
+        - "SRC-001 SKILL.md line 348 (REQ-007)"
+      disposition: RESOLVED_BY_CONTRACT
+      resolution: "3-layer policy (lexical + semantic + imperative), negation-aware. REQ-007 precedence = HIGHEST."
+      resolution_artifact: contracts/REQ007-semantic-policy.yaml
+      linked_reqs: [VTA-REQ-003]
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4
+
+    - ambiguity_id: AMR-018
+      linked_oracle: O-018
+      category: BENCHMARK_SELECTION
+      affected_mode: BOTH
+      ambiguity: "VNINDEX vs VN30 — which is canonical for Beta?"
+      conflicting_sources:
+        - "SRC-001 SKILL.md line 76"
+        - "SRC-007 stock_profile_blocks.md line 600"
+      disposition: RESOLVED_BY_CONTRACT
+      resolution: "VNINDEX canonical for Beta. VN30 documented as secondary. Per-calculation assignment frozen Phase 3."
+      resolution_artifact: contracts/source-policy.yaml
+      linked_reqs: [VTA-REQ-001]
+      unresolved_subitem: "Per-calculation benchmark freeze (Phase 3)"
+      phase_for_resolution: PHASE_3 (per-calc freeze)
+      phase_for_implementation: PHASE_4
+
+    # ----------------------------------------------------------------
+    # DEFERRED TO PHASE 3 (13) — calibration / authority required
+    # ----------------------------------------------------------------
+
+    - ambiguity_id: AMR-001
+      linked_oracle: O-001
+      category: FORMULA_DEFINITION
+      affected_mode: BOTH
+      ambiguity: "RSI smoothing: Wilder vs simple (SKILL.md doesn't specify)"
+      conflicting_sources:
+        - "SRC-002 indicators.md line 40-60 (Wilder)"
+        - "SKILL.md only says 'Relative Strength Index'"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Wilder 1978 reference + calibration against ta-lib"
+      linked_reqs: [VTA-REQ-005]
+      unresolved_subitems: ["warmup requirement", "Wilder seeding", "rounding policy"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: HIGH
+
+    - ambiguity_id: AMR-002
+      linked_oracle: O-002
+      category: FORMULA_DEFINITION
+      affected_mode: BOTH
+      ambiguity: "Bollinger std convention: population (÷N) vs sample (÷N-1)"
+      conflicting_sources:
+        - "SRC-002 indicators.md line 85 (÷period = population)"
+        - "SRC-007 stock_profile_blocks.md line 56 (÷(n-1) = sample)"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Bollinger reference + consistency decision for shared kernel"
+      linked_reqs: [VTA-REQ-006]
+      unresolved_subitems: ["which std for shared kernel"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: HIGH
+
+    - ambiguity_id: AMR-003
+      linked_oracle: O-003
+      category: FORMULA_DEFINITION
+      affected_mode: BOTH
+      ambiguity: "MA: SMA vs EMA (SKILL.md says 'trung bình động')"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Trading calendar convention"
+      linked_reqs: [VTA-REQ-001]
+      unresolved_subitems: ["window set", "warmup policy"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - ambiguity_id: AMR-004
+      linked_oracle: O-004
+      category: SMOOTHING_METHOD
+      affected_mode: ACTIVE
+      ambiguity: "MACD EMA seed: data[0] vs SMA(period)"
+      conflicting_sources:
+        - "SRC-002 indicators.md line 25 (data[0])"
+        - "Standard libraries often seed with SMA"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "MACD reference + seeding convention"
+      linked_reqs: [VTA-REQ-001]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - ambiguity_id: AMR-005
+      linked_oracle: O-005
+      category: WINDOW_OR_SMOOTHING
+      affected_mode: ACTIVE
+      ambiguity: "Beta window length (52w? full sample? other?)"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Calibration + return basis decision"
+      linked_reqs: [VTA-REQ-001]
+      unresolved_subitems: ["window length", "return basis (log vs simple)"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: HIGH
+
+    - ambiguity_id: AMR-006
+      linked_oracle: O-006
+      category: WINDOW_OR_SMOOTHING
+      affected_mode: ACTIVE
+      ambiguity: "Correlation window length (same as Beta?)"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Same as Beta window decision"
+      linked_reqs: [VTA-REQ-001]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - ambiguity_id: AMR-008
+      linked_oracle: O-008
+      category: THRESHOLD
+      affected_mode: BOTH
+      ambiguity: "Double Bottom: ACTIVE 3%/5w vs PROFILE 8%/12d"
+      conflicting_sources:
+        - "SRC-003 pattern_detection.md line 56 (ACTIVE)"
+        - "SRC-004 pattern_scoring.md line 280 (PROFILE)"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Parameter freeze (already reconciled as RECONCILED with mode_parameterization)"
+      linked_reqs: [VTA-REQ-002]
+      unresolved_subitems: ["mode_parameters_frozen = false"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - ambiguity_id: AMR-010
+      linked_oracle: O-010
+      category: WINDOW_OR_SMOOTHING
+      affected_mode: PROFILE
+      ambiguity: "Rolling return windows: 21/63/126/252 vs 20/60/120/252"
+      conflicting_sources:
+        - "SRC-007 stock_profile_blocks.md line 259 (21/63/126/252)"
+        - "metric_guardrails.md (20/60/120/252)"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Trading day convention decision"
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - ambiguity_id: AMR-011
+      linked_oracle: O-011
+      category: THRESHOLD
+      affected_mode: PROFILE
+      ambiguity: "VaR/ES confidence levels (95% and 99% implied but not stated)"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Statistical convention decision"
+      linked_reqs: [VTA-REQ-002]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: LOW
+
+    - ambiguity_id: AMR-012
+      linked_oracle: O-012
+      category: FORMULA_DEFINITION
+      affected_mode: PROFILE
+      ambiguity: "Percentile: floor counting vs linear interpolation (both in same file)"
+      conflicting_sources:
+        - "SRC-007 stock_profile_blocks.md line 65 (linear)"
+        - "SRC-007 stock_profile_blocks.md line 75 (floor)"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Statistical convention decision"
+      linked_reqs: [VTA-REQ-002]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+
+    - ambiguity_id: AMR-014
+      linked_oracle: O-014
+      category: ARCHETYPE_PRECEDENCE
+      affected_mode: PROFILE
+      ambiguity: "Archetype priority rationale not explained; no tie-break documented"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Methodology justification"
+      linked_reqs: [VTA-REQ-002]
+      unresolved_subitems: ["rationale for priority order"]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: MEDIUM
+      note: "Precedence deterministic per archetype-precedence-reconciliation.yaml (unique precedence per archetype)."
+
+    - ambiguity_id: AMR-015
+      linked_oracle: O-015
+      category: PATTERN_THRESHOLD
+      affected_mode: PROFILE
+      ambiguity: "Setup top-N: 6 (code comment) vs 8 (header)"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Sol decision (recommend: ALL setups ≥55, no silent top-N)"
+      linked_reqs: [VTA-REQ-002]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: LOW
+
+    - ambiguity_id: AMR-023
+      linked_oracle: O-023
+      category: THRESHOLD
+      affected_mode: ACTIVE
+      ambiguity: "Tech score bands: gap at -3, RSI 45-55 zone, BB exactly 50%"
+      disposition: DEFERRED_TO_PHASE_3
+      authority_required: "Threshold reconciliation"
+      linked_reqs: [VTA-REQ-001]
+      phase_for_resolution: PHASE_3
+      risk_if_unresolved: LOW
+
+    # ----------------------------------------------------------------
+    # DEFERRED TO PHASE 4 (2) — bug fixes
+    # ----------------------------------------------------------------
+
+    - ambiguity_id: AMR-021
+      linked_oracle: O-021
+      category: ERROR_BEHAVIOR
+      affected_mode: PROFILE
+      ambiguity: "RS benchmark profile: no guard for None benchmark → crash"
+      conflicting_sources:
+        - "SRC-007 stock_profile_blocks.md line 1276"
+      disposition: DEFERRED_TO_PHASE_4
+      authority_required: "None-guard implementation + error_code BENCHMARK_UNAVAILABLE"
+      linked_reqs: [VTA-REQ-002, VTA-REQ-010]
+      linked_failure_modes: [FM-BENCHMARK-MISALIGNED]
+      phase_for_resolution: PHASE_4
+      risk_if_unresolved: HIGH
+
+    - ambiguity_id: AMR-022
+      linked_oracle: O-022
+      category: FORMULA_DEFINITION
+      affected_mode: PROFILE
+      ambiguity: "VPCI returns 'hỗn hợp' when vpci_latest is None (silent failure)"
+      conflicting_sources:
+        - "SRC-007 stock_profile_blocks.md line 800-850"
+      disposition: DEFERRED_TO_PHASE_4
+      authority_required: "Error handling policy decision"
+      linked_reqs: [VTA-REQ-002]
+      phase_for_resolution: PHASE_4
+      risk_if_unresolved: MEDIUM
+
+    # ----------------------------------------------------------------
+    # DERIVED FROM OTHER AMBIGUITY (1)
+    # ----------------------------------------------------------------
+
+    - ambiguity_id: AMR-020
+      linked_oracle: O-020
+      category: FORMULA_DEFINITION
+      affected_mode: ACTIVE
+      ambiguity: "Alpha simplified (no risk-free rate, not Jensen's)"
+      conflicting_sources:
+        - "SRC-002 indicators.md line 125"
+      disposition: DERIVED_FROM_OTHER
+      derived_from_ambiguities: [AMR-005, AMR-006]
+      resolution: "Alpha depends on Beta window/return basis. Once AMR-005/006 resolved Phase 3, Alpha contract follows. Documentation obligation only."
+      linked_reqs: [VTA-REQ-001]
+      phase_for_resolution: PHASE_3 (documentation)
+      risk_if_unresolved: LOW
+
+  # ====================================================================
+  # Integrity check
+  # ====================================================================
+
+  integrity_check:
+    ambiguity_count: 18  # remaining after 6 critical resolved in Phase 2A
+    disposition_breakdown:
+      RESOLVED_BY_CONTRACT: 2
+      DEFERRED_TO_PHASE_3: 13
+      DEFERRED_TO_PHASE_4: 2
+      DERIVED_FROM_OTHER: 1
+      total: 18
+    fully_dispositioned: 18/18
+    orphaned_ambiguities: 0
+    cross_reference_to_phase_2A: "AMB-001..006 in critical-ambiguity-resolution.yaml"
+    cross_reference_to_oracle_registry: "All 18 ambiguities linked to O-001..O-024 in oracle-disposition-registry.yaml"
+    cross_artifact_lock: manifests/technical-phase2B-cross-artifact-lock.yaml
+    status: PASS

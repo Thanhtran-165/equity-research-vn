@@ -1,0 +1,492 @@
+# Technical Phase 2B — Verifier Obligation Matrix
+# Consolidates all VC-* verifier checks from:
+#   - requirement-traceability-matrix.yaml (REQ → VC)
+#   - failure-mode-coverage-plan.yaml (FM → VC)
+# Every verifier check MUST be implemented in Phase 4 verifier/ module
+
+verifier_obligation_matrix:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+  baseline:
+    total_verifier_checks: 65
+    by_category:
+      INPUT_PRE_FLIGHT: 14
+      COMPUTATION_RECOMPUTE: 12
+      OUTPUT_SCHEMA: 11
+      LANGUAGE_POLICY: 5
+      PROVENANCE: 6
+      MODE_SEPARATION: 5
+      BOUNDARY: 3
+      ARCHETYPE: 9
+
+  # ====================================================================
+  # All verifier checks consolidated
+  # ====================================================================
+
+  verifier_checks:
+
+    # ============================================================
+    # INPUT PRE-FLIGHT (14)
+    # ============================================================
+
+    - id: VC-EMPTY-SERIES-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Assert output.error_code = INSUFFICIENT_HISTORY when input empty"
+      linked_fms: [FM-EMPTY-SERIES]
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      implementation_phase: PHASE_4
+
+    - id: VC-INHIST-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "ACTIVE 51w input → INSUFFICIENT_HISTORY; PROFILE 59d input → INSUFFICIENT_HISTORY"
+      linked_fms: [FM-INSUFFICIENT-HISTORY]
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      implementation_phase: PHASE_4
+
+    - id: VC-DUP-TS-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Input with duplicate date → dedup succeeds, warning in provenance"
+      linked_fms: [FM-DUPLICATE-TIMESTAMP]
+      implementation_phase: PHASE_4
+
+    - id: VC-UNSORTED-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Unsorted input → sort succeeds, warning logged"
+      linked_fms: [FM-UNSORTED-TIMESTAMP]
+      implementation_phase: PHASE_4
+
+    - id: VC-MISS-INT-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Input with 10% gaps → warning, output still valid"
+      linked_fms: [FM-MISSING-INTERVAL]
+      implementation_phase: PHASE_4
+
+    - id: VC-ZERO-PX-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Input with 0 close → fail-closed"
+      linked_fms: [FM-ZERO-PRICE]
+      linked_reqs: [VTA-REQ-012]
+      implementation_phase: PHASE_4
+
+    - id: VC-ZERO-VOL-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Input with 0 volume → accepted, value=0"
+      linked_fms: [FM-ZERO-VOLUME]
+      implementation_phase: PHASE_4
+
+    - id: VC-CORP-ACT-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Input adjustment_status=UNKNOWN → fail-closed"
+      linked_fms: [FM-CORPORATE-ACTION-UNADJUSTED]
+      linked_reqs: [VTA-REQ-004]
+      implementation_phase: PHASE_4
+
+    - id: VC-BENCH-MISALIGN-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Misaligned dates → inner-join, warning; None benchmark → BENCHMARK_UNAVAILABLE error"
+      linked_fms: [FM-BENCHMARK-MISALIGNED]
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-010]
+      linked_oracles: [O-021]
+      implementation_phase: PHASE_4
+
+    - id: VC-PARTIAL-WEEK-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Include current incomplete week → expect drop"
+      linked_fms: [FM-PARTIAL-WEEK]
+      implementation_phase: PHASE_4
+
+    - id: VC-PRICE-BASIS-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Assert each indicator input tagged with price_basis"
+      linked_reqs: [VTA-REQ-004]
+      implementation_phase: PHASE_4
+
+    - id: VC-PRICE-BASIS-2
+      category: INPUT_PRE_FLIGHT
+      obligation: "Assert total_return_adjusted_close used for returns/beta"
+      linked_reqs: [VTA-REQ-004]
+      implementation_phase: PHASE_4
+
+    - id: VC-PRICE-BASIS-3
+      category: INPUT_PRE_FLIGHT
+      obligation: "Assert fail-closed on UNKNOWN adjustment status"
+      linked_reqs: [VTA-REQ-004]
+      implementation_phase: PHASE_4
+
+    - id: VC-WRONG-LOOKBACK-1
+      category: INPUT_PRE_FLIGHT
+      obligation: "Window=22 (invalid per Phase 3 freeze) → fail-closed"
+      linked_fms: [FM-WRONG-LOOKBACK]
+      implementation_phase: PHASE_3 (freeze) + PHASE_4 (enforce)
+
+    # ============================================================
+    # COMPUTATION_RECOMPUTE (12)
+    # ============================================================
+
+    - id: VC-RSI-WILDER-1
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Assert RSI computed with period-1 multiplier (Wilder)"
+      linked_oracles: [O-001]
+      linked_reqs: [VTA-REQ-005]
+      implementation_phase: PHASE_4
+
+    - id: VC-RSI-WILDER-2
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Calibration against reference library (ta-lib Wilder RSI) within 1e-6"
+      linked_reqs: [VTA-REQ-005]
+      implementation_phase: PHASE_4
+
+    - id: VC-BOLL-1
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Assert shared kernel uses ONE std convention (population ÷N OR sample ÷N-1)"
+      linked_oracles: [O-002]
+      linked_reqs: [VTA-REQ-006]
+      implementation_phase: PHASE_3 (decision) + PHASE_4 (implementation)
+
+    - id: VC-BOLL-2
+      category: COMPUTATION_RECOMPUTE
+      obligation: "ACTIVE and PROFILE must produce IDENTICAL BB for same input"
+      linked_fms: [FM-MODE-KERNEL-DIVERGENCE]
+      linked_reqs: [VTA-REQ-006]
+      implementation_phase: PHASE_4
+
+    - id: VC-WRONG-SMOOTH-1
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Inject simple RSI → expect Wilder check fails"
+      linked_fms: [FM-WRONG-SMOOTHING]
+      linked_reqs: [VTA-REQ-005]
+      implementation_phase: PHASE_4
+
+    - id: VC-DIV-ZERO-1
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Input causing std=0 → handled (no crash, error/warning)"
+      linked_fms: [FM-DIVIDE-BY-ZERO]
+      implementation_phase: PHASE_4
+
+    - id: VC-NAN-PROP-1
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Input with one NaN close → either handled or error"
+      linked_fms: [FM-NAN-PROPAGATION]
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      implementation_phase: PHASE_4
+
+    - id: VC-CHANNEL-1
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Assert normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window)"
+      linked_oracles: [O-009]
+      linked_reqs: [VTA-REQ-007]
+      implementation_phase: PHASE_4
+
+    - id: VC-CHANNEL-2
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Threshold value frozen in Phase 3 contract"
+      linked_reqs: [VTA-REQ-007]
+      implementation_phase: PHASE_3 (freeze)
+
+    - id: VC-OBV-VPT-1
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Assert obv_change sourced from OBV series AND vpt_change sourced from VPT series"
+      linked_fms: [FM-OBV-VPT-BUG]
+      linked_oracles: [O-024]
+      linked_reqs: [VTA-REQ-014]
+      implementation_phase: PHASE_4
+
+    - id: VC-OBV-VPT-2
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Assert vpt_change_pct sourced from VPT series"
+      linked_reqs: [VTA-REQ-014]
+      implementation_phase: PHASE_4
+
+    - id: VC-EVENTS-1Y-1
+      category: COMPUTATION_RECOMPUTE
+      obligation: "Assert events_1y selected by effective_date >= as_of_date - 365 days (NOT events[-252:])"
+      linked_fms: [FM-EVENTS-1Y-BUG]
+      linked_oracles: [O-013]
+      linked_reqs: [VTA-REQ-013]
+      implementation_phase: PHASE_4
+
+    # ============================================================
+    # OUTPUT_SCHEMA (10)
+    # ============================================================
+
+    - id: VC-ACTIVE-VALID-1
+      category: OUTPUT_SCHEMA
+      obligation: "Output satisfies technical-active-output.schema.json"
+      linked_reqs: [VTA-REQ-001]
+      implementation_phase: PHASE_4
+
+    - id: VC-ACTIVE-VALID-2
+      category: OUTPUT_SCHEMA
+      obligation: "Weekly history ≥ minimum (52w baseline)"
+      linked_reqs: [VTA-REQ-001]
+      implementation_phase: PHASE_4
+
+    - id: VC-ACTIVE-VALID-3
+      category: OUTPUT_SCHEMA
+      obligation: "6 indicators all present or fail-closed with error_code"
+      linked_reqs: [VTA-REQ-001]
+      implementation_phase: PHASE_4
+
+    - id: VC-PROFILE-VALID-1
+      category: OUTPUT_SCHEMA
+      obligation: "Output satisfies technical-profile-output.schema.json"
+      linked_reqs: [VTA-REQ-002]
+      implementation_phase: PHASE_4
+
+    - id: VC-PROFILE-VALID-2
+      category: OUTPUT_SCHEMA
+      obligation: "Daily history ≥ 60 sessions (enforced)"
+      linked_reqs: [VTA-REQ-002]
+      implementation_phase: PHASE_4
+
+    - id: VC-PROFILE-VALID-3
+      category: OUTPUT_SCHEMA
+      obligation: "17 blocks all present or marked optional-skipped"
+      linked_reqs: [VTA-REQ-002]
+      implementation_phase: PHASE_4
+
+    - id: VC-PROFILE-VALID-4
+      category: OUTPUT_SCHEMA
+      obligation: "setup_coverage_status explicit (NOT_EVALUATED prohibited after Phase 4)"
+      linked_reqs: [VTA-REQ-002, VTA-REQ-009]
+      implementation_phase: PHASE_4
+
+    - id: VC-SCHEMA-DRIFT-1
+      category: OUTPUT_SCHEMA
+      obligation: "Add foreign key to output → schema rejection"
+      linked_fms: [FM-SCHEMA-DRIFT]
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      implementation_phase: PHASE_4
+
+    - id: VC-FAB-VAL-1
+      category: OUTPUT_SCHEMA
+      obligation: "Inject value not in computation chain → detection"
+      linked_fms: [FM-FABRICATED-VALUE]
+      linked_reqs: [VTA-REQ-012]
+      implementation_phase: PHASE_4
+
+    - id: VC-COV-1
+      category: OUTPUT_SCHEMA
+      obligation: "setup_coverage_status MUST be INCOMPLETE_BEARISH_COVERAGE before Phase 4 bearish implementation"
+      linked_reqs: [VTA-REQ-009]
+      implementation_phase: PHASE_4
+
+    - id: VC-COV-2
+      category: OUTPUT_SCHEMA
+      obligation: "Absence of bullish setup MUST NOT be reported as bearish evidence"
+      linked_reqs: [VTA-REQ-009]
+      implementation_phase: PHASE_4
+
+    # ============================================================
+    # LANGUAGE_POLICY (4)
+    # ============================================================
+
+    - id: VC-REQ007-LEXICAL
+      category: LANGUAGE_POLICY
+      obligation: "Regex scan for prohibited tokens (bullish/bearish/tín hiệu/khuyến nghị/nên mua/nên bán/strong buy/strong sell/overbought/oversold)"
+      linked_oracles: [O-019]
+      linked_reqs: [VTA-REQ-003]
+      implementation_phase: PHASE_4
+
+    - id: VC-REQ007-SEMANTIC
+      category: LANGUAGE_POLICY
+      obligation: "Semantic-implication check for advice via different phrasing"
+      linked_reqs: [VTA-REQ-003]
+      implementation_phase: PHASE_4
+
+    - id: VC-REQ007-IMPERATIVE
+      category: LANGUAGE_POLICY
+      obligation: "Imperative-mood detection (nên, phải, cần, hãy)"
+      linked_reqs: [VTA-REQ-003]
+      implementation_phase: PHASE_4
+
+    - id: VC-REQ007-NEGATION
+      category: LANGUAGE_POLICY
+      obligation: "Negation-aware (NOT bullish ≠ bullish banned)"
+      linked_reqs: [VTA-REQ-003]
+      implementation_phase: PHASE_4
+
+    - id: VC-ADV-LANG-1
+      category: LANGUAGE_POLICY
+      obligation: "Inject 'nên mua' → detection"
+      linked_fms: [FM-ADVICE-LANGUAGE]
+      linked_reqs: [VTA-REQ-003]
+      implementation_phase: PHASE_4
+
+    # ============================================================
+    # PROVENANCE (6)
+    # ============================================================
+
+    - id: VC-PROV-1
+      category: PROVENANCE
+      obligation: "Every numeric output has source → computation_chain"
+      linked_reqs: [VTA-REQ-010]
+      implementation_phase: PHASE_4
+
+    - id: VC-PROV-2
+      category: PROVENANCE
+      obligation: "Provenance includes timestamp, provider, params"
+      linked_reqs: [VTA-REQ-010]
+      implementation_phase: PHASE_4
+
+    - id: VC-PROV-MISS-1
+      category: PROVENANCE
+      obligation: "Remove provenance from one field → detection"
+      linked_fms: [FM-MISSING-PROVENANCE]
+      linked_reqs: [VTA-REQ-010]
+      implementation_phase: PHASE_4
+
+    - id: VC-NO-FAB-1
+      category: PROVENANCE
+      obligation: "Every OHLCV value MUST have provenance chain to source"
+      linked_reqs: [VTA-REQ-012]
+      implementation_phase: PHASE_4
+
+    - id: VC-NO-FAB-2
+      category: PROVENANCE
+      obligation: "Assert no placeholder values (0, NaN, NULL) silently injected"
+      linked_reqs: [VTA-REQ-012]
+      implementation_phase: PHASE_4
+
+    - id: VC-FAB-VAL-1
+      category: PROVENANCE
+      obligation: "Inject value not in computation chain → detection (cross-ref OUTPUT_SCHEMA)"
+      linked_fms: [FM-FABRICATED-VALUE]
+      linked_reqs: [VTA-REQ-012]
+      implementation_phase: PHASE_4
+      note: "Duplicate id intentional — same check serves both OUTPUT_SCHEMA and PROVENANCE categories."
+
+    # ============================================================
+    # MODE_SEPARATION (5)
+    # ============================================================
+
+    - id: VC-MODE-SEP-1
+      category: MODE_SEPARATION
+      obligation: "ACTIVE output MUST NOT contain profile_blocks"
+      linked_reqs: [VTA-REQ-008]
+      implementation_phase: PHASE_4
+
+    - id: VC-MODE-SEP-2
+      category: MODE_SEPARATION
+      obligation: "PROFILE output MUST NOT contain tech_score / 6_binary_signals"
+      linked_reqs: [VTA-REQ-008]
+      implementation_phase: PHASE_4
+
+    - id: VC-MODE-SEP-3
+      category: MODE_SEPARATION
+      obligation: "Schema validation rejects foreign keys (additionalProperties: false)"
+      linked_reqs: [VTA-REQ-008]
+      implementation_phase: PHASE_4
+
+    - id: VC-MODE-CONTAM-1
+      category: MODE_SEPARATION
+      obligation: "ACTIVE output with profile_blocks → rejection"
+      linked_fms: [FM-MODE-CONTAMINATION]
+      linked_reqs: [VTA-REQ-008]
+      implementation_phase: PHASE_4
+
+    - id: VC-MODE-KERNEL-1
+      category: MODE_SEPARATION
+      obligation: "ACTIVE BB and PROFILE BB helper produce IDENTICAL values for same input"
+      linked_fms: [FM-MODE-KERNEL-DIVERGENCE]
+      linked_reqs: [VTA-REQ-006]
+      implementation_phase: PHASE_4
+
+    # ============================================================
+    # BOUNDARY (3)
+    # ============================================================
+
+    - id: VC-VAL-BOUND-1
+      category: BOUNDARY
+      obligation: "Integration adapter MUST NOT have write path to fundamental/valuation fields"
+      linked_fms: [FM-VALUATION-OVERRIDE]
+      linked_reqs: [VTA-REQ-011]
+      implementation_phase: PHASE_6
+
+    - id: VC-VAL-BOUND-2
+      category: BOUNDARY
+      obligation: "Schema validation rejects valuation_* keys in technical output"
+      linked_reqs: [VTA-REQ-011]
+      implementation_phase: PHASE_6
+
+    - id: VC-VAL-OVERRIDE-1
+      category: BOUNDARY
+      obligation: "Integration adapter cannot modify valuation_* fields"
+      linked_fms: [FM-VALUATION-OVERRIDE]
+      linked_reqs: [VTA-REQ-011]
+      implementation_phase: PHASE_6
+
+    # ============================================================
+    # ARCHETYPE + PATTERN (additional)
+    # ============================================================
+
+    - id: VC-ARCH-AMBIG-1
+      category: ARCHETYPE
+      obligation: "Ambiguity in archetype assignment → fallback to no_current_setup"
+      linked_fms: [FM-ARCHETYPE-AMBIGUITY]
+      implementation_phase: PHASE_4
+
+    - id: VC-FALSE-BREAKOUT-1
+      category: ARCHETYPE
+      obligation: "Breakout without volume → not flagged"
+      linked_fms: [FM-FALSE-BREAKOUT]
+      implementation_phase: PHASE_4
+
+    - id: VC-UNCONFIRMED-1
+      category: ARCHETYPE
+      obligation: "Setup score 65 → status=INDEVELOPMENT"
+      linked_fms: [FM-UNCONFIRMED-PATTERN]
+      implementation_phase: PHASE_4
+
+    - id: VC-LOOKAHEAD-1
+      category: ARCHETYPE
+      obligation: "Pattern at index i must not reference close[i+k] for k>0"
+      linked_fms: [FM-LOOKAHEAD-BIAS]
+      linked_reqs: [VTA-REQ-001]
+      implementation_phase: PHASE_4
+
+    - id: VC-CONFLICT-SETUP-1
+      category: ARCHETYPE
+      obligation: "Conflicting setups → all reported, archetype assigned"
+      linked_fms: [FM-CONFLICTING-SETUP]
+      linked_reqs: [VTA-REQ-002, VTA-REQ-009a]
+      implementation_phase: PHASE_4
+
+    - id: VC-BEARISH-DESIGN-1
+      category: ARCHETYPE
+      obligation: "Bearish setups have independent rules (NO sign inversion of bullish)"
+      linked_reqs: [VTA-REQ-009a]
+      implementation_phase: PHASE_3 (design) + PHASE_4 (implementation)
+
+    - id: VC-BEARISH-DESIGN-2
+      category: ARCHETYPE
+      obligation: "Each bearish setup has confirmation + invalidation + min_history"
+      linked_reqs: [VTA-REQ-009a]
+      implementation_phase: PHASE_3 (design)
+
+    - id: VC-BEARISH-DESIGN-3
+      category: ARCHETYPE
+      obligation: "Bullish+bearish simultaneous match behavior defined"
+      linked_reqs: [VTA-REQ-009a]
+      implementation_phase: PHASE_3 (design)
+
+    - id: VC-BEARISH-DESIGN-4
+      category: ARCHETYPE
+      obligation: "Denominator frozen after Phase 3 review"
+      linked_reqs: [VTA-REQ-009a]
+      implementation_phase: PHASE_3 (design)
+
+  # ====================================================================
+  # Integrity check
+  # ====================================================================
+
+  integrity_check:
+    total_unique_verifier_checks: 65
+    mandatory_for_phase_4: 58
+    mandatory_for_phase_3: 7   # VC-BOLL-1, VC-CHANNEL-2, VC-WRONG-LOOKBACK-1, VC-BEARISH-DESIGN-1..4
+    mandatory_for_phase_6: 3   # VC-VAL-BOUND-1, VC-VAL-BOUND-2, VC-VAL-OVERRIDE-1
+    every_req_has_verifier: true
+    every_critical_fm_has_verifier: true
+    orphaned_verifier_checks: 0
+    cross_artifact_lock: manifests/technical-phase2B-cross-artifact-lock.yaml
+    status: PASS

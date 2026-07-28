@@ -1,0 +1,74 @@
+# Technical Phase 1 — Mode Inventory
+# READ_ONLY audit artifact. Not a production contract.
+
+modes:
+  total: 2
+
+  ACTIVE:
+    mode_id: MODE-ACTIVE
+    intended_input_frequency: WEEKLY (interval='1W')
+    intended_parent_phase: phase_4a
+    workflow_steps: 4
+    workflow_description:
+      step_1: "Fetch weekly OHLCV 52 weeks via vnstock Quote.history(interval='1W')"
+      step_2: "Compute 6 indicators: MA10/20/50, RSI(14), MACD(12/26/9), Bollinger(MA20±2σ), Beta, Correlation"
+      step_3: "Detect patterns with evidence: Double Bottom, Channel, Candlestick, Divergence"
+      step_4: "Render HTML from technical_template.html with Tech Score + verdict"
+    output_format: "HTML file + JSON (task-state.json compact schema)"
+    formulas_used: [F-MA-ACTIVE, F-RSI-ACTIVE, F-MACD-ACTIVE, F-BOLL-ACTIVE, F-BETA-ACTIVE, F-CORR-ACTIVE, F-PERF-ACTIVE]
+    thresholds:
+      rsi_oversold: 30
+      rsi_overbought: 70
+      double_bottom_spacing_weeks: 5
+      double_bottom_tolerance_pct: 3
+      channel_slope_vnd: 100
+      tech_score_range: [-6, 6]
+      tech_score_signals: 6
+      tech_score_bands: [STRONG_BULLISH_4to6, BULLISH_1to3, NEUTRAL_neg1to0, BEARISH_neg3to_neg2, STRONG_BEARISH_neg6to_neg4]
+    language_policy: "Active mode uses 'TECHNICAL STRONG BULLISH/BEARISH' (SKILL guardrail v2.2.0). Phase4a/REQ-005 still use old 'STRONG SELL/BUY' enum."
+    data_dependencies: [weekly OHLCV, VNINDEX weekly, VN30 weekly, company overview, ratios]
+    warmup_minimum: AMBIGUOUS (see oracle registry)
+
+  PROFILE:
+    mode_id: MODE-PROFILE
+    intended_input_frequency: DAILY (interval='1D')
+    intended_parent_phase: phase_4b
+    workflow_steps: 5
+    workflow_description:
+      step_1: "Fetch daily OHLCV ~2 years (≥60 minimum, ≥252 ideal) via Quote.history(interval='1D')"
+      step_2: "Compute 17 profile blocks (B1-B17) from stock_profile_blocks.md"
+      step_3: "Detect 8 bullish setup heuristics + classify archetype (4+1 types)"
+      step_4: "Generate non-advice narrative via metric_guardrails.md scrub + non_conclusion"
+      step_5: "Render HTML from profile_template.html with all profile data + 4 chart objects"
+    output_format: "HTML file + JSON schema vn-technical-profile-v1"
+    profile_blocks_used: [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13, B14, B15, B16, B17]
+    setup_heuristics_used: [S-BULL-FLAG, S-BULL-PENNANT, S-HIGH-TIGHT-FLAG, S-MEASURED-MOVE-UP, S-TRIANGLE-ASC, S-TRIANGLE-SYM, S-CUP-HANDLE, S-DOUBLE-BOTTOM-PROFILE]
+    archetypes: [trend_following, accumulation_breakout, trap_prone, mixed, no_current_setup]
+    thresholds:
+      min_sessions_error: 60
+      min_sessions_ideal: 252
+      spike_volume_multiplier: 2
+      deep_drawdown_levels: [-10, -20, -30]
+      var_confidence_levels: [95, 99]
+      rolling_windows: AMBIGUOUS_21_63_126_252_VS_20_60_120_252
+      setup_score_min: 55
+      setup_score_near_confirm: 78
+      setup_near_confirm_distance_pct: 3
+      regime_stress_dd: -18
+      regime_stress_r60: -12
+      regime_uptrend_r60: 6
+      regime_uptrend_r120: 8
+      regime_uptrend_dd: -8
+    language_policy: "neutral_descriptive_non_advice with forbidden list + scrubCopy + forced translations + non_conclusion_panel"
+    data_dependencies: [daily OHLCV, VNINDEX daily, VN30 daily, value=close*volume*1000, optional industry peer data]
+    warmup_minimum: 60 sessions (hard error below)
+
+shared_logic:
+  - canonical_market_data_normalization (OHLCV parsing, dropna, sort)
+  - indicator_kernel (MA, RSI used in both modes though different frequency)
+  - language_generation (non-advice, though ACTIVE has weaker policy than PROFILE)
+
+mode_separation_issues:
+  - field_overlaps: ["MA20 exists in both modes but computed on weekly vs daily"]
+  - contamination_risk: "ACTIVE output (tech_score, verdict) must NOT appear in PROFILE output"
+  - shared_kernel_gap: "RSI in ACTIVE uses Wilder (indicators.md) but PROFILE blocks may use different smoothing (stock_profile_blocks.md helpers not explicitly Wilder)"

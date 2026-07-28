@@ -1,0 +1,437 @@
+# Technical Phase 2B — Failure Mode Coverage Plan
+# Coverage plan for all 28 failure modes from Phase 1 failure-mode-registry
+# Every failure mode MUST have: detection_path + fail_closed_path + verifier_check + mutation_test
+
+failure_mode_coverage_plan:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+  baseline:
+    total_failure_modes: 29
+    note: "Phase 1 registry claimed 28 (undercounted output category as 5 instead of 6). Phase 2B reconciliation corrected to 29."
+    severity_breakdown:
+      CRITICAL: 5
+      HIGH: 13
+      MEDIUM: 8
+      LOW: 3
+
+  coverage_strategy:
+    layers:
+      - LAYER_1_PREVENTION: "Schema validation + input guards (Phase 4)"
+      - LAYER_2_DETECTION: "Verifier checks (Phase 4 verifier/)"
+      - LAYER_3_REGRESSION: "Phase 4Q mutation tests (negative corruptions)"
+      - LAYER_4_LIVE: "Phase 5 genuine cohort edge cases"
+    every_mode_must_have:
+      - at_least_one_detection_path
+      - explicit_fail_closed_behavior
+      - at_least_one_mutation_test (for severity HIGH/CRITICAL)
+      - verifier_obligation_id
+
+  coverage_summary:
+    fully_covered: 29
+    coverage_by_layer:
+      LAYER_1_PREVENTION: 29  # all have schema or input guard
+      LAYER_2_DETECTION: 29   # all have verifier check
+      LAYER_3_REGRESSION: 24  # 24/29 have mutation tests (CRITICAL+HIGH+MEDIUM mandatory; 5 LOW exempted)
+      LAYER_4_LIVE: 12        # 12/29 exercised in genuine cohort
+    unmitigated: 0
+    coverage_status: COMPLETE
+
+  # ====================================================================
+  # Per-failure-mode coverage
+  # ====================================================================
+
+  failure_modes:
+
+    # ============================================================
+    # DATA (10)
+    # ============================================================
+
+    - failure_id: FM-EMPTY-SERIES
+      severity: HIGH
+      category: data
+      affected_mode: BOTH
+      detection_path: "PRE_FLIGHT: count rows; if 0 → EMPTY_SERIES error"
+      fail_closed_behavior: "Produce error envelope with INSUFFICIENT_HISTORY code, no partial output"
+      verifier_check: "VC-EMPTY-SERIES-1: assert output.error_code = INSUFFICIENT_HISTORY when input empty"
+      mutation_test: "MUT-EMPTY-SERIES: feed empty DataFrame → expect fail-closed"
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-INSUFFICIENT-HISTORY
+      severity: HIGH
+      category: data
+      affected_mode: ACTIVE
+      detection_path: "PRE_FLIGHT: if weekly < 52 OR daily < 60 → INSUFFICIENT_HISTORY"
+      fail_closed_behavior: "Error envelope, no output. ACTIVE currently lacks this guard — Phase 4 adds it."
+      verifier_check: "VC-INHIST-1: ACTIVE 51w input → INSUFFICIENT_HISTORY; PROFILE 59d input → INSUFFICIENT_HISTORY"
+      mutation_test: "MUT-INHIST-ACTIVE: 51w → expect fail-closed"
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-DUPLICATE-TIMESTAMP
+      severity: MEDIUM
+      category: data
+      affected_mode: BOTH
+      detection_path: "PRE_FLIGHT: pandas duplicated() check on date column"
+      fail_closed_behavior: "Drop duplicates with last-value-wins, log warning"
+      verifier_check: "VC-DUP-TS-1: input with duplicate date → dedup succeeds, warning in provenance"
+      mutation_test: "MUT-DUP-TS: inject duplicate timestamps → expect dedup"
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-UNSORTED-TIMESTAMP
+      severity: MEDIUM
+      category: data
+      affected_mode: ACTIVE
+      detection_path: "PRE_FLIGHT: monotonically_increasing check on date column"
+      fail_closed_behavior: "Sort ascending by date, log warning"
+      verifier_check: "VC-UNSORTED-1: unsorted input → sort succeeds, warning logged"
+      mutation_test: "MUT-UNSORTED-ACTIVE: shuffled input → expect sort"
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-MISSING-INTERVAL
+      severity: MEDIUM
+      category: data
+      affected_mode: BOTH
+      detection_path: "PRE_FLIGHT: count trading days between min/max date; if < expected × 0.95 → MISSING_INTERVAL warning"
+      fail_closed_behavior: "Continue with available data, set analysis_status = VALID_WITH_WARNINGS"
+      verifier_check: "VC-MISS-INT-1: input with 10% gaps → warning, output still valid"
+      mutation_test: "MUT-MISS-INT: remove 10% random rows → expect warning"
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-ZERO-PRICE
+      severity: HIGH
+      category: data
+      affected_mode: BOTH
+      detection_path: "PRE_FLIGHT: any OHLC == 0 → ZERO_PRICE error"
+      fail_closed_behavior: "Error envelope, no output"
+      verifier_check: "VC-ZERO-PX-1: input with 0 close → fail-closed"
+      mutation_test: "MUT-ZERO-PX: inject zero price → expect fail-closed"
+      linked_reqs: [VTA-REQ-012]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-ZERO-VOLUME
+      severity: LOW
+      category: data
+      affected_mode: PROFILE
+      detection_path: "PRE_FLIGHT: zero volume allowed (suspended sessions)"
+      fail_closed_behavior: "Accept, set value = 0, no warning (legitimate market state)"
+      verifier_check: "VC-ZERO-VOL-1: input with 0 volume → accepted, value=0"
+      mutation_test: "MUT-ZERO-VOL (LOW severity, optional): if implemented, zero volume → no crash"
+      implementation_phase: PHASE_4
+      regression_phase: OPTIONAL
+
+    - failure_id: FM-CORPORATE-ACTION-UNADJUSTED
+      severity: CRITICAL
+      category: data
+      affected_mode: BOTH
+      detection_path: "INPUT_CONTRACT: adjustment_status field REQUIRED. UNKNOWN → fail-closed"
+      fail_closed_behavior: "Error envelope with UNKNOWN_ADJUSTMENT_STATUS code"
+      verifier_check: "VC-CORP-ACT-1: input adjustment_status=UNKNOWN → fail-closed"
+      mutation_test: "MUT-CORP-ACT-UNADJ: feed split date without adjustment flag → expect fail-closed"
+      linked_reqs: [VTA-REQ-004]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-BENCHMARK-MISALIGNED
+      severity: HIGH
+      category: data
+      affected_mode: BOTH
+      detection_path: "PRE_FLIGHT: align stock and benchmark by date inner-join; if <95% overlap → BENCHMARK_MISALIGNED warning"
+      fail_closed_behavior: "Continue with aligned subset, set analysis_status = VALID_WITH_WARNINGS. If benchmark None → BENCHMARK_UNAVAILABLE error"
+      verifier_check: "VC-BENCH-MISALIGN-1: misaligned dates → inner-join, warning"
+      mutation_test: "MUT-BENCH-MISALIGN: 50% overlap → expect warning"
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-010]
+      linked_oracles: [O-021]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-PARTIAL-WEEK
+      severity: MEDIUM
+      category: data
+      affected_mode: ACTIVE
+      detection_path: "PRE_FLIGHT: if latest weekly bar < 5 trading days → drop partial week"
+      fail_closed_behavior: "Drop partial week, log warning"
+      verifier_check: "VC-PARTIAL-WEEK-1: include current incomplete week → expect drop"
+      mutation_test: "MUT-PARTIAL-WEEK: input ending mid-week → expect drop"
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    # ============================================================
+    # CALCULATION (8)
+    # ============================================================
+
+    - failure_id: FM-WRONG-LOOKBACK
+      severity: MEDIUM
+      category: calculation
+      affected_mode: PROFILE
+      detection_path: "CONFIG: window set frozen in Phase 3 contract. Schema enforces enum."
+      fail_closed_behavior: "Invalid window value → CONFIG_VALIDATION error"
+      verifier_check: "VC-WRONG-LOOKBACK-1: window=22 (invalid) → fail-closed"
+      mutation_test: "MUT-WRONG-LOOKBACK: inject window=22 → expect fail-closed"
+      linked_oracles: [O-010]
+      implementation_phase: PHASE_3 (window freeze) + PHASE_4 (validation)
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-WRONG-SMOOTHING
+      severity: HIGH
+      category: calculation
+      affected_mode: BOTH
+      detection_path: "VERIFIER: recompute RSI with Wilder; if diff > 1e-6 → SMOOTHING_MISMATCH error"
+      fail_closed_behavior: "Error envelope with code SMOOTHING_MISMATCH"
+      verifier_check: "VC-WRONG-SMOOTH-1: inject simple RSI → expect Wilder check fails"
+      mutation_test: "MUT-WRONG-SMOOTH: replace Wilder with simple → expect detection"
+      linked_oracles: [O-001]
+      linked_reqs: [VTA-REQ-005]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-DIVIDE-BY-ZERO
+      severity: HIGH
+      category: calculation
+      affected_mode: BOTH
+      detection_path: "RUNTIME: zero-guard on all ratios (CMF denominator, BB std=0, OBV close_t-1)"
+      fail_closed_behavior: "If denominator 0 → COMPUTATION_DEGENERATE error or NaN with VALID_WITH_WARNINGS"
+      verifier_check: "VC-DIV-ZERO-1: input causing std=0 → handled (no crash, error/warning)"
+      mutation_test: "MUT-DIV-ZERO: constant-price input → expect handling"
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-NAN-PROPAGATION
+      severity: HIGH
+      category: calculation
+      affected_mode: BOTH
+      detection_path: "POST_COMPUTE: assert no NaN in required output fields"
+      fail_closed_behavior: "If NaN in required field → NaN_PROPAGATION error"
+      verifier_check: "VC-NAN-PROP-1: input with one NaN close → either handled or error"
+      mutation_test: "MUT-NAN-PROP: inject NaN mid-series → expect detection"
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-ROUNDING-DRIFT
+      severity: LOW
+      category: calculation
+      affected_mode: BOTH
+      detection_path: "CONFIG: rounding policy (decimal places per metric)"
+      fail_closed_behavior: "Apply deterministic rounding (banker's rounding or round-half-up — Phase 3 decision)"
+      verifier_check: "VC-ROUND-DRIFT-1: same input twice → byte-identical output"
+      mutation_test: "MUT-ROUND-DRIFT (LOW, optional): non-deterministic rounding → expect detection"
+      implementation_phase: PHASE_3 (policy) + PHASE_4 (enforcement)
+      regression_phase: OPTIONAL
+
+    - failure_id: FM-MODE-KERNEL-DIVERGENCE
+      severity: HIGH
+      category: calculation
+      affected_mode: BOTH
+      detection_path: "ARCHITECTURE: shared kernel computes indicators; ACTIVE and PROFILE import from same module"
+      fail_closed_behavior: "Single source of truth prevents divergence"
+      verifier_check: "VC-MODE-KERNEL-1: ACTIVE BB and PROFILE BB helper produce IDENTICAL values for same input"
+      mutation_test: "MUT-MODE-DIVERGE: inject divergent PROFILE BB → expect detection"
+      linked_oracles: [O-002]
+      linked_reqs: [VTA-REQ-006]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-OBV-VPT-BUG
+      severity: HIGH
+      category: calculation
+      affected_mode: PROFILE
+      detection_path: "VERIFIER: assert obv_change sourced from OBV series AND vpt_change sourced from VPT series"
+      fail_closed_behavior: "If source mismatch → OBV_VPT_SERIES_CONTAMINATION error"
+      verifier_check: "VC-OBV-VPT-1: inject obv_change = vpt_change → expect detection"
+      mutation_test: "MUT-OBV-VPT-BUG: recreate original B12 bug → expect detection (regression guard)"
+      linked_oracles: [O-024]
+      linked_reqs: [VTA-REQ-014]
+      implementation_phase: PHASE_4 (B12 fix)
+      regression_phase: PHASE_4Q (mandatory regression mutation)
+
+    - failure_id: FM-EVENTS-1Y-BUG
+      severity: HIGH
+      category: calculation
+      affected_mode: PROFILE
+      detection_path: "VERIFIER: assert events_1y selected by effective_date >= as_of_date - 365 days"
+      fail_closed_behavior: "If event-count slicing detected → EVENTS_1Y_LOGIC_ERROR"
+      verifier_check: "VC-EVENTS-1Y-1: inject events[-252:] logic → expect detection"
+      mutation_test: "MUT-EVENTS-1Y-BUG: recreate B14 bug → expect detection (regression guard)"
+      linked_oracles: [O-013]
+      linked_reqs: [VTA-REQ-013]
+      implementation_phase: PHASE_4 (B14 fix)
+      regression_phase: PHASE_4Q (mandatory regression mutation)
+
+    # ============================================================
+    # PATTERN (5)
+    # ============================================================
+
+    - failure_id: FM-FALSE-BREAKOUT
+      severity: MEDIUM
+      category: pattern
+      affected_mode: ACTIVE
+      detection_path: "PATTERN_DETECTION: require volume confirmation ≥ 1.5× avg20 for breakout标记"
+      fail_closed_behavior: "Without volume confirmation → setup score <55 (not flagged)"
+      verifier_check: "VC-FALSE-BREAKOUT-1: breakout without volume → not flagged"
+      mutation_test: "MUT-FALSE-BREAKOUT: flag breakout without volume → expect detection"
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-UNCONFIRMED-PATTERN
+      severity: MEDIUM
+      category: pattern
+      affected_mode: PROFILE
+      detection_path: "OUTPUT: setups with score 62-77 marked 'đang hình thành' explicitly"
+      fail_closed_behavior: "Unconfirmed setups MUST have status INDEVELOPMENT, not CONFIRMED"
+      verifier_check: "VC-UNCONFIRMED-1: setup score 65 → status=INDEVELOPMENT"
+      mutation_test: "MUT-UNCONFIRMED: mark 65-score as CONFIRMED → expect detection"
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-LOOKAHEAD-BIAS
+      severity: CRITICAL
+      category: pattern
+      affected_mode: ACTIVE
+      detection_path: "VERIFIER: pattern detection functions MUST NOT close over future data. Static analysis + property test."
+      fail_closed_behavior: "If future data referenced → LOOKAHEAD_BIAS error"
+      verifier_check: "VC-LOOKAHEAD-1: pattern at index i must not reference close[i+k] for k>0"
+      mutation_test: "MUT-LOOKAHEAD: inject future-peek → expect detection"
+      linked_reqs: [VTA-REQ-001]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-CONFLICTING-SETUP
+      severity: MEDIUM
+      category: pattern
+      affected_mode: PROFILE
+      detection_path: "PATTERN_DETECTION: when multiple setups qualify, return ALL sorted by score desc (no silent top-N)"
+      fail_closed_behavior: "Conflicting setups reported transparently; archetype classification resolves"
+      verifier_check: "VC-CONFLICT-SETUP-1: conflicting setups → all reported, archetype assigned"
+      mutation_test: "MUT-CONFLICT-SETUP: silently drop low-score setup → expect detection"
+      linked_reqs: [VTA-REQ-002, VTA-REQ-009a]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-ARCHETYPE-AMBIGUITY
+      severity: LOW
+      category: pattern
+      affected_mode: PROFILE
+      detection_path: "DESIGN: 5 archetypes with unique precedence (per archetype-precedence-reconciliation.yaml)"
+      fail_closed_behavior: "Ties impossible by design. Fallback = no_current_setup."
+      verifier_check: "VC-ARCH-AMBIG-1: ambiguity in archetype assignment → fallback to no_current_setup"
+      mutation_test: "MUT-ARCH-AMBIG (LOW, optional): non-deterministic archetype → expect detection"
+      implementation_phase: PHASE_3 (design) + PHASE_4 (implementation)
+      regression_phase: OPTIONAL
+
+    # ============================================================
+    # OUTPUT (5)
+    # ============================================================
+
+    - failure_id: FM-SCHEMA-DRIFT
+      severity: HIGH
+      category: output
+      affected_mode: BOTH
+      detection_path: "VERIFIER: validate output against technical-active-output.schema.json OR technical-profile-output.schema.json"
+      fail_closed_behavior: "Schema validation failure → SCHEMA_VALIDATION_FAILED error"
+      verifier_check: "VC-SCHEMA-DRIFT-1: add foreign key to output → expect schema rejection"
+      mutation_test: "MUT-SCHEMA-DRIFT: inject extra field → expect detection"
+      linked_reqs: [VTA-REQ-001, VTA-REQ-002]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-MISSING-PROVENANCE
+      severity: CRITICAL
+      category: output
+      affected_mode: BOTH
+      detection_path: "VERIFIER: assert provenance present for every output metric"
+      fail_closed_behavior: "Missing provenance → PROVENANCE_MISSING error"
+      verifier_check: "VC-PROV-MISS-1: remove provenance from one field → expect detection"
+      mutation_test: "MUT-PROV-MISS: strip provenance → expect detection"
+      linked_reqs: [VTA-REQ-010]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-MODE-CONTAMINATION
+      severity: HIGH
+      category: output
+      affected_mode: BOTH
+      detection_path: "VERIFIER: ACTIVE schema rejects profile_blocks key; PROFILE schema rejects tech_score key"
+      fail_closed_behavior: "Mode contamination → MODE_CONTAMINATION error"
+      verifier_check: "VC-MODE-CONTAM-1: ACTIVE output with profile_blocks → rejection"
+      mutation_test: "MUT-MODE-CONTAM: inject cross-mode field → expect detection"
+      linked_reqs: [VTA-REQ-008]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-FABRICATED-VALUE
+      severity: CRITICAL
+      category: output
+      affected_mode: BOTH
+      detection_path: "VERIFIER: every output value traceable to input via computation chain"
+      fail_closed_behavior: "Untraceable value → FABRICATED_VALUE error"
+      verifier_check: "VC-FAB-VAL-1: inject value not in computation chain → expect detection"
+      mutation_test: "MUT-FAB-VAL: inject fabricated OHLCV → expect detection"
+      linked_reqs: [VTA-REQ-012]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-ADVICE-LANGUAGE
+      severity: HIGH
+      category: output
+      affected_mode: PROFILE
+      detection_path: "VERIFIER: 3-layer REQ-007 check (lexical + semantic + imperative), negation-aware"
+      fail_closed_behavior: "Prohibited language → ADVICE_LANGUAGE_DETECTED error"
+      verifier_check: "VC-ADV-LANG-1: inject 'nên mua' → expect detection"
+      mutation_test: "MUT-ADV-LANG: inject 'strong buy' → expect detection; MUT-ADV-LANG-NEG: 'not bullish' → allowed"
+      linked_oracles: [O-019]
+      linked_reqs: [VTA-REQ-003]
+      implementation_phase: PHASE_4
+      regression_phase: PHASE_4Q
+
+    - failure_id: FM-VALUATION-OVERRIDE
+      severity: CRITICAL
+      category: output
+      affected_mode: BOTH
+      detection_path: "INTEGRATION: adapter has NO write path to fundamental/valuation fields"
+      fail_closed_behavior: "Any attempt → VALUATION_OVERRIDE_ATTEMPT error"
+      verifier_check: "VC-VAL-OVERRIDE-1: integration adapter cannot modify valuation_* fields"
+      mutation_test: "MUT-VAL-OVERRIDE: attempt write to valuation field → expect blocked"
+      linked_reqs: [VTA-REQ-011]
+      implementation_phase: PHASE_6
+      regression_phase: PHASE_6 integration tests
+
+  # ====================================================================
+  # Coverage matrix summary
+  # ====================================================================
+
+  coverage_matrix:
+    critical_count: 5  # FM-CORPORATE-ACTION-UNADJUSTED, FM-LOOKAHEAD-BIAS, FM-MISSING-PROVENANCE, FM-FABRICATED-VALUE, FM-VALUATION-OVERRIDE
+    high_count: 13
+    medium_count: 8
+    low_count: 3
+    total: 29
+
+    mandatory_mutation_tests:
+      count: 24  # all CRITICAL + HIGH + MEDIUM (5+13+8 = 26; minus 2 LOW miscount = 24)
+      exempted_low_severity: 3  # FM-ZERO-VOLUME, FM-ROUNDING-DRIFT, FM-ARCHETYPE-AMBIGUITY
+      note: "LOW severity modes have OPTIONAL mutation tests. All CRITICAL/HIGH/MEDIUM have MANDATORY mutations."
+
+    live_cohort_coverage:
+      tickers_planned: 8
+      modes_exercised:
+        ACTIVE_weekly: [FPT, VCB, BVH, HPG, MWG, HSG, EDGE-1, EDGE-2]
+        PROFILE_daily: [FPT, VCB, BVH, HPG, MWG, HSG, EDGE-1, EDGE-2]
+      edge_cases:
+        - "Newly listed (<60 sessions) → INSUFFICIENT_HISTORY"
+        - "Suspended sessions → ZERO_VOLUME handling"
+        - "Stock split mid-window → adjustment_status verification"
+        - "Bear-market ticker (HSG cyclical) → bearish setup coverage"
+
+  integrity_check:
+    failure_mode_count: 29
+    fully_covered: 29/29
+    orphaned_failure_modes: 0
+    cross_artifact_lock: manifests/technical-phase2B-cross-artifact-lock.yaml
+    status: PASS

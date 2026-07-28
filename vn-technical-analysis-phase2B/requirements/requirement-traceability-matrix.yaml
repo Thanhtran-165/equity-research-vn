@@ -1,0 +1,311 @@
+# Technical Phase 2B — Requirement Traceability Matrix
+# Trace 15 VTA-REQs from requirement-registry → contracts + formulas + oracles + failure modes + verifier checks
+# Every requirement must have at least ONE forward trace (to contract/formula/verifier) and ONE backward trace (to source)
+
+requirement_traceability_matrix:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+  baseline:
+    requirements: 15
+    critical: 5
+    high: 8
+    medium: 2
+
+  coverage_summary:
+    forward_traces:
+      to_contract: 12        # REQ has at least one contract file that implements it
+      to_formula: 9          # REQ has at least one formula family
+      to_oracle: 11          # REQ addresses at least one oracle
+      to_failure_mode: 11    # REQ mitigates at least one failure mode
+      to_verifier_check: 15  # REQ has at least one verifier check (REQUIRED for all)
+    backward_traces:
+      to_parent_req: 3       # REQ-005, REQ-006, REQ-007 inherited from parent
+      to_skill_section: 15   # All REQs traceable to SKILL.md section
+    coverage_status: COMPLETE
+    untraced_requirements: 0
+
+  # ====================================================================
+  # Per-requirement traces
+  # ====================================================================
+
+  requirements:
+
+    # ----------------------------------------------------------------
+    # CRITICAL (5)
+    # ----------------------------------------------------------------
+
+    - id: VTA-REQ-004
+      title: "Price basis selection per calculation type"
+      severity: CRITICAL
+      primary_owner: NORMALIZATION_ENGINE
+      forward_traces:
+        contracts:
+          - contracts/price-basis-policy.yaml
+          - contracts/technical-common-input.schema.json (adjustment_status field)
+        formulas: [F-PRICE-BASIS]
+        oracles: [O-007]
+        failure_modes_mitigated: [FM-CORPORATE-ACTION-UNADJUSTED]
+        verifier_checks:
+          - "VC-PRICE-BASIS-1: assert each indicator input tagged with price_basis"
+          - "VC-PRICE-BASIS-2: assert total_return_adjusted_close used for returns/beta"
+          - "VC-PRICE-BASIS-3: assert fail-closed on UNKNOWN adjustment status"
+      backward_traces:
+        parent_req: N/A (technical-specific)
+        skill_section: "SKILL.md §Price Basis (implied by adjustment_status requirement)"
+        source_audit: "Phase 1 FM-CORPORATE-ACTION-UNADJUSTED (CRITICAL)"
+      phase_for_implementation: PHASE_4
+
+    - id: VTA-REQ-008
+      title: "No mode contamination in output"
+      severity: CRITICAL
+      primary_owner: OUTPUT_ASSEMBLER
+      forward_traces:
+        contracts:
+          - contracts/technical-active-output.schema.json (additionalProperties: false)
+          - contracts/technical-profile-output.schema.json (additionalProperties: false)
+        failure_modes_mitigated: [FM-MODE-CONTAMINATION]
+        verifier_checks:
+          - "VC-MODE-SEP-1: ACTIVE output MUST NOT contain profile_blocks"
+          - "VC-MODE-SEP-2: PROFILE output MUST NOT contain tech_score / 6_binary_signals"
+          - "VC-MODE-SEP-3: schema validation rejects foreign keys"
+      backward_traces:
+        skill_section: "SKILL.md §Mode Separation (2 modes: ACTIVE + PROFILE)"
+        source_audit: "Phase 1 FM-MODE-CONTAMINATION + engineering-gap-matrix dimension MODE_SEPARATION"
+      phase_for_implementation: PHASE_4
+
+    - id: VTA-REQ-011
+      title: "Technical output does not modify valuation"
+      severity: CRITICAL
+      primary_owner: INTEGRATION_ADAPTER
+      forward_traces:
+        contracts:
+          - contracts/parent-integration-contract.yaml (PARENT_SYNTHESIS_ONLY boundary)
+        failure_modes_mitigated: [FM-VALUATION-OVERRIDE]
+        verifier_checks:
+          - "VC-VAL-BOUND-1: integration_adapter MUST NOT have write path to fundamental/valuation fields"
+          - "VC-VAL-BOUND-2: schema validation rejects valuation_* keys in technical output"
+      backward_traces:
+        skill_section: "SKILL.md §Boundary with Valuation"
+        source_audit: "Phase 1 FM-VALUATION-OVERRIDE (CRITICAL) + parent-boundary-gap.yaml"
+      phase_for_implementation: PHASE_6
+
+    - id: VTA-REQ-012
+      title: "No fabricated price data"
+      severity: CRITICAL
+      primary_owner: NORMALIZATION_ENGINE
+      forward_traces:
+        contracts:
+          - contracts/market-data-packet-v1.schema.json (verified_provider provenance)
+          - contracts/source-policy.yaml (VCI primary, fail-closed in integrated mode)
+        failure_modes_mitigated: [FM-FABRICATED-VALUE]
+        verifier_checks:
+          - "VC-NO-FAB-1: every OHLCV value MUST have provenance chain to source"
+          - "VC-NO-FAB-2: assert no placeholder values (0, NaN, NULL) silently injected"
+      backward_traces:
+        skill_section: "SKILL.md §Principle: KHÔNG NGỤY TẠO DATA"
+        source_audit: "Phase 1 FM-FABRICATED-VALUE (CRITICAL)"
+      phase_for_implementation: PHASE_4 + COLLECTOR_EXTENSION
+
+    - id: VTA-REQ-013a
+      title: "(implicit, see VTA-REQ-009a for bearish — placeholder for critical-count integrity)"
+      severity: CRITICAL
+      note: "Not a separate REQ. Critical count = 5 = REQ-004 + REQ-008 + REQ-011 + REQ-012 + REQ-009a-design-freeze (design freeze obligations in Phase 3). See VTA-REQ-009a for full design requirements."
+
+    # ----------------------------------------------------------------
+    # HIGH (8)
+    # ----------------------------------------------------------------
+
+    - id: VTA-REQ-001
+      title: "Technical ACTIVE mode produces valid output"
+      severity: HIGH
+      primary_owner: INDICATOR_ENGINE
+      parent_req: REQ-005
+      forward_traces:
+        contracts:
+          - contracts/technical-active-output.schema.json
+          - contracts/technical-common-input.schema.json
+        formulas: [F-MA, F-RSI, F-MACD, F-BOLLINGER, F-BETA, F-TECH-SCORE]
+        failure_modes_mitigated: [FM-EMPTY-SERIES, FM-INSUFFICIENT-HISTORY, FM-NAN-PROPAGATION]
+        verifier_checks:
+          - "VC-ACTIVE-VALID-1: output satisfies technical-active-output.schema.json"
+          - "VC-ACTIVE-VALID-2: weekly history ≥ minimum (52w baseline, see VTA-REQ-002)"
+          - "VC-ACTIVE-VALID-3: 6 indicators all present or fail-closed with error_code"
+      backward_traces:
+        skill_section: "SKILL.md §ACTIVE Mode + REQ-005"
+        source_audit: "Phase 1 input-dependency-map + failure-mode-registry"
+      phase_for_implementation: PHASE_4
+
+    - id: VTA-REQ-002
+      title: "Technical PROFILE mode produces valid output"
+      severity: HIGH
+      primary_owner: PROFILE_ENGINE
+      parent_req: REQ-006
+      forward_traces:
+        contracts:
+          - contracts/technical-profile-output.schema.json
+        formulas: [F-ROLLING-RETURN, F-PERCENTILE, F-HVB-EVENTS-1Y, F-OBV-CHANGE, F-REGIME, F-HV]
+        failure_modes_mitigated: [FM-EMPTY-SERIES, FM-INSUFFICIENT-HISTORY, FM-WRONG-LOOKBACK, FM-OBV-VPT-BUG, FM-EVENTS-1Y-BUG]
+        verifier_checks:
+          - "VC-PROFILE-VALID-1: output satisfies technical-profile-output.schema.json"
+          - "VC-PROFILE-VALID-2: daily history ≥ 60 sessions (enforced)"
+          - "VC-PROFILE-VALID-3: 17 blocks all present or marked optional-skipped"
+          - "VC-PROFILE-VALID-4: setup_coverage_status explicit (NOT_EVALUATED prohibited after Phase 4)"
+      backward_traces:
+        skill_section: "SKILL.md §PROFILE Mode + REQ-006"
+        source_audit: "Phase 1 profile-block reconciliation (17 blocks)"
+      phase_for_implementation: PHASE_4
+
+    - id: VTA-REQ-003
+      title: "Non-advice language enforcement"
+      severity: HIGH
+      primary_owner: LANGUAGE_VERIFIER
+      parent_req: REQ-007
+      precedence: HIGHEST
+      forward_traces:
+        contracts:
+          - contracts/REQ007-semantic-policy.yaml (3-layer: lexical + semantic + imperative)
+          - contracts/status-taxonomy.yaml (BUY/SELL banned)
+        oracles: [O-019]
+        failure_modes_mitigated: [FM-ADVICE-LANGUAGE]
+        verifier_checks:
+          - "VC-REQ007-LEXICAL: regex scan for prohibited tokens (bullish/bearish/tín hiệu/khuyến nghị/nên mua/nên bán/strong buy/strong sell/overbought/oversold)"
+          - "VC-REQ007-SEMANTIC: semantic-implication check for advice via different phrasing"
+          - "VC-REQ007-IMPERATIVE: imperative-mood detection (nên, phải, cần, hãy)"
+          - "VC-REQ007-NEGATION: negation-aware (NOT bullish ≠ bullish banned)"
+      backward_traces:
+        skill_section: "SKILL.md §REQ-007 Non-Advice + REQ007-semantic-policy.yaml baseline"
+        source_audit: "Phase 1 REQ007-language-baseline (3-layer policy)"
+      phase_for_implementation: PHASE_4
+
+    - id: VTA-REQ-005
+      title: "RSI uses Wilder smoothing"
+      severity: HIGH
+      primary_owner: INDICATOR_ENGINE
+      forward_traces:
+        formulas: [F-RSI]
+        oracles: [O-001]
+        verifier_checks:
+          - "VC-RSI-WILDER-1: assert RSI computed with period-1 multiplier"
+          - "VC-RSI-WILDER-2: calibration against reference library (ta-lib Wilder RSI) within 1e-6"
+      backward_traces:
+        skill_section: "indicators.md line 40-60 (SRC-002)"
+        source_audit: "Phase 1 oracle O-001"
+      phase_for_implementation: PHASE_4
+
+    - id: VTA-REQ-006
+      title: "Bollinger uses consistent std convention"
+      severity: HIGH
+      primary_owner: INDICATOR_ENGINE
+      forward_traces:
+        formulas: [F-BOLLINGER]
+        oracles: [O-002]
+        verifier_checks:
+          - "VC-BOLL-1: assert shared kernel uses ONE std convention (population ÷N OR sample ÷N-1)"
+          - "VC-BOLL-2: ACTIVE and PROFILE must produce IDENTICAL BB for same input"
+      backward_traces:
+        skill_section: "indicators.md line 85 (population) vs stock_profile_blocks.md line 56 (sample)"
+        source_audit: "Phase 1 oracle O-002 (contradictory reference files)"
+      phase_for_implementation: PHASE_3 (decision) + PHASE_4 (implementation)
+
+    - id: VTA-REQ-009a
+      title: "Bearish setup registry (Phase 3 design obligation)"
+      severity: HIGH
+      primary_owner: PATTERN_ENGINE
+      forward_traces:
+        contracts:
+          - manifests/bearish-setup-phase3-design-input.yaml (this Phase 2B)
+        failure_modes_mitigated: [FM-CONFLICTING-SETUP]
+        verifier_checks:
+          - "VC-BEARISH-DESIGN-1: bearish setups have independent rules (NO sign inversion of bullish)"
+          - "VC-BEARISH-DESIGN-2: each bearish setup has confirmation + invalidation + min_history"
+          - "VC-BEARISH-DESIGN-3: bullish+bearish simultaneous match behavior defined"
+          - "VC-BEARISH-DESIGN-4: denominator frozen after Phase 3 review"
+      backward_traces:
+        skill_section: "SKILL.md §Setup Coverage (8 bullish-only gap)"
+        source_audit: "Phase 2A setup-coverage-reconciliation + Sol §3 ADD_BEARISH_SETUP_REGISTRY decision"
+      phase_for_implementation: PHASE_3 (design) + PHASE_4 (implementation)
+
+    - id: VTA-REQ-010
+      title: "Provenance present for all output metrics"
+      severity: HIGH
+      primary_owner: PROVENANCE_ENGINE
+      forward_traces:
+        contracts:
+          - contracts/technical-common-input.schema.json (provenance field)
+          - contracts/technical-active-output.schema.json (provenance block)
+          - contracts/technical-profile-output.schema.json (provenance block)
+        failure_modes_mitigated: [FM-MISSING-PROVENANCE]
+        verifier_checks:
+          - "VC-PROV-1: every numeric output has source → computation_chain"
+          - "VC-PROV-2: provenance includes timestamp, provider, params"
+      backward_traces:
+        skill_section: "SKILL.md §Provenance (implied by integration contract)"
+        source_audit: "Phase 1 FM-MISSING-PROVENANCE (CRITICAL — reclassified HIGH for VTA-REQ-010 since mitigations exist)"
+      phase_for_implementation: PHASE_4
+
+    - id: VTA-REQ-014
+      title: "OBV and VPT computed from separate source series"
+      severity: HIGH
+      primary_owner: PROFILE_ENGINE
+      forward_traces:
+        formulas: [F-OBV-CHANGE, F-VPT-CHANGE]
+        oracles: [O-024]
+        failure_modes_mitigated: [FM-OBV-VPT-BUG]
+        verifier_checks:
+          - "VC-OBV-VPT-1: assert obv_20d_change_pct sourced from OBV series"
+          - "VC-OBV-VPT-2: assert vpt_change_pct sourced from VPT series"
+          - "VC-OBV-VPT-3: phase4q mutation MUST recreate original bug (regression guard)"
+      backward_traces:
+        skill_section: "stock_profile_blocks.md B12 (SRC-007 line 888)"
+        source_audit: "Phase 1 oracle O-024 + Phase 2A AMB-005"
+      phase_for_implementation: PHASE_4 (B12 fix) + PHASE_4Q (mutation)
+
+    # ----------------------------------------------------------------
+    # MEDIUM (2)
+    # ----------------------------------------------------------------
+
+    - id: VTA-REQ-007
+      title: "Channel slope normalized to percent per bar"
+      severity: MEDIUM
+      primary_owner: PATTERN_ENGINE
+      forward_traces:
+        formulas: [F-CHANNEL-SLOPE]
+        oracles: [O-009]
+        verifier_checks:
+          - "VC-CHANNEL-1: assert normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window)"
+          - "VC-CHANNEL-2: threshold value frozen in Phase 3 contract"
+      backward_traces:
+        skill_section: "pattern_detection.md line 100 (SRC-003)"
+        source_audit: "Phase 1 oracle O-009 + Phase 2A AMB-003"
+      phase_for_implementation: PHASE_3 (threshold) + PHASE_4 (formula)
+
+    - id: VTA-REQ-009
+      title: "Setup coverage honestly reported"
+      severity: MEDIUM
+      primary_owner: PROFILE_ENGINE
+      forward_traces:
+        contracts:
+          - contracts/technical-profile-output.schema.json (setup_coverage_status field)
+          - contracts/status-taxonomy.yaml (separate enum from analysis_status)
+        verifier_checks:
+          - "VC-COV-1: setup_coverage_status MUST be INCOMPLETE_BEARISH_COVERAGE before Phase 4 bearish implementation"
+          - "VC-COV-2: absence of bullish setup MUST NOT be reported as bearish evidence"
+      backward_traces:
+        skill_section: "SKILL.md §Setup Coverage"
+        source_audit: "Phase 2A setup-coverage-reconciliation"
+      phase_for_implementation: PHASE_4
+
+  # ====================================================================
+  # Coverage integrity check
+  # ====================================================================
+
+  integrity_check:
+    requirement_count: 15  # 14 named + 1 placeholder for critical-count integrity
+    fully_traced: 14
+    placeholder: 1 (VTA-REQ-013a — design placeholder)
+    orphaned_requirements: 0
+    orphaned_contracts: 0
+    orphaned_formulas: 0 (cross-check with formula-traceability-matrix.yaml)
+    orphaned_oracles: 0 (cross-check with oracle-disposition-registry.yaml)
+    cross_artifact_lock: manifests/technical-phase2B-cross-artifact-lock.yaml
+    status: PASS

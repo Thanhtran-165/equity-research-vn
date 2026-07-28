@@ -1,0 +1,47 @@
+# Technical Phase 2A — Source Policy
+
+source_policy:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+
+  source_hierarchy:
+    primary:
+      source_id: vnstock_sponsor
+      provider: VCI
+      tier: golden
+      priority: 1
+      fallback_rank: 1
+    
+    secondary:
+      source_id: vnstock_community
+      provider: VCI
+      tier: community
+      priority: 2
+      fallback_rank: 2
+    
+    tertiary:
+      source_id: issuer_qhcd
+      provider: company_IR
+      tier: official_filing
+      priority: 3
+      fallback_rank: 3
+
+  integrated_mode_policy:
+    direct_provider_fetch: PROHIBITED
+    sole_source: "vn-financial-data-collector market_data_packet_v1"
+    fallback: "NONE — if collector packet unavailable, fail closed with INPUT_INCOMPLETE"
+
+  standalone_mode_policy:
+    direct_fetch: ALLOWED
+    must_use_source_policy: true
+    fabrication_prohibited: true
+    minimum_sources_for_pattern_confirmation: 1
+
+  conflict_resolution:
+    threshold_pct: 5
+    rule: "If sources differ >5% on any OHLCV value → SOURCE_CONFLICT, prefer issuer_qhcd"
+
+  provenance_requirements:
+    per_indicator: true
+    required_fields: [source_id, source_date, source_type, fetch_params, data_hash]
+    missing_handling: "PROVENANCE_MISSING error, fail closed"

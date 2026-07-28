@@ -1,0 +1,326 @@
+# Technical Phase 2A-R3 — Formula Disposition Registry (22/22)
+# R3: F-VPT-CHANGE reclassified ALIAS→DERIVED_OUTPUT (alias to OBV was self-contradictory)
+
+formula_disposition:
+  expected: 22
+  recorded: 22
+  unclassified: 0
+  silently_excluded: 0
+
+  # === R3 Disposition counts (computed from 22 records) ===
+  # RECONCILED: 7
+  # DEFERRED_TO_PHASE_3: 11
+  # ALIAS: 0 (F-VPT-CHANGE moved to DERIVED_OUTPUT in R3)
+  # DERIVED_OUTPUT: 4 (was 2 in R2; +F-VPT-CHANGE from ALIAS)
+  # DUPLICATE_SEMANTIC: 0
+  # NOT_APPLICABLE: 0
+  # Total: 7 + 11 + 0 + 4 + 0 + 0 = 22 ✓
+
+  formulas:
+
+    # === RECONCILED (6) — fully defined by Sol decisions ===
+
+    - formula_id: F-STATUS-TAXONOMY
+      formula_family: OUTPUT_SEMANTICS
+      modes: [ACTIVE, PROFILE]
+      canonical_status: RECONCILED
+      canonical_definition: "analysis_status + technical_state + confidence separated. BUY/SELL banned."
+      unresolved_items: none
+      authority_required: none
+      phase_for_resolution: COMPLETE
+      linked_oracles: [O-016]
+      silently_excluded: false
+
+    - formula_id: F-PRICE-BASIS
+      formula_family: INPUT_POLICY
+      modes: [ACTIVE, PROFILE]
+      canonical_status: RECONCILED
+      canonical_definition: "raw for provenance, adjusted for indicators, total-return for returns/beta. Fail-closed on UNKNOWN."
+      unresolved_items: none
+      phase_for_resolution: COMPLETE
+      linked_oracles: [O-007]
+      silently_excluded: false
+
+    - formula_id: F-CHANNEL-SLOPE
+      formula_family: PATTERN_DETECTION
+      modes: [ACTIVE]
+      canonical_status: RECONCILED
+      canonical_definition: "normalized_slope_pct_per_bar = 100 × OLS_slope(adjusted_close) / median(adjusted_close_window)"
+      unresolved_items: "Threshold for classification not yet frozen"
+      phase_for_resolution: PHASE_3 (threshold freeze)
+      linked_oracles: [O-009]
+      silently_excluded: false
+
+    - formula_id: F-HVB-EVENTS-1Y
+      formula_family: PROFILE_BLOCK
+      modes: [PROFILE]
+      canonical_status: RECONCILED
+      canonical_definition: "events_1y = events where effective_date >= (as_of_date - 365 calendar_days)"
+      unresolved_items: none
+      phase_for_resolution: PHASE_4 (implementation fix)
+      linked_oracles: [O-013]
+      silently_excluded: false
+
+    - formula_id: F-OBV-CHANGE
+      formula_family: PROFILE_BLOCK
+      modes: [PROFILE]
+      canonical_status: RECONCILED
+      canonical_definition: "obv_change sourced from OBV series. Separate from VPT series."
+      unresolved_items: none
+      phase_for_resolution: PHASE_4 (implementation fix)
+      linked_oracles: [O-024]
+      silently_excluded: false
+
+    - formula_id: F-MARKET-DATA-PACKET
+      formula_family: INPUT_CONTRACT
+      modes: [ACTIVE, PROFILE]
+      canonical_status: RECONCILED
+      canonical_definition: "market-data-packet-v1.schema.json defines OHLCV + benchmark + metadata"
+      unresolved_items: "Collector does not yet produce this packet"
+      phase_for_resolution: COLLECTOR_EXTENSION (before Phase 6)
+      linked_oracles: [O-017]
+      silently_excluded: false
+
+    # === DEFERRED_TO_PHASE_3 (10) — need calibration evidence or authority ===
+
+    - formula_id: F-RSI
+      formula_family: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "Wilder smoothing confirmed (indicators.md). Window=14."
+      unresolved_items: "Warmup requirement, seeding method for Wilder avg, rounding policy"
+      authority_required: "Standard reference (Wilder 1978) + calibration against known library"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-001]
+      silently_excluded: false
+
+    - formula_id: F-BOLLINGER
+      formula_family: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "MA20 ± 2σ. ACTIVE uses population std (÷N). PROFILE helpers use sample std (÷N-1). Must reconcile to ONE convention in shared kernel."
+      unresolved_items: "Population vs sample std — which for shared kernel?"
+      authority_required: "Bollinger reference + consistency decision"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-002]
+      silently_excluded: false
+
+    - formula_id: F-MA
+      formula_family: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "SMA for MA indicators. EMA only for MACD. Windows: 10/20/50 (ACTIVE weekly), 20/60/120/252 or 21/63/126/252 (PROFILE daily)."
+      unresolved_items: "Window set: 20/60/120/252 vs 21/63/126/252. Warmup policy."
+      authority_required: "Trading calendar convention (252 vs 244 VN sessions)"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-003, O-010]
+      silently_excluded: false
+
+    - formula_id: F-MACD
+      formula_family: INDICATOR
+      modes: [ACTIVE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "EMA12 - EMA26, Signal=EMA9. Seeding: out[0]=data[0] (not SMA seed)."
+      unresolved_items: "Seeding method (data[0] vs SMA). Rounding."
+      authority_required: "MACD reference + seeding convention decision"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-004]
+      silently_excluded: false
+
+    - formula_id: F-BETA
+      formula_family: CORRELATION
+      modes: [ACTIVE, PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "β = Cov(stock,market)/Var(market). Population covariance."
+      unresolved_items: "Window length (52w? full sample?), return basis (log vs simple), benchmark (VNINDEX vs VN30 as canonical)"
+      authority_required: "Benchmark selection + return basis decision"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-005, O-018]
+      silently_excluded: false
+
+    - formula_id: F-CORRELATION
+      formula_family: CORRELATION
+      modes: [ACTIVE, PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "Pearson r = cov(x,y)/(σ_x × σ_y)"
+      unresolved_items: "Window length"
+      authority_required: "Same as Beta window decision"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-006]
+      silently_excluded: false
+
+    - formula_id: F-ROLLING-RETURN
+      formula_family: PROFILE_BLOCK
+      modes: [PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "pct_change(close, window) × 100. Windows: 21/63/126/252 (stock_profile_blocks.md) vs 20/60/120/252 (metric_guardrails.md)."
+      unresolved_items: "Window set conflict"
+      authority_required: "Trading day convention"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-010]
+      silently_excluded: false
+
+    - formula_id: F-PERCENTILE
+      formula_family: PROFILE_BLOCK
+      modes: [PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "Two methods in same file: floor counting (percentile_of_value) and linear interpolation (quantile helper). Must pick ONE."
+      unresolved_items: "Floor counting vs linear interpolation"
+      authority_required: "Statistical convention decision"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-012]
+      silently_excluded: false
+
+    - formula_id: F-ARCHETYPE-PRECEDENCE
+      formula_family: CLASSIFICATION
+      modes: [PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "Priority: trend_following > accumulation_breakout > trap_prone > mixed > no_current_setup"
+      unresolved_items: "Rationale for priority order not explained"
+      authority_required: "Methodology justification"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-014]
+      silently_excluded: false
+
+    - formula_id: F-REGIME
+      formula_family: PROFILE_BLOCK
+      modes: [PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "stress: dd≤-18% or (r60≤-12% & vol_rank≥75); uptrend: r60>6% & r120>8% & dd>-8%; recovery: r60>4% & r120≤8% & dd>-14%; sideways: default"
+      unresolved_items: "Threshold calibration evidence. O(n²) performance bug."
+      authority_required: "Calibration against VN market data"
+      phase_for_resolution: PHASE_3 (thresholds), PHASE_4 (O(n²) fix)
+      linked_oracles: []
+      silently_excluded: false
+
+    # === ALIAS (1) ===
+
+    - formula_id: F-VPT-CHANGE
+      formula_family: VOLUME_PRICE_TREND_CHANGE
+      modes: [PROFILE]
+      canonical_status: DERIVED_OUTPUT
+      canonical_definition: "VPT_t = VPT_(t-1) + volume_t × ((close_t - close_(t-1)) / close_(t-1)). Change = line_change_pct(VPT_series, 20)."
+      derived_from: F-VPT
+      source_series: VPT
+      prohibited_source_series: [OBV]
+      prohibited_alias_targets: [F-OBV-CHANGE]
+      independence:
+        OBV_formula_independent: true
+        OBV_series_mapping_shared: false
+        distinct_formula_definitions: true
+        distinct_source_series: true
+        alias_relationship: false
+      input_basis:
+        price: corporate_action_adjusted_close
+        volume: verified_volume
+      change_method:
+        options: [ABSOLUTE_CHANGE, PERCENT_CHANGE]
+        selected: DEFERRED_TO_PHASE_3
+      unresolved_items: "Change method (absolute vs percent) not frozen"
+      phase_for_resolution: PHASE_3
+      linked_oracles: [O-024]
+      silently_excluded: false
+
+    # === DERIVED_OUTPUT (3) ===
+
+    - formula_id: F-ALPHA
+      formula_family: CORRELATION
+      modes: [ACTIVE]
+      canonical_status: DERIVED_OUTPUT
+      canonical_definition: "Alpha = stock_perf - beta × market_perf (simplified, no risk-free rate). Derived from F-BETA + F-PERF."
+      base_formulas: [F-BETA, F-PERF]
+      unresolved_items: "Not Jensen's alpha. Risk-free rate omitted. Acceptable for descriptive purposes but must be documented."
+      phase_for_resolution: PHASE_3 (documentation)
+      linked_oracles: [O-020]
+      silently_excluded: false
+
+    - formula_id: F-TECH-SCORE
+      formula_family: OUTPUT_SEMANTICS
+      modes: [ACTIVE]
+      canonical_status: DERIVED_OUTPUT
+      canonical_definition: "sum of 6 binary signals derived from MA, RSI, MACD, BB position"
+      base_formulas: [F-MA, F-RSI, F-MACD, F-BOLLINGER]
+      unresolved_items: "Gap at score=-3. RSI 45-55 zone. BB exactly 50%."
+      phase_for_resolution: PHASE_3 (threshold reconciliation)
+      linked_oracles: [O-023]
+      silently_excluded: false
+
+    - formula_id: F-HV
+      formula_family: PROFILE_BLOCK
+      modes: [PROFILE]
+      canonical_status: DERIVED_OUTPUT
+      canonical_definition: "HV = std_dev(log_returns, window) × √252 × 100. Derived from log_returns + std_dev helpers."
+      base_formulas: [F-ROLLING-RETURN, F-PERCENTILE]
+      unresolved_items: "√252 assumes US calendar. VN has ~244-248 trading days."
+      phase_for_resolution: PHASE_3 (annualization factor)
+      linked_oracles: []
+      silently_excluded: false
+
+    # === DUPLICATE_SEMANTIC (1) ===
+
+    - formula_id: F-DOUBLE-BOTTOM
+      formula_family: PATTERN_DETECTION
+      modes: [ACTIVE, PROFILE]
+      canonical_status: RECONCILED
+      canonical_definition: "Double Bottom detection — shared semantic family with mode-specific parameterization"
+      shared_semantic_family: DOUBLE_BOTTOM_DETECTION
+      mode_parameterization:
+        ACTIVE:
+          frequency: WEEKLY
+          tolerance_pct: 3
+          min_spacing_weeks: 5
+          source_location: "SRC-003 pattern_detection.md line 56"
+        PROFILE:
+          frequency: DAILY
+          tolerance_pct: 8
+          min_spacing_sessions: 12
+          source_location: "SRC-004 pattern_scoring.md line 280"
+      mode_parameters_frozen: false
+      phase_for_parameter_freeze: PHASE_3
+      rationale: "Different frequencies require different parameters. Weekly 3%/5w and daily 8%/12d are both legitimate for their respective data frequencies."
+      linked_oracles: [O-008]
+      silently_excluded: false
+
+    # === NOT_APPLICABLE (1) ===
+
+    - formula_id: F-INDUSTRY-PEER
+      formula_family: PROFILE_BLOCK
+      modes: [PROFILE]
+      canonical_status: DEFERRED_TO_PHASE_3
+      canonical_definition: "B17 industry_peer_profile — conditional block. Runs when verified industry peer data available."
+      applicability:
+        required_input: VERIFIED_INDUSTRY_PEER_DATA
+        when_available:
+          formula_applicable: true
+        when_unavailable:
+          runtime_status: NOT_APPLICABLE
+          output_behavior: "Omit from output, analysis_status remains VALID_WITH_WARNINGS"
+      unresolved_items: "Industry peer data source reliability; minimum peer count; sector classification"
+      authority_required: "Peer data availability from collector or vnstock"
+      phase_for_resolution: PHASE_3
+      linked_oracles: []
+      silently_excluded: false
+      note: "NOT_APPLICABLE is a runtime result when peer data unavailable, NOT a permanent disposition. Formula remains in scope."
+
+  # === Previously unaccounted (4) ===
+  previously_unaccounted:
+    count: 4
+    cause: "Phase 2A reconciliation counted only 6 RECONCILED + 12 DEFERRED = 18. The remaining 4 formula families (F-VPT-CHANGE, F-ALPHA, F-TECH-SCORE, F-HV) were implicitly present in the formula inventory but not explicitly dispositioned in the reconciliation manifest."
+    resolution: "Now explicitly classified in R2: 1 ALIAS (F-VPT-CHANGE) + 2 DERIVED_OUTPUT (F-ALPHA, F-TECH-SCORE) + 1 moved to RECONCILED set via F-HV remaining as DERIVED_OUTPUT"
+
+    records:
+      - formula_id: F-VPT-CHANGE
+        cause_of_omission: "Was treated as part of B12 money_flow block rather than as a separate formula family"
+        final_disposition: ALIAS (alias_target=F-OBV-CHANGE, independent source series)
+
+      - formula_id: F-ALPHA
+        cause_of_omission: "Was treated as part of F-PERF (performance) rather than as a separate derived output"
+        final_disposition: DERIVED_OUTPUT
+
+      - formula_id: F-TECH-SCORE
+        cause_of_omission: "Was treated as part of output assembly rather than as a formula family derived from indicators"
+        final_disposition: DERIVED_OUTPUT
+
+      - formula_id: F-HV
+        cause_of_omission: "Was treated as part of B2 volatility block rather than as a separate formula derived from log_returns"
+        final_disposition: DERIVED_OUTPUT

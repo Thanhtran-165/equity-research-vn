@@ -1,0 +1,250 @@
+# Technical Phase 1 — Implicit Oracle Registry
+# READ_ONLY audit artifact. Not a production contract.
+# Every value currently assumed "correct" without formal contract.
+
+implicit_oracles:
+  total: 24
+  high_risk: 12
+  unresolved: 24
+
+  oracles:
+
+    - oracle_id: O-001
+      category: FORMULA_DEFINITION
+      affected: F-RSI-ACTIVE
+      assumed_correct_value: "Wilder smoothing (period-1 multiplier)"
+      source: "SRC-002 indicators.md line 40-60"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "SKILL.md only says 'Relative Strength Index' — Wilder vs simple not stated in SKILL itself"
+      downstream_risk: HIGH (different RSI values → different tech_score → different verdict)
+
+    - oracle_id: O-002
+      category: FORMULA_DEFINITION
+      affected: F-BOLL-ACTIVE
+      assumed_correct_value: "Population std (÷N) for ACTIVE, Sample std (÷N-1) for PROFILE"
+      source: "SRC-002 line 85 (÷period), SRC-007 line 56 (÷(n-1))"
+      authority: REFERENCE_FILES_CONTRADICTORY
+      frozen: false
+      ambiguity: "Two different std definitions across two modes"
+      downstream_risk: HIGH (BB bands differ → different BB position → different tech_score)
+
+    - oracle_id: O-003
+      category: FORMULA_DEFINITION
+      affected: F-MA-ACTIVE
+      assumed_correct_value: "SMA for MA indicators. EMA only for MACD."
+      source: "SRC-002 line 15 (SMA), line 65 (EMA for MACD)"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "SKILL.md says 'trung bình động' — could be SMA or EMA"
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-004
+      category: SMOOTHING_METHOD
+      affected: F-MACD-ACTIVE
+      assumed_correct_value: "EMA seed = data[0] (not SMA seed)"
+      source: "SRC-002 line 25: out[0]=data[0]"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "Standard libraries often seed EMA with SMA(period). This implementation uses first value."
+      downstream_risk: MEDIUM (early MACD values differ)
+
+    - oracle_id: O-005
+      category: WINDOW_OR_SMOOTHING
+      affected: F-BETA-ACTIVE
+      assumed_correct_value: "52 weeks lookback for Beta"
+      source: "implied by ACTIVE mode (52 weekly data points)"
+      authority: IMPLIED
+      frozen: false
+      ambiguity: "Not explicitly stated. Could be full sample, 26 weeks, or other."
+      downstream_risk: HIGH
+
+    - oracle_id: O-006
+      category: WINDOW_OR_SMOOTHING
+      affected: F-CORR-ACTIVE
+      assumed_correct_value: "Same window as Beta (52 weeks?)"
+      source: "implied"
+      authority: IMPLIED
+      frozen: false
+      ambiguity: "Not explicitly stated."
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-007
+      category: ADJUSTMENT_POLICY
+      affected: ALL_INPUTS
+      assumed_correct_value: "Unadjusted close prices"
+      source: "vnstock default (df['close'] not df['adj_close'])"
+      authority: IMPLIED
+      frozen: false
+      ambiguity: "Corporate actions (splits, dividends) may require adjusted prices for accuracy"
+      downstream_risk: HIGH (split-unadjusted prices create false patterns)
+
+    - oracle_id: O-008
+      category: THRESHOLD
+      affected: P-DB-ACTIVE
+      assumed_correct_value: "Double Bottom: <3% tolerance, ≥5 weeks spacing"
+      source: "SRC-003 line 56"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "Conflicts with PROFILE Double Bottom: <8%, ≥12 sessions. Same pattern, different params."
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-009
+      category: THRESHOLD
+      affected: P-CHANNEL
+      assumed_correct_value: "Channel slope change >100 VND"
+      source: "SRC-003 line 100"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "100 VND hardcoded — not scale-free. Penny stock 5000đ → 100đ = 2%. VCB 90000đ → 100đ = 0.1%."
+      downstream_risk: HIGH
+
+    - oracle_id: O-010
+      category: WINDOW_OR_SMOOTHING
+      affected: F-ROLLING-RET-PROFILE
+      assumed_correct_value: "Windows: 21/63/126/252 sessions"
+      source: "SRC-007 line 259"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "metric_guardrails.md says 20D/60D/120D/252D. stock_profile_blocks.md implements 21/63/126/252."
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-011
+      category: THRESHOLD
+      affected: F-VAR-ES-PROFILE
+      assumed_correct_value: "Confidence levels: 95% and 99%"
+      source: "implied from field names var_95, var_99"
+      authority: IMPLIED
+      frozen: false
+      ambiguity: "SKILL.md does not state confidence levels explicitly."
+      downstream_risk: LOW
+
+    - oracle_id: O-012
+      category: FORMULA_DEFINITION
+      affected: F-PERCENTILE-PROFILE
+      assumed_correct_value: "Floor counting for percentile_of_value, linear interpolation for quantile helper"
+      source: "SRC-007 line 75 (floor), line 65 (linear)"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "Two different percentile methods in same file. Which is used where?"
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-013
+      category: THRESHOLD
+      affected: F-HVB-PROFILE
+      assumed_correct_value: "Spike threshold: volume ≥ 2× avg20"
+      source: "SRC-007 line 1010"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "events_1y = events[-252:] treats sporadic events as daily — logic error."
+      downstream_risk: HIGH
+
+    - oracle_id: O-014
+      category: ARCHETYPE_PRECEDENCE
+      affected: archetype_classification
+      assumed_correct_value: "trend_following > accumulation_breakout > trap_prone > mixed"
+      source: "SRC-004 line 348-354"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "Priority order given but rationale not explained. No tie-break for trend+accumulation both qualifying."
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-015
+      category: PATTERN_THRESHOLD
+      affected: SETUP_SCORING
+      assumed_correct_value: "Setup score <55 dropped, 55-61 chưa đủ sạch, 62-77 đang hình thành, ≥78+dist≤3% gần xác nhận"
+      source: "SRC-004 line 30-40"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "Top 6 returned (code comment) vs 8 claimed (header). Which?"
+      downstream_risk: LOW
+
+    - oracle_id: O-016
+      category: OUTPUT_STATUS
+      affected: TECH_SCORE_VERDICT
+      assumed_correct_value: "TECHNICAL STRONG BULLISH/BEARISH (SKILL v2.2.0 guardrail)"
+      source: "SRC-001 line 194-199 vs SRC-009 phase4a line 16"
+      authority: CONTRADICTORY
+      frozen: false
+      ambiguity: "SKILL.md v2.2.0 prohibits BUY/SELL; phase4a and REQ-005 still use old enum."
+      downstream_risk: HIGH
+
+    - oracle_id: O-017
+      category: SOURCE_PRIORITY
+      affected: DATA_FETCH
+      assumed_correct_value: "vnstock VCI primary; TCBS/DNSE backup; Yahoo backup"
+      source: "SRC-008 line 10, SRC-001 line 23-29"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "SKILL.md only mentions VCI. vnstock_usage.md lists TCBS/DNSE. Priority unclear."
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-018
+      category: BENCHMARK_SELECTION
+      affected: F-BETA-ACTIVE, F-RS-BENCHMARK-PROFILE
+      assumed_correct_value: "VNINDEX as primary benchmark, VN30 as secondary"
+      source: "SRC-001 line 76, SRC-007 line 600"
+      authority: IMPLIED
+      frozen: false
+      ambiguity: "Both VNINDEX and VN30 used but which is canonical for Beta? Different benchmarks → different Beta."
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-019
+      category: LANGUAGE_CLASSIFICATION
+      affected: REQ-007
+      assumed_correct_value: "forbidden: bullish/bearish/tín hiệu/khuyến nghị/nên mua/nên bán/strong buy/strong sell/overbought/oversold"
+      source: "SRC-005 metric_guardrails.md line 283, SRC-001 line 348"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "REQ-006 regex is narrower than full forbidden list. REQ-007 is negation-aware but REQ-006 is not."
+      downstream_risk: HIGH
+
+    - oracle_id: O-020
+      category: FORMULA_DEFINITION
+      affected: F-PERF-ACTIVE
+      assumed_correct_value: "Alpha = stock_perf - beta × market_perf (no risk-free rate)"
+      source: "SRC-002 line 125"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "Not Jensen's alpha. Simplified. Risk-free rate omitted."
+      downstream_risk: LOW
+
+    - oracle_id: O-021
+      category: ERROR_BEHAVIOR
+      affected: F-RS-BENCHMARK-PROFILE
+      assumed_correct_value: "If vnindex_rows=None → crash"
+      source: "SRC-007 line 1276"
+      authority: CODE_BEHAVIOR
+      frozen: false
+      ambiguity: "No guard for None benchmark."
+      downstream_risk: HIGH
+
+    - oracle_id: O-022
+      category: FORMULA_DEFINITION
+      affected: F-VPCI-PROFILE
+      assumed_correct_value: "VPCI = VPC × VPR × VM with windows 20/100"
+      source: "SRC-007 line 800-850"
+      authority: REFERENCE_FILE
+      frozen: false
+      ambiguity: "If vpci_latest is None but other vars known → returns 'hỗn hợp' instead of error."
+      downstream_risk: MEDIUM
+
+    - oracle_id: O-023
+      category: THRESHOLD
+      affected: F-TECH-SCORE
+      assumed_correct_value: "6 signals × ±1 = range [-6,6]. Verdict bands: +4-6/+1-3/-1-0/-2to-3/-4to-6"
+      source: "SRC-001 line 175-192"
+      authority: SKILL_FILE
+      frozen: false
+      ambiguity: "Gap at (-4,-3). Score=-3 falls between bands. Score=0 in NEUTRAL (-1 to 0)."
+      downstream_risk: LOW
+
+    - oracle_id: O-024
+      category: FORMULA_DEFINITION
+      affected: F-CMF-PROFILE
+      assumed_correct_value: "B12: obv_20d_change_pct = vpt_chg (bug)"
+      source: "SRC-007 line 888"
+      authority: CODE_BUG
+      frozen: false
+      ambiguity: "OBV change overwritten by VPT change. Real OBV change computed but unused."
+      downstream_risk: HIGH

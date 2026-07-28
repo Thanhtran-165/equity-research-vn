@@ -1,0 +1,221 @@
+# Technical Phase 1 — Pattern & Heuristic Inventory
+# READ_ONLY audit artifact. Not a production contract.
+
+# === ACTIVE mode patterns (from pattern_detection.md) ===
+
+active_patterns:
+  total: 5
+  audited: 5
+
+  patterns:
+    - pattern_id: P-SWING
+      name: "Swing Points"
+      mode: ACTIVE
+      required_inputs: [closes]
+      detection_rule: "lookback=2: point higher/lower than 2 candles each side"
+      confirmation_rule: N/A
+      invalidation_rule: N/A
+      scoring_rule: N/A
+      minimum_history: 5 sessions
+      threshold_origin: "SRC-003 line 20"
+      false_positive_risk: LOW
+      oracle_status: DEFINED
+
+    - pattern_id: P-DB-ACTIVE
+      name: "Double Bottom (Weekly)"
+      mode: ACTIVE
+      required_inputs: [lows, closes]
+      detection_rule: "2 lows chênh <3%, cách ≥5 tuần, neckline=swing high between"
+      confirmation_rule: "breakout above neckline + volume → confirmed"
+      invalidation_rule: "break below low 2 → failed"
+      scoring_rule: "status: potential/confirmed/failed"
+      minimum_history: 10 weeks
+      threshold_origin: "SRC-003 line 56"
+      false_positive_risk: MEDIUM
+      oracle_status: "AMBIGUOUS — closes referenced from closure not param"
+      ambiguity: "detectDoubleBottom references `closes` global, not param. Bug if ported."
+
+    - pattern_id: P-CHANNEL
+      name: "Ascending/Descending Channel"
+      mode: ACTIVE
+      required_inputs: [highs, lows]
+      detection_rule: "fit trendline, slope change >100 VND"
+      confirmation_rule: N/A
+      invalidation_rule: N/A
+      scoring_rule: N/A
+      minimum_history: AMBIGUOUS
+      threshold_origin: "SRC-003 line 100"
+      false_positive_risk: HIGH
+      oracle_status: "AMBIGUOUS — 100 VND hardcoded, not scale-free"
+
+    - pattern_id: P-CANDLE
+      name: "Candlestick Patterns"
+      mode: ACTIVE
+      required_inputs: [open, high, low, close]
+      detection_rule: "Hammer: lowerWick>body*2 & pctBody<35; Marubozu: pctBody>70; Doji: pctBody<10; Engulfing: curr.c>prev.o & curr.o<prev.c"
+      scoring_rule: N/A
+      minimum_history: 2 sessions
+      threshold_origin: "SRC-003 line 150-200"
+      false_positive_risk: MEDIUM
+      oracle_status: DEFINED
+
+    - pattern_id: P-DIVERGENCE
+      name: "RSI Divergence"
+      mode: ACTIVE
+      required_inputs: [price_swings, rsi]
+      detection_rule: "2 recent swing lows: price↓ + RSI↑ = bullish; price↑ + RSI↓ = bearish"
+      scoring_rule: "boolean has_divergence"
+      minimum_history: 2 swing lows
+      threshold_origin: "SRC-003 line 204"
+      false_positive_risk: MEDIUM
+      oracle_status: "AMBIGUOUS — no min distance between swing lows"
+
+# === PROFILE mode setup heuristics (from pattern_scoring.md) ===
+
+profile_setups:
+  claimed_count: 8
+  audited_count: 8
+  confirmed_count: 8
+  duplicate_setups: 0
+  undefined_setups: 0
+  conflicting_setups: 0
+  note: "All 8 are bullish-only. Bearish setups in DOWNSIDE_PATTERNS dict but NO detector function exists."
+
+  setups:
+    - pattern_id: S-BULL-FLAG
+      name: "Bull Flag"
+      mode: PROFILE
+      required_inputs: [daily_close, daily_volume]
+      detection_rule: "pole=30 sessions prior uptrend, flag=14 sessions consolidation downward"
+      scoring_rule: "0-100 based on pole strength, flag depth, volume decline"
+      minimum_history: 65 sessions
+      threshold_origin: "SRC-004 line 50"
+      false_positive_risk: MEDIUM
+      oracle_status: DEFINED
+
+    - pattern_id: S-BULL-PENNANT
+      name: "Bull Pennant"
+      mode: PROFILE
+      detection_rule: "converging consolidation after strong pole"
+      scoring_rule: "0-100"
+      minimum_history: 65
+      threshold_origin: "SRC-004 line 80"
+      oracle_status: DEFINED
+
+    - pattern_id: S-HIGH-TIGHT-FLAG
+      name: "High Tight Flag"
+      mode: PROFILE
+      detection_rule: "pole gain >100% in 8 weeks, tight flag <25% pullback"
+      scoring_rule: "0-100"
+      minimum_history: 65
+      threshold_origin: "SRC-004 line 110"
+      oracle_status: DEFINED
+
+    - pattern_id: S-MEASURED-MOVE-UP
+      name: "Measured Move Up"
+      mode: PROFILE
+      detection_rule: "correction phase ~50% retrace (25-75% ok)"
+      scoring_rule: "0-100"
+      minimum_history: 65
+      threshold_origin: "SRC-004 line 140"
+      oracle_status: DEFINED
+
+    - pattern_id: S-TRIANGLE-ASC
+      name: "Ascending Triangle"
+      mode: PROFILE
+      detection_rule: "flat resistance + rising support"
+      scoring_rule: "0-100"
+      minimum_history: 65
+      threshold_origin: "SRC-004 line 170"
+      oracle_status: DEFINED
+
+    - pattern_id: S-TRIANGLE-SYM
+      name: "Symmetrical Triangle"
+      mode: PROFILE
+      detection_rule: "converging both sides"
+      scoring_rule: "0-100"
+      minimum_history: 65
+      threshold_origin: "SRC-004 line 200"
+      oracle_status: DEFINED
+
+    - pattern_id: S-CUP-HANDLE
+      name: "Cup with Handle"
+      mode: PROFILE
+      detection_rule: "cup depth ~25%, handle pullback ≤16%"
+      scoring_rule: "0-100"
+      minimum_history: 75
+      threshold_origin: "SRC-004 line 230"
+      oracle_status: DEFINED
+
+    - pattern_id: S-DB-PROFILE
+      name: "Double Bottom (Daily)"
+      mode: PROFILE
+      detection_rule: "2 lows chênh <8%, tách ≥12 phiên"
+      scoring_rule: "0-100"
+      minimum_history: 65
+      threshold_origin: "SRC-004 line 280"
+      false_positive_risk: MEDIUM
+      oracle_status: "AMBIGUOUS — thresholds conflict with P-DB-ACTIVE (<3% ≥5w). Same pattern name, different parameters by frequency."
+
+  score_thresholds:
+    below_55: "dropped (return None)"
+    range_55_61: "chưa đủ sạch"
+    range_62_77: "đang hình thành"
+    above_78_dist_le_3pct: "gần xác nhận"
+
+  top_n_returned: 6  # comment in code says "top 6, sort by completion_score desc" — contradicts header "8 setups"
+
+# === Archetype logic ===
+
+archetypes:
+  total: 5
+  found: [trend_following, accumulation_breakout, trap_prone, mixed, no_current_setup]
+  classification_rules:
+    trend_following: "if any CONTINUATION pattern setup ≥55 score"
+    accumulation_breakout: "if any ACCUMULATION pattern setup ≥55 score"
+    trap_prone: "if high_volume_behavior = suy yếu (from B14)"
+    mixed: "multiple conflicting setups"
+    no_current_setup: "no setups ≥55"
+  priority_order: "trend_following > accumulation_breakout > trap_prone > mixed"
+  tie_break_rule: "NOT DEFINED — if trend_following AND accumulation_breakout both qualify, priority order used but rationale not explained"
+  unclassified_behavior: "no_current_setup is 5th archetype but SKILL.md/phase4b only mention 4"
+  precedence_defined: true
+  precedence_rationale_provided: false
+  ambiguity: "SKILL.md says '4 archetype', pattern_scoring.md defines 5 (incl no_current_setup). phase4b.md says '4 archetype'."
+
+# === Profile blocks reconciliation ===
+
+profile_blocks:
+  claimed_count_skill_md: 15
+  claimed_count_reference_header: 17
+  claimed_count_metric_guardrails: 15
+  audited_count: 17
+  confirmed_count: 17
+  duplicate_blocks: 0
+  undefined_blocks: 0
+  conflicting_blocks: 0
+  note: "stock_profile_blocks.md actually implements 17 blocks (B1-B17). B16 (VAP) and B17 (industry_peer) are optional but implemented. Header text says '15 core blocks'. Count claim unreconciled."
+  
+  blocks:
+    - {id: B1, name: price_behavior, optional: false}
+    - {id: B2, name: volatility, optional: false}
+    - {id: B3, name: drawdown, optional: false}
+    - {id: B4, name: liquidity, optional: false}
+    - {id: B5, name: return_distribution, optional: false}
+    - {id: B6, name: tail_risk, optional: false}
+    - {id: B7, name: liquidity_risk, optional: false}
+    - {id: B8, name: relative_strength, optional: false}
+    - {id: B9, name: regime, optional: false}
+    - {id: B10, name: volume_price, optional: false}
+    - {id: B11, name: vpci, optional: false}
+    - {id: B12, name: money_flow, optional: false}
+    - {id: B13, name: effort_result, optional: false}
+    - {id: B14, name: high_volume_behavior, optional: false}
+    - {id: B15, name: pvi_nvi, optional: false}
+    - {id: B16, name: volume_at_price, optional: true}
+    - {id: B17, name: industry_peer, optional: true}
+
+  known_bugs:
+    - "B12: obv_20d_change_pct = vpt_chg (copy-paste bug, OBV change overwritten by VPT change)"
+    - "B14: events_1y = events[-252:] cuts 252 sporadic events, not 252 sessions → may span years"
+    - "B9: realized_vol_history recomputed in loop → O(n²) performance"

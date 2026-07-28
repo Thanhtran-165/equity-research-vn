@@ -1,0 +1,68 @@
+# Technical Phase 2A — Status Taxonomy Contract
+# Separates validity, direction, and confidence. NO action enums.
+
+status_taxonomy:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+
+  analysis_status:
+    description: "Validity of the computation — did it produce a usable result?"
+    enum:
+      - VALID
+      - VALID_WITH_WARNINGS
+      - INPUT_INCOMPLETE
+      - NOT_APPLICABLE
+      - ERROR
+    prohibited_overlap: "analysis_status must NOT contain direction (BULLISH/BEARISH) or action (BUY/SELL)"
+
+  technical_state:
+    description: "Directional observation of market conditions — descriptive, not prescriptive"
+    enum:
+      - BULLISH
+      - BEARISH
+      - NEUTRAL
+      - MIXED
+      - UNDETERMINED
+    prohibited_overlap: "technical_state must NOT contain action words or investment recommendations"
+
+  confidence:
+    description: "How well-supported is the technical_state by evidence"
+    enum:
+      - LOW
+      - MEDIUM
+      - HIGH
+      - NOT_ESTABLISHED
+    derivation_contract: "If deterministic derivation rule not yet defined, use NOT_ESTABLISHED. Do NOT default to HIGH without calibration evidence."
+
+  prohibited_action_enums:
+    description: "These are BANNED from all technical output contracts"
+    enum:
+      - BUY
+      - SELL
+      - HOLD
+      - STRONG_BUY
+      - STRONG_SELL
+      - ACCUMULATE
+      - REDUCE
+      - OVERWEIGHT
+      - UNDERWEIGHT
+
+  separation_invariants:
+    - "analysis_status and technical_state are orthogonal fields"
+    - "VALID + BULLISH means: computation succeeded, market appears bullish"
+    - "INPUT_INCOMPLETE + UNDETERMINED means: not enough data to assess"
+    - "ERROR + UNDETERMINED means: computation failed, no directional assessment"
+    - "technical_state must NEVER appear alone without analysis_status"
+
+  legacy_mapping:
+    description: "How old verdict enum maps to new taxonomy"
+    mappings:
+      "STRONG BUY": {analysis_status: VALID, technical_state: BULLISH, confidence: HIGH}
+      "BUY": {analysis_status: VALID, technical_state: BULLISH, confidence: MEDIUM}
+      "TECHNICAL BULLISH": {analysis_status: VALID, technical_state: BULLISH, confidence: MEDIUM}
+      "TECHNICAL STRONG BULLISH": {analysis_status: VALID, technical_state: BULLISH, confidence: HIGH}
+      "TECHNICAL NEUTRAL": {analysis_status: VALID, technical_state: NEUTRAL, confidence: NOT_ESTABLISHED}
+      "TECHNICAL BEARISH": {analysis_status: VALID, technical_state: BEARISH, confidence: MEDIUM}
+      "TECHNICAL STRONG BEARISH": {analysis_status: VALID, technical_state: BEARISH, confidence: HIGH}
+      "SELL/REDUCE": {analysis_status: VALID, technical_state: BEARISH, confidence: HIGH}
+    note: "Legacy mapping is for migration only. New contracts must use new enums directly."

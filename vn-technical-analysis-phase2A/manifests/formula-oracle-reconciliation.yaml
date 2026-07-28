@@ -1,0 +1,76 @@
+# Technical Phase 2A — Formula Oracle Reconciliation
+# Reconciles 24 implicit oracles from Phase 1 with 6 Sol decisions
+
+formula_oracle_reconciliation:
+  total_oracles: 24
+  resolved_by_sol_decision: 6
+  deferred_to_phase_3: 11
+  alias: 0
+  derived_output: 4
+  duplicate_semantic: 0
+  not_applicable: 0
+  fully_reconciled: 7
+  note: "R3 reclassification: F-VPT-CHANGE moved ALIAS→DERIVED_OUTPUT (alias to OBV was self-contradictory). F-DOUBLE-BOTTOM in RECONCILED since R2. F-INDUSTRY-PEER in DEFERRED_TO_PHASE_3 since R2. See formula-disposition-delta-phase2A-R3.yaml for full delta."
+
+  reconciliations:
+
+    # === 6 CRITICAL resolved by Sol ===
+
+    - oracle_id: O-016
+      ambiguity: "Verdict enum contradiction SKILL vs phase4a/REQ-005"
+      sol_decision: "§1: Remove BUY/SELL. Use analysis_status + technical_state + confidence."
+      resolution: status-taxonomy.yaml defines new enums. Legacy mapping provided.
+      phase_for_implementation: PHASE_4
+      status: RESOLVED
+
+    - oracle_id: O-007
+      ambiguity: "Adjusted vs unadjusted prices"
+      sol_decision: "§2: Lock price-basis policy — adjusted for indicators, total-return for returns/beta"
+      resolution: price-basis-policy.yaml defines 3 bases with fail-closed on UNKNOWN.
+      phase_for_implementation: PHASE_4
+      status: RESOLVED
+
+    - oracle_id: O-009
+      ambiguity: "Channel slope 100 VND hardcoded"
+      sol_decision: "§3: normalized_slope_pct_per_bar = 100 × OLS_slope / median(close)"
+      resolution: Formula defined. Threshold deferred to Phase 3.
+      phase_for_implementation: PHASE_3 (threshold), PHASE_4 (formula)
+      status: RESOLVED_FORMULA_THRESHOLD_DEFERRED
+
+    - oracle_id: O-013
+      ambiguity: "HVB events_1y cuts 252 events not sessions"
+      sol_decision: "§4: Use calendar window as_of_date - 365 days"
+      resolution: VTA-REQ-013 defines calendar-based window.
+      phase_for_implementation: PHASE_4 (B14 fix)
+      status: RESOLVED
+
+    - oracle_id: O-024
+      ambiguity: "CMF B12 OBV/VPT bug"
+      sol_decision: "§5: Separate OBV and VPT source series"
+      resolution: VTA-REQ-014 mandates separation. Phase 4Q mutation to recreate bug.
+      phase_for_implementation: PHASE_4 (B12 fix)
+      status: RESOLVED
+
+    - oracle_id: O-017 + IB-001
+      ambiguity: "Collector OHLCV gap"
+      sol_decision: "§6: market-data-packet-v1 contract; collector extension required before Phase 6"
+      resolution: market-data-packet-v1.schema.json defined. Phase 6 blocked until extension.
+      phase_for_implementation: COLLECTOR_EXTENSION (before Phase 6)
+      status: RESOLVED_CONTRACT_EXTENSION_BLOCKED
+
+    # === Remaining 18 oracles — status ===
+
+    - oracle_ids: [O-001, O-002, O-003, O-004, O-005, O-006]
+      category: FORMULA_DEFINITION
+      status: DEFERRED_TO_PHASE_3
+      note: "RSI Wilder confirmed (O-001). Bollinger std inconsistency noted (O-002). Beta window/return basis (O-005/O-006). All to be frozen in Phase 3 formula contracts."
+
+    - oracle_ids: [O-008, O-010, O-011, O-012, O-014, O-015]
+      category: THRESHOLD + WINDOW
+      status: DEFERRED_TO_PHASE_3
+      note: "Thresholds require calibration evidence. Windows (21/63/126/252 vs 20/60/120/252) require decision."
+
+    - oracle_ids: [O-018, O-019, O-020, O-021, O-022, O-023]
+      category: SOURCE + LANGUAGE + ERROR + OUTPUT
+      status: PARTIALLY_RESOLVED
+      note: "REQ-007 policy resolves O-019. Source policy resolves O-017. Others deferred."

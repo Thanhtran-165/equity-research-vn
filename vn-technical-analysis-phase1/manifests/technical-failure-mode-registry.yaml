@@ -1,0 +1,220 @@
+# Technical Phase 1 — Failure Mode Registry
+# READ_ONLY audit artifact. Not a production contract.
+
+failure_modes:
+  total: 28
+  critical: 6
+  high: 10
+  medium: 8
+  low: 4
+
+  data:
+    - failure_id: FM-EMPTY-SERIES
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "dropna silently removes, may produce empty array → NaN propagation"
+      desired_behavior: "hard error if <minimum sessions"
+      severity: HIGH
+      affected_mode: BOTH
+      evidence: "SRC-008 line 100"
+
+    - failure_id: FM-INSUFFICIENT-HISTORY
+      currently_detected: true
+      currently_fail_closed: true
+      current_behavior: "PROFILE: <60 sessions → error. ACTIVE: no minimum check."
+      desired_behavior: "Both modes should enforce minimum"
+      severity: HIGH
+      affected_mode: ACTIVE
+      evidence: "SKILL.md line 247 only PROFILE has guard"
+
+    - failure_id: FM-DUPLICATE-TIMESTAMP
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "no dedup logic"
+      severity: MEDIUM
+      affected_mode: BOTH
+
+    - failure_id: FM-UNSORTED-TIMESTAMP
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "PROFILE sorts by time. ACTIVE does not sort."
+      severity: MEDIUM
+      affected_mode: ACTIVE
+
+    - failure_id: FM-MISSING-INTERVAL
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "gaps in trading days silently accepted"
+      severity: MEDIUM
+      affected_mode: BOTH
+
+    - failure_id: FM-ZERO-PRICE
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "zero price → NaN in returns/divisions"
+      severity: HIGH
+      affected_mode: BOTH
+
+    - failure_id: FM-ZERO-VOLUME
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "value = close × 0 × 1000 = 0 — accepted"
+      severity: LOW
+      affected_mode: PROFILE
+
+    - failure_id: FM-CORPORATE-ACTION-UNADJUSTED
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "uses df['close'] without adjustment flag"
+      severity: CRITICAL
+      affected_mode: BOTH
+
+    - failure_id: FM-BENCHMARK-MISALIGNED
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "no date alignment between stock and VNINDEX/VN30"
+      severity: HIGH
+      affected_mode: BOTH
+
+    - failure_id: FM-PARTIAL-WEEK
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "current incomplete week may be included in weekly data"
+      severity: MEDIUM
+      affected_mode: ACTIVE
+
+  calculation:
+    - failure_id: FM-WRONG-LOOKBACK
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "rolling windows 21/63/126/252 vs 20/60/120/252 ambiguous"
+      severity: MEDIUM
+      affected_mode: PROFILE
+
+    - failure_id: FM-WRONG-SMOOTHING
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "RSI Wilder (ACTIVE) vs possibly different in PROFILE blocks"
+      severity: HIGH
+      affected_mode: BOTH
+
+    - failure_id: FM-DIVIDE-BY-ZERO
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "no explicit zero-guard in many ratios (CMF denominator, BB std=0)"
+      severity: HIGH
+      affected_mode: BOTH
+
+    - failure_id: FM-NAN-PROPAGATION
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "NaN in any input propagates through indicator chain"
+      severity: HIGH
+      affected_mode: BOTH
+
+    - failure_id: FM-ROUNDING-DRIFT
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "no deterministic rounding policy"
+      severity: LOW
+      affected_mode: BOTH
+
+    - failure_id: FM-MODE-KERNEL-DIVERGENCE
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "ACTIVE uses indicators.md formulas. PROFILE uses stock_profile_blocks.md helpers. Two codebases may diverge."
+      severity: HIGH
+      affected_mode: BOTH
+
+    - failure_id: FM-OBV-VPT-BUG
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "B12: obv_20d_change_pct overwritten by vpt_chg (copy-paste bug)"
+      severity: HIGH
+      affected_mode: PROFILE
+
+    - failure_id: FM-EVENTS-1Y-BUG
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "B14: events[-252:] cuts sporadic events not sessions → wrong 1-year window"
+      severity: HIGH
+      affected_mode: PROFILE
+
+  pattern:
+    - failure_id: FM-FALSE-BREAKOUT
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "patterns flagged as 'potential' — no volume confirmation required"
+      severity: MEDIUM
+      affected_mode: ACTIVE
+
+    - failure_id: FM-UNCONFIRMED-PATTERN
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "setup score 62-77 = 'đang hình thành' but may be presented without sufficient evidence"
+      severity: MEDIUM
+      affected_mode: PROFILE
+
+    - failure_id: FM-LOOKAHEAD-BIAS
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "pattern detection functions may reference future data (closes from closure scope)"
+      severity: CRITICAL
+      affected_mode: ACTIVE
+
+    - failure_id: FM-CONFLICTING-SETUP
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "multiple setups may trigger simultaneously with different directions"
+      severity: MEDIUM
+      affected_mode: PROFILE
+
+    - failure_id: FM-ARCHETYPE-AMBIGUITY
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "4 vs 5 archetypes depending on source. no_current_setup missing from some docs."
+      severity: LOW
+      affected_mode: PROFILE
+
+  output:
+    - failure_id: FM-SCHEMA-DRIFT
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "output JSON fields vary between SKILL.md, phase4a/4b schemas, and actual implementation"
+      severity: HIGH
+      affected_mode: BOTH
+
+    - failure_id: FM-MISSING-PROVENANCE
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "no provenance tracking in output (which vnstock call, when, what params)"
+      severity: CRITICAL
+      affected_mode: BOTH
+
+    - failure_id: FM-MODE-CONTAMINATION
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "no guard preventing ACTIVE fields appearing in PROFILE output or vice versa"
+      severity: HIGH
+      affected_mode: BOTH
+
+    - failure_id: FM-FABRICATED-VALUE
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "SKILL.md warns against fabrication but no verifier to catch it"
+      severity: CRITICAL
+      affected_mode: BOTH
+
+    - failure_id: FM-ADVICE-LANGUAGE
+      currently_detected: true
+      currently_fail_closed: false
+      current_behavior: "grep check exists but negation-unaware in REQ-006. REQ-007 requires negation-aware."
+      severity: HIGH
+      affected_mode: PROFILE
+
+    - failure_id: FM-VALUATION-OVERRIDE
+      currently_detected: false
+      currently_fail_closed: false
+      current_behavior: "no guard preventing technical output from modifying fundamental/valuation fields"
+      severity: CRITICAL
+      affected_mode: BOTH

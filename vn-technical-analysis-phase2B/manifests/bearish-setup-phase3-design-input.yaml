@@ -1,0 +1,258 @@
+# Technical Phase 2B — Bearish Setup Phase 3 Design Input
+# Design input package for the Bearish Setup Registry, mandated by Sol §3 decision
+# (ADD_BEARISH_SETUP_REGISTRY; mirror by sign inversion PROHIBITED)
+#
+# This is a DESIGN INPUT artifact — NOT a final contract. Phase 3 will freeze the registry
+# based on independent rules, confirmation/invalidation, and minimum history requirements.
+
+bearish_setup_phase3_design_input:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+  decision_authority: "Sol §3 (Phase 2A)"
+  decision: ADD_BEARISH_SETUP_REGISTRY
+  symmetric_sign_inversion: PROHIBITED
+
+  # ====================================================================
+  # Context — why this is needed
+  # ====================================================================
+
+  context:
+    current_state:
+      bullish_setups: 8  # S-BULL-FLAG, S-BULL-PENNANT, S-HIGH-TIGHT-FLAG, S-MEASURED-MOVE-UP, S-TRIANGLE-ASC, S-TRIANGLE-SYM, S-CUP-HANDLE, S-DB-PROFILE
+      bearish_setups: 0
+      directional_coverage: BULLISH_ONLY
+    gap:
+      issue: "Engine cannot represent BEARISH states. trap_prone archetype only triggers via high_volume_behavior, never via bearish pattern detection."
+      impact: "Coverage claim cannot imply completeness. setup_coverage_status must be INCOMPLETE_BEARISH_COVERAGE until bearish registry implemented."
+    prohibited_shortcut:
+      rule: "Mirror-by-sign-inversion PROHIBITED (Sol §3)"
+      rationale: "Bearish patterns have different microstructure (distribution vs accumulation, weaker confirmation signals, different volume signatures). Inverting bullish rules produces false signals."
+
+  # ====================================================================
+  # Candidate bearish setups (from DOWNSIDE_PATTERNS dict in pattern_scoring.md)
+  # These are CANDIDATES — Phase 3 must design independent rules for each.
+  # ====================================================================
+
+  candidate_bearish_setups:
+    source: "SRC-004 pattern_scoring.md DOWNSIDE_PATTERNS dict"
+    note: "Dict has 5 entries (bear_flag, bear_pennant, triangles_descending, rectangle_tops, head_and_shoulders) but NO detector functions. Each needs full design."
+
+    candidates:
+
+      - candidate_id: C-BEAR-FLAG
+        bullish_mirror: S-BULL-FLAG
+        common_name: "Bear Flag"
+        direction: BEARISH
+        structural_sketch: |
+          1. Prior downtrend (impulse leg down)
+          2. Consolidation channel rising (counter-trend)
+          3. Volume contracts during consolidation
+          4. Breakout below consolidation low with volume expansion
+        independent_design_required:
+          - prior_trend_lookback: NOT_YET_FROZEN  # how many bars to confirm downtrend
+          - consolidation_slope: NOT_YET_FROZEN  # rising slope tolerance
+          - volume_contraction_threshold: NOT_YET_FROZEN  # e.g., <70% avg20
+          - breakout_confirmation_volume: NOT_YET_FROZEN  # e.g., >150% avg20
+        prohibited_mirror_from: S-BULL-FLAG
+        min_history_sessions: 65  # initial estimate, freeze in Phase 3
+
+      - candidate_id: C-BEAR-PENNANT
+        bullish_mirror: S-BULL-PENNANT
+        common_name: "Bear Pennant"
+        direction: BEARISH
+        structural_sketch: |
+          1. Prior downtrend
+          2. Triangular consolidation (converging highs/lows)
+          3. Volume contracts
+          4. Breakout below lower trendline with volume expansion
+        independent_design_required:
+          - prior_trend_lookback: NOT_YET_FROZEN
+          - triangle_convergence_tolerance: NOT_YET_FROZEN
+          - volume_contraction_threshold: NOT_YET_FROZEN
+          - breakout_threshold: NOT_YET_FROZEN
+        prohibited_mirror_from: S-BULL-PENNANT
+        min_history_sessions: 65
+
+      - candidate_id: C-DESCENDING-TRIANGLE
+        bullish_mirror: S-TRIANGLE-ASC
+        common_name: "Descending Triangle"
+        direction: BEARISH
+        structural_sketch: |
+          1. Horizontal lower line (support tested ≥2 times)
+          2. Declining upper line (lower highs)
+          3. Volume declining into apex
+          4. Breakdown below horizontal support
+        independent_design_required:
+          - support_test_count: 2  # minimum
+          - lower_highs_regression_fit: NOT_YET_FROZEN  # R² threshold
+          - breakdown_volume: NOT_YET_FROZEN
+        prohibited_mirror_from: S-TRIANGLE-ASC
+        min_history_sessions: 65
+
+      - candidate_id: C-RECTANGLE-TOP
+        bullish_mirror: none  # no direct bullish equivalent (S-MEASURED-MOVE-UP is directional, not range)
+        common_name: "Rectangle Top (Distribution)"
+        direction: BEARISH
+        structural_sketch: |
+          1. Extended sideways range after uptrend
+          2. Multiple tests of range high that fail
+          3. Volume pattern: higher on down bars, lower on up bars
+          4. Breakdown below range low
+        independent_design_required:
+          - range_duration_min: NOT_YET_FROZEN
+          - failed_high_test_count: NOT_YET_FROZEN
+          - up_down_volume_ratio: NOT_YET_FROZEN
+          - breakdown_threshold: NOT_YET_FROZEN
+        prohibited_mirror_from: none
+        min_history_sessions: 75
+
+      - candidate_id: C-HEAD-SHOULDERS
+        bullish_mirror: none
+        common_name: "Head and Shoulders Top"
+        direction: BEARISH
+        structural_sketch: |
+          1. Left shoulder peak
+          2. Higher head peak
+          3. Right shoulder peak (lower than head, similar to left)
+          4. Neckline connecting troughs between peaks
+          5. Break below neckline
+        independent_design_required:
+          - peak_symmetry_tolerance: NOT_YET_FROZEN
+          - neckline_regression_fit: NOT_YET_FROZEN
+          - right_shoulder_lower_than_head: REQUIRED
+          - neckline_break_volume: NOT_YET_FROZEN
+        prohibited_mirror_from: none
+        min_history_sessions: 90  # most structurally demanding
+
+  # ====================================================================
+  # Design obligations (per VTA-REQ-009a)
+  # ====================================================================
+
+  design_obligations:
+    independent_rule_design:
+      requirement: "Each bearish setup has its OWN detection rules — NOT derived by negating or sign-inverting a bullish setup"
+      acceptance_criteria:
+        - "Detection function does not import or call bullish detector with sign flip"
+        - "Threshold parameters bearish-specific (not -1 × bullish threshold)"
+        - "Volume signature independently designed for distribution (vs accumulation)"
+
+    confirmation_rules:
+      requirement: "Each setup has explicit confirmation criteria"
+      minimum_confirmation_elements:
+        - volume_threshold: "Breakdown must have volume ≥ threshold × avg20"
+        - hold_period: "Breakdown must hold for N sessions (no immediate reversal)"
+
+    invalidation_rules:
+      requirement: "Each setup has explicit invalidation criteria"
+      minimum_invalidation_elements:
+        - price_threshold: "If price recovers above breakdown level within N sessions → invalidated"
+        - time_decay: "If setup not confirmed within M sessions of forming → expired"
+
+    minimum_history:
+      requirement: "Each setup has explicit minimum daily history"
+      range: "65–90 sessions (per candidate above)"
+
+    conflict_resolution:
+      requirement: "Behavior defined when bullish AND bearish setups match simultaneously"
+      options_for_phase_3:
+        - OPTION_A: "Report both, classify archetype as A-MIXED"
+        - OPTION_B: "Report both, weight by score, higher score wins archetype"
+        - OPTION_C: "Report both, mark as INDEVELOPMENT, do not assign archetype"
+      recommended_default: OPTION_A  # least information loss
+      note: "Phase 3 must freeze one option."
+
+    no_setup_behavior:
+      requirement: "When no setups (bullish or bearish) match score ≥55, behavior defined"
+      rule: "Falls through to A-NO-CURRENT-SETUP archetype. Already covered."
+
+  # ====================================================================
+  # Denominator policy
+  # ====================================================================
+
+  denominator_policy:
+    current_denominator: 8  # 8 bullish only
+    proposed_after_phase_3: 13  # 8 bullish + 5 bearish (preliminary)
+    freeze_authority: "Sol (after Phase 3 design review)"
+    rule: "Denominator frozen ONLY after Phase 3 design review. Until then, status INCOMPLETE_BEARISH_COVERAGE."
+    note: "Number of bearish setups may change in Phase 3 — final denominator determined by independent design quality, not arbitrary parity with bullish count."
+
+  # ====================================================================
+  # Setup coverage status trajectory
+  # ====================================================================
+
+  coverage_status_trajectory:
+    current_phase_2B:
+      coverage_status: INCOMPLETE_BEARISH_COVERAGE
+      bull_count: 8
+      bear_count: 0
+    after_phase_3_design:
+      coverage_status: INCOMPLETE_BEARISH_COVERAGE  # still — design complete but not implemented
+      bull_count: 8
+      bear_count: 5  # proposed
+    after_phase_4_implementation:
+      coverage_status: COMPLETE_DIRECTIONAL_COVERAGE  # if all 5 designed pass Phase 4Q mutations
+      bull_count: 8
+      bear_count: 5
+      note: "Coverage status upgrades ONLY after Phase 4Q mutations prove detectors don't false-positive and false-negative."
+
+  # ====================================================================
+  # Phase 3 design questions for Sol (Phase 3 opens with these)
+  # ====================================================================
+
+  open_questions_for_phase_3:
+    - question_id: BEAR-Q1
+      question: "Confirm 5 candidates sufficient? Or add more (e.g., rising wedge, rounding top)?"
+      recommendation: "Start with 5, add later if Phase 5 cohort reveals gaps"
+    - question_id: BEAR-Q2
+      question: "Which conflict-resolution option (A/B/C) for simultaneous bullish+bearish?"
+      recommendation: OPTION_A (least information loss)
+    - question_id: BEAR-Q3
+      question: "Confirmation volume threshold (1.5× avg20? 2× avg20?)"
+      recommendation: "Calibrate against VN historical breakdowns in Phase 3"
+    - question_id: BEAR-Q4
+      question: "Invalidation hold period (5 sessions? 10 sessions?)"
+      recommendation: "5 sessions for daily mode, 2 weeks for weekly"
+    - question_id: BEAR-Q5
+      question: "Should bearish setups feed a bearish archetype, or expand trap_prone?"
+      recommendation: "Add new archetype A-DISTRIBUTION (Phase 3 decision) — keep trap_prone distinct (HVB-driven, not pattern-driven)"
+
+  # ====================================================================
+  # Verifier obligations
+  # ====================================================================
+
+  verifier_obligations:
+    design_phase_obligations:
+      - {id: VC-BEARISH-DESIGN-1, obligation: "Bearish setups have independent rules (NO sign inversion of bullish)"}
+      - {id: VC-BEARISH-DESIGN-2, obligation: "Each bearish setup has confirmation + invalidation + min_history"}
+      - {id: VC-BEARISH-DESIGN-3, obligation: "Bullish+bearish simultaneous match behavior defined"}
+      - {id: VC-BEARISH-DESIGN-4, obligation: "Denominator frozen after Phase 3 review"}
+    additional_phase_4_obligations:
+      - {id: VC-BEAR-DETECT-1, obligation: "Each bearish detector produces valid output or NOT_PRESENT"}
+      - {id: VC-BEAR-FALSE-POS, obligation: "Bearish detector must not fire on bullish-only setup input"}
+      - {id: VC-BEAR-FALSE-NEG, obligation: "Bearish detector must fire on confirmed bearish historical case"}
+      - {id: VC-BEAR-PROV, obligation: "Each bearish detection has provenance to volume + price evidence"}
+
+  # ====================================================================
+  # Phase 4Q mutation plan (preview)
+  # ====================================================================
+
+  mutation_plan_preview:
+    mandatory_mutations:
+      - MUT-BEAR-SIGN-FLIP: "Replace bearish rules with sign-inverted bullish → expect detection"
+      - MUT-BEAR-NO-VOLUME: "Flag bearish breakout without volume confirmation → expect detection"
+      - MUT-BEAR-NO-HOLD: "Flag bearish breakdown that immediately reverses → expect detection (invalidation)"
+      - MUT-BEAR-FALSE-POS: "Bearish detector fires on uptrend data → expect detection"
+    optional_mutations:
+      - MUT-BEAR-CUP-HANDLE-MIRROR: "If cup-handle bull + sign-inverted bear exist, verify they use independent code paths"
+
+  # ====================================================================
+  # Cross-artifact integrity
+  # ====================================================================
+
+  integrity_check:
+    candidate_count: 5
+    design_obligations_count: 6  # independent, confirmation, invalidation, min_history, conflict, no_setup
+    open_questions_count: 5
+    verifier_obligations_count: 8  # 4 design + 4 phase 4
+    cross_artifact_lock: manifests/technical-phase2B-cross-artifact-lock.yaml
+    status: DESIGN_INPUT_READY_FOR_PHASE_3

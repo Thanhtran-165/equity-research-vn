@@ -1,0 +1,112 @@
+# Technical Phase 1 — REQ-007 Language Baseline
+# READ_ONLY audit artifact. Not a production contract.
+
+REQ_007_baseline:
+  authority_sources:
+    - "SRC-001 SKILL.md line 194-199, 297-299, 348"
+    - "SRC-005 metric_guardrails.md (full forbidden list + scrubCopy + non_conclusion)"
+    - "SRC-006 profile_render.md (negation-aware grep QA check 4)"
+    - "SRC-010 phase4b.md (REQ-006/007 requirements)"
+
+  clearly_allowed:
+    - "xu hướng tăng"
+    - "xu hướng giảm"
+    - "động lượng suy yếu"
+    - "giá nằm trên MA20"
+    "rủi ro điều chỉnh tăng"
+    - "điều kiện kỹ thuật chưa được xác nhận"
+    - "đang hình thành"
+    - "không phải tín hiệu giao dịch"
+    - "KHÔNG phải khuyến nghị"
+    - "không kết luận đây là khuyến nghị"
+
+  clearly_prohibited:
+    lexical:
+      - "bullish"
+      - "bearish"
+      - "tín hiệu"
+      - "khuyến nghị"
+      - "nên mua"
+      - "nên bán"
+      - "strong buy"
+      - "strong sell"
+      - "target giá"
+      - "cắt lỗ tại"
+      - "phân bổ tỷ trọng"
+      - "khuyến nghị giao dịch"
+      - "overbought"
+      - "oversold"
+      - "breakout sắp xảy ra"
+    
+    semantic_implication:
+      - "đây là vùng giá hấp dẫn để tham gia"
+      - "cơ hội tốt để tích lũy"
+      - "đáng theo dõi để vào lệnh"
+    
+    imperative_mood:
+      - "chờ điều chỉnh rồi giải ngân"
+      - "nên theo dõi điểm vào"
+      - "giữ vị thế hiện tại"
+
+  ambiguous:
+    - "STRONG BULLISH" (used in ACTIVE verdict — is this prohibited? SKILL v2.2.0 allows it but profile mode forbids "bullish")
+    - "TECHNICAL STRONG BULLISH" (guardrail replacement for "STRONG BUY")
+    - "đi lên khá sạch" (from CONSUMER_LABELS — descriptive or advisory?)
+    - "đang tích lũy" (could imply "should accumulate")
+    - "rủi ro cao" (descriptive but may be interpreted as warning to sell)
+
+  context_dependent:
+    - "tăng" — allowed when describing price ("giá tăng 5%") but prohibited when advising ("nên tăng vị thế")
+    - "giảm" — same dual meaning
+    - "mua" — prohibited as advice ("nên mua") but allowed in factual context ("không phải lệnh mua")
+
+  forced_translations:
+    - {from: "Drawdown", to: "Mức giảm"}
+    - {from: "Volume", to: "Khối lượng"}
+    - {from: "Value", to: "Giá trị giao dịch"}
+    - {from: "Volatility", to: "Biến động"}
+    - {from: "Range", to: "Biên dao động"}
+    - {from: "Regime", to: "Trạng thái"}
+    - {from: "Outperform", to: "Đi tốt hơn"}
+    - {from: "Underperform", to: "Đi kém hơn"}
+    - {from: "Hit rate", to: "Tỷ lệ vượt mốc"}
+    - {from: "Confirmation", to: "Xác nhận"}
+    - {from: "Setup", to: "Cấu trúc đang hình thành"}
+    - {from: "Pattern", to: "Mẫu hình"}
+
+  non_conclusion_points:
+    version_conflict:
+      metric_guardrails_md:
+        - "Không kết luận đây là khuyến nghị hoặc lời gọi giao dịch."
+        - "Tỷ lệ trong quá khứ không đảm bảo lặp lại trong tương lai."
+        - "Không đọc so sánh rổ/ngành như lịch sử đầy đủ nếu chỉ snapshot hiện tại."
+        - "Không dùng kết quả dài hạn nếu chưa kiểm chứng corporate actions."
+      stock_profile_blocks_md_orchestrator:
+        - "Không kết luận đây là khuyến nghị hoặc lời gọi giao dịch."
+        - "Tỷ lệ trong quá khứ không đảm bảo lặp lại trong tương lai."
+        - "Không đọc quan sát chồng lấp như dự báo độc lập."
+        - "Không dùng kết quả dài hạn nếu chưa kiểm chứng corporate actions."
+      conflict: "Point 3 differs completely between two sources. Unknown which is used at runtime."
+
+  verification_layers:
+    layer_1_lexical:
+      method: "grep -inE 'bullish|bearish|tín hiệu|khuyến nghị|...'"
+      gap: "REQ-006 regex is narrower than full forbidden list"
+    
+    layer_2_semantic_implication:
+      method: "NOT IMPLEMENTED — no checker for contextual meaning"
+      gap: "Missing entirely. Only lexical grep exists."
+    
+    layer_3_imperative_mood:
+      method: "NOT IMPLEMENTED — no mood detection"
+      gap: "Missing entirely."
+
+  negation_awareness:
+    profile_render_md: "YES — grep with grep -vE 'không phải|KHÔNG|...'"
+    requirements_yaml_REQ006: "NO — plain grep, will flag 'không phải tín hiệu' as violation"
+    requirements_yaml_REQ007: "YES — mentions 'P4: negation-aware' but P4 undefined"
+    
+  inconsistency_summary: "REQ-006 and REQ-007 both check non-advice language but with different regex and different negation awareness. An implementation can PASS REQ-007 but FAIL REQ-006 for the same text."
+
+  lexical_only_insufficient: true
+  rationale: "Lexical scan misses semantic implication and imperative mood. A text like 'đây là vùng giá hấp dẫn để tham gia' passes lexical scan but is advisory."

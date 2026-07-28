@@ -1,0 +1,53 @@
+# Technical Phase 2A - REQ-005/006/007 Compatibility Matrix
+# Resolves the inconsistency between REQ-006 (negation-unaware) and REQ-007 (negation-aware)
+
+compatibility_matrix:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+
+  precedence:
+    rank_1: REQ_007_NON_ADVICE
+    rank_2: REQ_006_PROFILE_LANGUAGE
+    rank_3: REQ_005_ACTIVE_OUTPUT
+
+  rule: "If REQ-005 or REQ-006 contain recommendation semantics, REQ-007 overrides."
+
+  REQ_005_reconciliation:
+    current_text: "Report phải có sec-tech với Tech Score số + Verdict (STRONG SELL→STRONG BUY)"
+    conflict: "Uses prohibited action enums BUY/SELL"
+    resolution: "REQ-005 now requires: analysis_status (VALID/ERROR) + technical_state (BULLISH/BEARISH/NEUTRAL) + tech_score (integer). NO action enums."
+    migration: "Legacy 'verdict' field maps to technical_state via status-taxonomy.yaml legacy_mapping"
+
+  REQ_006_reconciliation:
+    current_text: "Report phải có sec-tech-profile, KHÔNG chứa bullish|bearish|khuyến nghị mua|strong buy|strong sell"
+    conflict: "Regex is negation-UNAWARE. Flags 'không phải tín hiệu' as violation."
+    resolution: "REQ-006 regex MUST be updated to negation-aware (matching REQ-007 standard). Both REQs use same 3-layer policy from REQ007-semantic-policy.yaml."
+    required_regex_update: "Add grep -vE 'không phải|KHÔNG|không nên hiểu|không kết luận' before flagging"
+
+  REQ_007_reconciliation:
+    current_text: "Section PROFILE phải dùng ngôn ngữ neutral_descriptive_non_advice (P4: negation-aware)"
+    conflict: "P4 undefined. No formal policy document."
+    resolution: "P4 = REQ007-semantic-policy.yaml (this Phase 2A contract). 3-layer verification: lexical + semantic + imperative."
+
+  joint_verification:
+    rule: "Both REQ-006 and REQ-007 check non-advice language. They MUST use identical regex + identical negation awareness."
+    single_policy: REQ007-semantic-policy.yaml
+    prohibited: "Dual-standard where REQ-006 is stricter (unaware) than REQ-007 (aware)"
+
+  examples:
+    PASS_both:
+      - "Xu hướng trung hạn đang tích cực."
+      - "Động lượng suy yếu nhưng chưa xác nhận đảo chiều."
+      - "Mẫu hình chỉ hợp lệ nếu thanh khoản được xác nhận."
+      - "Không phải tín hiệu giao dịch."
+
+    FAIL_both:
+      - "Nên mua."
+      - "Có thể giải ngân tại vùng này."
+      - "Target giá là 50000."
+      - "Cắt lỗ tại 35000."
+      - "Ưu tiên tỷ trọng 15%."
+
+    AMBIGUOUS_context_dependent:
+      - "tăng - PASS descriptive, FAIL advisory"
+      - "tích lũy - PASS if pattern name, FAIL if imperative"

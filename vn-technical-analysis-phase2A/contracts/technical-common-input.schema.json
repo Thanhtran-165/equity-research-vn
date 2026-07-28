@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "technical-common-input",
+  "title": "Technical Analysis Common Input",
+  "description": "Common input schema for both ACTIVE and PROFILE modes",
+  "type": "object",
+  "required": ["research_context", "market_data"],
+  "properties": {
+    "research_context": {
+      "type": "object",
+      "required": ["research_context_id", "ticker", "exchange", "as_of_date", "currency", "market_data_type", "technical_mode", "source_snapshot_hash", "collector_evidence_hash"],
+      "properties": {
+        "research_context_id": {"type": "string"},
+        "ticker": {"type": "string", "pattern": "^[A-Z0-9]{3,5}$"},
+        "exchange": {"type": "string", "enum": ["HOSE", "HNX", "UPCOM"]},
+        "as_of_date": {"type": "string", "format": "date"},
+        "currency": {"type": "string", "const": "VND"},
+        "market_data_type": {"type": "string", "enum": ["WEEKLY", "DAILY"]},
+        "technical_mode": {"type": "string", "enum": ["ACTIVE", "PROFILE"]},
+        "source_snapshot_hash": {"type": "string"},
+        "collector_evidence_hash": {"type": "string"}
+      }
+    },
+    "market_data": {
+      "type": "object",
+      "required": ["raw_OHLCV", "adjusted_OHLCV", "adjustment_metadata"],
+      "properties": {
+        "raw_OHLCV": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "open", "high", "low", "close", "volume"],
+            "properties": {
+              "date": {"type": "string", "format": "date"},
+              "open": {"type": "number", "exclusiveMinimum": 0},
+              "high": {"type": "number", "exclusiveMinimum": 0},
+              "low": {"type": "number", "exclusiveMinimum": 0},
+              "close": {"type": "number", "exclusiveMinimum": 0},
+              "volume": {"type": "integer", "minimum": 0}
+            }
+          },
+          "minItems": 1
+        },
+        "adjusted_OHLCV": {
+          "type": "array",
+          "items": {"$ref": "#/properties/market_data/properties/raw_OHLCV/items"}
+        },
+        "total_return_adjusted_close": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["date", "close"],
+            "properties": {
+              "date": {"type": "string", "format": "date"},
+              "close": {"type": "number"}
+            }
+          }
+        },
+        "benchmark_series": {
+          "type": "object",
+          "properties": {
+            "VNINDEX": {"type": "array", "items": {"type": "object"}},
+            "VN30": {"type": "array", "items": {"type": "object"}}
+          }
+        },
+        "adjustment_metadata": {
+          "type": "object",
+          "required": ["adjustment_status"],
+          "properties": {
+            "adjustment_status": {"type": "string", "enum": ["VERIFIED_ADJUSTED", "VERIFIED_NO_ACTION_REQUIRED", "UNKNOWN", "CONFLICTING"]},
+            "corporate_actions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "action_type": {"type": "string", "enum": ["SPLIT", "BONUS", "RIGHTS", "DIVIDEND"]},
+                  "effective_date": {"type": "string", "format": "date"},
+                  "adjustment_ratio": {"type": "number"},
+                  "ex_date": {"type": "string", "format": "date"}
+                }
+              }
+            }
+          }
+        },
+        "trading_status": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date": {"type": "string", "format": "date"},
+              "status": {"type": "string", "enum": ["NORMAL", "SUSPENDED", "HALTED", "DELISTED"]}
+            }
+          }
+        },
+        "exchange_calendar": {
+          "type": "array",
+          "items": {"type": "string", "format": "date"}
+        }
+      }
+    }
+  }
+}

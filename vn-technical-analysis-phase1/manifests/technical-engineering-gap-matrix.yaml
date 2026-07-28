@@ -1,0 +1,95 @@
+# Technical Phase 1 — Engineering Gap Matrix
+# READ_ONLY audit artifact. Not a production contract.
+# Comparison with 4 child skills that achieved PRODUCTION_INTEGRATED.
+
+maturity_dimensions:
+  total: 12
+
+  dimensions:
+
+    - dimension: contracts
+      standard_example: "vn-financial-data-collector has 8 contract files (output schema, input schema, parent-integration, error-codes, source-policy, current-behavior, proposed-standalone, sector-applicability)"
+      technical_current: "ZERO contract files. Schema inline in SKILL.md + references."
+      status: ABSENT
+      gap: "Need 6-10 contract files: active-output.schema.json, profile-output.schema.json, parent-integration-contract.yaml, error-codes.yaml, source-policy.yaml"
+
+    - dimension: schemas
+      standard_example: "JSON Schema .json files with $id, type, required fields, validation"
+      technical_current: "JSON output examples inline in SKILL.md + Python dict structures in stock_profile_blocks.md. No formal JSON Schema."
+      status: ABSENT
+      gap: "Need 2 formal JSON Schemas (ACTIVE + PROFILE)"
+
+    - dimension: deterministic_code
+      standard_example: "implementation/ with runner.py, verifier/, engines/ — all Python, deterministic"
+      technical_current: "Code snippets in references (stock_profile_blocks.md ~59KB of Python). Not runnable as-is — embedded in markdown."
+      status: PROMPT_ONLY
+      gap: "Need to extract + organize into implementation/ modules. Code exists but not structured."
+
+    - dimension: error_taxonomy
+      standard_example: "error-codes.yaml with severity, stage, recovery_hint"
+      technical_current: "No error taxonomy. Only '<60 sessions → error' in PROFILE."
+      status: ABSENT
+      gap: "Need full error-codes.yaml covering data, calculation, pattern, output errors"
+
+    - dimension: source_policy
+      standard_example: "source-policy.yaml with priority, provenance requirements, conflict handling"
+      technical_current: "SKILL.md says 'KHÔNG NGỤY TẠO DATA' principle + vnstock VCI primary. No formal policy."
+      status: INFORMAL
+      gap: "Need formal source-policy.yaml"
+
+    - dimension: provenance
+      standard_example: "Per-metric provenance record with source_id, source_date, source_type, hash chain"
+      technical_current: "NONE. Output has data_source field but no per-metric provenance."
+      status: ABSENT
+      gap: "Need provenance system (similar to fundamental-analysis Phase 4R)"
+
+    - dimension: verifier
+      standard_example: "independent_verifier.py that recomputes indicators independently"
+      technical_current: "NONE. No verifier exists."
+      status: ABSENT
+      gap: "Need independent verifier: numeric recompute + REQ-007 language check + pattern evidence check"
+
+    - dimension: mutation_suite
+      standard_example: "32-38 mutations testing data corruption, formula errors, policy violations"
+      technical_current: "NONE."
+      status: ABSENT
+      gap: "Need 32+ mutations: data fabrication, indicator miscalculation, pattern false positive, advice injection, mode contamination"
+
+    - dimension: genuine_validation
+      standard_example: "7-8 ticker live cohort with source tieouts, frozen replays"
+      technical_current: "NONE. No cohort evidence."
+      status: ABSENT
+      gap: "Need 8-ticker cohort with weekly + daily data"
+
+    - dimension: replayability
+      standard_example: "Frozen snapshot → deterministic replay → semantic hash match"
+      technical_current: "NONE."
+      status: ABSENT
+      gap: "Need snapshot/replay system"
+
+    - dimension: parent_context_binding
+      standard_example: "ResearchContext with hash binding, adapter, lineage chain"
+      technical_current: "NONE. Subagent receives task-state.json without context envelope."
+      status: ABSENT
+      gap: "Need context binding + adapter (Phase 6)"
+
+    - dimension: rollback_readiness
+      standard_example: "Parent release freeze + hash contract + rollback validation"
+      technical_current: "NONE."
+      status: ABSENT
+      gap: "Part of Phase 6 integration"
+
+  summary:
+    current_overall_maturity: PROMPT_ONLY
+    absent_layers: 9
+    prompt_only_layers: 1
+    informal_layers: 1
+    deterministic_layers: 0
+    verified_layers: 0
+
+  largest_missing_layers:
+    1: "Verifier (no independent recomputation)"
+    2: "Contracts (no formal schemas)"
+    3: "Provenance (no source chain)"
+    4: "Deterministic code (Python embedded in markdown)"
+    5: "Mutation suite (no corruption testing)"

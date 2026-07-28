@@ -1,0 +1,64 @@
+# Technical Phase 2A — 6 Critical Ambiguity Resolution Records
+
+critical_ambiguity_resolutions:
+  total: 6
+  resolved: 6
+  deferred: 0
+
+  records:
+
+    - ambiguity_id: AMB-001
+      category: OUTPUT_SCHEMA
+      affected_mode: ACTIVE
+      conflicting_sources: ["SKILL.md v2.2.0 guardrail (cấm BUY/SELL)", "phase4a.md (dùng STRONG SELL→STRONG BUY)", "REQ-005 (dùng old enum)"]
+      sol_decision: "§1"
+      resolution: "New status-taxonomy.yaml: analysis_status + technical_state + confidence. Legacy mapping provided. BUY/SELL/HOLD banned."
+      vta_requirement: VTA-REQ-001 (updated)
+      phase_for_implementation: PHASE_4
+
+    - ambiguity_id: AMB-002
+      category: ADJUSTMENT_POLICY
+      affected_mode: BOTH
+      conflicting_sources: ["SKILL.md uses df['close'] without adjustment flag", "No reference specifies adjusted vs unadjusted"]
+      sol_decision: "§2"
+      resolution: "price-basis-policy.yaml: raw for provenance, adjusted for indicators/patterns, total-return for returns/beta. Fail-closed on UNKNOWN."
+      vta_requirement: VTA-REQ-004
+      phase_for_implementation: PHASE_4
+
+    - ambiguity_id: AMB-003
+      category: PATTERN_THRESHOLD
+      affected_mode: ACTIVE
+      conflicting_sources: ["pattern_detection.md: channel slope >100 VND hardcoded"]
+      sol_decision: "§3"
+      resolution: "normalized_slope_pct_per_bar = 100 × OLS_slope / median(close_window). Unit: percent/bar. Threshold deferred to Phase 3."
+      vta_requirement: VTA-REQ-007
+      phase_for_implementation: PHASE_3 (threshold freeze), PHASE_4 (implementation)
+
+    - ambiguity_id: AMB-004
+      category: ERROR_BEHAVIOR
+      affected_mode: PROFILE
+      conflicting_sources: ["stock_profile_blocks.md B14: events_1y = events[-252:]"]
+      sol_decision: "§4"
+      resolution: "Calendar window: as_of_date - 365 days. Selection by effective_date. No last-N-events slicing."
+      vta_requirement: VTA-REQ-013
+      phase_for_implementation: PHASE_4 (B14 fix)
+      known_defect_id: B14_EVENTS_1Y
+
+    - ambiguity_id: AMB-005
+      category: FORMULA_DEFINITION
+      affected_mode: PROFILE
+      conflicting_sources: ["stock_profile_blocks.md B12: obv_20d_change_pct = vpt_chg (copy-paste bug)"]
+      sol_decision: "§5"
+      resolution: "OBV change from OBV series. VPT change from VPT series. Separate source series mandated. Phase 4Q must have mutation to recreate bug."
+      vta_requirement: VTA-REQ-014
+      phase_for_implementation: PHASE_4 (B12 fix)
+      known_defect_id: B12_OBV_VPT_BUG
+
+    - ambiguity_id: AMB-006
+      category: PARENT_BOUNDARY
+      affected_mode: BOTH
+      conflicting_sources: ["Collector provides fundamental data but NOT OHLCV price data", "Technical requires daily+weekly price series"]
+      sol_decision: "§6"
+      resolution: "market-data-packet-v1.schema.json defined. Collector extension required. Phase 6 BLOCKED until extension independently qualified."
+      vta_requirement: "N/A (architectural constraint, not per-formula requirement)"
+      phase_for_implementation: COLLECTOR_EXTENSION_PROGRAM (between Phase 5 and Phase 6)

@@ -1,0 +1,65 @@
+# Technical Phase 2A — Archetype Precedence Reconciliation
+
+archetype_precedence_reconciliation:
+  canonical_denominator: 5
+  reconciled: 5/5
+
+  archetypes:
+
+    - archetype_id: A-TREND-FOLLOWING
+      eligibility_rule: "Any CONTINUATION pattern setup with score ≥55"
+      exclusion_rule: "If trap_prone conditions also met, trend_following takes precedence"
+      precedence: 1
+      tie_break: "Wins against all lower-precedence archetypes"
+      insufficient_data_behavior: "Not eligible"
+
+    - archetype_id: A-ACCUMULATION-BREAKOUT
+      eligibility_rule: "Any ACCUMULATION pattern setup with score ≥55"
+      exclusion_rule: "If trend_following also eligible, trend_following wins"
+      precedence: 2
+      tie_break: "Wins against trap_prone and mixed"
+      insufficient_data_behavior: "Not eligible"
+
+    - archetype_id: A-TRAP-PRONE
+      eligibility_rule: "high_volume_behavior_profile label = 'suy yếu' (positive_rate≤40% & median_return<0, min 5 events)"
+      exclusion_rule: "If trend_following or accumulation_breakout also eligible, they take precedence"
+      precedence: 3
+      tie_break: "Wins against mixed"
+      insufficient_data_behavior: "Not eligible if <5 HVB events"
+
+    - archetype_id: A-MIXED
+      eligibility_rule: "Multiple conflicting setups from different families, none dominant"
+      exclusion_rule: "If any specific archetype eligible, mixed is overridden"
+      precedence: 4
+      tie_break: "Wins against no_current_setup only"
+      insufficient_data_behavior: "Eligible if data sufficient but conflicting signals"
+
+    - archetype_id: A-NO-CURRENT-SETUP
+      eligibility_rule: "No setups with score ≥55 AND trap_prone not triggered"
+      exclusion_rule: "Always overridden by any other archetype"
+      precedence: 5
+      tie_break: "Default fallback"
+      insufficient_data_behavior: "Default when insufficient data to classify"
+
+  precedence_order: [A-TREND-FOLLOWING, A-ACCUMULATION-BREAKOUT, A-TRAP-PRONE, A-MIXED, A-NO-CURRENT-SETUP]
+  precedence_rationale: "Trend signals are strongest (momentum persistence). Accumulation is next (base-building). Trap-prone is risk flag. Mixed is uncertainty. No-setup is absence."
+
+  tie_break_rule:
+    rule: "When multiple archetypes at same precedence level qualify (impossible by current rules — each has unique precedence), use first-in-list order."
+    note: "Current design assigns unique precedence to each archetype, so ties cannot occur."
+
+  multiple_match_behavior:
+    deterministic: true
+    description: "Highest-precedence eligible archetype always wins. No random selection."
+
+  no_match_behavior:
+    deterministic: true
+    fallback: A-NO-CURRENT-SETUP
+
+  SKILL_md_vs_code_count_conflict:
+    SKILL_md_claim: 4
+    code_actual: 5
+    resolution: "Canonical = 5 (code is correct). no_current_setup was omitted from SKILL.md text. Phase 4 implementation must use 5."
+
+  insufficient_data_for_hvb_guard:
+    rule: "If <5 HVB events exist, A-TRAP-PRONE is NOT eligible regardless of label. Falls through to lower precedence."

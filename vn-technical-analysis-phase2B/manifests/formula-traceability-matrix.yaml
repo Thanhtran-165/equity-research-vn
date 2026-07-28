@@ -1,0 +1,367 @@
+# Technical Phase 2B — Formula Traceability Matrix
+# Trace 22 formula families from Phase 1 inventory → disposition → oracle → REQ → phase for implementation
+# Every formula MUST have: source_location + disposition + phase_for_resolution + (oracle OR explicit-none)
+
+formula_traceability_matrix:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+  baseline:
+    formula_families: 22
+    disposition_counts:
+      RECONCILED: 7
+      DEFERRED_TO_PHASE_3: 11
+      DERIVED_OUTPUT: 4
+      ALIAS: 0
+      DUPLICATE_SEMANTIC: 0
+      NOT_APPLICABLE: 0
+
+  coverage_summary:
+    fully_traced: 22
+    orphaned_formulas: 0
+    source_locatable: 22
+    oracle_linked: 16  # 16/22 have oracle linkage; 6 have no oracle (formula-internal calibration)
+    req_linked: 18     # 18/22 traced to VTA-REQ; 4 are formula-internal details under another REQ
+    untraced: 0
+    coverage_status: COMPLETE
+
+  # ====================================================================
+  # Per-formula traces
+  # ====================================================================
+
+  formulas:
+
+    # ----------------------------------------------------------------
+    # RECONCILED (7)
+    # ----------------------------------------------------------------
+
+    - formula_id: F-STATUS-TAXONOMY
+      family: OUTPUT_SEMANTICS
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-001 SKILL.md line 194-199"
+        - "SRC-009 phase4a.md line 16"
+      disposition: RECONCILED
+      linked_oracles: [O-016]
+      linked_reqs: [VTA-REQ-001, VTA-REQ-003]
+      linked_contracts: [contracts/status-taxonomy.yaml]
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-PRICE-BASIS
+      family: INPUT_POLICY
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "vnstock default behavior (df['close'] unadjusted)"
+        - "Phase 1 FM-CORPORATE-ACTION-UNADJUSTED"
+      disposition: RECONCILED
+      linked_oracles: [O-007]
+      linked_reqs: [VTA-REQ-004]
+      linked_contracts: [contracts/price-basis-policy.yaml, contracts/technical-common-input.schema.json]
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-CHANNEL-SLOPE
+      family: PATTERN_DETECTION
+      modes: [ACTIVE]
+      source_locations:
+        - "SRC-003 pattern_detection.md line 100"
+      disposition: RECONCILED
+      linked_oracles: [O-009]
+      linked_reqs: [VTA-REQ-007]
+      linked_contracts: []  # threshold deferred to Phase 3
+      unresolved: "Threshold for classification not frozen"
+      phase_for_resolution: PHASE_3 (threshold freeze)
+      phase_for_implementation: PHASE_3 (threshold) + PHASE_4 (formula)
+
+    - formula_id: F-HVB-EVENTS-1Y
+      family: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B14 line 1010"
+      disposition: RECONCILED
+      linked_oracles: [O-013]
+      linked_reqs: [VTA-REQ-013]
+      linked_contracts: []
+      known_defect: B14_EVENTS_1Y
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4 (B14 fix)
+
+    - formula_id: F-OBV-CHANGE
+      family: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B12 line 888"
+      disposition: RECONCILED
+      linked_oracles: [O-024]
+      linked_reqs: [VTA-REQ-014]
+      linked_contracts: []
+      known_defect: B12_OBV_VPT_BUG
+      phase_for_resolution: COMPLETE
+      phase_for_implementation: PHASE_4 (B12 fix)
+
+    - formula_id: F-MARKET-DATA-PACKET
+      family: INPUT_CONTRACT
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "Collector gap (Phase 1 parent-boundary-gap.yaml IB-001)"
+      disposition: RECONCILED
+      linked_oracles: [O-017]
+      linked_reqs: [VTA-REQ-012]
+      linked_contracts: [contracts/market-data-packet-v1.schema.json]
+      unresolved: "Collector does not yet produce this packet"
+      phase_for_resolution: COLLECTOR_EXTENSION (before Phase 6)
+      phase_for_implementation: COLLECTOR_EXTENSION_PROGRAM
+
+    - formula_id: F-DOUBLE-BOTTOM
+      family: PATTERN_DETECTION
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-003 pattern_detection.md line 56 (ACTIVE weekly)"
+        - "SRC-004 pattern_scoring.md line 280 (PROFILE daily)"
+      disposition: RECONCILED  # since R2: shared semantic family, mode-parameterized
+      linked_oracles: [O-008]
+      linked_reqs: [VTA-REQ-002]
+      linked_contracts: []
+      mode_parameterization:
+        ACTIVE: {frequency: WEEKLY, tolerance_pct: 3, min_spacing_weeks: 5}
+        PROFILE: {frequency: DAILY, tolerance_pct: 8, min_spacing_sessions: 12}
+      unresolved: "mode_parameters_frozen = false → Phase 3 freeze"
+      phase_for_resolution: PHASE_3 (parameter freeze)
+      phase_for_implementation: PHASE_4
+
+    # ----------------------------------------------------------------
+    # DEFERRED_TO_PHASE_3 (11)
+    # ----------------------------------------------------------------
+
+    - formula_id: F-RSI
+      family: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-002 indicators.md line 40-60"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-001]
+      linked_reqs: [VTA-REQ-005]
+      unresolved: "Warmup requirement, Wilder seeding, rounding"
+      authority_required: "Wilder 1978 + calibration against ta-lib"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-BOLLINGER
+      family: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-002 indicators.md line 85"
+        - "SRC-007 stock_profile_blocks.md line 56"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-002]
+      linked_reqs: [VTA-REQ-006]
+      unresolved: "Population vs sample std for shared kernel"
+      authority_required: "Bollinger reference + consistency decision"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-MA
+      family: INDICATOR
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-002 indicators.md line 15, 65"
+        - "SRC-007 stock_profile_blocks.md"
+        - "metric_guardrails.md"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-003, O-010]
+      linked_reqs: [VTA-REQ-001]
+      unresolved: "Window set (20/60/120/252 vs 21/63/126/252); warmup policy"
+      authority_required: "VN trading calendar convention (252 vs 244)"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-MACD
+      family: INDICATOR
+      modes: [ACTIVE]
+      source_locations:
+        - "SRC-002 indicators.md line 25"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-004]
+      linked_reqs: [VTA-REQ-001]
+      unresolved: "EMA seeding (data[0] vs SMA)"
+      authority_required: "MACD reference + seeding convention"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-BETA
+      family: CORRELATION
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-002 indicators.md"
+        - "SRC-007 stock_profile_blocks.md line 600"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-005, O-018]
+      linked_reqs: [VTA-REQ-001]
+      unresolved: "Window length, return basis, benchmark (VNINDEX vs VN30)"
+      authority_required: "Benchmark + return basis decision"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-CORRELATION
+      family: CORRELATION
+      modes: [ACTIVE, PROFILE]
+      source_locations:
+        - "SRC-002 indicators.md"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-006]
+      linked_reqs: [VTA-REQ-001]
+      unresolved: "Window length (same as Beta)"
+      authority_required: "Same as Beta window decision"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-ROLLING-RETURN
+      family: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md line 259"
+        - "metric_guardrails.md"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-010]
+      linked_reqs: [VTA-REQ-002]
+      unresolved: "Window set conflict (21/63/126/252 vs 20/60/120/252)"
+      authority_required: "Trading day convention"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-PERCENTILE
+      family: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md line 65, 75"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-012]
+      linked_reqs: [VTA-REQ-002]
+      unresolved: "Floor counting vs linear interpolation"
+      authority_required: "Statistical convention decision"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-ARCHETYPE-PRECEDENCE
+      family: CLASSIFICATION
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-004 pattern_scoring.md line 348-354"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: [O-014]
+      linked_reqs: [VTA-REQ-002]
+      unresolved: "Rationale for priority order"
+      authority_required: "Methodology justification"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+      note: "See archetype-verification-plan.yaml for verification details"
+
+    - formula_id: F-REGIME
+      family: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B9 line 700-730"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: []
+      linked_reqs: [VTA-REQ-002]
+      unresolved: "Threshold calibration + O(n²) bug"
+      authority_required: "Calibration against VN market data"
+      known_defect: B9_ON_SQUARED_COMPLEXITY
+      phase_for_resolution: PHASE_3 (thresholds) + PHASE_4 (O(n²) fix)
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-INDUSTRY-PEER
+      family: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B17 line 1180-1230"
+      disposition: DEFERRED_TO_PHASE_3
+      linked_oracles: []
+      linked_reqs: [VTA-REQ-002]
+      unresolved: "Industry peer data source, minimum peer count, sector classification"
+      authority_required: "Peer data availability from collector or vnstock"
+      applicability: CONDITIONAL (when peer data available)
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+    # Note: F-VPT-CHANGE moved to DERIVED_OUTPUT in R3 (was incorrectly classified as ALIAS in R2)
+
+    # ----------------------------------------------------------------
+    # DERIVED_OUTPUT (4)
+    # ----------------------------------------------------------------
+
+    - formula_id: F-ALPHA
+      family: CORRELATION
+      modes: [ACTIVE]
+      source_locations:
+        - "SRC-002 indicators.md line 125"
+      disposition: DERIVED_OUTPUT
+      derived_from: [F-BETA, F-PERF]
+      linked_oracles: [O-020]
+      linked_reqs: [VTA-REQ-001]
+      unresolved: "Not Jensen's alpha. Risk-free rate omitted. Must be documented."
+      phase_for_resolution: PHASE_3 (documentation)
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-TECH-SCORE
+      family: OUTPUT_SEMANTICS
+      modes: [ACTIVE]
+      source_locations:
+        - "SRC-001 SKILL.md line 175-192"
+      disposition: DERIVED_OUTPUT
+      derived_from: [F-MA, F-RSI, F-MACD, F-BOLLINGER]
+      linked_oracles: [O-023]
+      linked_reqs: [VTA-REQ-001]
+      unresolved: "Gap at score=-3, RSI 45-55 zone, BB exactly 50%"
+      phase_for_resolution: PHASE_3 (threshold reconciliation)
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-HV
+      family: PROFILE_BLOCK
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B2"
+      disposition: DERIVED_OUTPUT
+      derived_from: [F-ROLLING-RETURN, F-PERCENTILE]
+      linked_oracles: []
+      linked_reqs: [VTA-REQ-002]
+      unresolved: "√252 assumes US calendar. VN ~244-248 trading days."
+      phase_for_resolution: PHASE_3 (annualization factor)
+      phase_for_implementation: PHASE_4
+
+    - formula_id: F-VPT-CHANGE
+      family: VOLUME_PRICE_TREND_CHANGE
+      modes: [PROFILE]
+      source_locations:
+        - "SRC-007 stock_profile_blocks.md B12"
+      disposition: DERIVED_OUTPUT  # R3 reclassification (was ALIAS in R2)
+      derived_from: [F-VPT]
+      source_series: VPT
+      prohibited_alias_targets: [F-OBV-CHANGE]
+      linked_oracles: [O-024]
+      linked_reqs: [VTA-REQ-014]
+      unresolved: "Change method (absolute vs percent) not frozen"
+      phase_for_resolution: PHASE_3
+      phase_for_implementation: PHASE_4
+
+  # ====================================================================
+  # Cross-artifact integrity
+  # ====================================================================
+
+  integrity_check:
+    formula_count: 22
+    disposition_sum_check:
+      RECONCILED: 7
+      DEFERRED_TO_PHASE_3: 11
+      DERIVED_OUTPUT: 4
+      ALIAS: 0
+      DUPLICATE_SEMANTIC: 0
+      NOT_APPLICABLE: 0
+      total: 22
+      arithmetic_check: PASS
+    source_locatable: 22/22
+    oracle_linked: 16/22
+    req_linked: 18/22
+    rationale: "4 formulas without explicit REQ trace (F-CORRELATION, F-ROLLING-RETURN, F-PERCENTILE, F-REGIME) are sub-components of VTA-REQ-001/002 but traced to those REQs at parent level. No formula is untraced."
+    cross_artifact_lock: manifests/technical-phase2B-cross-artifact-lock.yaml
+    status: PASS

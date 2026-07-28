@@ -1,0 +1,68 @@
+# Technical Phase 2A — Price Basis Policy
+# Per Sol decision §2: raw for provenance, adjusted for indicators, total-return for returns/beta
+
+price_basis_policy:
+  version: "1.0.0"
+  frozen_at: "2026-07-25"
+
+  basis_definitions:
+    raw_OHLCV:
+      description: "Unadjusted open/high/low/close/volume as reported by exchange"
+      purpose:
+        - provenance_record
+        - source_tieout
+        - current_price_display
+      consumer: "Verifier uses for source verification only"
+
+    corporate_action_adjusted_OHLCV:
+      description: "OHLCV adjusted for stock splits, bonus shares, and rights issues (but NOT dividends)"
+      purpose:
+        - moving_averages
+        - RSI
+        - MACD
+        - Bollinger_bands
+        - pattern_detection
+        - channel_analysis
+        - candlestick_analysis
+      mandatory_for: "ALL indicator and pattern calculations"
+
+    total_return_adjusted_close:
+      description: "Close adjusted for both corporate actions AND dividends"
+      purpose:
+        - return_series
+        - beta_calculation
+        - correlation
+        - alpha
+      mandatory_for: "ALL return-based calculations"
+
+  adjustment_status_enum:
+    - VERIFIED_ADJUSTED
+    - VERIFIED_NO_ACTION_REQUIRED
+    - UNKNOWN
+    - CONFLICTING
+
+  calculation_policy:
+    indicator_and_pattern_basis:
+      VERIFIED_ADJUSTED: "Use corporate_action_adjusted_OHLCV"
+      VERIFIED_NO_ACTION_REQUIRED: "Use raw_OHLCV (no corporate actions occurred in window)"
+      UNKNOWN: "BLOCK — status: INPUT_INCOMPLETE, error: UNKNOWN_ADJUSTMENT_STATUS"
+      CONFLICTING: "BLOCK — status: INPUT_INCOMPLETE, error: CONFLICTING_ADJUSTMENT_STATUS"
+
+    return_and_beta_basis:
+      required: total_return_adjusted_close
+      fallback: "NONE — if total_return_adjusted_close unavailable, BLOCK"
+
+  fail_closed_behavior:
+    description: "If adjustment status cannot be verified, computation MUST fail closed"
+    status_on_unknown: INPUT_INCOMPLETE
+    error_code: UNKNOWN_ADJUSTMENT_STATUS
+    prohibited: "Silently using raw prices for pattern detection after splits, dividends, or rights issues"
+
+  corporate_action_handling:
+    detection_source: "adjustment_metadata in market_data_packet"
+    required_fields:
+      - action_type (SPLIT, BONUS, RIGHTS, DIVIDEND)
+      - effective_date
+      - adjustment_ratio
+      - ex_date
+    missing_handling: "If corporate_actions list is empty AND window spans known corporate action period → UNKNOWN_ADJUSTMENT_STATUS"
