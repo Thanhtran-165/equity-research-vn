@@ -121,7 +121,7 @@ vc_to_verifier_mapping:
       primary_category: INPUT_PRE_FLIGHT
       requirement_ids: []
       canonical_obligation: "Input with duplicate date → dedup succeeds, warning in provenance"
-      controlled_failure: VALID_WITH_WARNINGS
+      controlled_failure: DUPLICATE_TIMESTAMP_DEDUPED
       implementation_surface:
         proposed_verifier_module: verifier/schema_conformance.py
         proposed_verifier_function: "assert_duplicate_dedup"
@@ -130,7 +130,7 @@ vc_to_verifier_mapping:
       negative_fixture_ids: [FX-DUP-TS-NEG-1]
       mutation_fixture_ids: [MUT-DUP-TS]
       expected_PASS_condition: "Duplicate timestamps removed (last-value-wins), analysis_status=VALID_WITH_WARNINGS, warning in provenance"
-      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_primary_failure_code: DUPLICATE_TIMESTAMP_DEDUPED
       expected_diagnostic_codes: [DUPLICATE_TIMESTAMP_DEDUPED]
       oracle_source: failure-mode-coverage-plan.yaml FM-DUPLICATE-TIMESTAMP
       deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS, provenance.warnings=[dedup])"
@@ -142,7 +142,7 @@ vc_to_verifier_mapping:
       primary_category: INPUT_PRE_FLIGHT
       requirement_ids: []
       canonical_obligation: "Unsorted input → sort succeeds, warning logged"
-      controlled_failure: VALID_WITH_WARNINGS
+      controlled_failure: UNSORTED_TIMESTAMP_SORTED
       implementation_surface:
         proposed_verifier_module: verifier/schema_conformance.py
         proposed_verifier_function: "assert_unsorted_sort"
@@ -151,7 +151,7 @@ vc_to_verifier_mapping:
       negative_fixture_ids: [FX-UNSORTED-NEG-1]
       mutation_fixture_ids: [MUT-UNSORTED-ACTIVE]
       expected_PASS_condition: "Shuffled input sorted ascending by date, analysis_status=VALID_WITH_WARNINGS, warning logged"
-      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_primary_failure_code: UNSORTED_TIMESTAMP_SORTED
       expected_diagnostic_codes: [UNSORTED_TIMESTAMP_SORTED]
       oracle_source: failure-mode-coverage-plan.yaml FM-UNSORTED-TIMESTAMP
       deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS, provenance.warnings=[sort])"
@@ -163,7 +163,7 @@ vc_to_verifier_mapping:
       primary_category: INPUT_PRE_FLIGHT
       requirement_ids: []
       canonical_obligation: "Input with 10% gaps → warning, output still valid"
-      controlled_failure: VALID_WITH_WARNINGS
+      controlled_failure: MISSING_INTERVAL
       implementation_surface:
         proposed_verifier_module: verifier/schema_conformance.py
         proposed_verifier_function: "assert_gap_ratio"
@@ -172,7 +172,7 @@ vc_to_verifier_mapping:
       negative_fixture_ids: [FX-MISS-INT-NEG-1]
       mutation_fixture_ids: [MUT-MISS-INT]
       expected_PASS_condition: "10% gap → warning emitted, analysis_status=VALID_WITH_WARNINGS, output valid"
-      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_primary_failure_code: MISSING_INTERVAL
       expected_diagnostic_codes: [MISSING_INTERVAL_WARNING]
       oracle_source: failure-mode-coverage-plan.yaml FM-MISSING-INTERVAL
       deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS)"
@@ -247,7 +247,7 @@ vc_to_verifier_mapping:
       primary_category: INPUT_PRE_FLIGHT
       requirement_ids: [VTA-REQ-001, VTA-REQ-002, VTA-REQ-010]
       canonical_obligation: "Misaligned dates → inner-join, warning; None benchmark → BENCHMARK_UNAVAILABLE error"
-      controlled_failure: VALID_WITH_WARNINGS
+      controlled_failure: BENCHMARK_MISALIGNED
       implementation_surface:
         proposed_verifier_module: verifier/schema_conformance.py
         proposed_verifier_function: "assert_benchmark_alignment"
@@ -256,7 +256,7 @@ vc_to_verifier_mapping:
       negative_fixture_ids: [FX-BENCH-MISALIGN-NEG-50PCT, FX-BENCH-MISALIGN-NEG-NONE]
       mutation_fixture_ids: [MUT-BENCH-MISALIGN]
       expected_PASS_condition: "Misaligned → inner-join + warning; None benchmark → BENCHMARK_UNAVAILABLE error"
-      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_primary_failure_code: BENCHMARK_MISALIGNED
       expected_diagnostic_codes: [BENCHMARK_UNAVAILABLE]
       oracle_source: oracle-disposition-registry.yaml O-021
       deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS) OR error_envelope(error_code=BENCHMARK_UNAVAILABLE)"
@@ -268,7 +268,7 @@ vc_to_verifier_mapping:
       primary_category: INPUT_PRE_FLIGHT
       requirement_ids: []
       canonical_obligation: "Include current incomplete week → expect drop"
-      controlled_failure: VALID_WITH_WARNINGS
+      controlled_failure: PARTIAL_WEEK_DROPPED
       implementation_surface:
         proposed_verifier_module: verifier/schema_conformance.py
         proposed_verifier_function: "assert_partial_week_dropped"
@@ -277,7 +277,7 @@ vc_to_verifier_mapping:
       negative_fixture_ids: [FX-PARTIAL-WEEK-NEG-1]
       mutation_fixture_ids: [MUT-PARTIAL-WEEK]
       expected_PASS_condition: "Latest weekly bar < 5 trading days → dropped, warning logged"
-      expected_primary_failure_code: VALID_WITH_WARNINGS
+      expected_primary_failure_code: PARTIAL_WEEK_DROPPED
       expected_diagnostic_codes: [PARTIAL_WEEK_DROPPED]
       oracle_source: failure-mode-coverage-plan.yaml FM-PARTIAL-WEEK
       deterministic_output_record: "output(analysis_status=VALID_WITH_WARNINGS, provenance.warnings=[partial_week])"
@@ -1517,23 +1517,35 @@ vc_to_verifier_mapping:
       unique_primary_failure_codes: 32
       unique_diagnostic_codes: 64
       canonical_registry_aligned: true
-      canonical_codes_used: 26   # names match vta-failure-code-registry.yaml exactly
-      output_gate_codes_introduced: 7   # new codes for OUTPUT_SCHEMA gates not in canonical registry
-      output_gate_code_names:
-        - PRICE_BASIS_UNTAGGED       # VC-PRICE-BASIS-1
-        - PRICE_BASIS_MISMATCH       # VC-PRICE-BASIS-2
-        - INDICATOR_MISSING          # VC-ACTIVE-VALID-3
-        - BLOCK_MISSING              # VC-PROFILE-VALID-3
-        - SETUP_COVERAGE_MISREPRESENTED  # VC-PROFILE-VALID-4, VC-COV-1, VC-COV-2
-        - THRESHOLD_NOT_FROZEN       # VC-CHANNEL-2
-        - DENOMINATOR_NOT_FROZEN     # VC-BEARISH-DESIGN-4
+      canonical_codes_used: 32   # R3: all primary codes now match vta-failure-code-registry.yaml verbatim
+      output_gate_codes_introduced: 0   # R3: the 7 prior output-gate codes were added to the canonical registry
+      output_gate_code_names: []
+      output_gate_codes_history_note: >
+        Pre-R3 this section listed 7 output-gate codes that were referenced
+        here but absent from the canonical failure-code registry
+        (PRICE_BASIS_UNTAGGED, PRICE_BASIS_MISMATCH, INDICATOR_MISSING,
+        BLOCK_MISSING, SETUP_COVERAGE_MISREPRESENTED, THRESHOLD_NOT_FROZEN,
+        DENOMINATOR_NOT_FROZEN). R3 added all 7 to the canonical registry
+        as distinct PRIMARY codes (see vta-failure-code-registry.yaml
+        review_R3_changes block). The 8th previously-unresolved code
+        (VALID_WITH_WARNINGS, referenced by 5 input-recoverable VCs) was
+        adjudicated as a generic analysis_status umbrella rather than a
+        distinct failure mode; the 5 affected VCs were remapped to their
+        specific design-as-primary DIAGNOSTIC codes
+        (DUPLICATE_TIMESTAMP_DEDUPED, UNSORTED_TIMESTAMP_SORTED,
+        MISSING_INTERVAL, BENCHMARK_MISALIGNED, PARTIAL_WEEK_DROPPED).
+        The 9th reference (NONE) is the sentinel for non-fail checks
+        (e.g., VC-ZERO-VOL-1) and is documented as a non-code sentinel,
+        not a failure code.
       note: >
-        Every VC has an expected_primary_failure_code (NONE for non-fail
-        checks like VC-ZERO-VOL-1, VALID_WITH_WARNINGS for recoverable
-        warnings). 25 codes reuse the canonical failure-code-registry names
-        verbatim. 7 codes are new OUTPUT_SCHEMA / design-gate codes introduced
-        here; Phase 4 implementation should reconcile these into the canonical
-        registry as PRIMARY tier-3 codes.
+        Every VC has an expected_primary_failure_code that resolves to a
+        canonical code in vta-failure-code-registry.yaml (NONE for non-fail
+        checks like VC-ZERO-VOL-1). 32 primary codes match the canonical
+        registry names verbatim; 5 VCs (VC-DUP-TS-1, VC-UNSORTED-1,
+        VC-MISS-INT-1, VC-PARTIAL-WEEK-1, VC-ZERO-VOL-1) emit design-as-
+        primary DIAGNOSTIC codes by registry contract (zero volume and
+        recoverable warnings are not PRIMARY by design). R3 closes the
+        unknown_failure_code_references gate at 0.
 
     oracle_source_coverage:
       failure_mode_plan_oracles: 24
@@ -1560,6 +1572,16 @@ vc_to_verifier_mapping:
       must satisfy: each VC resolves to exactly one verifier function with
       predeclared fixtures and stable failure codes. Fixture IDs (FX-*, MUT-*)
       are design placeholders; executable fixtures are Phase 4 deliverables.
+    review_R3_chain_freeze: >
+      Pre-R3 the chain was broken at the "frozen fixture" link because this
+      artifact referenced descriptive fixture IDs (e.g. FX-ADV-LANG-POS-CLEAN)
+      while vta-fixture-and-mutation-design.yaml used numbered IDs
+      (e.g. FX-ADV-LANG-POS-001); 183 references could not resolve.
+      R3 freezes the DESCRIPTIVE namespace as canonical (see
+      vta-fixture-and-mutation-design.yaml fixture_ID_migration block) and
+      the chain is now complete for all 64 canonical VCs: every fixture ID
+      resolves, every expected_primary_failure_code resolves, and every
+      oracle source is documented.
 
   cross_artifact_lock:
     readiness_commit: d75a9a3ac56db642ff8fa5623898ea7f4733222a

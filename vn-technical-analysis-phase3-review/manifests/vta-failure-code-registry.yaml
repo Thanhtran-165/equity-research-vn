@@ -128,7 +128,7 @@ vta_failure_code_registry:
     - failure_code: CONFLICTING_ADJUSTMENT_STATUS
       semantic_definition: "Input series mixes adjustment_status values within the same series in a way that makes basis selection ambiguous."
       triggering_condition: ">1 distinct non-UNKNOWN adjustment_status value observed across rows consumed by one indicator/return computation."
-      owning_VC_ids: [VC-PRICE-BASIS-1, VC-PRICE-BASIS-2]
+      owning_VC_ids: []
       related_requirement_ids: [VTA-REQ-004]
       classification: PRIMARY
       tier: 1
@@ -137,6 +137,55 @@ vta_failure_code_registry:
       may_coexist_with: []
       required_context_fields: [mode, distinct_statuses, affected_date_range]
       linked_failure_modes: [FM-CORPORATE-ACTION-UNADJUSTED]
+      note: >
+        Review-R3 ownership-narrowed. Pre-R3 this code was assigned to
+        VC-PRICE-BASIS-1 and VC-PRICE-BASIS-2, but those VCs check the
+        indicator input tagging and the returns/beta basis selection
+        respectively — both of which are downstream of, and semantically
+        distinct from, a literal mix of adjustment_status values across
+        input rows. The two new codes PRICE_BASIS_UNTAGGED and
+        PRICE_BASIS_MISMATCH now own those VCs. CONFLICTING_ADJUSTMENT_STATUS
+        is retained as a canonical PRIMARY code with no owning VC at present;
+        it remains the canonical name for the literal mixed-status condition
+        and may be emitted by future VCs.
+
+    - failure_code: PRICE_BASIS_UNTAGGED
+      semantic_definition: "An indicator input record in the computation chain lacks the required price_basis tag (must be one of {adjusted, total_return_adjusted})."
+      triggering_condition: "any(computation_chain[i].price_basis NOT in {adjusted, total_return_adjusted} for indicator inputs)."
+      owning_VC_ids: [VC-PRICE-BASIS-1]
+      related_requirement_ids: [VTA-REQ-004]
+      classification: PRIMARY
+      tier: 1
+      precedence: 42
+      mutually_exclusive_with: [UNKNOWN_ADJUSTMENT_STATUS]
+      may_coexist_with: []
+      required_context_fields: [mode, indicator_id, observed_basis_tag]
+      aliases: [PRICE_BASIS_MISSING]
+      linked_failure_modes: [FM-CORPORATE-ACTION-UNADJUSTED]
+      note: >
+        Review-R3 addition. Distinct from CONFLICTING_ADJUSTMENT_STATUS
+        (mixed input statuses) and from PRICE_BASIS_MISMATCH (wrong basis
+        used for a specific calculation). This code fires at the indicator
+        input layer when the basis tag is absent or invalid.
+
+    - failure_code: PRICE_BASIS_MISMATCH
+      semantic_definition: "Returns or Beta computation consumed adjusted_close instead of the contractually-required total_return_adjusted_close basis."
+      triggering_condition: "source_basis(returns|beta) != total_return_adjusted_close."
+      owning_VC_ids: [VC-PRICE-BASIS-2]
+      related_requirement_ids: [VTA-REQ-004]
+      classification: PRIMARY
+      tier: 1
+      precedence: 43
+      mutually_exclusive_with: [UNKNOWN_ADJUSTMENT_STATUS]
+      may_coexist_with: []
+      required_context_fields: [mode, calculation, observed_basis, required_basis]
+      aliases: [RETURNS_BASIS_WRONG]
+      linked_failure_modes: [FM-CORPORATE-ACTION-UNADJUSTED]
+      note: >
+        Review-R3 addition. Distinct from CONFLICTING_ADJUSTMENT_STATUS
+        (input-layer mixed statuses) and from PRICE_BASIS_UNTAGGED
+        (missing tag). This code fires at the returns/beta calculation
+        layer when the wrong basis is selected despite valid tags.
 
     - failure_code: BENCHMARK_UNAVAILABLE
       semantic_definition: "Benchmark series required for a computation is None / not supplied and cannot be substituted."
@@ -335,15 +384,36 @@ vta_failure_code_registry:
     - failure_code: CHANNEL_SLOPE_CONTRACT_VIOLATION
       semantic_definition: "Channel slope normalized formula or classification threshold deviates from the Phase 3 frozen contract (Sol §3)."
       triggering_condition: "normalized_slope_pct_per_bar != 100 x OLS_slope / median(close_window) OR classification_threshold != frozen Phase-3 value."
-      owning_VC_ids: [VC-CHANNEL-1, VC-CHANNEL-2]
+      owning_VC_ids: [VC-CHANNEL-1]
       related_requirement_ids: [VTA-REQ-007]
       classification: PRIMARY
       tier: 3
       precedence: 270
-      mutually_exclusive_with: []
+      mutually_exclusive_with: [THRESHOLD_NOT_FROZEN]
       may_coexist_with: []
       required_context_fields: [mode, observed_formula, expected_formula, observed_threshold, expected_threshold]
       linked_failure_modes: []  # contract freeze, not in FM registry
+
+    - failure_code: THRESHOLD_NOT_FROZEN
+      semantic_definition: "A classification threshold value (e.g., channel-slope band cutoff) was not pinned to the Phase 3 frozen contract value at runtime; the applied value drifted from the registry-frozen value."
+      triggering_condition: "applied_threshold_value != contracts/<formula>.yaml.frozen_threshold_value for a Phase 3 design-gated formula."
+      owning_VC_ids: [VC-CHANNEL-2]
+      related_requirement_ids: [VTA-REQ-007]
+      classification: PRIMARY
+      tier: 3
+      precedence: 271
+      mutually_exclusive_with: [CHANNEL_SLOPE_CONTRACT_VIOLATION]
+      may_coexist_with: []
+      required_context_fields: [mode, threshold_key, applied_value, frozen_value, source_contract]
+      linked_failure_modes: []  # design-gate freeze failure, not in FM registry
+      note: >
+        Review-R3 addition. Distinct from CHANNEL_SLOPE_CONTRACT_VIOLATION
+        (which covers BOTH the normalized formula and the threshold). This
+        code is the design-gate guard for the threshold value alone, fired
+        by mutation MUT-CHANNEL-2 (MUTATE_CHANNEL_SLOPE_THRESHOLD). Splitting
+        the concern lets the formula-recompute check (VC-CHANNEL-1) and the
+        threshold-freeze check (VC-CHANNEL-2) emit independent codes and run
+        as isolated mutations.
 
     # ----------------------------------------------------------------
     # TIER 4 — PATTERN
@@ -429,8 +499,8 @@ vta_failure_code_registry:
 
     - failure_code: BEARISH_SETUP_INCOMPLETE
       semantic_definition: "Bearish registry not yet fully designed/implemented; setup_coverage_status must reflect INCOMPLETE_BEARISH_COVERAGE."
-      triggering_condition: "bearish registry < 5 designed OR denominator not frozen post-Phase-3-review."
-      owning_VC_ids: [VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3, VC-BEARISH-DESIGN-4, VC-COV-1]
+      triggering_condition: "bearish registry < 5 designed OR a setup lacks required confirmation/invalidation/min_history element."
+      owning_VC_ids: [VC-BEARISH-DESIGN-2, VC-BEARISH-DESIGN-3]
       related_requirement_ids: [VTA-REQ-009, VTA-REQ-009a]
       classification: PRIMARY
       tier: 4
@@ -439,19 +509,55 @@ vta_failure_code_registry:
       may_coexist_with: []
       required_context_fields: [designed_count, expected_count, coverage_status]
       linked_failure_modes: []
+      note: >
+        Review-R3 ownership-narrowed. Pre-R3 this code also owned
+        VC-BEARISH-DESIGN-4 (denominator freeze) and VC-COV-1 (coverage
+        status field). Those two VCs now own the more specific codes
+        DENOMINATOR_NOT_FROZEN and SETUP_COVERAGE_MISREPRESENTED
+        respectively. BEARISH_SETUP_INCOMPLETE retains its core semantic:
+        the registry is genuinely incomplete (insufficient designs or a
+        setup missing required completeness elements).
+
+    - failure_code: DENOMINATOR_NOT_FROZEN
+      semantic_definition: "The setup_coverage denominator value (8 bullish + N bearish, with N frozen at Phase 3 review) was not pinned to the registry-frozen value at runtime; the applied denominator drifted from the frozen registry value."
+      triggering_condition: "applied_setup_coverage_denominator != frozen_registry_denominator."
+      owning_VC_ids: [VC-BEARISH-DESIGN-4]
+      related_requirement_ids: [VTA-REQ-009a]
+      classification: PRIMARY
+      tier: 4
+      precedence: 363
+      mutually_exclusive_with: []
+      may_coexist_with: []
+      required_context_fields: [applied_denominator, frozen_denominator, source_registry]
+      linked_failure_modes: []
+      note: >
+        Review-R3 addition. Distinct from BEARISH_SETUP_INCOMPLETE (which
+        fires when the registry genuinely lacks designs or completeness
+        elements). This code is the design-gate guard for the denominator
+        value alone, fired by mutation MUT-BEARISH-DESIGN-4
+        (MUTATE_SETUP_DENOMINATOR). Splitting the concern lets the registry
+        completeness check and the denominator-freeze check emit
+        independent codes and run as isolated mutations.
 
     - failure_code: BEARISH_FALSE_POSITIVE
-      semantic_definition: "Bearish detector fired on input containing only bullish setups, or absence of bullish setup was reported as bearish evidence."
+      semantic_definition: "Bearish detector fired on input containing only bullish setups."
       owning_VC_ids: [VC-COV-2]
       related_requirement_ids: [VTA-REQ-009]
-      semantic_definition_extended: "Two sub-conditions: (a) bearish_detector(bullish_only_input) != NOT_PRESENT; (b) absence_of_bullish_setup reported as bearish evidence."
-      triggering_condition: "bearish_detector fires on bullish-only input OR bearish_evidence cited when no bullish setup present."
+      semantic_definition_extended: "Pre-R3 this code also covered 'absence of bullish setup reported as bearish evidence'; that sub-condition is now owned by SETUP_COVERAGE_MISREPRESENTED (status-field misrepresentation). This code retains the detector-side semantic only."
+      triggering_condition: "bearish_detector(bullish_only_input) != NOT_PRESENT."
       classification: PRIMARY
       tier: 4
       precedence: 362
       mutually_exclusive_with: []
-      may_coexist_with: []
+      may_coexist_with: [SETUP_COVERAGE_MISREPRESENTED]
       required_context_fields: [mode, sub_condition, input_description]
+      note: >
+        Review-R3 semantic-narrowed. The 'bearish evidence from bullish
+        absence' sub-condition was a status-field misrepresentation that
+        now belongs to SETUP_COVERAGE_MISREPRESENTED. VC-COV-2 emits
+        BEARISH_FALSE_POSITIVE when its detector fires on bullish-only
+        input; VC-COV-2 also co-emits SETUP_COVERAGE_MISREPRESENTED when
+        the status field is misreported as a consequence.
 
     # ----------------------------------------------------------------
     # TIER 5 — OUTPUT_STRUCTURE
@@ -483,6 +589,70 @@ vta_failure_code_registry:
       may_coexist_with: [SCHEMA_VALIDATION_FAILED]
       required_context_fields: [mode, foreign_key, owning_mode_of_key]
       linked_failure_modes: [FM-MODE-CONTAMINATION]
+
+    - failure_code: INDICATOR_MISSING
+      semantic_definition: "An ACTIVE-mode output is missing one of the 6 mandatory indicators (MA, RSI, MACD, BB, Beta, CMF) without an accompanying error_code disclosing the omission."
+      triggering_condition: "mode=ACTIVE AND count(indicators in {MA,RSI,MACD,BB,Beta,CMF} present in output) < 6 AND output.error_code is absent."
+      owning_VC_ids: [VC-ACTIVE-VALID-3]
+      related_requirement_ids: [VTA-REQ-001]
+      classification: PRIMARY
+      tier: 5
+      precedence: 421
+      mutually_exclusive_with: []
+      may_coexist_with: [SCHEMA_VALIDATION_FAILED]
+      required_context_fields: [mode, present_indicators, missing_indicators]
+      aliases: [PARTIAL_INDICATOR_OUTPUT]
+      linked_failure_modes: []
+      note: >
+        Review-R3 addition. Distinct from SCHEMA_VALIDATION_FAILED (which is
+        structural JSON-schema rejection): INDICATOR_MISSING fires when the
+        output is JSON-valid but a required indicator object is silently
+        absent. Companion diagnostic PARTIAL_INDICATOR_OUTPUT is retained
+        as an alias so historical references continue to resolve.
+
+    - failure_code: BLOCK_MISSING
+      semantic_definition: "A PROFILE-mode output is missing one of the 17 mandatory profile blocks without an explicit optional-skipped marker carrying a rationale."
+      triggering_condition: "mode=PROFILE AND count(blocks present OR marked optional-skipped with FORMULA_NOT_APPLICABLE rationale) < 17."
+      owning_VC_ids: [VC-PROFILE-VALID-3]
+      related_requirement_ids: [VTA-REQ-002]
+      classification: PRIMARY
+      tier: 5
+      precedence: 422
+      mutually_exclusive_with: [FORMULA_NOT_APPLICABLE]
+      may_coexist_with: [SCHEMA_VALIDATION_FAILED]
+      required_context_fields: [mode, present_blocks, missing_blocks, expected_block_count]
+      aliases: [BLOCK_ABSENT_WITHOUT_SKIP_MARKER]
+      linked_failure_modes: []
+      note: >
+        Review-R3 addition. Distinct from FORMULA_NOT_APPLICABLE (which is a
+        DIAGNOSTIC surfacing that a conditional block was legitimately
+        skipped): BLOCK_MISSING fires when a block is absent WITHOUT the
+        optional-skipped marker, so the absence is unattributed and the
+        coverage claim is misrepresented.
+
+    - failure_code: SETUP_COVERAGE_MISREPRESENTED
+      semantic_definition: "The setup_coverage_status field reports a coverage state the engine did not actually establish (NOT_EVALUATED after Phase 4, COMPLETE_DIRECTIONAL_COVERAGE before bearish registry implemented, or bearish evidence cited from bullish-only input)."
+      triggering_condition: >
+        setup_coverage_status NOT in allowed_enum_for_phase
+        OR (phase < Phase_4Q AND setup_coverage_status == COMPLETE_DIRECTIONAL_COVERAGE AND bearish_registry_designed < 5)
+        OR (bearish_detector fires on bullish-only input AND setup_coverage_status reports bearish coverage).
+      owning_VC_ids: [VC-PROFILE-VALID-4, VC-COV-1, VC-COV-2]
+      related_requirement_ids: [VTA-REQ-009, VTA-REQ-009a]
+      classification: PRIMARY
+      tier: 5
+      precedence: 423
+      mutually_exclusive_with: []
+      may_coexist_with: [BEARISH_SETUP_INCOMPLETE, BEARISH_FALSE_POSITIVE]
+      required_context_fields: [mode, observed_status, allowed_status_set, evidence_basis]
+      linked_failure_modes: []
+      note: >
+        Review-R3 addition. Distinct from BEARISH_SETUP_INCOMPLETE (which
+        fires when the registry genuinely lacks bearish setups and the
+        output correctly reports INCOMPLETE_BEARISH_COVERAGE) and from
+        BEARISH_FALSE_POSITIVE (which fires when a bearish detector emits
+        a non-NOT_PRESENT result on bullish-only input). This code fires
+        when the reported status field does not match the actual coverage
+        state, independent of detector behavior.
 
     - failure_code: FORMULA_NOT_APPLICABLE
       semantic_definition: "A formula/block cannot be computed for this run because its applicability condition is unmet (conditional block, bearish registry pre-implementation, optional-skipped)."
@@ -591,29 +761,31 @@ vta_failure_code_registry:
   gate:
     duplicate_codes: 0          # no two codes share semantic_definition
     ambiguous_codes: 0          # every code has a unique triggering_condition predicate
-    VCs_without_primary_code: 0 # every one of 64 unique VCs owns or co-owns at least one PRIMARY code
+    VCs_without_primary_code: 0 # every one of 64 unique VCs owns or co-owns at least one PRIMARY code (or design-as-primary DIAGNOSTIC for the 5 input-recoverable VCs)
     diagnostic_codes_without_primary_owner: 0  # every DIAGNOSTIC is co-owned by a VC that also ties to a PRIMARY chain
     precedence_conflicts: 0     # no two codes share (tier, precedence)
     catch_all_codes: 0          # no GENERIC/UNKNOWN catch-all
     message_text_as_machine_contract: false
+    orphan_primary_codes: 1     # CONFLICTING_ADJUSTMENT_STATUS retained canonical, no owning VC post-R3; counted truthfully
 
   # ==================================================================
   # Integrity summary
   # ==================================================================
   integrity_check:
-    total_codes: 36
-    primary_codes: 28
+    total_codes: 43
+    primary_codes: 35
     diagnostic_codes: 8
+    orphan_primary_codes: 1     # CONFLICTING_ADJUSTMENT_STATUS (no owning VC after R3 ownership-narrow; retained as canonical PRIMARY for future mixed-status VCs)
     tier_distribution:
-      INPUT_FATAL: 7            # EMPTY_SERIES, INSUFFICIENT_HISTORY, ZERO_PRICE_DETECTED, UNKNOWN_ADJUSTMENT_STATUS, CONFLICTING_ADJUSTMENT_STATUS, BENCHMARK_UNAVAILABLE, CONFIG_VALIDATION_FAILED
+      INPUT_FATAL: 9            # EMPTY_SERIES, INSUFFICIENT_HISTORY, ZERO_PRICE_DETECTED, UNKNOWN_ADJUSTMENT_STATUS, CONFLICTING_ADJUSTMENT_STATUS (orphan-primary retained), BENCHMARK_UNAVAILABLE, CONFIG_VALIDATION_FAILED, PRICE_BASIS_UNTAGGED, PRICE_BASIS_MISMATCH
       INPUT_RECOVERABLE: 6      # BENCHMARK_MISALIGNED, MISSING_INTERVAL, DUPLICATE_TIMESTAMP_DEDUPED, UNSORTED_TIMESTAMP_SORTED, PARTIAL_WEEK_DROPPED, ZERO_VOLUME_ACCEPTED
-      COMPUTATION: 7            # COMPUTATION_DEGENERATE, NAN_PROPAGATION, SMOOTHING_MISMATCH, OBV_VPT_SERIES_CONTAMINATION, EVENTS_1Y_LOGIC_ERROR, MODE_KERNEL_DIVERGENCE, CHANNEL_SLOPE_CONTRACT_VIOLATION
-      PATTERN: 8                # LOOKAHEAD_BIAS_DETECTED, FALSE_BREAKOUT_WITHOUT_VOLUME, UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED, SETUP_DROPPED_SILENTLY, ARCHETYPE_AMBIGUITY_FALLBACK, BEARISH_SIGN_INVERSION, BEARISH_SETUP_INCOMPLETE, BEARISH_FALSE_POSITIVE
-      OUTPUT_STRUCTURE: 3       # SCHEMA_VALIDATION_FAILED, MODE_CONTAMINATION, FORMULA_NOT_APPLICABLE
+      COMPUTATION: 8            # COMPUTATION_DEGENERATE, NAN_PROPAGATION, SMOOTHING_MISMATCH, OBV_VPT_SERIES_CONTAMINATION, EVENTS_1Y_LOGIC_ERROR, MODE_KERNEL_DIVERGENCE, CHANNEL_SLOPE_CONTRACT_VIOLATION, THRESHOLD_NOT_FROZEN
+      PATTERN: 9                # LOOKAHEAD_BIAS_DETECTED, FALSE_BREAKOUT_WITHOUT_VOLUME, UNCONFIRMED_PATTERN_REPORTED_AS_CONFIRMED, SETUP_DROPPED_SILENTLY, ARCHETYPE_AMBIGUITY_FALLBACK, BEARISH_SIGN_INVERSION, BEARISH_SETUP_INCOMPLETE, BEARISH_FALSE_POSITIVE, DENOMINATOR_NOT_FROZEN
+      OUTPUT_STRUCTURE: 6       # SCHEMA_VALIDATION_FAILED, MODE_CONTAMINATION, FORMULA_NOT_APPLICABLE, INDICATOR_MISSING, BLOCK_MISSING, SETUP_COVERAGE_MISREPRESENTED
       PROVENANCE_INTEGRITY: 2   # PROVENANCE_MISSING, FABRICATED_VALUE_DETECTED
       POLICY: 3                 # ADVICE_LANGUAGE_DETECTED, VALUATION_OVERRIDE_ATTEMPT, ROUNDING_DRIFT
-      canonical_total: 36
-    primary_diagnostic_reconciliation: "28 PRIMARY + 8 DIAGNOSTIC = 36 total. DIAGNOSTIC codes (8): BENCHMARK_MISALIGNED, MISSING_INTERVAL, DUPLICATE_TIMESTAMP_DEDUPED, UNSORTED_TIMESTAMP_SORTED, PARTIAL_WEEK_DROPPED, ZERO_VOLUME_ACCEPTED (all INPUT_RECOVERABLE), FORMULA_NOT_APPLICABLE (OUTPUT_STRUCTURE), ROUNDING_DRIFT (POLICY)."
+      canonical_total: 43
+    primary_diagnostic_reconciliation: "35 PRIMARY (including 1 orphan-primary) + 8 DIAGNOSTIC = 43 total. DIAGNOSTIC codes (8): BENCHMARK_MISALIGNED, MISSING_INTERVAL, DUPLICATE_TIMESTAMP_DEDUPED, UNSORTED_TIMESTAMP_SORTED, PARTIAL_WEEK_DROPPED, ZERO_VOLUME_ACCEPTED (all INPUT_RECOVERABLE), FORMULA_NOT_APPLICABLE (OUTPUT_STRUCTURE), ROUNDING_DRIFT (POLICY). Orphan-primary (1): CONFLICTING_ADJUSTMENT_STATUS retained as canonical name for the mixed-status condition; no VC currently emits it but the name is preserved for future use."
     VC_coverage:
       unique_VCs_covered: 64
       unique_VCs_total: 64
@@ -637,9 +809,10 @@ vta_failure_code_registry:
   failure_code_coverage_reconciliation:
     canonical_VCs: 64
 
-    registry_codes: 36
-    primary_codes: 28
+    registry_codes: 43
+    primary_codes: 35
     diagnostic_codes: 8
+    orphan_primary_codes: 1
 
     VCs_with_primary_code: 64/64
     VCs_with_canonical_emission_note: >
@@ -649,7 +822,8 @@ vta_failure_code_registry:
       documented contract states e.g. ZERO_VOLUME_ACCEPTED is "Never PRIMARY"
       because zero volume is a legitimate market state surfaced only as
       analysis_status context; that DIAGNOSTIC IS the canonical emission for
-      its VC).
+      its VC). After Review-R3, every one of the canonical 64 VCs also owns
+      a registry-resolved PRIMARY or design-as-primary DIAGNOSTIC code.
     VCs_with_strict_PRIMARY_only: 59/64
     VCs_without_primary_code: []                   # GATE: empty
 
@@ -676,6 +850,21 @@ vta_failure_code_registry:
     precedence_conflicts: 0                        # GATE: 0 — no two codes share (tier, precedence)
     precedence_conflict_groups: []
 
+    orphan_primary_codes_list:
+      - CONFLICTING_ADJUSTMENT_STATUS
+    orphan_primary_codes_note: >
+      CONFLICTING_ADJUSTMENT_STATUS is retained as a canonical PRIMARY code
+      (tier 1, precedence 41) with no owning VC after Review-R3 narrowed
+      VC-PRICE-BASIS-1 and VC-PRICE-BASIS-2 to the more specific
+      PRICE_BASIS_UNTAGGED and PRICE_BASIS_MISMATCH codes. It is NOT a
+      duplicate of those codes (its triggering condition is the literal
+      mix of distinct adjustment_status values across input rows, which
+      neither PRICE_BASIS_UNTAGGED nor PRICE_BASIS_MISMATCH covers). It
+      is retained as orphan-primary so the canonical name remains available
+      if a future VC targets the mixed-status condition directly. The
+      orphan_primary_codes gate counts it truthfully rather than
+      suppressing it.
+
     diagnostics_without_primary_owner: 1
     diagnostics_without_primary_owner_list:
       - ROUNDING_DRIFT
@@ -697,5 +886,43 @@ vta_failure_code_registry:
       VC-ROUND-DRIFT-1 is referenced from Phase 2B failure-mode-coverage-plan
       and is intentionally pre-registered here; it is not part of the canonical
       64 and is counted separately so the unknown_VC_references gate stays clean.
+
+    review_R3_changes:
+      added_distinct_codes: 7
+        # PRICE_BASIS_UNTAGGED (tier 1), PRICE_BASIS_MISMATCH (tier 1),
+        # THRESHOLD_NOT_FROZEN (tier 3), DENOMINATOR_NOT_FROZEN (tier 4),
+        # INDICATOR_MISSING (tier 5), BLOCK_MISSING (tier 5),
+        # SETUP_COVERAGE_MISREPRESENTED (tier 5).
+      added_codes_rationale: >
+        Each was previously referenced from vta-VC-to-verifier-mapping.yaml
+        as expected_primary_failure_code but absent from this registry
+        (R2 unknown_failure_code_references gate = 9 codes referenced but
+        unresolved). Per the R3 OWNER DIRECTIVE Section 8, each was
+        adjudicated against the existing canonical set; seven were found
+        to carry semantics distinct from any existing code and were added
+        as canonical PRIMARY codes with full records (semantic_definition,
+        triggering_condition, owning_VC_ids, tier, precedence,
+        mutually_exclusive_with, required_context_fields). The 8th code
+        (VALID_WITH_WARNINGS) was adjudicated as a generic analysis_status
+        umbrella, not a distinct failure mode; its five owning VCs already
+        own specific design-as-primary DIAGNOSTIC codes
+        (DUPLICATE_TIMESTAMP_DEDUPED, UNSORTED_TIMESTAMP_SORTED,
+        MISSING_INTERVAL, PARTIAL_WEEK_DROPPED, BENCHMARK_MISALIGNED);
+        the VC mapping was updated to reference those specific codes
+        instead of VALID_WITH_WARNINGS. The 9th reference (NONE) is the
+        sentinel for non-fail checks (e.g., VC-ZERO-VOL-1) and is not a
+        failure code; it is documented as a non-code sentinel in the VC
+        mapping.
+      ownership_narrowed:
+        - CONFLICTING_ADJUSTMENT_STATUS   # pre-R3 owned VC-PRICE-BASIS-1, VC-PRICE-BASIS-2; now orphan-primary
+        - BEARISH_SETUP_INCOMPLETE        # pre-R3 owned VC-BEARISH-DESIGN-4, VC-COV-1; now narrowed
+        - BEARISH_FALSE_POSITIVE          # pre-R3 covered 'absence-of-bullish' sub-condition; now narrowed; SETUP_COVERAGE_MISREPRESENTED owns status-field misrepresentation
+        - CHANNEL_SLOPE_CONTRACT_VIOLATION # pre-R3 owned VC-CHANNEL-2; now narrowed to VC-CHANNEL-1 only; THRESHOLD_NOT_FROZEN owns VC-CHANNEL-2
+      ownership_narrow_rationale: >
+        Pre-R3 several codes were overloaded across VCs whose actual
+        semantics differed; the R3 reconciliation splits them so each VC
+        owns a code whose triggering_condition matches the VC's exact
+        obligation. This eliminates the alias-without-semantic-mapping
+        failure mode prohibited by Section 4 of the directive.
 
     reconciliation_status: PASS
