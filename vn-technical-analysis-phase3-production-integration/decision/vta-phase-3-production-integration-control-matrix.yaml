@@ -1,0 +1,296 @@
+artifact_class: PRODUCTION_INTEGRATION_CONTROL_MATRIX
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: PRODUCTION_INTEGRATION_DECISION
+generated_at: '2026-07-29'
+
+controls_assessed: 24/24
+blocking_controls_failed: 0
+
+integration_controls:
+
+  - control_id: PI-BASELINE-IDENTITY
+    critical: true
+    claim: Branch derives from the exact maturity commit and lineage is intact.
+    evidence_paths:
+      - decision/vta-phase-3-production-integration-evidence.yaml (canonical_lineage)
+      - manifests/vta-phase-3-integration-manifest.yaml (branch, canonical_authority)
+    observed_result: parent e386c4ef3 (MATURITY/ROBUST_MACHINE); 4-commit ancestry intact
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Branch parent matches directive maturity commit.
+
+  - control_id: PI-FROZEN-CORE-INTEGRITY
+    critical: true
+    claim: No frozen VTA production core / verifier / fixture / oracle modified.
+    evidence_paths:
+      - manifests/vta-phase-3-integration-manifest.yaml (prohibited_changes)
+      - decision/vta-phase-3-production-integration-evidence.yaml (frozen_content_modified)
+    observed_result: frozen_content_modified=0
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Git diff across four commits touches only integration paths.
+
+  - control_id: PI-INTEGRATION-SCOPE
+    critical: true
+    claim: Commit roles are disjoint; each commit contains only its role's paths.
+    evidence_paths:
+      - manifests/vta-phase-3-integration-manifest.yaml (allowed/prohibited_changes)
+    observed_result: 4 commits, each scoped to its role (wiring/deployment/evidence/decision)
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: No commit mixes integration code with deployment, evidence, or decision.
+
+  - control_id: PI-HOST-INPUT-MAPPING
+    critical: true
+    claim: Host->canonical mapping is explicit per-field with provenance preserved.
+    evidence_paths:
+      - manifests/vta-phase-3-host-mapping.yaml (host_to_canonical_mapping)
+      - evidence/vta-phase-3-host-mapping-results.yaml
+    observed_result: 14 explicit mappings; 0 implicit aliases/drops/coercions
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: mapping_integrity gates all 0.
+
+  - control_id: PI-HOST-OUTPUT-MAPPING
+    critical: true
+    claim: Canonical packet preserved verbatim into host envelope; host fields namespaced.
+    evidence_paths:
+      - evidence/vta-phase-3-host-mapping-results.yaml (canonical_to_host_mapping_results)
+      - manifests/vta-phase-3-host-mapping.yaml (canonical_to_host_mapping)
+    observed_result: canonical_packet_preserved=true; fields_dropped=0; host_only_namespace separate
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Adapter emits verbatim frozen packet; host metadata namespaced.
+
+  - control_id: PI-SCHEMA-VERSIONING
+    critical: true
+    claim: All schema/contract versions pinned; mismatches fail closed.
+    evidence_paths:
+      - manifests/vta-phase-3-integration-manifest.yaml (version_pinning)
+      - deployment/vta-phase-3-dependency-freeze.yaml (versioned_contract_refs)
+      - deployment/vta-phase-3-environment-contract.yaml (configuration_keys_pinned)
+    observed_result: 7 versions pinned; mutable_version_ranges=0; commit asserted at load
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: INTEGRATION_CONFIGURATION_MISMATCH raised on any drift.
+
+  - control_id: PI-SEMANTIC-PRESERVATION
+    critical: true
+    claim: Requirements/VCs/formulas/setups preserved through the integration path.
+    evidence_paths:
+      - evidence/vta-phase-3-regression-results.yaml (semantic_preservation)
+      - evidence/vta-phase-3-shadow-parity-results.yaml
+    observed_result: 15/15, 64/64, 12/12, 5/5
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Shadow parity 184/184 exact; no recomputation in adapter.
+
+  - control_id: PI-FAILURE-CODE-PRESERVATION
+    critical: true
+    claim: 43 canonical failure codes unchanged; primary/diagnostic preserved.
+    evidence_paths:
+      - evidence/vta-phase-3-host-mapping-results.yaml (failure_namespaces)
+      - manifests/vta-phase-3-host-mapping.yaml (integration_failure_envelope)
+    observed_result: canonical codes 43 unchanged; canonical envelopes surfaced verbatim
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Canonical failure path substitutes no integration code.
+
+  - control_id: PI-PROVENANCE-PRESERVATION
+    critical: true
+    claim: Provenance chains preserved end-to-end.
+    evidence_paths:
+      - evidence/vta-phase-3-host-mapping-results.yaml
+      - evidence/vta-phase-3-shadow-parity-results.yaml (provenance_mismatches=0)
+    observed_result: provenance_preserved=true; provenance_mismatches=0
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Provenance carried in verbatim canonical packet.
+
+  - control_id: PI-DETERMINISTIC-IDENTITY
+    critical: true
+    claim: Deterministic record ID and chain ID preserved.
+    evidence_paths:
+      - evidence/vta-phase-3-operational-results.yaml (cold_start digest preserved)
+      - manifests/vta-phase-3-host-mapping.yaml (deterministic_record_id)
+    observed_result: deterministic_record_ID preserved; byte-identical across process restarts
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Record ID derived from canonical input+output digest; no wall-clock.
+
+  - control_id: PI-FEATURE-FLAG
+    critical: true
+    claim: Feature flag default OFF, runtime disable, no restart; OFF returns explicit disabled status.
+    evidence_paths:
+      - deployment/vta-phase-3-feature-flag-freeze.yaml
+      - manifests/vta-phase-3-host-mapping.yaml (feature_flag)
+      - src/feature_flag.py
+    observed_result: default OFF; runtime disable PASS; no alternative TA invoked when OFF
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: restart_required_to_disable enforced false at construction.
+
+  - control_id: PI-READ-ONLY-BOUNDARY
+    critical: true
+    claim: VTA integrated as read-only analytics; execution path not connected.
+    evidence_paths:
+      - manifests/vta-phase-3-integration-manifest.yaml (side_effect_policy)
+      - evidence/vta-phase-3-rollback-and-canary-results.yaml (canary_acceptance)
+    observed_result: unauthorized_side_effects=0; execution_side_effects=0
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Adapter exposes no write primitive targeting host state.
+
+  - control_id: PI-SHADOW-PARITY
+    critical: true
+    claim: Integrated output == direct frozen runner for every shadow record.
+    evidence_paths:
+      - evidence/vta-phase-3-shadow-parity-results.yaml
+    observed_result: 184 compared, 184 exact, 0 divergences
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: No post-execution normalization applied.
+
+  - control_id: PI-CANONICAL-REGRESSION
+    critical: true
+    claim: Full frozen fixture corpus passes through the integration path.
+    evidence_paths:
+      - evidence/vta-phase-3-regression-results.yaml (integration_regression)
+    observed_result: fixtures 184/184; both paths PASS
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Integrated path routes through identical frozen runner.
+
+  - control_id: PI-MUTATION-SENSITIVITY
+    critical: true
+    claim: All 33 mutations caught through the integration path; 0 survivors.
+    evidence_paths:
+      - evidence/vta-phase-3-regression-results.yaml (mutations)
+    observed_result: 33/33 caught; primary_code_matches 33/33
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Integration layer never alters primary/diagnostic codes.
+
+  - control_id: PI-WITNESS-SEPARATION
+    critical: true
+    claim: 7 witnesses matched; denominator not contaminated.
+    evidence_paths:
+      - evidence/vta-phase-3-regression-results.yaml (witnesses)
+    observed_result: 7/7 matched; denominator_contamination=0
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Witnesses partition intact; no canonical orphan-gate leakage.
+
+  - control_id: PI-OBSERVABILITY
+    critical: true
+    claim: 12 mandatory metrics, 7 dimensions, allowlisted logs.
+    evidence_paths:
+      - manifests/vta-phase-3-observability-contract.yaml
+      - evidence/vta-phase-3-operational-results.yaml (observability_verification)
+    observed_result: 12/12 metrics; 7/7 dimensions; secrets in logs=0
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Allowlist projection enforced before log emission.
+
+  - control_id: PI-DEPENDENCY-CLOSURE
+    critical: true
+    claim: No undeclared/mutable/floating dependencies; no secrets committed.
+    evidence_paths:
+      - deployment/vta-phase-3-dependency-freeze.yaml
+      - evidence/vta-phase-3-operational-results.yaml (dependency_closure)
+    observed_result: 0 undeclared; 0 floating; 0 mutable remote; 0 secrets
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Python stdlib only; pinned local frozen package.
+
+  - control_id: PI-RESOURCE-PROFILE
+    critical: false
+    claim: Operational resource profile measured; no accepted host SLO exists.
+    evidence_paths:
+      - evidence/vta-phase-3-operational-results.yaml (resource_profile)
+    observed_result: p95 12.913ms; p99 16.461ms; peak mem ~1.06MB; network 0
+    limitations:
+      - "No accepted host resource SLO exists; reported as operational baseline."
+    verdict: PASS
+    blocking: false
+    rationale: Non-critical (directive 33): not blocking when no accepted SLO exists.
+
+  - control_id: PI-CONCURRENCY-ISOLATION
+    critical: true
+    claim: Concurrent invocations isolated; no collisions/contamination.
+    evidence_paths:
+      - evidence/vta-phase-3-operational-results.yaml (concurrency)
+    observed_result: record_ID_collisions=0; cross_contamination=0; race_failures=0
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: Isolation by canonical_input_digest + integration_run_id.
+
+  - control_id: PI-COLD-START-RESTART
+    critical: true
+    claim: Cold start, process restart, flag toggle, rollback-then-restart all PASS.
+    evidence_paths:
+      - evidence/vta-phase-3-operational-results.yaml (operational_restarts)
+    observed_result: all PASS; canonical output digest preserved across restarts
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: No stale-cache or prior-output dependency.
+
+  - control_id: PI-SECURITY
+    critical: true
+    claim: 0 critical/high findings; no secret leaks; no unsafe dynamic execution.
+    evidence_paths:
+      - evidence/vta-phase-3-security-results.yaml
+    observed_result: critical=0; high=0; unresolved_secret_leaks=0; unsafe_dynamic_execution=0
+    limitations: []
+    verdict: PASS
+    blocking: false
+    rationale: All 11 review categories dispositioned acceptable.
+
+  - control_id: PI-CANARY
+    critical: true
+    claim: Read-only canary; 0 unauthorized side effects; rollback available.
+    evidence_paths:
+      - evidence/vta-phase-3-rollback-and-canary-results.yaml (canary_acceptance)
+    observed_result: unauthorized_side_effects=0; rollback_available=true; version_pinned=true
+    limitations:
+      - "No accepted host canary SLO exists; actual bounded scope reported."
+    verdict: PASS
+    blocking: false
+    rationale: Read-only boundary enforced during canary.
+
+  - control_id: PI-ROLLBACK
+    critical: true
+    claim: Rollback drill PASS; 0 residual side effects; no data migration.
+    evidence_paths:
+      - evidence/vta-phase-3-rollback-and-canary-results.yaml (rollback_drill)
+      - manifests/vta-phase-3-rollback-contract.yaml
+    observed_result: drill PASS; residual_side_effects=0; irreversible_side_effects=0
+    limitations:
+      - "No accepted host rollback SLO exists; measured duration reported."
+    verdict: PASS
+    blocking: false
+    rationale: Read-only analytics => no data to undo.
+
+control_matrix_verdict: PASS
+all_critical_controls_pass: true
+blocking_findings: 0

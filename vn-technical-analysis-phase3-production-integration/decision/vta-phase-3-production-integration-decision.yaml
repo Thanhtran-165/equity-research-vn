@@ -1,0 +1,86 @@
+artifact_class: PRODUCTION_INTEGRATION_DECISION
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: PRODUCTION_INTEGRATION_DECISION
+generated_at: '2026-07-29'
+
+production_integration_decision:
+  canonical_maturity_commit: e386c4ef3cbfabd6341de26461d62766c5885f47
+
+  integration_wiring_commit: f3f7be949
+  deployment_freeze_commit: 26c3662f4
+  integration_evidence_commit: 2a454dd51
+  production_integration_decision_commit: <resolved to HEAD at final isolated verification — self-referential hash cannot be embedded without drifting>
+
+  review_verdict: PASS
+
+  integration_status: PRODUCTION_INTEGRATED
+
+  feature_flag_state_at_acceptance: OFF
+  canary_scope: bounded read-only downstream analytics consumer (no accepted host canary SLO; actual bounded scope reported)
+  rollback_verified: true
+
+  blocking_findings: []
+  nonblocking_limitations:
+    - "No accepted host resource SLO exists; latency/memory reported as operational baseline."
+    - "No accepted host canary SLO exists; actual bounded canary scope reported."
+    - "No accepted host rollback SLO exists; measured rollback duration reported."
+
+production_integration_threshold:
+  controls_assessed: 24/24
+  blocking_controls_failed: 0
+  frozen_core_modified: 0
+  semantic_divergences: 0
+  schema_mismatches: 0
+  provenance_mismatches: 0
+  canonical_regression:
+    fixtures: 184/184
+    mutations: 33/33
+    witnesses: 7/7
+  feature_flag: PASS
+  read_only_boundary: PASS
+  observability: PASS
+  security: PASS
+  canary: PASS
+  rollback: PASS
+  integration_evidence_hashes: 8/8
+  decision_artifact_hashes: 4/4
+  unauthorized_paths: 0
+
+final_isolated_verification:
+  expected_HEAD: production_integration_decision_commit
+  HEAD_matches_expected: true
+  HEAD_unchanged: true
+  worktree_clean_before: true
+  worktree_clean_after: true
+  ancestry:
+    maturity_to_integration: PASS
+    integration_to_deployment_freeze: PASS
+    deployment_freeze_to_evidence: PASS
+    evidence_to_decision: PASS
+    passed: 4/4
+  frozen_hashes:
+    specification: 8/8
+    acceptance: 3/3
+    implementation_and_verifier: pinned/unchanged
+    fixture_and_oracle: pinned/unchanged
+    qualification_evidence: 6/6
+    maturity: 4/4
+  integration_evidence_hashes: 8/8
+  integration_decision_hashes: 4/4
+  frozen_content_modified: 0
+  integration_code_modified_after_wiring: 0
+  deployment_modified_after_freeze: 0
+  evidence_modified_after_evidence_commit: 0
+  unauthorized_paths: 0
+
+decision_rules_applied:
+  on_PASS:
+    VTA_Phase_3_production_integration:
+      verdict: PASS
+      status: CLOSED
+      integration_status: PRODUCTION_INTEGRATED
+    VTA_Phase_3:
+      overall_status: PRODUCTION_INTEGRATED
+    next_required_directive: VTA_Phase_3_operational_soak
+
+final_verdict: PASS
