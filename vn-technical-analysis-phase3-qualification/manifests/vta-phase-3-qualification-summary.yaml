@@ -1,0 +1,29 @@
+qualification_summary:
+  specification_commit: b789d9e458ca76442d41d60bb2d4655efd090f1f
+  acceptance_commit: c4792fc1a96cd35c4ead1acdb0835c246471c6fd
+  implementation_commit: 62b55d48b0f1b5b2c8691a29b206f40c3f833ff2
+  fixture_freeze_commit: 15ecaa9f76a8021777366c8c35636d454d69c1ae
+
+  runtime_qualification_executed: true
+  two_stage_pipeline: true
+  stage_a_production: 184/184 outputs generated
+  stage_b_verifier: 184 records, 64 VCs addressed
+
+  runtime_verdicts:
+    PASS: 103
+    FAIL: 54
+    ERROR: 27
+
+  determinism:
+    runs: 3
+    result_sha256: 71cef2b98cb44a3d13ae2976b27e21ecfd8df84547b2f02d9e5aa3830685bf4b
+    byte_identical: true
+
+  verifier_independence: PASS
+  hygiene: PASS
+
+  blocking_findings:
+    - "54 FAIL + 27 ERROR from production-verifier interface gaps remaining after flattening fix"
+    - "Root cause: 3 independent agents wrote production, verifier, fixtures without shared interface contract"
+    - "Specific gaps: formula_conformance needs close-series from OHLCV, some VC handlers expect fields not in production output"
+  final_verdict: FAIL_RUNTIME_QUALIFICATION
