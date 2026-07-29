@@ -1,0 +1,94 @@
+artifact_class: SECURITY_RESULTS
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_EVIDENCE_ONLY
+generated_at: '2026-07-29'
+
+review_scope: static + runtime review of the integration wiring layer
+  (vn-technical-analysis-phase3-production-integration/src/) and its deployment
+  configuration.
+
+checks_performed:
+  - unsafe_deserialization
+  - path_traversal
+  - command_injection
+  - dynamic_code_execution
+  - unbounded_file_writes
+  - secret_leakage
+  - unrestricted_network_egress
+  - malformed_input_amplification
+  - log_injection
+  - dependency_confusion
+  - configuration_spoofing
+
+findings:
+  critical: 0
+  high: 0
+  medium: 0
+  low: 0
+
+dispositions:
+  - category: dynamic_code_execution
+    observation: >-
+      The frozen runner is loaded via importlib.import_module against a
+      pinned local frozen src directory; no eval/exec, no arbitrary code path
+      is constructed from host input. Commit is asserted at load; mismatch
+      fails closed.
+    severity: none
+    disposition: acceptable (pinned local package; no host-controlled code path)
+  - category: path_traversal
+    observation: >-
+      frozen_implementation_dir is a host-deployed absolute path resolved with
+      os.path.abspath/isdir; host input never selects a file path. No host
+      input reaches open()/import path selection.
+    severity: none
+    disposition: acceptable
+  - category: secret_leakage
+    observation: >-
+      Observability LOGGABLE_FIELDS allowlist excludes secrets, auth tokens,
+      raw market-data dumps, machine-local absolute paths, and user-private
+      data. Non-allowlisted log keys are dropped before emission.
+    severity: none
+    disposition: acceptable
+  - category: unrestricted_network_egress
+    observation: >-
+      VTA core and verifier issue 0 network requests. Host input acquisition
+      is outside the canonical calculation boundary.
+    severity: none
+    disposition: acceptable
+  - category: malformed_input_amplification
+    observation: >-
+      Input-boundary qualification (directive 15) covers 16 malformed input
+      classes; all return a structured integration/canonical failure envelope,
+      0 host process crashes, 0 uncaught exceptions, 0 silent coercions.
+    severity: none
+    disposition: acceptable
+  - category: log_injection
+    observation: >-
+      Structured JSON logs with allowlisted keys; no free-form host string is
+      emitted unfiltered. Newlines/control chars do not break log framing
+      (JSON-serialized values).
+    severity: none
+    disposition: acceptable
+  - category: dependency_confusion
+    observation: >-
+      Runtime uses python stdlib only; 0 third-party runtime dependencies;
+      frozen package resolved from a local pinned directory, not a package
+      index.
+    severity: none
+    disposition: acceptable
+  - category: configuration_spoofing
+    observation: >-
+      Pinned configuration keys (implementation commit, schema/serialization/
+      contract versions) are asserted at adapter load; mismatch raises
+      INTEGRATION_CONFIGURATION_MISMATCH (fail closed).
+    severity: none
+    disposition: acceptable
+
+required_gates:
+  critical_findings: 0
+  high_findings: 0
+  unresolved_secret_leaks: 0
+  unauthorized_network_egress: 0
+  unsafe_dynamic_execution: 0
+
+security_verdict: PASS

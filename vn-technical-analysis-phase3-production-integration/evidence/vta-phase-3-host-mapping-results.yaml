@@ -1,0 +1,125 @@
+artifact_class: HOST_MAPPING_RESULTS
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_EVIDENCE_ONLY
+generated_at: '2026-07-29'
+
+mapping_source: vn-technical-analysis-phase3-production-integration/manifests/vta-phase-3-host-mapping.yaml
+adapter: vn-technical-analysis-phase3-production-integration/src/integration_adapter.py
+
+host_input_schema_versions_accepted:
+  - host-market-data-v1
+  - host-market-data-v1.1
+
+host_to_canonical_mapping_results:
+  - host_path: host_input.symbol
+    canonical_path: ticker
+    observed: mapped_pass_through
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: host_input.mode
+    canonical_path: mode
+    observed: mapped_normalize_upper
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: host_input.frequency
+    canonical_path: frequency
+    observed: mapped_normalize_upper
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: host_input.as_of_date
+    canonical_path: as_of_date
+    observed: mapped_iso8601_to_canonical_date (DERIVE = last row when absent)
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: host_input.source_provider
+    canonical_path: source_provider
+    observed: mapped_pass_through (NULL -> UNKNOWN_PROVIDER)
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: host_input.adjustment_state
+    canonical_path: adjustment_state
+    observed: mapped_pass_through
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: host_input.price_basis
+    canonical_path: price_basis
+    observed: mapped_pass_through
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: rows[].timestamp
+    canonical_path: rows[].date
+    observed: mapped_iso8601_to_canonical_date (UTC offset applied when present; never invented)
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: rows[].open_price
+    canonical_path: rows[].open
+    observed: mapped_as_float
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: rows[].high_price
+    canonical_path: rows[].high
+    observed: mapped_as_float
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: rows[].low_price
+    canonical_path: rows[].low
+    observed: mapped_as_float
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: rows[].close_price
+    canonical_path: rows[].close
+    observed: mapped_as_float
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: rows[].trade_volume
+    canonical_path: rows[].volume
+    observed: mapped_as_float_or_null
+    provenance_preserved: true
+    field_drops: 0
+  - host_path: rows[].trading_days_in_period
+    canonical_path: rows[].trading_days
+    observed: mapped_as_int_or_null
+    provenance_preserved: true
+    field_drops: 0
+
+canonical_to_host_mapping_results:
+  canonical_path: OutputPacket
+    host_path: HostOutputEnvelope.canonical_packet
+    observed: verbatim (no drop / rename / coerce / reorder)
+    canonical_packet_preserved: true
+    deterministic_record_ID_preserved: true
+    canonical_codes_preserved: true
+    provenance_preserved: true
+    fields_dropped: 0
+    fields_renamed_without_mapping: 0
+    invalid_type_coercions: 0
+    unordered_serialization: 0
+  host_only_namespace: HostOutputEnvelope.integration_envelope
+    separate_namespace: true
+    contents: host_target, side_effect_policy, schema_version_supported, phase_deadline_seconds
+
+canonical_failure_envelope_mapping_results:
+  canonical_path: runner ErrorEnvelope.error_code
+    host_path: run() CANONICAL_FAILURE result
+    observed: verbatim (NO integration code substituted)
+    canonical_codes_preserved: true
+    primary_codes_preserved: true
+    diagnostic_codes_preserved: true
+
+mapping_integrity_gates:
+  implicit_field_aliases: 0
+  heuristic_path_discovery: 0
+  undocumented_defaults: 0
+  silent_field_drops: 0
+  silent_type_coercions: 0
+
+failure_namespaces:
+  canonical_VTA_failure_codes:
+    count: 43
+    unchanged: true
+  integration_failure_codes:
+    namespace: VTA_PHASE_3_INTEGRATION
+    count: 9
+    overlap_with_canonical_codes: 0
+
+mapping_verdict: PASS

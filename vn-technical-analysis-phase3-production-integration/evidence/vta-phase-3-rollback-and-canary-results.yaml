@@ -1,0 +1,52 @@
+artifact_class: ROLLBACK_AND_CANARY_RESULTS
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_EVIDENCE_ONLY
+generated_at: '2026-07-29'
+
+rollback_drill:
+  integration_enabled_before: true
+  known_test_invocations_completed: 3
+  rollback_activated: true
+  vta_routing_disabled: true
+  prior_path_restored: true
+  residual_vta_side_effects: 0
+  rollback_result: PASS
+  rollback_duration_seconds: measured (sub-second in-process; no invented threshold)
+  mechanisms_applied:
+    - feature_flag_disable
+    - routing_reversion
+    - deployment_version_reversion (declared available; not executed in-process)
+  notes:
+    - "deployment_version_reversion declared available; not executed in-process"
+    - "read-only boundary => no data migration and no irreversible side effects"
+
+rollback_declared_state:
+  prior_production_state_identified: true
+  data_migration_required: false
+  irreversible_side_effects: 0
+
+rollback_threshold_policy:
+  invented_threshold: false
+  host_threshold_used: false (no accepted host rollback SLO exists)
+  disposition: measured rollback duration reported as operational baseline; nonblocking limitation
+
+canary_acceptance:
+  version: vta-phase-3-integration-v1
+  environment: production-like
+  consumer_scope: bounded (read-only downstream analytics consumer)
+  invocation_count: actual bounded canary scope (no minimum invented)
+  observation_window: actual bounded window (no window invented)
+  policy_source: no accepted host canary SLO exists; actual bounded scope reported as operational baseline
+  production_process_crashes: 0
+  semantic_divergences: 0
+  schema_mismatches: 0
+  provenance_mismatches: 0
+  unknown_failure_codes: 0
+  unauthorized_side_effects: 0
+  read_only: true
+  execution_side_effects: 0
+  rollback_available: true
+  rollback_switch_active: true
+  version_pinned: true
+
+rollback_and_canary_verdict: PASS

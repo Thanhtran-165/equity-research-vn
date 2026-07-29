@@ -1,0 +1,85 @@
+artifact_class: INTEGRATION_SUMMARY
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_EVIDENCE_ONLY
+generated_at: '2026-07-29'
+
+canonical_lineage:
+  canonical_maturity_commit: e386c4ef3cbfabd6341de26461d62766c5885f47
+  maturity_level: ROBUST_MACHINE
+  integration_wiring_commit: f3f7be949
+  deployment_freeze_commit: 26c3662f4
+  pinned_implementation_commit: 23853411aa74c504ee2d79dd8889a845b5edf7de
+
+host_target:
+  system: read-only downstream analytics consumer
+  integration_version: vta-phase-3-integration-v1
+  deployment_version: vta-phase-3-integration-deploy-v1
+
+feature_flag_state_at_evidence: OFF (default; runtime-enable used only inside the evidence harness)
+
+shadow_summary:
+  compared_records: 184
+  exact_matches: 184
+  semantic_mismatches: 0
+  schema_mismatches: 0
+  provenance_mismatches: 0
+  code_mismatches: 0
+  canonical_output_logged_for_comparison: true
+  feature_flag_scope: restricted (evidence harness)
+  downstream_side_effects: 0
+
+canary_summary:
+  read_only: true
+  execution_side_effects: 0
+  rollback_switch_active: true
+  version_pinned: true
+  unauthorized_side_effects: 0
+  consumer_scope: bounded (no accepted host canary SLO; actual bounded scope reported)
+
+regression_summary:
+  fixtures: {expected: 184, observed: 184, PASS: 184, FAIL: 0, ERROR: 0}
+  mutations: {expected: 33, observed: 33, caught: 33, survivors: 0}
+  witnesses: {expected: 7, observed: 7, matched: 7, denominator_contamination: 0}
+  paths:
+    direct_frozen_runner: PASS
+    integrated_host_path: PASS
+
+semantic_preservation:
+  requirements: 15/15
+  VCs: 64/64
+  formulas: 12/12
+  bearish_setups: 5/5
+  failure_codes: 43/43
+  deterministic_record_ID: preserved
+  provenance: preserved
+  primary_codes: preserved
+  diagnostic_codes: preserved
+  ordering: preserved
+
+operational_summary:
+  observability: PASS
+  concurrency_isolation: PASS
+  cold_start_restart: PASS
+  network_boundary: PASS
+  dependency_closure: PASS
+
+security_summary:
+  critical_findings: 0
+  high_findings: 0
+  unresolved_secret_leaks: 0
+  unauthorized_network_egress: 0
+  unsafe_dynamic_execution: 0
+
+rollback_summary:
+  drill_result: PASS
+  rollback_duration_seconds: measured (no invented threshold)
+  residual_side_effects: 0
+  data_migration_required: false
+
+blocking_findings: []
+
+nonblocking_limitations:
+  - "No accepted host resource SLO exists; latency/memory reported as operational baseline."
+  - "No accepted host canary SLO exists; actual bounded canary scope reported."
+
+final_execution_verdict: PASS

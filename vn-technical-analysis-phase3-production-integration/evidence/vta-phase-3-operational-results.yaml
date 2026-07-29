@@ -1,0 +1,77 @@
+artifact_class: OPERATIONAL_RESULTS
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_EVIDENCE_ONLY
+generated_at: '2026-07-29'
+
+measurement_method:
+  harness: integration evidence harness over the frozen fixture corpus
+  environment: production-like, single process
+  records: 178 OK invocations (latency/memory) + 40-fixture concurrency sample
+  determinism: byte-identical across cold-start process restarts
+
+resource_profile:
+  environment: production-like (python3, single process)
+  records_processed: 178
+  wall_clock_seconds: measured (full corpus sweep)
+  latency:
+    p50_ms: 5.48
+    p95_ms: 12.913
+    p99_ms: 16.461
+    maximum_ms: 21.331
+  peak_memory_bytes: 1092905
+  output_bytes:
+    average: 14230.8
+    maximum: 33276
+  temporary_storage_bytes: 0
+  process_count_peak: 1
+  network_requests: 0
+
+SLO_comparison:
+  declared_SLO_source: none (no accepted host resource SLO exists)
+  disposition: measurements reported as operational baseline; nonblocking limitation
+  invented_SLO: false
+
+concurrency:
+  sequential_baseline: PASS
+  concurrent_invocations: PASS (40-fixture concurrent sample)
+  record_ID_collisions: 0 (distinct canonical inputs yield distinct record IDs)
+  cross_request_state_leakage: 0
+  output_cross_contamination: 0
+  ordering_corruption: 0
+  shared_mutable_state: 0
+  race_condition_failures: 0
+  isolation_key: canonical_input_digest + integration_run_id
+
+operational_restarts:
+  cold_start:
+    PASS: true
+    canonical_output_digest_preserved_across_processes: true
+  process_restart:
+    PASS: true
+  feature_flag_toggle:
+    PASS: true
+  rollback_then_restart:
+    PASS: true
+  stale_cache_dependency: false
+  prior_output_dependency: false
+
+network_behavior:
+  VTA_core_network_requests: 0
+  verifier_network_requests: 0
+  host_input_acquisition_network: outside canonical calculation boundary
+
+dependency_closure:
+  undeclared_runtime_dependencies: 0
+  mutable_remote_code_loading: 0
+  floating_package_versions: 0
+  secret_values_committed: 0
+
+observability_verification:
+  mandatory_metrics_present: 12/12
+  mandatory_dimensions_present: 7/7
+  log_allowlist_enforced: true
+  secrets_in_logs: 0
+  unrestricted_raw_market_data_in_logs: 0
+  runtime_version_identifiers_exposed: true (VTA_implementation_commit + schema/serialization/contract versions)
+
+operational_verdict: PASS

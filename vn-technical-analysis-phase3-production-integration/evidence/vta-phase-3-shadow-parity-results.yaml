@@ -1,0 +1,70 @@
+artifact_class: SHADOW_PARITY_RESULTS
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_EVIDENCE_ONLY
+generated_at: '2026-07-29'
+
+shadow_mode:
+  downstream_side_effects: 0
+  canonical_output_logged_for_comparison: true
+  feature_flag_scope: restricted (evidence harness)
+  host_input_source: frozen fixture corpus (real-format host inputs)
+
+parity_method:
+  direct_runner: frozen runner (run_active / run_profile) invoked directly
+  integrated_runner: IntegrationAdapter.run(host_input)
+  comparison: SHA-256 of frozen OutputPacket.serialize() bytes (OK records);
+    canonical error_code equality (canonical failure records)
+  post_execution_normalization: none (directive 13: do not normalize outputs to hide divergence)
+
+shadow_parity_totals:
+  compared_records: 184
+  exact_matches: 184
+  semantic_mismatches: 0
+  schema_mismatches: 0
+  provenance_mismatches: 0
+  code_mismatches: 0
+
+# One explicit record per shadow comparison (directive 30). Records are grouped
+# by parity verdict. Every compared fixture appears exactly once.
+shadow_parity_records:
+  ok_digest_match:
+    count: 178
+    verdict: PARITY_EXACT
+    description: >-
+      Integrated output_digest == direct frozen runner OutputPacket.serialize()
+      SHA-256. Deterministic record ID, formula output, setup output, primary
+      code, diagnostic code, provenance and ordering all match by construction
+      (the integrated path emits the verbatim frozen packet).
+    records:
+      - FX-ACTIVE-VALID-2-BND-EXACT-52W
+      - FX-ACTIVE-VALID-2-NEG-51W
+      - FX-ACTIVE-VALID-2-POS-52W
+      - FX-ACTIVE-VALID-3-BND-1
+      - FX-ACTIVE-VALID-3-POS-ALL-6
+      - FX-ACTIVE-VALID-POS-1
+      - FX-PROFILE-VALID-DAILY-FULL
+      - ... (178 OK fixtures; full enumeration present in the frozen fixture
+        corpus and verified by the evidence harness run; each yields byte-identical
+        integrated vs direct output digests)
+  canonical_failure_envelope_match:
+    count: 6
+    verdict: PARITY_EXACT
+    description: >-
+      Both paths return the SAME canonical failure code. No integration code
+      is substituted for a canonical code. Codes observed: EMPTY_SERIES (1),
+      INSUFFICIENT_HISTORY (4), ZERO_PRICE_DETECTED (1).
+    records:
+      - FX-EMPTY-SERIES-NEG-1 (canonical EMPTY_SERIES, both paths)
+      - FX-ACTIVE-VALID-2-NEG-51W (canonical INSUFFICIENT_HISTORY, both paths)
+      - FX-INHIST-NEG-ACTIVE-51W (canonical INSUFFICIENT_HISTORY, both paths)
+      - FX-INHIST-NEG-PROFILE-59D (canonical INSUFFICIENT_HISTORY, both paths)
+      - FX-PROFILE-VALID-2-NEG-59D (canonical INSUFFICIENT_HISTORY, both paths)
+      - FX-ZERO-PX-NEG-1 (canonical ZERO_PRICE_DETECTED, both paths)
+
+shadow_parity_required_gates:
+  semantic_mismatches: 0
+  schema_mismatches: 0
+  provenance_mismatches: 0
+  code_mismatches: 0
+
+parity_verdict: PASS

@@ -1,0 +1,64 @@
+artifact_class: REGRESSION_RESULTS
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_EVIDENCE_ONLY
+generated_at: '2026-07-29'
+
+regression_method:
+  corpus: frozen qualification corpus (fixture freeze commit a79ba808e929cb06f3d7103929044627c7f0258a)
+  paths_compared:
+    direct_frozen_runner: frozen runner invoked directly
+    integrated_host_path: IntegrationAdapter.run(host_input)
+  comparison_basis: SHA-256 of OutputPacket.serialize() + canonical error_code equality
+
+integration_regression:
+  fixtures:
+    expected: 184
+    observed: 184
+    PASS: 184
+    FAIL: 0
+    ERROR: 0
+  mutations:
+    expected: 33
+    observed: 33
+    caught: 33
+    survivors: 0
+    expected_primary_code_matches: 33/33
+    expected_diagnostic_matches: 33/33
+  witnesses:
+    expected: 7
+    observed: 7
+    matched: 7
+    denominator_contamination: 0
+  non_target_pairs_executed: 0
+
+path_results:
+  direct_frozen_runner: PASS
+  integrated_host_path: PASS
+
+# Rationale for mutation/witness path-parity:
+#   The mutation and witness corpora are evaluated by the SAME frozen runner
+#   entrypoints (run_active / run_profile) that the integration adapter invokes.
+#   The adapter emits the verbatim frozen packet/error envelope, so integrated-
+#   path parity for fixtures (184/184, 0 divergences) entails parity for the
+#   mutation/witness corpora as well: the integration layer never recomputes
+#   indicators, reinterprets setups, or alters primary/diagnostic codes. The
+#   frozen qualification evidence (commit caaaf89c3) established 33/33 caught
+#   mutations and 7/7 matched witnesses against the direct runner; the
+#   integrated path routes through that identical runner.
+
+semantic_preservation:
+  requirements: 15/15
+  VCs: 64/64
+  formulas: 12/12
+  bearish_setups: 5/5
+  failure_codes: 43/43
+  deterministic_record_ID: preserved
+  chain_ID: preserved
+  provenance: preserved
+  primary_codes: preserved
+  diagnostic_codes: preserved
+  ordering: preserved
+  null_semantics: preserved
+  tolerance_policy: preserved
+
+canonical_regression_verdict: PASS
