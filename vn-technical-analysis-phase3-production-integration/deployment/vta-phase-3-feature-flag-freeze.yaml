@@ -1,0 +1,60 @@
+manifest_version: 1.0.0
+artifact_class: FEATURE_FLAG_FREEZE
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: DEPLOYMENT_FREEZE
+
+feature_flag_deployment:
+  name: vta_phase_3_integration_enabled
+  default_state: OFF
+  state_at_freeze: OFF
+
+  scope:
+    - environment
+    - tenant_or_consumer
+    - invocation_path
+
+  resolution_precedence:
+    - runtime_override (highest; programmatic enable/disable, no restart)
+    - invocation_path override
+    - tenant_or_consumer registry
+    - environment variable (VTA_PHASE_3_INTEGRATION_ENABLED)
+    - DEFAULT: OFF (lowest)
+
+  runtime_disable_supported: true
+  restart_required_to_disable: false
+  fail_closed_on_ambiguous_state: true
+
+  off_behavior:
+    returns: host explicit disabled status (EXPLICIT_DISABLED_STATUS)
+    invokes_alternative_TA_implementation: false
+    note: >-
+      Feature-flag OFF returns the host's documented non-VTA fallback or an
+      explicit disabled status. It does not silently invoke a different
+      technical-analysis implementation.
+
+  on_behavior:
+    routes: host input -> IntegrationAdapter -> frozen VTA runner -> host envelope
+    read_only: true
+
+  enforcement:
+    disables_integration_routing_only: true
+    modifies_frozen_implementation_files: false
+    restart_required_to_disable_violation_code: INTEGRATION_FLAG_RESTART_REQUIRED_VIOLATION
+    ambiguous_state_code: INTEGRATION_FLAG_AMBIGUOUS_STATE
+
+  metric_exposed:
+    name: feature_flag_state
+    kind: gauge (1.0 enabled / 0.0 disabled)
+    dimensions:
+      - environment
+      - integration_version
+      - VTA_implementation_commit
+      - canonical_schema_version
+      - consumer
+      - result_status
+      - primary_failure_code
+
+  immutability:
+    configuration_immutable_after_freeze: true
+    changes_require_new_deployment_freeze_commit: true

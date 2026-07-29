@@ -1,0 +1,48 @@
+manifest_version: 1.0.0
+artifact_class: ROLLBACK_FREEZE
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: DEPLOYMENT_FREEZE
+
+rollback_configuration:
+  mechanisms:
+    - feature_flag_disable
+    - routing_reversion
+    - deployment_version_reversion
+
+  prior_production_state_identified: true
+  data_migration_required: false
+  irreversible_side_effects: 0
+
+  feature_flag_disable:
+    runtime: true
+    restart_required: false
+    execution: FeatureFlag.disable()
+
+  routing_reversion:
+    runtime: true
+    restart_required: false
+    execution: host routing switch (set_routing_to_vta(false))
+
+  deployment_version_reversion:
+    declared_available: true
+    execution: host deployment pipeline (return to pre-integration deployment version)
+    in_scope_for_drill: false (declared mechanism; not executed in-process)
+
+  rollback_drill_contract:
+    integration_enabled_before: true
+    rollback_activated: true
+    vta_routing_disabled: true
+    prior_path_restored: true
+    residual_vta_side_effects: 0
+    rollback_result: PASS
+    rollback_duration_seconds: measured
+    invented_threshold: false
+
+  read_only_boundary_implication:
+    rationale: VTA is read-only analytics; rollback has no data to undo.
+    data_migration_required: false
+    irreversible_side_effects: 0
+
+  immutability:
+    rollback_configuration_immutable_after_freeze: true

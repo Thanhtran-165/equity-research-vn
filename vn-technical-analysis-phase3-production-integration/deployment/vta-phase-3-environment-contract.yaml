@@ -1,0 +1,67 @@
+manifest_version: 1.0.0
+artifact_class: ENVIRONMENT_CONTRACT
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: DEPLOYMENT_FREEZE
+
+environment_contract:
+  target_environment: production-like
+  host_system: read-only downstream analytics consumer
+
+  runtime_requirements:
+    python_version: ">=3.10"
+    process_isolation: per-invocation canonical input + integration run ID
+    shared_mutable_state: 0
+    network_egress_from_VTA_core: 0
+    network_egress_from_verifier: 0
+    undeclared_runtime_dependencies: 0
+
+  feature_flag_resolution_environment:
+    env_var_name: VTA_PHASE_3_INTEGRATION_ENABLED
+    default_state: OFF
+    scope:
+      - environment
+      - tenant_or_consumer
+      - invocation_path
+    restart_required_to_disable: false
+
+  configuration_keys_pinned:
+    - key: VTA_IMPLEMENTATION_COMMIT
+      pinned_value: 23853411aa74c504ee2d79dd8889a845b5edf7de
+      mismatch_behavior: fail_closed
+    - key: canonical_schema_version
+      pinned_value: vta-canonical-v1
+    - key: serialization_version
+      pinned_value: canonical-json-v1
+    - key: formula_contract_version
+      pinned_value: frozen-formula-registry-v1
+    - key: setup_contract_version
+      pinned_value: frozen-setup-registry-v1
+    - key: failure_code_registry_version
+      pinned_value: vta-failure-code-registry-1.0.0
+    - key: integration_version
+      pinned_value: vta-phase-3-integration-v1
+
+  input_acquisition_boundary:
+    host_input_acquisition: production infrastructure (outside canonical calculation boundary)
+    canonical_calculation_boundary_network_requests: 0
+
+  observability_pipeline:
+    metrics_bridge: host metrics pipeline (12 mandatory metrics, 7 dimensions)
+    logs_bridge: host structured log pipeline (allowlisted fields only)
+    secrets_in_logs: prohibited
+    unrestricted_raw_market_data_in_logs: prohibited
+
+  restart_and_cold_start:
+    cold_start_supported: true
+    process_restart_supported: true
+    feature_flag_toggle_supported: true
+    rollback_then_restart_supported: true
+    stale_cache_dependency: false
+    prior_output_dependency: false
+    canonical_output_digest_preserved_after_restart: true
+
+  concurrency:
+    sequential_baseline_supported: true
+    concurrent_invocations_supported: true
+    isolation_key: canonical_input_digest + integration_run_id

@@ -1,0 +1,50 @@
+manifest_version: 1.0.0
+artifact_class: DEPENDENCY_FREEZE
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: DEPLOYMENT_FREEZE
+
+dependency_lock:
+  pinned_authority:
+    implementation_commit: 23853411aa74c504ee2d79dd8889a845b5edf7de
+    fixture_freeze_commit: a79ba808e929cb06f3d7103929044627c7f0258a
+    qualification_evidence_commit: caaaf89c3d1bd86c57642ebacf8ddc0f56536eb2
+    maturity_commit: e386c4ef3cbfabd6341de26461d62766c5885f47
+
+  frozen_package:
+    source: local frozen implementation directory
+    path: vn-technical-analysis-phase3-implementation/src
+    modules_consumed:
+      - runner (run_active / run_profile / OutputPacket-bearing results)
+    commit_asserted_at_load: 23853411aa74c504ee2d79dd8889a845b5edf7de
+    load_isolation: sys.modules isolation prevents bare-name shadowing of the
+      frozen runner's sibling imports; no frozen code is copied or modified.
+
+  integration_runtime_dependencies:
+    python_stdlib_only: true
+    third_party_runtime_dependencies: 0
+    undeclared_runtime_dependencies: 0
+
+  integrity_gates:
+    mutable_version_ranges: 0
+    floating_package_versions: 0
+    floating_branch_dependencies: 0
+    latest_tag_dependencies: 0
+    mutable_remote_code_loading: 0
+    secret_values_committed: 0
+
+  network_boundary:
+    VTA_core_network_requests: 0
+    verifier_network_requests: 0
+    host_input_acquisition_network: outside canonical calculation boundary
+
+  versioned_contract_refs:
+    canonical_schema_version: vta-canonical-v1
+    serialization_version: canonical-json-v1
+    formula_contract_version: frozen-formula-registry-v1
+    setup_contract_version: frozen-setup-registry-v1
+    failure_code_registry_version: vta-failure-code-registry-1.0.0
+    integration_version: vta-phase-3-integration-v1
+
+  immutability:
+    dependency_lock_immutable_after_freeze: true

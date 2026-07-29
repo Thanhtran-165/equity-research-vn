@@ -1,0 +1,47 @@
+manifest_version: 1.0.0
+artifact_class: CANARY_FREEZE
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: DEPLOYMENT_FREEZE
+
+canary_configuration:
+  read_only: true
+  version_pinned: true
+  rollback_available: true
+  rollback_switch_active: true
+
+  consumer_scope:
+    kind: bounded
+    selection: host-declared bounded consumer set (read-only downstream analytics consumer)
+    minimum_invocation_count_invented: false
+    observation_window_invented: false
+    policy_source: no accepted host canary SLO exists; actual bounded scope reported as operational baseline
+
+  execution_side_effects_policy:
+    automated_order_execution: prohibited
+    trade_submission: prohibited
+    portfolio_mutation: prohibited
+    account_mutation: prohibited
+    source_market_data_mutation: prohibited
+    autonomous_external_action: prohibited
+    unauthorized_side_effects: 0
+
+  acceptance_gates:
+    production_process_crashes: 0
+    semantic_divergences: 0
+    schema_mismatches: 0
+    provenance_mismatches: 0
+    unknown_failure_codes: 0
+    unauthorized_side_effects: 0
+
+  version_pinning:
+    integration_version: vta-phase-3-integration-v1
+    pinned_implementation_commit: 23853411aa74c504ee2d79dd8889a845b5edf7de
+    canonical_schema_version: vta-canonical-v1
+
+  rollback_coupling:
+    rollback_required_available_during_canary: true
+    rollback_mechanism: feature_flag runtime disable (no restart)
+
+  immutability:
+    canary_configuration_immutable_after_freeze: true

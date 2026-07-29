@@ -1,0 +1,78 @@
+manifest_version: 1.0.0
+artifact_class: DEPLOYMENT_MANIFEST
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: DEPLOYMENT_FREEZE
+
+deployment:
+  version: vta-phase-3-integration-deploy-v1
+  deployment_freeze_commit: <set by decision commit lineage reference, not embedded here>
+  integration_wiring_commit: f3f7be949
+  canonical_maturity_commit: e386c4ef3cbfabd6341de26461d62766c5885f47
+  pinned_implementation_commit: 23853411aa74c504ee2d79dd8889a845b5edf7de
+
+  target_runtime:
+    language: python3
+    runtime_min_version: "3.10"
+    entrypoint_module: vn-technical-analysis-phase3-production-integration.src.integration_adapter
+    entrypoint_class: IntegrationAdapter
+    entrypoint_method: run
+
+  integration_version: vta-phase-3-integration-v1
+  canonical_schema_version: vta-canonical-v1
+  serialization_version: canonical-json-v1
+  formula_contract_version: frozen-formula-registry-v1
+  setup_contract_version: frozen-setup-registry-v1
+  failure_code_registry_version: vta-failure-code-registry-1.0.0
+
+  version_pinning:
+    mutable_version_ranges: 0
+    floating_branch_dependencies: 0
+    latest_tag_dependencies: 0
+    mutable_remote_code_loading: 0
+    secret_values_committed: 0
+
+  frozen_package_resolution:
+    source: local frozen implementation directory
+    path: vn-technical-analysis-phase3-implementation/src
+    commit_asserted_at_load: 23853411aa74c504ee2d79dd8889a845b5edf7de
+    mismatch_behavior: fail_closed (INTEGRATION_CONFIGURATION_MISMATCH)
+
+  rollback:
+    mechanisms_available:
+      - feature_flag_disable
+      - routing_reversion
+      - deployment_version_reversion
+    rollback_switch_active: true
+
+  feature_flag_state_at_deploy: OFF
+
+  read_only_boundary:
+    side_effect_policy: READ_ONLY
+    execution_path_wiring: NOT_CONNECTED (directive 7: VTA output not wired to any execution path)
+
+  canary:
+    read_only: true
+    consumer_scope: bounded (see canary-freeze)
+    rollback_available: true
+    version_pinned: true
+
+allowed_changes_in_this_commit:
+  - deployment manifests
+  - environment contract
+  - pinned dependency lock
+  - feature-flag deployment configuration
+  - canary configuration
+  - rollback configuration
+  - approved operational policy references
+
+prohibited_changes_in_this_commit:
+  - production core changes
+  - verifier changes
+  - integration code changes (immutable after INTEGRATION_WIRING)
+  - fixtures / oracles / mutations / witnesses
+  - evidence artifacts
+  - production acceptance decision
+
+post_commit_immutability:
+  deployment_configuration_immutable_after_freeze: true
