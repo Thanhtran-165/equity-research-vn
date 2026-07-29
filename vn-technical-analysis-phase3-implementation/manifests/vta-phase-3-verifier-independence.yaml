@@ -1,0 +1,50 @@
+# VTA Phase 3 Verifier Independence Manifest
+# Per OWNER DIRECTIVE Section 14
+
+verifier_independence:
+  version: "1.0.0"
+  date: '2026-07-29'
+
+  production_verifier_separation:
+    production_path: vn-technical-analysis-phase3-implementation/src/
+    verifier_path: vn-technical-analysis-phase3-implementation/verifier/
+    separated: true
+    note: "Production and verifier code live in separate directory trees with no shared decision logic."
+
+  static_import_scan:
+    production_decision_logic_imports: 0
+    note: "Verifier modules import only stdlib (ast, json, math, hashlib, datetime), numpy, and yaml. No imports from src/ production modules."
+    verified_by: "self_test.py assertion _assert_independence()"
+
+  forbidden_dependency_scan:
+    imports_normalization_engine: false
+    imports_indicator_engine: false
+    imports_profile_engine: false
+    imports_output_assembler: false
+    imports_integration_adapter: false
+    imports_language_verifier: false
+    imports_runner: false
+
+  oracle_sources:
+    production_outputs_used_as_oracle: false
+    runtime_generated_expected_outputs: false
+    network_oracle: false
+    mutable_external_oracle: false
+    frozen_mathematical_definitions: true
+    frozen_expected_outputs: true
+    frozen_failure_code_expectations: true
+    independent_primitive_arithmetic: true
+    note: "Verifier uses independently implemented reference calculations (Wilder RSI, population std, Kahan summation, OLS slope, OBV/VPT series) from verifier/common.py — never calls production formula functions."
+
+  deterministic_result_schema:
+    ordering_primary: VC_id
+    ordering_secondary: fixture_id
+    ordering_tertiary: mutation_id
+    fields: [VC_id, fixture_id, mutation_id, expected_status, observed_status, expected_primary_code, observed_primary_code, expected_diagnostic_codes, observed_diagnostic_codes, expected_output_digest, observed_output_digest, verdict, diagnostics]
+    no_runtime_timestamps: true
+    no_random_uuids: true
+    no_unordered_collections: true
+
+  independence_verdict: PASS
+  runtime_isolation_check: PASS
+  note: "Runtime guard _assert_independence() in vta_verifier.py rejects startup if any production module is loaded in sys.modules."

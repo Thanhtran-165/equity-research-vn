@@ -1,0 +1,69 @@
+# VTA Phase 3 Code-Symbol Traceability
+# Per OWNER DIRECTIVE Section 14
+
+code_symbol_traceability:
+  version: "1.0.0"
+
+  requirements_to_symbols:
+    count: 15
+    mappings:
+      VTA-REQ-001: [indicator_engine.compute_rsi, indicator_engine.compute_bollinger, indicator_engine.compute_ma, indicator_engine.compute_macd, indicator_engine.compute_beta, runner.run_active]
+      VTA-REQ-002: [profile_engine.compute_profile_block, profile_engine.detect_setup, profile_engine.classify_archetype, runner.run_profile]
+      VTA-REQ-003: [language_verifier.check_language]
+      VTA-REQ-004: [normalization_engine.verify_price_basis, normalization_engine.normalize_input]
+      VTA-REQ-005: [indicator_engine.compute_rsi]
+      VTA-REQ-006: [indicator_engine.compute_bollinger]
+      VTA-REQ-007: [indicator_engine.compute_channel_slope]
+      VTA-REQ-008: [output_assembler.assemble_output, output_assembler.validate_schema]
+      VTA-REQ-009: [profile_engine.detect_setup, profile_engine.classify_archetype]
+      VTA-REQ-009a: [profile_engine.detect_setup]
+      VTA-REQ-010: [output_assembler.generate_provenance]
+      VTA-REQ-011: [integration_adapter.enforce_valuation_boundary, integration_adapter.handoff_to_parent]
+      VTA-REQ-012: [normalization_engine.normalize_input]
+      VTA-REQ-013: [profile_engine.compute_hvb_events_1y]
+      VTA-REQ-014: [indicator_engine.compute_cmf, profile_engine.compute_obv_change, profile_engine.compute_vpt_change]
+
+  VCs_to_production_symbols:
+    count: 64
+    note: "Each VC is mapped to production module functions in the VC-to-verifier mapping. Production symbols are in src/ modules."
+
+  VCs_to_verifier_symbols:
+    count: 64
+    note: "Each VC is addressed by verifier functions in verifier/ modules. Domain breakdown: formula_conformance=15, schema_conformance=23, provenance_integrity=6, language_policy=5, boundary_enforcement=3, setup_semantics=12."
+
+  formulas_to_symbols:
+    count: 12
+    mappings:
+      F-RSI: [indicator_engine.compute_rsi]
+      F-BOLLINGER: [indicator_engine.compute_bollinger]
+      F-MA: [indicator_engine.compute_ma]
+      F-MACD: [indicator_engine.compute_macd]
+      F-BETA: [indicator_engine.compute_beta]
+      F-CMF: [indicator_engine.compute_cmf]
+      F-VPCI: [profile_engine.compute_profile_block]
+      F-VAR-ES: [profile_engine.compute_profile_block]
+      F-PERCENTILE: [profile_engine.compute_profile_block]
+      F-HVB: [profile_engine.compute_hvb_events_1y]
+      F-ALPHA: [indicator_engine.compute_beta]
+      F-HV: [profile_engine.compute_profile_block]
+
+  setups_to_symbols:
+    count: 13
+    mappings:
+      S-BULL-FLAG: [profile_engine.detect_setup]
+      S-BULL-PENNANT: [profile_engine.detect_setup]
+      S-HIGH-TIGHT-FLAG: [profile_engine.detect_setup]
+      S-MEASURED-MOVE-UP: [profile_engine.detect_setup]
+      S-TRIANGLE-ASC: [profile_engine.detect_setup]
+      S-TRIANGLE-SYM: [profile_engine.detect_setup]
+      S-CUP-HANDLE: [profile_engine.detect_setup]
+      S-DB-PROFILE: [profile_engine.detect_setup]
+      S-BEAR-FLAG: [profile_engine.detect_setup]
+      S-BEAR-PENNANT: [profile_engine.detect_setup]
+      S-BEAR-DOWN-TRIANGLE: [profile_engine.detect_setup]
+      S-BEAR-RECTANGLE-TOP: [profile_engine.detect_setup]
+      S-BEAR-HEAD-SHOULDERS: [profile_engine.detect_setup]
+
+  failure_codes_to_symbols:
+    count: 43
+    note: "All 43 failure codes are implemented across production modules. Each module emits codes from the frozen registry via _CODES dictionaries."
