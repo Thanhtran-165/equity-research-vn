@@ -1,0 +1,112 @@
+# VTA Phase 3 Implementation Manifest
+# Per OWNER DIRECTIVE Section 14
+
+implementation_manifest:
+  version: "1.0.0"
+  date: '2026-07-29'
+
+  specification_authority:
+    commit: b789d9e458ca76442d41d60bb2d4655efd090f1f
+    status: FROZEN
+
+  acceptance_freeze:
+    commit: c4792fc1a96cd35c4ead1acdb0835c246471c6fd
+    verdict: PASS
+
+  implementation_environment:
+    python_version: "3.14"
+    os: darwin 25.5.0 arm64
+    dependencies:
+      - numpy (for numerical computation)
+      - pyyaml (for contract loading)
+    deterministic_config:
+      numpy_random_seed: null  # no randomness
+      timezone: Asia/Ho_Chi_Minh
+      locale: en_US.UTF-8
+
+  implementation_path_inventory:
+    production_code:
+      - src/normalization_engine.py
+      - src/indicator_engine.py
+      - src/profile_engine.py
+      - src/language_verifier.py
+      - src/output_assembler.py
+      - src/integration_adapter.py
+      - src/runner.py
+    independent_verifier:
+      - verifier/vta_verifier.py
+      - verifier/formula_conformance.py
+      - verifier/schema_conformance.py
+      - verifier/provenance_integrity.py
+      - verifier/language_policy.py
+      - verifier/boundary_enforcement.py
+      - verifier/setup_semantics.py
+
+  module_inventory:
+    - module_id: normalization_engine
+      responsibility: Input validation, dedup, sort, price-basis selection
+      public_symbols: [normalize_input, verify_price_basis]
+      related_requirements: [VTA-REQ-004, VTA-REQ-012]
+      related_VCs: [VC-EMPTY-SERIES-1, VC-INHIST-1, VC-DUP-TS-1, VC-UNSORTED-1, VC-MISS-INT-1, VC-ZERO-PX-1, VC-ZERO-VOL-1, VC-CORP-ACT-1, VC-PRICE-BASIS-1..3, VC-FAB-VAL-1, VC-NO-FAB-1, VC-NO-FAB-2]
+
+    - module_id: indicator_engine
+      responsibility: Compute 6 ACTIVE + PROFILE indicators with frozen formula semantics
+      public_symbols: [compute_rsi, compute_bollinger, compute_ma, compute_macd, compute_beta, compute_cmf]
+      related_requirements: [VTA-REQ-001, VTA-REQ-005, VTA-REQ-006, VTA-REQ-007, VTA-REQ-014]
+      related_VCs: [VC-RSI-WILDER-1..2, VC-WRONG-SMOOTH-1, VC-BOLL-1..2, VC-CHANNEL-1..2, VC-WRONG-LOOKBACK-1, VC-DIV-ZERO-1, VC-NAN-PROP-1, VC-OBV-VPT-1..2]
+
+    - module_id: profile_engine
+      responsibility: Compute 17 PROFILE blocks + 13 setups + archetype
+      public_symbols: [compute_profile_block, detect_setup, classify_archetype]
+      related_requirements: [VTA-REQ-002, VTA-REQ-009, VTA-REQ-009a, VTA-REQ-013]
+      related_VCs: [VC-PROFILE-VALID-1..4, VC-EVENTS-1Y-1, VC-COV-1..2, VC-CONFLICT-SETUP-1, VC-UNCONFIRMED-1, VC-FALSE-BREAKOUT-1, VC-ARCH-AMBIG-1, VC-BEARISH-DESIGN-1..4]
+
+    - module_id: language_verifier
+      responsibility: 3-layer non-advice language check
+      public_symbols: [check_language]
+      related_requirements: [VTA-REQ-003]
+      related_VCs: [VC-REQ007-LEXICAL, VC-REQ007-SEMANTIC, VC-REQ007-NEGATION, VC-REQ007-IMPERATIVE, VC-ADV-LANG-1]
+
+    - module_id: output_assembler
+      responsibility: Assemble mode-specific output, schema validation, provenance
+      public_symbols: [assemble_output, validate_schema]
+      related_requirements: [VTA-REQ-008, VTA-REQ-010]
+      related_VCs: [VC-SCHEMA-DRIFT-1, VC-MODE-CONTAM-1, VC-MODE-SEP-1..3, VC-MODE-KERNEL-1, VC-PROV-1..2, VC-PROV-MISS-1, VC-ACTIVE-VALID-1..3]
+
+    - module_id: integration_adapter
+      responsibility: Parent integration, boundary enforcement
+      public_symbols: [handoff_to_parent, enforce_valuation_boundary]
+      related_requirements: [VTA-REQ-011]
+      related_VCs: [VC-VAL-BOUND-1..2, VC-VAL-OVERRIDE-1]
+
+    - module_id: runner
+      responsibility: Pipeline orchestration
+      public_symbols: [run_active, run_profile]
+      related_requirements: [VTA-REQ-001, VTA-REQ-002]
+      related_VCs: [VC-LOOKAHEAD-1, VC-BENCH-MISALIGN-1, VC-PARTIAL-WEEK-1]
+
+    - module_id: vta_verifier
+      responsibility: Independent verification of all 64 VCs
+      public_symbols: [run_verification]
+      related_VCs: all 64 canonical VCs
+
+  requirement_status:
+    total: 15
+    implemented: 15
+    missing: 0
+    partial: 0
+
+  formula_status:
+    total: 12
+    implemented: 12
+    contract_deviations: 0
+
+  setup_status:
+    total: 13  # 8 bullish + 5 bearish
+    implemented: 13
+
+  failure_code_status:
+    total: 43
+    implemented: 43
+    missing: 0
+    unknown_added: 0
