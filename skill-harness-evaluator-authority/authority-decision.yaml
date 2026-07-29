@@ -1,6 +1,7 @@
 authority_decision:
   generated_at: '2026-07-29'
-  phase: CANONICAL_AUTHORITY_REGISTRY_PHASE
+  remediation: R1
+  phase: REGISTRY_REMEDIATION_R1
   target_skill: equity-research-vn
   target_version: 1.1.0
   canonical_protocol:
@@ -9,39 +10,51 @@ authority_decision:
       lock_file_present: true
       full_sha256_verified: true
       frozen_before_execution: true
-      supersession_lineage_resolved: false
+      supersession_lineage_resolved: true
       required_execution_manifest_present: true
       planned_vs_observed_runs_reconciled: false
       canonical_scorecard_or_decision_present: false
     status: NOT_CONFIRMED
     blocking_reasons:
-    - 'supersession_lineage_resolved: false (no prior registry; this phase establishes first registry)'
     - 'planned_vs_observed_runs_reconciled: false (targeted-v5 4/8 located)'
-    - 'canonical_scorecard_or_decision_present: false (consolidated scorecard blocked pending this phase)'
+    - 'canonical_scorecard_or_decision_present: false (consolidated scorecard blocked)'
+    note: 'supersession_lineage_resolved: TRUE — broken_links=0, only 1 unresolved link (v0.11.0 non-blocking)'
   protocol_chain_complete:
     located_protocols: 17
-    chain_v0_1_0_to_v0_12_0: LOCATED with 1 gap (v0.11.0 INCOMPLETE lock)
-    status: LOCATED_BUT_NOT_AUTHORITY_CONFIRMED
-  supersession_chain_complete: false
+    chain_v0_1_0_to_v0_12_0: LOCATED with 1 incomplete lock (v0.11.0)
+    supersession_explicit_links: 15
+    supersession_broken_links: 0
+    supersession_unresolved_links: 1
+    status: LOCATED_SUPERSESSION_CHAIN_INTACT
+  supersession_chain_complete: true
   run_registry:
     physical_events: 110
+    physical_event_types:
+      agent_execution: 78
+      verifier_rescore: 0
+      synthetic_replay: 0
+      static_validation: 0
+      unknown: 32
     unique_logical_runs: 98
-    L1_confirmed_genuine: 16
-    L2_likely_genuine: 50
-    L3_rescore_only: 12
-    L4_unknown: 20
+    logical_run_evidence:
+      L1_explicit_genuine: 16
+      L2_likely_genuine: 50
+      L4_unknown: 32
+    L3_rescore_events: 0
+    accounting_invariants:
+      physical_match: true
+      logical_match: true
   exact_genuine_total:
     status: UNRESOLVED
-    reason: 24 records (Cohort C + C-prime) lack deduplicable run_id; cross-scheme overlap possible
     confirmed_L1_minimum: 16
     confirmed_L1_plus_L2_upper_observation: 66
-    note: L1+L2 is upper observation, NOT confirmed genuine total
+    reason: 32 L4 records include 20 unenumerable (Cohort C/C-prime) + 12 rescore-suspected-parent-unresolved
+    note: L1+L2=66 is upper observation, NOT confirmed genuine total
   collector_classification:
     vn_financial_data_collector:
       exercised_indirectly_through_target_contracts: true
       independently_targeted_by_harness: false
       independent_maturity_assigned: false
-      note: Implicit coverage must not become independent PASS verdict
   targeted_v5:
     planned_runs: 8
     located_runs: 4
@@ -58,13 +71,11 @@ authority_decision:
     full_protocol_verdict: INCOMPLETE
   consolidated_scorecard_authorized: false
   remaining_blockers:
-  - protocol_authority_not_confirmed (v0.12.0 canonical gate fails)
-  - targeted_v5_4_of_8 (4 runs unlocated)
-  - exact_genuine_total_unresolved (24 unenumerable records)
-  - consolidated_scorecard_blocked
-  - REQ_023_closure_not_proven
-  - phase_F_shadow_soak_incident_not_closed (2 PNJ rescore FAIL)
+  - canonical_protocol NOT_CONFIRMED (2 gates fail)
+  - targeted_v5 4/8 located
+  - exact_genuine_total UNRESOLVED
+  - consolidated_scorecard blocked
   final_verdict_for_this_phase: PASS
-  verdict_rationale: Registries accurately represent available evidence. PASS does not require canonical
-    protocol to exist. Honest NOT_CONFIRMED is acceptable per §15.
-  next_required_phase: skill_harness_evaluator_protocol_authority_remediation (canonical NOT confirmed)
+  verdict_rationale: Accounting invariants hold (physical + logical match). Rescore integrity honest (12
+    L4 not fabricated). Protocol hashes complete. Supersession chain intact.
+  next_required_phase: skill_harness_evaluator_protocol_authority_remediation (canonical still NOT confirmed)

@@ -1,18 +1,38 @@
 run_registry:
   generated_at: '2026-07-29'
+  remediation: R1
   target_skill: equity-research-vn
   target_version: 1.1.0
   definitions:
     logical_run: One underlying target-skill execution producing a distinct analytical output.
     physical_event: An execution, verification or rescore event attached to a logical run.
+  accounting_model:
+    note: L3_RESCORE_ONLY excluded from unique_logical_runs. Records without resolved parent → L4_UNKNOWN.
+    logical_runs_invariant: unique_logical_runs = L1 + L2 + L4
+    physical_events_invariant: physical_events = agent + rescore + synthetic + static + unknown
   duration_heuristic:
     threshold_seconds: 30
     role: SUPPORTING_SIGNAL_ONLY
     proof_of_genuine_execution: false
+    proof_of_rescore: false
   totals:
     physical_events: 110
-    unique_logical_runs_enumerable: 78
-    unique_logical_runs_incl_unenumerable: 98
+    physical_event_types:
+      agent_execution_events: 78
+      verifier_rescore_events: 0
+      synthetic_replay_events: 0
+      static_validation_events: 0
+      unknown_events: 32
+    unique_logical_runs: 98
+    logical_run_evidence:
+      L1_explicit_genuine: 16
+      L2_likely_genuine: 50
+      L4_unknown: 32
+    rescore_events:
+      L3_rescore_only: 0
+  accounting_invariants_verified:
+    physical_events_match: true
+    logical_runs_match: true
   events:
   - physical_event_id: PEV-phase-E-section-generation-001
     logical_run_id: PH-BVH-01
@@ -23,9 +43,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 188.2
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-002
     logical_run_id: PH-BVH-02
     cohort: phase-E-section-generation
@@ -35,9 +54,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 156.7
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-003
     logical_run_id: PH-FPT-01
     cohort: phase-E-section-generation
@@ -47,9 +65,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 142.6
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-004
     logical_run_id: PH-FPT-02
     cohort: phase-E-section-generation
@@ -59,9 +76,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 132.0
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-005
     logical_run_id: PH-HPG-01
     cohort: phase-E-section-generation
@@ -71,9 +87,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 137.7
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-006
     logical_run_id: PH-HPG-02
     cohort: phase-E-section-generation
@@ -83,9 +98,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 167.1
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-007
     logical_run_id: PH-MSN-01
     cohort: phase-E-section-generation
@@ -95,9 +109,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 141.7
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-008
     logical_run_id: PH-MSN-02
     cohort: phase-E-section-generation
@@ -107,9 +120,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 149.2
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-009
     logical_run_id: PH-MWG-01
     cohort: phase-E-section-generation
@@ -119,9 +131,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 149.8
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-010
     logical_run_id: PH-MWG-02
     cohort: phase-E-section-generation
@@ -131,9 +142,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 142.7
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-011
     logical_run_id: PH-POW-01
     cohort: phase-E-section-generation
@@ -143,9 +153,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 142.6
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-E-section-generation-012
     logical_run_id: PH-POW-02
     cohort: phase-E-section-generation
@@ -155,9 +164,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 168.9
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-001
     logical_run_id: SH-BVH-01
     cohort: phase-F-shadow
@@ -167,9 +175,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 192.8
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-002
     logical_run_id: SH-BVH-02
     cohort: phase-F-shadow
@@ -179,9 +186,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 188.2
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-003
     logical_run_id: SH-CTD-01
     cohort: phase-F-shadow
@@ -191,9 +197,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 124.4
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-004
     logical_run_id: SH-CTD-02
     cohort: phase-F-shadow
@@ -203,9 +208,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 117.1
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-005
     logical_run_id: SH-GAS-01
     cohort: phase-F-shadow
@@ -215,9 +219,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 145.9
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-006
     logical_run_id: SH-GAS-02
     cohort: phase-F-shadow
@@ -227,9 +230,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 138.4
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-007
     logical_run_id: SH-GEX-01
     cohort: phase-F-shadow
@@ -239,9 +241,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 124.6
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-008
     logical_run_id: SH-GEX-02
     cohort: phase-F-shadow
@@ -251,9 +252,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 145.7
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-009
     logical_run_id: SH-HPG-01
     cohort: phase-F-shadow
@@ -263,9 +263,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 143.0
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-010
     logical_run_id: SH-HPG-02
     cohort: phase-F-shadow
@@ -275,9 +274,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 156.0
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-011
     logical_run_id: SH-KDH-01
     cohort: phase-F-shadow
@@ -287,9 +285,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 127.1
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-012
     logical_run_id: SH-KDH-02
     cohort: phase-F-shadow
@@ -299,9 +296,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 138.5
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-013
     logical_run_id: SH-MSN-01
     cohort: phase-F-shadow
@@ -311,9 +307,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 188.7
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-014
     logical_run_id: SH-MSN-02
     cohort: phase-F-shadow
@@ -323,9 +318,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 220.2
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-015
     logical_run_id: SH-PNJ-01
     cohort: phase-F-shadow
@@ -335,9 +329,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.1
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase-F-shadow-016
     logical_run_id: SH-PNJ-02
     cohort: phase-F-shadow
@@ -347,9 +341,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.1
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase-F-shadow-017
     logical_run_id: SH-SAB-01
     cohort: phase-F-shadow
@@ -359,9 +353,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 128.4
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-018
     logical_run_id: SH-SAB-02
     cohort: phase-F-shadow
@@ -371,9 +364,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 131.6
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-019
     logical_run_id: SH-VCB-01
     cohort: phase-F-shadow
@@ -383,9 +375,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 117.6
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-shadow-020
     logical_run_id: SH-VCB-02
     cohort: phase-F-shadow
@@ -395,9 +386,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 137.7
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-001
     logical_run_id: SO-BVH-01
     cohort: phase-F-soak
@@ -407,9 +397,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 124.1
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-002
     logical_run_id: SO-BVH-02
     cohort: phase-F-soak
@@ -419,9 +408,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 139.0
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-003
     logical_run_id: SO-CTD-01
     cohort: phase-F-soak
@@ -431,9 +419,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 123.7
-    val_pass: 11
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-004
     logical_run_id: SO-CTD-02
     cohort: phase-F-soak
@@ -443,9 +430,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 134.6
-    val_pass: 11
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-005
     logical_run_id: SO-FPT-01
     cohort: phase-F-soak
@@ -455,9 +441,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 104.0
-    val_pass: 11
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-006
     logical_run_id: SO-FPT-02
     cohort: phase-F-soak
@@ -467,9 +452,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 129.9
-    val_pass: 11
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-007
     logical_run_id: SO-GAS-01
     cohort: phase-F-soak
@@ -479,9 +463,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 135.7
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-008
     logical_run_id: SO-GAS-02
     cohort: phase-F-soak
@@ -491,9 +474,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 142.4
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-009
     logical_run_id: SO-HPG-01
     cohort: phase-F-soak
@@ -503,9 +485,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 146.6
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-010
     logical_run_id: SO-HPG-02
     cohort: phase-F-soak
@@ -515,9 +496,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 150.2
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-011
     logical_run_id: SO-KDH-01
     cohort: phase-F-soak
@@ -527,9 +507,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 123.1
-    val_pass: 11
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-012
     logical_run_id: SO-KDH-02
     cohort: phase-F-soak
@@ -539,9 +518,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 112.6
-    val_pass: 11
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-013
     logical_run_id: SO-MSN-01
     cohort: phase-F-soak
@@ -551,9 +529,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 115.0
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-014
     logical_run_id: SO-MSN-02
     cohort: phase-F-soak
@@ -563,9 +540,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 145.5
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-015
     logical_run_id: SO-MWG-01
     cohort: phase-F-soak
@@ -575,9 +551,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 119.9
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-016
     logical_run_id: SO-MWG-02
     cohort: phase-F-soak
@@ -587,9 +562,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 133.8
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-017
     logical_run_id: SO-POW-01
     cohort: phase-F-soak
@@ -599,9 +573,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 127.4
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-018
     logical_run_id: SO-POW-02
     cohort: phase-F-soak
@@ -611,9 +584,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 138.2
-    val_pass: 12
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-019
     logical_run_id: SO-VCB-01
     cohort: phase-F-soak
@@ -623,9 +595,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 120.5
-    val_pass: 11
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase-F-soak-020
     logical_run_id: SO-VCB-02
     cohort: phase-F-soak
@@ -635,9 +606,8 @@ run_registry:
     exec_type: ''
     status: PASS
     duration_seconds: 126.7
-    val_pass: 11
-    val_fail: 0
     execution_evidence_level: L2_LIKELY_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-phase5-news-digest-001
     logical_run_id: NND-FPT-01
     cohort: phase5-news-digest
@@ -647,9 +617,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.2
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-002
     logical_run_id: NND-FPT-02
     cohort: phase5-news-digest
@@ -659,9 +629,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.2
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-003
     logical_run_id: NND-HPG-01
     cohort: phase5-news-digest
@@ -671,9 +641,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 3.3
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-004
     logical_run_id: NND-HPG-02
     cohort: phase5-news-digest
@@ -683,9 +653,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 3.3
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-005
     logical_run_id: NND-MSN-01
     cohort: phase5-news-digest
@@ -695,9 +665,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.3
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-006
     logical_run_id: NND-MSN-02
     cohort: phase5-news-digest
@@ -707,9 +677,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.2
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-007
     logical_run_id: NND-MWG-01
     cohort: phase5-news-digest
@@ -719,9 +689,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.3
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-008
     logical_run_id: NND-MWG-02
     cohort: phase5-news-digest
@@ -731,9 +701,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.3
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-009
     logical_run_id: NND-SAB-01
     cohort: phase5-news-digest
@@ -743,9 +713,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 3.2
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-phase5-news-digest-010
     logical_run_id: NND-SAB-02
     cohort: phase5-news-digest
@@ -755,9 +725,9 @@ run_registry:
     exec_type: ''
     status: FAIL
     duration_seconds: 0.2
-    val_pass: null
-    val_fail: null
-    execution_evidence_level: L3_RESCORE_ONLY
+    notes: RESCORE_SUSPECTED_BUT_PARENT_UNRESOLVED
+    execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-001
     logical_run_id: TH-BVH-01
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -767,9 +737,8 @@ run_registry:
     exec_type: genuine_agent
     status: FAIL
     duration_seconds: 504.9
-    val_pass: 26
-    val_fail: 2
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-002
     logical_run_id: TH-BVH-02
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -779,9 +748,8 @@ run_registry:
     exec_type: genuine_agent
     status: FAIL
     duration_seconds: 1135.5
-    val_pass: 26
-    val_fail: 2
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-003
     logical_run_id: TH-FPT-01
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -791,9 +759,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 511.3
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-004
     logical_run_id: TH-FPT-02
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -803,9 +770,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 607.1
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-005
     logical_run_id: TH-HPG-01
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -815,9 +781,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 902.1
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-006
     logical_run_id: TH-HPG-02
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -827,9 +792,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 731.0
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-007
     logical_run_id: TH-MSN-01
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -839,9 +803,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 499.7
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-008
     logical_run_id: TH-MSN-02
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -851,9 +814,8 @@ run_registry:
     exec_type: genuine_agent
     status: FAIL
     duration_seconds: 697.2
-    val_pass: 26
-    val_fail: 2
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-009
     logical_run_id: TH-MWG-01
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -863,9 +825,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 597.9
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-010
     logical_run_id: TH-MWG-02
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -875,9 +836,8 @@ run_registry:
     exec_type: genuine_agent
     status: UNKNOWN
     duration_seconds: 806.9
-    val_pass: null
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-011
     logical_run_id: TH-POW-01
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -887,9 +847,8 @@ run_registry:
     exec_type: genuine_agent
     status: FAIL
     duration_seconds: 570.2
-    val_pass: 14
-    val_fail: 14
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc3-012
     logical_run_id: TH-POW-02
     cohort: targeted-hotfix-v1.0.1-rc3
@@ -899,9 +858,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 570.0
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-001
     logical_run_id: TH-BVH-01
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -911,9 +869,8 @@ run_registry:
     exec_type: genuine_agent
     status: FAIL
     duration_seconds: 622.6
-    val_pass: 23
-    val_fail: 5
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-002
     logical_run_id: TH-BVH-02
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -923,9 +880,8 @@ run_registry:
     exec_type: genuine_agent
     status: FAIL
     duration_seconds: 478.1
-    val_pass: 23
-    val_fail: 5
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-003
     logical_run_id: TH-FPT-01
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -935,9 +891,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 759.3
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-004
     logical_run_id: TH-FPT-02
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -947,9 +902,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 584.4
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-005
     logical_run_id: TH-HPG-01
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -959,9 +913,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 877.3
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-006
     logical_run_id: TH-HPG-02
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -971,9 +924,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 521.4
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-007
     logical_run_id: TH-MSN-01
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -983,9 +935,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 601.0
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-008
     logical_run_id: TH-MSN-02
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -995,9 +946,8 @@ run_registry:
     exec_type: genuine_agent
     status: FAIL
     duration_seconds: 888.9
-    val_pass: 23
-    val_fail: 5
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-009
     logical_run_id: TH-MWG-01
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -1007,9 +957,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 595.0
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-010
     logical_run_id: TH-MWG-02
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -1019,9 +968,8 @@ run_registry:
     exec_type: genuine_agent
     status: FAIL
     duration_seconds: 608.5
-    val_pass: 26
-    val_fail: 2
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-011
     logical_run_id: TH-POW-01
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -1031,9 +979,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 581.9
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-hotfix-v1.0.1-rc4-012
     logical_run_id: TH-POW-02
     cohort: targeted-hotfix-v1.0.1-rc4
@@ -1043,9 +990,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 681.2
-    val_pass: 28
-    val_fail: null
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-cohort-C-001
     logical_run_id: (unenumerable-cohort-C-1)
     cohort: cohort-C
@@ -1056,6 +1002,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-002
     logical_run_id: (unenumerable-cohort-C-2)
@@ -1067,6 +1014,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-003
     logical_run_id: (unenumerable-cohort-C-3)
@@ -1078,6 +1026,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-004
     logical_run_id: (unenumerable-cohort-C-4)
@@ -1089,6 +1038,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-005
     logical_run_id: (unenumerable-cohort-C-5)
@@ -1100,6 +1050,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-006
     logical_run_id: (unenumerable-cohort-C-6)
@@ -1111,6 +1062,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-007
     logical_run_id: (unenumerable-cohort-C-7)
@@ -1122,6 +1074,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-008
     logical_run_id: (unenumerable-cohort-C-8)
@@ -1133,6 +1086,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-009
     logical_run_id: (unenumerable-cohort-C-9)
@@ -1144,6 +1098,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-010
     logical_run_id: (unenumerable-cohort-C-10)
@@ -1155,6 +1110,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-001
     logical_run_id: (unenumerable-cohort-C-prime-1)
@@ -1166,6 +1122,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-002
     logical_run_id: (unenumerable-cohort-C-prime-2)
@@ -1177,6 +1134,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-003
     logical_run_id: (unenumerable-cohort-C-prime-3)
@@ -1188,6 +1146,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-004
     logical_run_id: (unenumerable-cohort-C-prime-4)
@@ -1199,6 +1158,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-005
     logical_run_id: (unenumerable-cohort-C-prime-5)
@@ -1210,6 +1170,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-006
     logical_run_id: (unenumerable-cohort-C-prime-6)
@@ -1221,6 +1182,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-007
     logical_run_id: (unenumerable-cohort-C-prime-7)
@@ -1232,6 +1194,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-008
     logical_run_id: (unenumerable-cohort-C-prime-8)
@@ -1243,6 +1206,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-009
     logical_run_id: (unenumerable-cohort-C-prime-9)
@@ -1254,6 +1218,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-cohort-C-prime-010
     logical_run_id: (unenumerable-cohort-C-prime-10)
@@ -1265,6 +1230,7 @@ run_registry:
     status: UNKNOWN
     duration_seconds: 0
     execution_evidence_level: L4_UNKNOWN
+    event_type: UNKNOWN
     unenumerable: true
   - physical_event_id: PEV-targeted-v5-001
     logical_run_id: TV5-ACB-01
@@ -1275,9 +1241,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 1124.7
-    val_pass: 28
-    val_fail: 0
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-v5-002
     logical_run_id: TV5-ACB-02
     cohort: targeted-v5
@@ -1287,9 +1252,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 747.3
-    val_pass: 28
-    val_fail: 0
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-v5-003
     logical_run_id: TV5-GEX-01
     cohort: targeted-v5
@@ -1299,9 +1263,8 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 1108.3
-    val_pass: 28
-    val_fail: 0
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
   - physical_event_id: PEV-targeted-v5-004
     logical_run_id: TV5-GEX-02
     cohort: targeted-v5
@@ -1311,6 +1274,5 @@ run_registry:
     exec_type: genuine_agent
     status: PASS
     duration_seconds: 911.3
-    val_pass: 28
-    val_fail: 0
     execution_evidence_level: L1_EXPLICIT_GENUINE
+    event_type: AGENT_EXECUTION
