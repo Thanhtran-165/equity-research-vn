@@ -1,0 +1,95 @@
+manifest_version: 1.0.0
+artifact_class: OBSERVABILITY_CONTRACT
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_WIRING
+
+recorder_class: observability.ObservabilityRecorder
+implementation: src/observability.py
+
+mandatory_metrics_count: 12
+mandatory_metrics:
+  - name: integration_invocation_total
+    kind: counter
+    description: Total host invocations through the integration boundary.
+  - name: integration_success_total
+    kind: counter
+    description: Invocations returning an OK host envelope.
+  - name: integration_failure_total
+    kind: counter
+    description: Invocations ending in an integration-failure envelope.
+  - name: canonical_failure_envelope_total
+    kind: counter
+    description: Invocations surfacing a frozen canonical VTA failure envelope (codes unchanged).
+  - name: adapter_rejection_total
+    kind: counter
+    description: Host inputs rejected at the adapter schema boundary.
+  - name: output_schema_mismatch_total
+    kind: counter
+    description: Canonical-to-host envelope schema mismatches detected.
+  - name: semantic_divergence_total
+    kind: counter
+    description: Integrated output divergences vs direct frozen runner (must be 0).
+  - name: latency_seconds
+    kind: gauge (observation)
+    description: End-to-end integration boundary latency per invocation.
+  - name: input_record_count
+    kind: gauge (observation)
+    description: Number of canonical input rows processed per invocation.
+  - name: output_bytes
+    kind: gauge (observation)
+    description: Serialized host output envelope size in bytes.
+  - name: feature_flag_state
+    kind: gauge (observation)
+    description: Resolved feature flag state (1.0 enabled, 0.0 disabled).
+  - name: rollback_activation_total
+    kind: counter
+    description: Rollback activations observed.
+
+mandatory_dimensions_count: 7
+mandatory_dimensions:
+  - environment
+  - integration_version
+  - VTA_implementation_commit
+  - canonical_schema_version
+  - consumer
+  - result_status
+  - primary_failure_code
+
+log_contract:
+  must_include:
+    - integration_run_id
+    - deterministic_record_id
+    - canonical_input_digest
+    - output_digest
+    - provenance_version
+    - feature_flag_state
+    - elapsed_seconds
+    - result_status
+  may_include:
+    - primary_failure_code
+    - integration_version
+    - VTA_implementation_commit
+    - canonical_schema_version
+    - environment
+    - consumer
+    - mode
+    - ticker
+    - input_record_count
+    - output_bytes
+  must_not_include:
+    - secrets
+    - authentication_tokens
+    - unrestricted_raw_market_data_dumps
+    - machine_local_absolute_paths
+    - user_private_data_not_required_for_debugging
+  enforcement: allowlist projection (LOGGABLE_FIELDS); non-allowlisted keys dropped before emission
+
+runtime_version_identifiers_exposed:
+  - VTA_implementation_commit (exact pinned commit)
+  - canonical_schema_version
+  - serialization_version
+  - formula_contract_version
+  - setup_contract_version
+  - failure_code_registry_version
+  - integration_version

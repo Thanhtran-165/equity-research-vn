@@ -1,0 +1,255 @@
+manifest_version: 1.0.0
+artifact_class: HOST_MAPPING_CONTRACT
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_WIRING
+
+integration_contract:
+  host_input_schema:
+    schema_version_supported:
+      - host-market-data-v1
+      - host-market-data-v1.1
+    top_level_fields:
+      host_input.symbol: string (non-null)
+      host_input.mode: enum[ACTIVE, PROFILE] (non-null)
+      host_input.frequency: enum[WEEKLY, DAILY] (non-null)
+      host_input.as_of_date: string ISO-8601 date (nullable; DERIVE = last row)
+      host_input.source_provider: string (nullable -> UNKNOWN_PROVIDER)
+      host_input.adjustment_state: string (non-null)
+      host_input.price_basis: string (non-null)
+      host_input.rows: list of host OHLCV rows (non-null key; empty list allowed)
+
+  canonical_VTA_input_schema:
+    runner_entrypoints:
+      - run_active(ticker, weekly_data, as_of_date, source_provider)
+      - run_profile(ticker, daily_data, as_of_date, source_provider)
+    row_shape:
+      - date (ISO-8601 date string)
+      - open / high / low / close (float)
+      - volume (float, nullable)
+      - trading_days (int, nullable, ACTIVE only)
+
+  host_to_canonical_mapping:
+    - host_path: host_input.symbol
+      canonical_path: ticker
+      type: string
+      nullable: false
+      transformation: pass_through
+      unit: n/a
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: host_input.mode
+      canonical_path: mode
+      type: enum[ACTIVE, PROFILE]
+      nullable: false
+      transformation: normalize_upper
+      unit: n/a
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: host_input.frequency
+      canonical_path: frequency
+      type: enum[WEEKLY, DAILY]
+      nullable: false
+      transformation: normalize_upper
+      unit: n/a
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: host_input.as_of_date
+      canonical_path: as_of_date
+      type: string_ISO8601_date
+      nullable: true
+      transformation: iso8601_to_canonical_date
+      unit: ISO_8601
+      timezone: UTC (offset applied if present; never invented)
+      missing_behavior: DERIVE (last row date)
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: host_input.source_provider
+      canonical_path: source_provider
+      type: string
+      nullable: false
+      transformation: pass_through
+      unit: n/a
+      timezone: n/a
+      missing_behavior: NULL (-> UNKNOWN_PROVIDER)
+      invalid_behavior: NULL
+      provenance_preserved: true
+    - host_path: host_input.adjustment_state
+      canonical_path: adjustment_state
+      type: string
+      nullable: false
+      transformation: pass_through
+      unit: n/a
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: host_input.price_basis
+      canonical_path: price_basis
+      type: string
+      nullable: false
+      transformation: pass_through
+      unit: n/a
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+
+    - host_path: rows[].timestamp
+      canonical_path: rows[].date
+      type: string_ISO8601_date
+      nullable: false
+      transformation: iso8601_to_canonical_date
+      unit: ISO_8601
+      timezone: UTC (offset applied if present; never invented)
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: rows[].open_price
+      canonical_path: rows[].open
+      type: float
+      nullable: false
+      transformation: as_float
+      unit: price_quote
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: rows[].high_price
+      canonical_path: rows[].high
+      type: float
+      nullable: false
+      transformation: as_float
+      unit: price_quote
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: rows[].low_price
+      canonical_path: rows[].low
+      type: float
+      nullable: false
+      transformation: as_float
+      unit: price_quote
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: rows[].close_price
+      canonical_path: rows[].close
+      type: float
+      nullable: false
+      transformation: as_float
+      unit: price_quote
+      timezone: n/a
+      missing_behavior: REJECT
+      invalid_behavior: REJECT
+      provenance_preserved: true
+    - host_path: rows[].trade_volume
+      canonical_path: rows[].volume
+      type: float
+      nullable: true
+      transformation: as_float_or_null
+      unit: shares
+      timezone: n/a
+      missing_behavior: NULL
+      invalid_behavior: NULL
+      provenance_preserved: true
+    - host_path: rows[].trading_days_in_period
+      canonical_path: rows[].trading_days
+      type: int
+      nullable: true
+      transformation: as_int_or_null
+      unit: count
+      timezone: n/a
+      missing_behavior: NULL
+      invalid_behavior: NULL
+      provenance_preserved: true
+
+  canonical_VTA_output_schema:
+    packet_class: output_assembler.OutputPacket (frozen)
+    packet_fields:
+      - mode (ACTIVE | PROFILE)
+      - body (deterministic, sorted-key payload)
+      - provenance (field_path -> ProvenanceChain)
+      - validation (ValidationResult)
+    serialization: JSON sort_keys=True, separators=(',',':'), ensure_ascii=False
+
+  host_output_schema:
+    envelope_class: HostOutputEnvelope
+    envelope_fields:
+      - integration_run_id
+      - integration_version
+      - pinned_implementation_commit
+      - canonical_schema_version
+      - serialization_version
+      - feature_flag_decision
+      - canonical_input_digest
+      - output_digest
+      - deterministic_record_id
+      - provenance_version
+      - canonical_packet (VERBATIM frozen packet)
+      - integration_envelope (host-only namespace)
+      - elapsed_seconds
+
+  canonical_to_host_mapping:
+    canonical_path: OutputPacket.to_dict()
+      host_path: HostOutputEnvelope.canonical_packet
+      transformation: verbatim (no drop / rename / coerce / reorder)
+      provenance_preserved: true
+    canonical_path: OutputPacket.serialize() digest
+      host_path: HostOutputEnvelope.output_digest
+      transformation: sha256(canonical serialize bytes)
+      provenance_preserved: true
+    host_only_namespace: HostOutputEnvelope.integration_envelope
+      separate_namespace: true
+      contains: host_target, side_effect_policy, schema_version_supported, phase_deadline_seconds
+
+  canonical_failure_envelope_mapping:
+    canonical_path: runner ErrorEnvelope.error_code (frozen, 43 codes)
+      host_path: run() result {"status":"CANONICAL_FAILURE","canonical_error":...}
+      transformation: verbatim (NO integration code substituted)
+      provenance_preserved: true
+
+  integration_failure_envelope:
+    namespace: VTA_PHASE_3_INTEGRATION
+    namespace_version: 1.0.0
+    overlap_with_canonical_codes: 0
+    codes:
+      - INTEGRATION_ADAPTER_SCHEMA_REJECTED
+      - INTEGRATION_FROZEN_PACKAGE_UNAVAILABLE
+      - INTEGRATION_CONFIGURATION_MISMATCH
+      - INTEGRATION_UNSUPPORTED_HOST_SCHEMA
+      - INTEGRATION_DEPLOYMENT_VERSION_MISMATCH
+      - INTEGRATION_TIMEOUT
+      - INTEGRATION_HOST_SERIALIZATION_FAILED
+      - INTEGRATION_FLAG_AMBIGUOUS_STATE
+      - INTEGRATION_FLAG_RESTART_REQUIRED_VIOLATION
+
+  feature_flag:
+    name: vta_phase_3_integration_enabled
+    default_state: OFF
+    scope:
+      - environment
+      - tenant_or_consumer
+      - invocation_path
+    runtime_disable_supported: true
+    restart_required_to_disable: false
+
+  rollback_switch:
+    runtime_disable: feature_flag.FeatureFlag.disable()
+    routing_reversion: host routing switch (set_routing_to_vta(False))
+    deployment_version_reversion: declared available (host deployment policy)
+
+mapping_integrity:
+  implicit_field_aliases: 0
+  heuristic_path_discovery: 0
+  undocumented_defaults: 0
+  silent_field_drops: 0
+  silent_type_coercions: 0

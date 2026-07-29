@@ -1,0 +1,113 @@
+manifest_version: 1.0.0
+artifact_class: INTEGRATION_MANIFEST
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_WIRING
+
+canonical_authority:
+  specification_acceptance_commit: c4792fc1a96cd35c4ead1acdb0835c246471c6fd
+  implementation_commit: 23853411aa74c504ee2d79dd8889a845b5edf7de
+  fixture_freeze_commit: a79ba808e929cb06f3d7103929044627c7f0258a
+  qualification_evidence_commit: caaaf89c3d1bd86c57642ebacf8ddc0f56536eb2
+  maturity_commit: e386c4ef3cbfabd6341de26461d62766c5885f47
+  maturity_level: ROBUST_MACHINE
+
+branch:
+  name: vta-phase-3-production-integration
+  parent_commit: e386c4ef3cbfabd6341de26461d62766c5885f47
+
+integration_boundary:
+  host_input: Host system real-format market-data input
+  integration_adapter: vn-technical-analysis-phase3-production-integration/src/integration_adapter.py
+  canonical_VTA_input: Frozen runner (run_active / run_profile) canonical input shape
+  frozen_VTA_implementation: vn-technical-analysis-phase3-implementation/src/runner.py
+  canonical_VTA_output_packet: output_assembler.OutputPacket (frozen, verbatim)
+  host_output_adapter: HostOutputEnvelope (versioned transport envelope)
+  downstream_consumer: READ_ONLY downstream analytics consumer
+
+version_pinning:
+  implementation_commit: 23853411aa74c504ee2d79dd8889a845b5edf7de
+  canonical_schema_version: vta-canonical-v1
+  serialization_version: canonical-json-v1
+  formula_contract_version: frozen-formula-registry-v1
+  setup_contract_version: frozen-setup-registry-v1
+  failure_code_registry_version: vta-failure-code-registry-1.0.0
+  integration_version: vta-phase-3-integration-v1
+  mutable_version_ranges: 0
+  floating_branch_dependencies: 0
+  latest_tag_dependencies: 0
+
+integration_components:
+  - path: src/integration_adapter.py
+    role: Host<->canonical boundary adapter; frozen-runner loader (commit-pinned)
+    public_interfaces:
+      - IntegrationAdapter.run(host_input) -> structured dict
+      - IntegrationAdapter.map_host_to_canonical_input(host_input) -> CanonicalInput
+      - IntegrationAdapter.map_canonical_to_host_envelope(packet, ...) -> HostOutputEnvelope
+  - path: src/feature_flag.py
+    role: Mandatory integration feature flag (default OFF, runtime disable)
+    public_interfaces:
+      - FeatureFlag.resolve(...) -> FeatureFlagDecision
+      - FeatureFlag.enable() / disable() / clear_runtime_override()
+  - path: src/observability.py
+    role: 12 mandatory metrics + 7 dimensions + allowlisted structured logs
+    public_interfaces:
+      - ObservabilityRecorder.inc / observe / record_invocation / log / snapshot
+  - path: src/rollback_hooks.py
+    role: Rollback controller + declared rollback state
+    public_interfaces:
+      - RollbackController.execute_drill(...) -> RollbackDrillResult
+      - DECLARED_ROLLBACK_STATE
+  - path: src/integration_failure_codes.py
+    role: Separate integration failure-code namespace (9 codes, 0 canonical overlap)
+    public_interfaces:
+      - all_codes / registry_records / is_integration_code / assert_disjoint_from_canonical
+  - path: src/integration_tests.py
+    role: Integration test suite (29 tests)
+    public_interfaces:
+      - suite() -> unittest.TestSuite
+
+semantic_preservation_targets:
+  requirements: 15/15
+  VCs: 64/64
+  formulas: 12/12
+  bearish_setups: 5/5
+  failure_codes: 43/43
+  deterministic_record_ID: preserved
+  chain_ID: preserved
+  provenance: preserved
+  primary_codes: preserved
+  diagnostic_codes: preserved
+  ordering: preserved
+  null_semantics: preserved
+  tolerance_policy: preserved
+
+side_effect_policy:
+  automated_order_execution: prohibited
+  trade_submission: prohibited
+  portfolio_mutation: prohibited
+  account_mutation: prohibited
+  source_market_data_mutation: prohibited
+  autonomous_external_action: prohibited
+
+allowed_changes_in_this_commit:
+  - integration adapter code
+  - host entrypoint wiring
+  - feature-flag implementation
+  - observability instrumentation
+  - integration failure-code namespace
+  - rollback hooks
+  - integration tests
+  - integration metadata
+
+prohibited_changes_in_this_commit:
+  - frozen VTA production core
+  - frozen verifier
+  - frozen fixtures / oracles / mutations / witnesses
+  - frozen qualification evidence
+  - frozen maturity artifacts
+  - deployment configuration
+  - production acceptance decision
+
+post_commit_immutability:
+  integration_code_immutable_after_wiring: true

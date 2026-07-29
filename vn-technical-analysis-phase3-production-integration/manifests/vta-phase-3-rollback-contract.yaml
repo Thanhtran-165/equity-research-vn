@@ -1,0 +1,55 @@
+manifest_version: 1.0.0
+artifact_class: ROLLBACK_CONTRACT
+frozen_at: '2026-07-29'
+phase: VTA_PHASE_3_PRODUCTION_INTEGRATION
+commit_role: INTEGRATION_WIRING
+
+controller_class: rollback_hooks.RollbackController
+implementation: src/rollback_hooks.py
+
+rollback:
+  mechanisms:
+    - feature_flag_disable
+    - routing_reversion
+    - deployment_version_reversion
+  prior_production_state_identified: true
+  data_migration_required: false
+  irreversible_side_effects: 0
+
+mechanism_details:
+  feature_flag_disable:
+    description: Runtime, atomic, no restart required. Forces flag OFF; host returns explicit disabled status.
+    execution: FeatureFlag.disable()
+    restart_required: false
+  routing_reversion:
+    description: Host routing switch stops directing traffic to the VTA integration path; prior non-VTA path restored.
+    execution: handle.set_routing_to_vta(False)
+    restart_required: false
+  deployment_version_reversion:
+    description: Return the deployment to the pre-integration deployment version (host deployment policy).
+    execution: host deployment pipeline (declared available; out of scope for in-process drill)
+    restart_required: host-defined
+
+read_only_boundary_implication:
+  rationale: VTA is integrated as a read-only analytics capability (directive 7). Rollback therefore has no data to undo.
+  data_migration_required: false
+  irreversible_side_effects: 0
+  residual_side_effects_after_drill: 0
+
+rollback_drill_contract:
+  integration_enabled_before: true
+  known_test_invocations_completed: host-declared count
+  rollback_activated: true
+  vta_routing_disabled: true
+  prior_path_restored: true
+  residual_vta_side_effects: 0
+  rollback_result: PASS
+  rollback_duration_seconds: measured (no invented threshold)
+  notes:
+    - "deployment_version_reversion declared available; not executed in-process"
+    - "read-only boundary => no data migration and no irreversible side effects"
+
+threshold_policy:
+  invented_threshold: false
+  host_threshold_used: false (no accepted host rollback SLO exists)
+  disposition: report measured rollback duration as an operational baseline; nonblocking limitation
