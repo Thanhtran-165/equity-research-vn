@@ -8,7 +8,7 @@
 
 ## Scope and Methodology
 
-Review of VTA Phase 3 implementation (R4 qualification) against 25 maturity controls.
+Review of VTA Phase 3 implementation (R4 qualification) against 26 maturity controls.
 Only frozen artifacts used. No code/fixture/oracle modifications.
 
 ## Frozen Authority
@@ -21,7 +21,7 @@ fixture_freeze_R4: eac8219c7
 qualification_evidence_R4: f9389b9f6
 ```
 
-## 25-Control Summary
+## 26-Control Summary
 
 | Domain | Controls | ROBUST | FUNCTIONAL |
 |---|---|---|---|
@@ -29,13 +29,13 @@ qualification_evidence_R4: f9389b9f6
 | Semantic (5) | 5 | 5 | 0 |
 | Runtime (6) | 6 | 6 | 0 |
 | Independence (4) | 4 | 4 | 0 |
-| Freeze/Operational (6) | 6 | 5 | 1 |
-| **Total** | **25** | **24** | **1** |
+| Freeze/Operational (7) | 7 | 6 | 1 |
+| **Total** | **26** | **25** | **1** |
 
 ## Maturity Distribution
 
-- ROBUST_MACHINE: 24/25 controls
-- FUNCTIONAL_MACHINE: 1/25 (MC-CLEAN-REPRODUCIBILITY — non-critical)
+- ROBUST_MACHINE: 25/26 controls
+- FUNCTIONAL_MACHINE: 1/26 (MC-CLEAN-REPRODUCIBILITY — non-critical)
 
 ## Critical-Control Floor
 
