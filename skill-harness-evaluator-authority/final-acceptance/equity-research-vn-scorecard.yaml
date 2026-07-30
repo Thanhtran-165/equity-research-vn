@@ -1,0 +1,101 @@
+equity_research_vn_scorecard:
+  generated_at: '2026-07-30'
+  phase: CONSOLIDATED_SCORECARD_AND_FINAL_ACCEPTANCE
+  target: equity-research-vn
+  version: '1.1.0'
+
+  owner_release_state:
+    target: equity-research-vn
+    version: '1.1.0'
+    architecture: HYBRID_DETERMINISTIC_SHELL
+    owner_release_label: PRODUCTION_READY
+    source: equity-research-vn/VERSION + RELEASE-MANIFEST.json
+
+  target_score_dimensions:
+    implementation_integrity:
+      evidence: 'source tree hash 6e6b2a25... pinned across all freezes'
+      status: PASS
+    deterministic_shell_integrity:
+      evidence: 'HYBRID_DETERMINISTIC_SHELL architecture, data contract deterministic'
+      status: PASS
+    functional_execution:
+      evidence: 'Phase E 12/12 PASS, authoritative completion 8/8 PASS'
+      status: PASS
+    genuine_agent_execution:
+      evidence: '20 explicit genuine-agent runs (L1) across phases'
+      status: PASS
+    requirement_compliance:
+      evidence: '224/224 requirements accounted across 8 authoritative runs'
+      status: PASS
+    source_traceability:
+      evidence: 'REQ-021 provenance check PASS across runs'
+      status: PASS
+    unsupported_claim_prevention:
+      evidence: 'narrative sanitizer PASS, REQ-027 external claim flagging'
+      status: PASS
+    ticker_isolation:
+      evidence: 'cross-run leakage 0 verified'
+      status: PASS
+    cross_ticker_generalization:
+      evidence: 'CTD (v0.14) + GAS/SAB/SSI (v0.13) + ACB/GEX (v0.12) all PASS'
+      status: PASS
+    clean_positive_control:
+      evidence: 'SAB REQ-023 applicable, PASS, no false positive'
+      status: PASS
+    data_dependency_handling:
+      evidence: 'sponsor vnstock_data golden tier required, handled'
+      status: PASS
+    failure_reason_correctness:
+      evidence: 'verifier reports correct failure reasons (Phase E 0 failures)'
+      status: PASS
+    reproducibility:
+      evidence: 'deterministic shell produces same output for same input'
+      status: PASS
+    operational_evidence:
+      evidence: 'genuine agent runs 542-630s each, exit 0, stderr empty'
+      status: PASS
+    unresolved_critical_defects:
+      evidence: '0 critical defects in authoritative runs'
+      status: PASS
+
+  previously_unverified_metrics:
+    hard_gates_17_of_17:
+      metric_state: NOT_VERIFIED
+      reason: 'only historical v0.1.0 evidence (FAIL status), not canonical'
+    mutation_suite_6_of_6:
+      metric_state: NOT_VERIFIED
+      reason: 'only historical v0.1.0 evidence, not re-verified under canonical authority'
+    validator_sensitivity_1_0:
+      metric_state: NOT_VERIFIED
+      reason: 'no canonical evidence'
+    validator_specificity_1_0:
+      metric_state: NOT_VERIFIED
+      reason: 'historical v0.1.0 specificity was 0.0 (FAIL), not canonical'
+    verification_layer_ROBUST:
+      metric_state: NOT_VERIFIED
+      reason: 'no canonical scorecard assigns ROBUST to verification layer'
+
+  target_maturity_decision:
+    owner_release_label: PRODUCTION_READY
+    evaluator_assigned_maturity: FUNCTIONAL_WITH_GENERALIZATION_EVIDENCE
+    maturity_cap_applied: true
+    cap_reason: '5 canonical metrics NOT_VERIFIED (hard_gates, mutation, sensitivity, specificity, ROBUST). Owner-declared PRODUCTION_READY but evaluator cannot independently confirm verification-layer maturity beyond FUNCTIONAL.'
+    critical_blockers: 0
+    limitations:
+      - '5 metrics NOT_VERIFIED (hard_gates/mutation/sensitivity/specificity/ROBUST)'
+      - 'TV13-CTD-01 historical non-authoritative (retry policy unresolved, recovered via v0.14)'
+      - '2 unresolved launcher incidents preserved'
+    final_verdict: PASS_WITH_MATURITY_CAP
+
+  authoritative_completion:
+    expected: 8
+    completed: 8
+    PASS: 8
+    requirements_per_run: 28
+    requirements_expected: 224
+    requirements_accounted: 224
+    REQ_013: PASS_8_OF_8
+    REQ_023: PASS_8_OF_8_DIRECT
+    REQ_025: PASS_8_OF_8
+    missing_evidence: 0
+    cross_run_leakage: 0

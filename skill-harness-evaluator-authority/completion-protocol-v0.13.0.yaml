@@ -1,0 +1,324 @@
+completion_protocol_v0_13_0:
+  protocol_id: skill-harness-evaluator-completion
+  version: 0.13.0
+  type: COMPLETION_PROTOCOL
+  generated_at: '2026-07-30'
+  phase: COMPLETION_PROTOCOL_FREEZE
+
+  authority_anchors:
+    accepted_registry_commit: '232c9b8c1ba7e0adf7c48972162db016bcde483c'
+    accepted_protocol_authority_decision_commit: '089b06a27056e021af32a1d37384316aac15380f'
+
+  relationship_to_v0_12:
+    type: COMPLETES_UNFINISHED_EVALUATION_OBLIGATIONS
+    inherits_authority: false
+    modifies_v0_12: false
+    rationale: >-
+      v0.12.0 supersession chain unresolved (R2 decision). v0.13.0 does NOT
+      supersede or legitimize v0.12.0. It is a fresh authority anchored directly
+      to accepted registry + R2 decision, created solely to complete the 4
+      Targeted-v5 obligations that no existing protocol can govern.
+
+  supersedes_protocol: null
+  predecessor_protocol: null
+
+  planned_runs:
+    total: 4
+    runs:
+      - run_id: TV13-GAS-01
+        ticker: GAS
+        execution_type: GENUINE_AGENT
+        obligation: FRESH_EXECUTION
+      - run_id: TV13-CTD-01
+        ticker: CTD
+        execution_type: GENUINE_AGENT
+        obligation: FRESH_EXECUTION
+      - run_id: TV13-SAB-01
+        ticker: SAB
+        execution_type: GENUINE_AGENT
+        obligation: FRESH_EXECUTION
+      - run_id: TV13-SSI-01
+        ticker: SSI
+        execution_type: GENUINE_AGENT
+        obligation: FRESH_EXECUTION
+
+  per_run_roles:
+    TV13-GAS-01:
+      ticker: GAS
+      role: TARGETED_DEFECT_VALIDATION
+      targeted_requirements: [REQ-013, REQ-023, REQ-025]
+      expected_applicability: 'GAS previously interrupted (TV5-GAS-01 INTERRUPTED_NO_VERDICT). Fresh execution validates defect closure.'
+    TV13-CTD-01:
+      ticker: CTD
+      role: CROSS_TICKER_REQUALIFICATION
+      targeted_requirements: [REQ-013, REQ-023, REQ-025]
+      expected_applicability: 'CTD benchmark ticker, never executed under Targeted-v5. Requalifies cross-ticker generalization.'
+    TV13-SAB-01:
+      ticker: SAB
+      role: CLEAN_POSITIVE_CONTROL
+      targeted_requirements: [REQ-013, REQ-023, REQ-025]
+      REQ_023:
+        expected_applicability: APPLICABLE
+        expected_result: PASS
+        defect_injection: none
+        stress_case: false
+      purpose: 'Confirm a valid clean SAB report passes REQ-023 without false-positive rejection. Not a stress case.'
+    TV13-SSI-01:
+      ticker: SSI
+      role: GENERALIZATION_CONTROL
+      targeted_requirements: [REQ-013, REQ-023, REQ-025]
+      expected_applicability: 'SSI securities-sector archetype. Generalization control outside primary tested sectors.'
+
+  run_applicability:
+    TV13-GAS-01:
+      REQ_013: APPLICABLE
+      REQ_023: APPLICABLE
+      REQ_025: APPLICABLE
+    TV13-CTD-01:
+      REQ_013: APPLICABLE
+      REQ_023: APPLICABLE
+      REQ_025: APPLICABLE
+    TV13-SAB-01:
+      REQ_013: APPLICABLE
+      REQ_023: APPLICABLE
+      REQ_025: APPLICABLE
+    TV13-SSI-01:
+      REQ_013: APPLICABLE
+      REQ_023: APPLICABLE
+      REQ_025: APPLICABLE
+
+  role_consistency:
+    TARGETED_DEFECT_VALIDATION:
+      may_be_stress_case: true
+    CROSS_TICKER_REQUALIFICATION:
+      expected_role_fixed_before_execution: true
+    CLEAN_POSITIVE_CONTROL:
+      defect_injection: prohibited
+      stress_case: false
+    GENERALIZATION_CONTROL:
+      expected_applicability_fixed_before_execution: true
+    contradictory_role_labels: 0
+    unresolved_applicability_values: 0
+    post_result_role_changes: 0
+
+  completion_obligations:
+    GAS:
+      fresh_execution_required: true
+      legacy_interrupted_artifact_excluded: true
+      legacy_artifact_run_id: TV5-GAS-01
+      legacy_artifact_state: INTERRUPTED_NO_VERDICT
+      requirements: [REQ-013, REQ-023, REQ-025]
+    CTD:
+      fresh_execution_required: true
+      cross_ticker_requalification: true
+      requirements: [REQ-013, REQ-023, REQ-025]
+    SAB:
+      fresh_execution_required: true
+      role: CLEAN_POSITIVE_CONTROL
+      REQ_023_stress_case: false
+      REQ_023_expected: PASS
+      requirements: [REQ-013, REQ-023, REQ-025]
+    SSI:
+      fresh_execution_required: true
+      role: GENERALIZATION_CONTROL
+      requirements: [REQ-013, REQ-023, REQ-025]
+
+  requirement_matrix:
+    total_requirements_per_run: 28
+    requirements:
+      - requirement_id: REQ-001
+        description: 'Sponsor package phải hoạt động (tier golden), không fallback community'
+        applicability: all_runs
+        evidence_required: sponsor_data_present
+        verifier_rule: source_tier_check
+        pass_condition: golden_tier_active
+        fail_condition: community_fallback
+        criticality: critical
+      - requirement_id: REQ-002
+        description: 'Sponsor data ≥20 kỳ (không phải community 8 kỳ)'
+        applicability: all_runs
+        evidence_required: period_count
+        verifier_rule: period_count_check
+        pass_condition: '>=20'
+        fail_condition: '<20'
+        criticality: critical
+      - requirement_id: REQ-003
+        description: 'Artifact structure đầy đủ (HTML + data + charts)'
+        applicability: all_runs
+        evidence_required: artifact_completeness
+        verifier_rule: artifact_completeness_check
+        pass_condition: all_sections_present
+        fail_condition: missing_sections
+        criticality: critical
+      - requirement_id: REQ-004
+        description: 'Oracle context-scoped detection'
+        applicability: all_runs
+        evidence_required: oracle_detection
+        verifier_rule: artifact_check
+        pass_condition: oracle_correctly_detected
+        fail_condition: oracle_missed
+        criticality: critical
+      - requirement_id: REQ-013
+        description: 'Content depth ≥200 chars per section'
+        applicability: all_runs
+        evidence_required: section_content_length
+        verifier_rule: content_depth_check
+        pass_condition: '>=200_chars_all_sections'
+        fail_condition: '<200_chars_any_section'
+        criticality: critical
+      - requirement_id: REQ-020
+        description: 'Div balance integrity'
+        applicability: all_runs
+        evidence_required: div_balance
+        verifier_rule: div_balance_check
+        pass_condition: balanced
+        fail_condition: imbalanced
+        criticality: non-critical
+      - requirement_id: REQ-021
+        description: 'Provenance traceability'
+        applicability: all_runs
+        evidence_required: provenance_chain
+        verifier_rule: provenance_check
+        pass_condition: full_traceability
+        fail_condition: broken_chain
+        criticality: critical
+      - requirement_id: REQ-022
+        description: 'Data accuracy context-anchored'
+        applicability: all_runs
+        evidence_required: data_accuracy
+        verifier_rule: data_accuracy_check
+        pass_condition: context_anchored
+        fail_condition: unanchored
+        criticality: critical
+      - requirement_id: REQ-023
+        description: 'Balance sheet accuracy (banking-sector-aware column mapping)'
+        applicability: all_runs
+        evidence_required: balance_sheet_values
+        verifier_rule: balance_sheet_accuracy_check
+        pass_condition: values_match_contract
+        fail_condition: values_mismatch
+        criticality: critical
+        note: 'REQ-023 MUST be tested directly (banking column case), NOT inferred from other requirements. SAB/SSI banking/securities tickers are primary stress tests.'
+      - requirement_id: REQ-024
+        description: 'CAPEX accuracy'
+        applicability: all_runs
+        evidence_required: capex_values
+        verifier_rule: capex_accuracy_check
+        pass_condition: capex_matches_contract
+        fail_condition: capex_mismatch
+        criticality: critical
+      - requirement_id: REQ-025
+        description: 'Valuation multiples (PE/PB) rendered deterministically from contract'
+        applicability: all_runs
+        evidence_required: pe_pb_values
+        verifier_rule: valuation_recompute_check
+        pass_condition: pe_pb_match_contract
+        fail_condition: pe_pb_mismatch_or_omitted
+        criticality: critical
+      - requirement_id: REQ-027
+        description: 'External claim explicit flagging'
+        applicability: all_runs
+        evidence_required: claim_flagging
+        verifier_rule: external_claim_check
+        pass_condition: explicit_flag
+        fail_condition: unflagged_claim
+        criticality: critical
+      - requirement_id: ARTIFACT-COMPLETENESS
+        description: 'Report structure complete (all required sections)'
+        applicability: all_runs
+        evidence_required: section_map
+        verifier_rule: section_map_check
+        pass_condition: all_required_sections
+        fail_condition: missing_section
+        criticality: critical
+      - requirement_id: SOURCE-TRACEABILITY
+        description: 'All data points trace to sponsor source'
+        applicability: all_runs
+        evidence_required: source_paths
+        verifier_rule: source_trace_check
+        pass_condition: all_traced
+        fail_condition: untraced_data
+        criticality: critical
+      - requirement_id: DETERMINISTIC-SHELL
+        description: 'Deterministic shell integrity (same input → same output)'
+        applicability: all_runs
+        evidence_required: rerender_determinism
+        verifier_rule: determinism_check
+        pass_condition: deterministic
+        fail_condition: non_deterministic
+        criticality: critical
+      - requirement_id: UNSUPPORTED-CLAIM-PREVENTION
+        description: 'No unsupported claims in narrative'
+        applicability: all_runs
+        evidence_required: narrative_sanitization
+        verifier_rule: narrative_check
+        pass_condition: no_unsupported_claims
+        fail_condition: unsupported_claim_present
+        criticality: critical
+      - requirement_id: TICKER-ISOLATION
+        description: 'No cross-ticker data leakage'
+        applicability: all_runs
+        evidence_required: isolation_check
+        verifier_rule: ticker_isolation_check
+        pass_condition: isolated
+        fail_condition: leakage_detected
+        criticality: critical
+      - requirement_id: RUNTIME-COMPLETION
+        description: 'Agent invocation completed (not interrupted)'
+        applicability: all_runs
+        evidence_required: completion_log
+        verifier_rule: completion_check
+        pass_condition: completed
+        fail_condition: interrupted
+        criticality: critical
+      - requirement_id: FAILURE-REASON-CORRECTNESS
+        description: 'When FAIL, failure reason must be correct (not wrong-reason)'
+        applicability: all_runs
+        evidence_required: failure_detail
+        verifier_rule: failure_reason_check
+        pass_condition: correct_reason
+        fail_condition: wrong_reason
+        criticality: critical
+
+  execution_environment:
+    target_skill:
+      name: equity-research-vn
+      version: 1.1.0
+      source_tree_sha256: '6e6b2a254065bc62f0c461ca53fc494c1a0348d8bc5058b127154d9c0cf98d23'
+    evaluator:
+      name: skill-harness-evaluator
+      version: 0.1.0
+      source_tree_sha256: '083a960428403d0f8bd909cdb2a2b2e24545c8e9e6602e89023d6f0c684a9b7e'
+    verifier:
+      version: 0.1.6
+      source_path: equity-research-vn/scripts/independent_verifier.py
+      source_sha256: 'c155d5cb4c705adce9787fa6643c010157c23fbe4ceeb99542a1cda2c47e6617'
+    runtime:
+      operating_system: 'Darwin 25.5.0'
+      language_runtime: 'Python 3.11.14'
+      network_policy: 'sponsor vnstock_data required (golden tier)'
+      model_provider: zai
+      model_id: GLM-5.2
+
+  run_acceptance_gate:
+    agent_invocation_completed: true
+    output_artifact_present: true
+    decision_log_complete: true
+    verifier_completed: true
+    final_verdict_present: true
+    requirements_accounted: all
+    evidence_hashes_present: all
+
+  valid_run_statuses: [PASS, FAIL, ERROR, INTERRUPTED]
+  interrupted_not_completed: true
+
+  protocol_acceptance:
+    planned_runs: 4
+    required_completed_with_verdict: 4
+    hard_gate_failures: 0
+    missing_evidence: 0
+    cross_run_leakage: 0
+    fabricated_identifiers: 0
+    valid_verdicts: [PASS, FAIL]
+    excluded_statuses: [PASS_WITH_EXCLUSIONS]
+    note: 'No PASS_WITH_EXCLUSIONS. No removing failed runs from denominator.'

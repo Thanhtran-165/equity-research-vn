@@ -1,0 +1,97 @@
+protocol_authority_decision:
+  generated_at: '2026-07-30'
+  phase: PROTOCOL_AUTHORITY_REMEDIATION_R2
+  parent_commit: 'c9bf736403cc77ac44d111e24e94cbb330ee7a8a'
+  accepted_registry_commit: '232c9b8c1ba7e0adf7c48972162db016bcde483c'
+  remediation: 'R2 — decision consistency correction (v0.12.0 AUTHORIZED_COMPLETION → UNRESOLVED; targeted-v5 4-state accounting)'
+
+  canonical_protocol:
+    protocol_id: null
+    status: NOT_CONFIRMED
+    rationale: 'No protocol meets all 7 canonical gates. No protocol has resolved supersession authority over the broken v0.10.0→v0.12.0 segment.'
+
+  v0_12:
+    lock_valid: true
+    hash_verified: true
+    frozen_before_execution: true
+    supersession_chain_resolved: false
+    authority_status: UNRESOLVED
+    rationale: >-
+      Lock is syntactically valid and frozen, BUT v0.12.0 has NO baseline_protocol_sha256
+      (does not link to any predecessor) and the v0.10.0→v0.11.0→v0.11.1 segment baselines
+      match no located embedded hash. Per R2 directive §5: cannot assign
+      AUTHORIZED_COMPLETION_PROTOCOL while supersession authority is unresolved.
+      v0.12.0 may NOT govern completion cohort until authority restored or a new
+      completion protocol is frozen.
+
+  v0_11_0:
+    execution_manifest_present: true
+    lock_complete: false
+    frozen_before_execution: false
+    authority_status: UNRESOLVED
+
+  v0_11_1:
+    authority_status: UNRESOLVED
+    rationale: 'Valid lock but baseline (9dcf3938...) matches no located embedded hash.'
+
+  supersession_chain:
+    complete: false
+    intact_segment:
+      first: v0.1.0
+      last: v0.10.0
+      valid_explicit_links: 13
+    broken_segment:
+      links:
+        - predecessor: v0.10.0
+          successor: v0.11.0
+        - predecessor: v0.11.0
+          successor: v0.11.1
+        - predecessor: v0.11.1
+          successor: v0.12.0
+    broken_links: 3
+    unsupported_inferred_links: 0
+    fully_resolved: false
+
+  targeted_v5:
+    planned: 8
+    completed_with_verdict:
+      count: 4
+      runs: ['TV5-ACB-01', 'TV5-ACB-02', 'TV5-GEX-01', 'TV5-GEX-02']
+      PASS: 4
+      FAIL: 0
+      ERROR: 0
+    located_incomplete:
+      count: 1
+      runs:
+        - run_id: TV5-GAS-01
+          state: INTERRUPTED_NO_VERDICT
+          output_artifact_present: true
+          decision_log_present: true
+          decision_log_complete: false
+    absent:
+      count: 3
+      runs: ['TV5-CTD-01', 'TV5-SAB-01', 'TV5-SSI-01']
+    artifacts_located: 5
+    completed_with_verdict_count: 4
+    complete: false
+    full_protocol_verdict: INCOMPLETE
+
+  canonical_scorecard:
+    located: false
+    path: null
+
+  targeted_completion_authorized: false
+
+  next_phase: skill_harness_evaluator_completion_protocol_freeze
+  next_phase_rationale: >-
+    No existing protocol can safely govern the remaining runs. A new completion
+    protocol (recommended v0.13.0) must be frozen with explicit parent authority
+    anchored to the accepted registry and R2 decision, with 4 completion obligations
+    (adjudicate/rerun GAS, run CTD, run SAB, run SSI). R2 itself does not create it.
+
+  final_verdict: PASS
+  verdict_rationale: >-
+    R2 corrects the decision layer: v0.12.0 reclassified UNRESOLVED (was AUTHORIZED_COMPLETION),
+    targeted-v5 split into 4 states, next phase rerouted to completion_protocol_freeze.
+    Evidence investigation from prior commit preserved. PASS = decision now consistent
+    with directive. Does not require confirming canonical protocol.

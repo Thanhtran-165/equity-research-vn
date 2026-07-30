@@ -1,0 +1,80 @@
+consolidated_run_inventory:
+  generated_at: '2026-07-30'
+  phase: CONSOLIDATED_SCORECARD_AND_FINAL_ACCEPTANCE
+
+  accepted_registry_baseline:
+    source: skill-harness-evaluator-authority/run-registry.yaml
+    source_commit: '232c9b8c1ba7e0adf7c48972162db016bcde483c'
+    physical_events: 110
+    unique_logical_runs: 98
+    logical_evidence:
+      L1_explicit_genuine: 16
+      L2_likely_genuine: 50
+      L4_unknown: 32
+
+  post_registry_execution_delta:
+    v0_13:
+      genuine_completed_runs: ['TV13-GAS-01', 'TV13-CTD-01', 'TV13-SAB-01', 'TV13-SSI-01']
+      unresolved_launcher_incidents: 2
+      non_authoritative_completed_outputs: ['TV13-CTD-01']
+    v0_14:
+      genuine_completed_runs: ['TV14-CTD-01']
+      launcher_attempts: 1
+      interrupted: 0
+
+  final_run_inventory:
+    baseline_physical_events: 110
+    post_registry_physical_events: 5
+    total_physical_events: 115
+    baseline_unique_logical_runs: 98
+    post_registry_unique_logical_runs: 5
+    total_unique_logical_runs: 103
+    explicit_genuine_logical_runs: 21
+    likely_genuine_logical_runs: 50
+    unknown_logical_runs: 32
+    logical_run_invariant:
+      equation: '21 + 50 + 32'
+      observed: 103
+      match: true
+    authoritative_completion_runs: 8
+    historical_non_authoritative_runs: 1
+    unresolved_launcher_incidents: 2
+    accounting_invariants_match: true
+
+  evidence_classification_note:
+    L1_explicit_genuine: 21
+    L1_breakdown:
+      baseline_L1: 16
+      post_registry_L1: 5
+      post_registry_L1_runs: ['TV13-GAS-01', 'TV13-CTD-01', 'TV13-SAB-01', 'TV13-SSI-01', 'TV14-CTD-01']
+    TV13_CTD_01_classification:
+      execution_evidence: L1_EXPLICIT_GENUINE
+      observed_verdict: PASS
+      authority_status: HISTORICAL_NON_AUTHORITATIVE
+      note: 'L1 genuine completed logical run in inventory, but NOT in authoritative completion set'
+
+  authority_and_incident_subsets:
+    authoritative_completion_runs: 8
+    historical_non_authoritative_completed_runs:
+      count: 1
+      run: TV13-CTD-01
+    unresolved_launcher_incidents:
+      count: 2
+      proven_agent_physical_events: false
+
+  authoritative_run_set:
+    adopted_v0_12: ['TV5-ACB-01', 'TV5-ACB-02', 'TV5-GEX-01', 'TV5-GEX-02']
+    adopted_unaffected_v0_13: ['TV13-GAS-01', 'TV13-SAB-01', 'TV13-SSI-01']
+    fresh_v0_14: ['TV14-CTD-01']
+    total: 8
+
+  excluded_history:
+    TV13_CTD:
+      completed_output_present: true
+      observed_verdict: PASS
+      authoritative: false
+      reason: RETRY_POLICY_CONFORMANCE_UNRESOLVED
+    unresolved_launcher_attempts:
+      count: 2
+      classification: UNRESOLVED
+      preserved: true

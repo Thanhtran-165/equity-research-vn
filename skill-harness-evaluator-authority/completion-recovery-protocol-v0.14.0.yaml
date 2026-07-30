@@ -1,0 +1,121 @@
+completion_recovery_protocol_v0_14_0:
+  protocol_id: skill-harness-evaluator-completion-recovery
+  version: 0.14.0
+  type: RECOVERY_COMPLETION_PROTOCOL
+  generated_at: '2026-07-30'
+  phase: COMPLETION_RECOVERY_PROTOCOL_FREEZE
+
+  authority_anchors:
+    accepted_completion_freeze: '0fc9f967b23177a1f0013f22f9199b6b3444abd5'
+    raw_completion_execution: 'ea3035da540e1d6632be7a143be94867a74ec3c0'
+    accepted_execution_remediation_R2: 'b8ad7301c7996e97b386721ae2d22d045d106e46'
+
+  relationship_to_v0_13:
+    type: RECOVERS_ONE_UNRESOLVED_COMPLETION_OBLIGATION
+    inherits_execution_verdict: false
+    modifies_v0_13: false
+    retroactively_authorizes_TV13_CTD: false
+
+  supersedes_protocol: null
+  predecessor_protocol: null
+
+  planned_runs:
+    total: 1
+    runs:
+      - run_id: TV14-CTD-01
+        ticker: CTD
+        execution_type: GENUINE_AGENT
+        role: CROSS_TICKER_REQUALIFICATION
+
+  recovery_obligation:
+    run_id: TV14-CTD-01
+    ticker: CTD
+    role: CROSS_TICKER_REQUALIFICATION
+    execution_type: GENUINE_AGENT
+    fresh_execution_required: true
+    requirements_total: 28
+    directly_required: [REQ-013, REQ-023, REQ-025]
+
+  run_applicability:
+    TV14-CTD-01:
+      REQ_013: APPLICABLE
+      REQ_023: APPLICABLE
+      REQ_025: APPLICABLE
+
+  execution_environment:
+    target_skill:
+      name: equity-research-vn
+      version: '1.1.0'
+      source_tree_sha256: '6e6b2a254065bc62f0c461ca53fc494c1a0348d8bc5058b127154d9c0cf98d23'
+    evaluator:
+      name: skill-harness-evaluator
+      version: '0.1.0'
+      source_tree_sha256: '083a960428403d0f8bd909cdb2a2b2e24545c8e9e6602e89023d6f0c684a9b7e'
+    verifier:
+      version: '0.1.6'
+      source_path: equity-research-vn/scripts/independent_verifier.py
+      source_sha256: 'c155d5cb4c705adce9787fa6643c010157c23fbe4ceeb99542a1cda2c47e6617'
+    runtime:
+      operating_system: 'Darwin 25.5.0'
+      language_runtime: 'Python 3.11.14'
+      network_policy: 'sponsor vnstock_data required (golden tier)'
+      model_provider: zai
+      model_id: GLM-5.2
+
+  launcher_safety:
+    shell_pipeline_allowed: false
+    pipe_to_head_allowed: false
+    pipe_to_tail_allowed: false
+    stdout_redirect_required: true
+    stderr_redirect_required: true
+    unique_attempt_directory_required: true
+    output_directory_reuse_allowed: false
+    rm_rf_existing_attempt_directory_allowed: false
+    launcher_attempt_id_required: true
+    process_id_capture_required: true
+    exit_code_capture_required: true
+    signal_capture_required: true
+    provider_request_logging_required: true
+    token_usage_logging_required: true
+
+  launcher_command:
+    executable: python3
+    arguments: 'agent-eval/runner/agent_runner.py TV14-CTD-01 recovery-v0.14.0 <unique_attempt_dir> agent-eval/cohort-c/source-packs/CTD CTD --scored true --model-backend zai'
+    stdout_path: '<unique_attempt_dir>/agent-invocation.log'
+    stderr_path: '<unique_attempt_dir>/agent-invocation.err'
+    working_directory: '/Users/bobo/ZCodeProject'
+
+  execution_identity:
+    obligation_run_id: TV14-CTD-01
+    launcher_attempt_id: TV14-CTD-01-LAUNCH-01
+    logical_run_id: TV14-CTD-01
+    physical_event_id: PEV-TV14-CTD-01-001
+
+  retry_policy:
+    maximum_launcher_attempts: 1
+    maximum_agent_executions: 1
+    silent_retry: prohibited
+    replacement_execution: prohibited
+    same_phase_rerun: prohibited
+
+  interrupted_or_aborted_policy:
+    preserve_evidence: true
+    final_recovery_status: INCOMPLETE
+    additional_execution_under_v0_14: prohibited
+
+  run_acceptance_gate:
+    launcher_attempts: '1/1'
+    genuine_agent_executions: '1/1'
+    invocation_completed: true
+    output_present: true
+    output_hash_present: true
+    verifier_completed: true
+    verifier_hash_present: true
+    final_verdict_present: true
+    requirements_accounted: '28/28'
+    REQ_013_direct_result: present
+    REQ_023_direct_result: present
+    REQ_025_direct_result: present
+    missing_evidence: 0
+
+  valid_run_verdicts: [PASS, FAIL, ERROR, INTERRUPTED]

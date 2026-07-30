@@ -1,0 +1,221 @@
+incident:
+  obligation_run_id: TV13-CTD-01
+  ticker: CTD
+
+  CTD_attempt_inventory:
+    obligation_run_id: TV13-CTD-01
+    command_attempts: 3
+    attempts:
+      - attempt_id: CTD-LAUNCH-01
+        external_execution_id: exec_bec41ebc
+      - attempt_id: CTD-LAUNCH-02
+        external_execution_id: exec_d812d274
+      - attempt_id: CTD-LAUNCH-03
+        external_execution_id: exec_a868e697
+
+  attempts:
+
+    - attempt_id: CTD-LAUNCH-01
+      external_execution_id: exec_bec41ebc
+      exact_command: "python3 agent-eval/runner/agent_runner.py TV13-CTD-01 completion-v0.13.0 <workspace> <source_pack> CTD --scored true --model-backend zai --protocol-sha256 <hash> > <workspace>/agent-invocation.log 2>&1"
+      shell_pipeline: 'redirect to agent-invocation.log (NO pipe)'
+      stdout_path: '<workspace>/agent-invocation.log'
+      stderr_path: 'captured in same file (2>&1)'
+      process_start_timestamp: '2026-07-30T10:05:26 (task-state created_at)'
+      process_end_timestamp: 'unknown (background task notification: completed exit 0, but exact end not recorded)'
+      process_exit_code: 0
+      terminating_signal: NONE_REPORTED
+      working_directory: '/Users/bobo/ZCodeProject'
+      output_directory: 'skill-harness-evaluator-authority/completion-execution-v0.13.0/runs/TV13-CTD-01'
+      task_state:
+        path: '.task-state/task-state.json'
+        state_before: 'none (fresh workspace)'
+        state_after: 'phase=init, all phases pending'
+        created_timestamp: '2026-07-30T10:05:26'
+        modified_timestamp: '2026-07-30T10:05:26 (same as created — never updated by runner)'
+      files_created:
+        - '.task-state/task-state.json (phase=init)'
+        - 'data/balance_sheet.json, data/cash_flow.json, data/financials.json (from build_data_contract)'
+        - 'verified-dashboard-data.json'
+      files_modified: []
+      files_overwritten_later: 'ALL — CTD-LAUNCH-02 did rm -rf before running'
+      model_request:
+        started: UNRESOLVED
+        request_id: null
+        provider_log_paths: []
+        rationale: 'Runner does NOT update task-state phase in loop (verified: runner only reads state_file line 243-244, never writes phase). So phase=init does NOT prove model not called. No run-result.json produced → runner exited before final dump. Could have been waiting on phase0 model call when process ended.'
+      token_usage:
+        observed: UNRESOLVED
+        evidence_paths: []
+      agent_invocation:
+        started: UNRESOLVED
+        logical_run_id: null
+        physical_event_id: null
+        evidence_paths: []
+      verifier:
+        started: false
+        evidence_paths: []
+      output_artifact:
+        produced: false
+        path: null
+        sha256: null
+      run_result:
+        produced: false
+        path: null
+        sha256: null
+      classification: UNRESOLVED
+      classification_confidence: UNRESOLVED
+      rationale: >
+        Exit code 0 + empty log + no run-result.json. Runner ran init+build (deterministic,
+        pre-model) but exited before producing any output or run-result. Runner does NOT
+        update task-state phase, so phase=init is NOT evidence model wasn't called.
+        No independent evidence (provider logs, token records, attempt-specific snapshot)
+        proves model_request_started=false. Evidence overwritten by CTD-LAUNCH-02 rm -rf.
+        Per §6: do not inherit classification; evidence loss cannot favor PASS. UNRESOLVED.
+      evidence_paths:
+        - 'agent-invocation.log: 0 bytes (no phase loop output)'
+        - 'task-state.json: phase=init (but runner never updates phase — inconclusive)'
+        - 'no run-result.json produced'
+        - 'agent_runner.py: runner does not write task-state phase in loop'
+
+    - attempt_id: CTD-LAUNCH-02
+      external_execution_id: exec_d812d274
+      exact_command: "rm -rf <workspace>; mkdir -p <workspace>; python3 agent-eval/runner/agent_runner.py TV13-CTD-01 ... 2>&1 | head -40; echo EXIT"
+      shell_pipeline: 'pipe through head -40 (SIGPIPE risk when head closes after 40 lines)'
+      stdout_path: '/Users/bobo/.zcode/cli/exec/.../call_b46205e4d708448db597cf52-stdout.log'
+      stderr_path: '/Users/bobo/.zcode/cli/exec/.../call_b46205e4d708448db597cf52-stderr.log'
+      process_start_timestamp: 'after CTD-LAUNCH-01 completed (~10:06)'
+      process_end_timestamp: 'killed by operator TaskStop (~10:10, ~225s runtime)'
+      process_exit_code: null
+      terminating_signal: 'KILLED_BY_OPERATOR (TaskStop exec_d812d274)'
+      working_directory: '/Users/bobo/ZCodeProject'
+      output_directory: 'skill-harness-evaluator-authority/completion-execution-v0.13.0/runs/TV13-CTD-01 (rm -rf before run)'
+      task_state:
+        path: '.task-state/task-state.json'
+        state_before: 'none (rm -rf cleared dir)'
+        state_after: 'phase=init (recreated by init_task_state)'
+        created_timestamp: '~10:06'
+        modified_timestamp: '~10:06'
+      files_created:
+        - 'task-state.json (phase=init, recreated)'
+        - 'data/ files (recreated by build_data_contract)'
+      files_modified: []
+      files_overwritten_later: 'ALL — CTD-LAUNCH-03 did rm -rf before running'
+      model_request:
+        started: UNRESOLVED
+        request_id: null
+        provider_log_paths: []
+        rationale: >
+          Process ran ~225s before being killed. At 180s check, stdout=27 bytes (only echo
+          header), phase=init. Runner was likely in phase loop waiting on model response
+          (phase0_sponsor first call). But no independent evidence confirms model request
+          was sent. The pipe |head -40 did NOT cause SIGPIPE (runner hadn't printed 40 lines).
+          Process was killed by operator TaskStop. Evidence overwritten by CTD-LAUNCH-03 rm -rf.
+      token_usage:
+        observed: UNRESOLVED
+        evidence_paths: []
+      agent_invocation:
+        started: UNRESOLVED
+        logical_run_id: null
+        physical_event_id: null
+        evidence_paths: []
+      verifier:
+        started: false
+        evidence_paths: []
+      output_artifact:
+        produced: false
+        path: null
+        sha256: null
+      run_result:
+        produced: false
+        path: null
+        sha256: null
+      classification: UNRESOLVED
+      classification_confidence: UNRESOLVED
+      rationale: >
+        Process killed by operator after ~225s. No output, no run-result. Phase=init
+        inconclusive (runner doesn't update phase). Could have been in phase0 model call
+        (waiting on response) or still in pre-execution setup. No independent evidence.
+        Evidence overwritten by CTD-LAUNCH-03 rm -rf. Per §6: UNRESOLVED.
+      evidence_paths:
+        - 'stdout file: 27 bytes (only echo header, no runner output)'
+        - 'stderr file: empty'
+        - 'TaskStop notification: killed by operator'
+        - 'task-state: phase=init (inconclusive)'
+
+    - attempt_id: CTD-LAUNCH-03
+      external_execution_id: exec_a868e697
+      exact_command: "rm -rf <workspace>; mkdir -p <workspace>; python3 agent-eval/runner/agent_runner.py TV13-CTD-01 ... > <workspace>/agent-invocation.log 2>&1"
+      shell_pipeline: 'redirect (NO pipe)'
+      stdout_path: '<workspace>/agent-invocation.log'
+      process_start_timestamp: '~10:06'
+      process_end_timestamp: '~10:16 (598s duration per run-result)'
+      process_exit_code: 0
+      terminating_signal: NONE
+      task_state:
+        state_before: 'none (rm -rf)'
+        state_after: 'completed (all phases done)'
+      model_request:
+        started: true
+        request_id: 'embedded in phase_events'
+      agent_invocation:
+        started: true
+        logical_run_id: 'TV13-CTD-01'
+        physical_event_id: 'PEV-TV13-CTD-01-003'
+      output_artifact:
+        produced: true
+        path: 'CTD_Complete_Report.html'
+        sha256: 'cdbc260bd99720918308fd62b2e40460bfc555e1be2b7dd85108b3ebc98d1ed2'
+      run_result:
+        produced: true
+        path: 'run-result.json'
+        sha256: 'f060f232cbe269b60140d5216f9b0eea55832e0f4c3442784dd1a228efcae37d'
+      classification: COMPLETED_AGENT_EXECUTION
+      classification_confidence: PROVEN
+      final_verdict: PASS
+      requirements_accounted: '28/28'
+      rationale: 'Full execution, 9 phases, genuine_agent, PASS. Sole completed execution.'
+
+  evidence_overwrite_analysis:
+    output_directory_reused: true
+    task_state_path_reused: true
+    invocation_log_path_reused: true
+    run_result_path_reused: true
+    overwrite_occurred: true
+    affected_attempts: ['CTD-LAUNCH-01', 'CTD-LAUNCH-02']
+    affected_paths: ['all files in runs/TV13-CTD-01/']
+    evidence_irretrievably_lost: true
+    consequence_for_classification: >
+      Both failed attempts' evidence was overwritten by subsequent rm -rf + rerun.
+      Current committed files are from CTD-LAUNCH-03 only. Classification of
+      CTD-LAUNCH-01 and CTD-LAUNCH-02 cannot rely on surviving files. Both UNRESOLVED.
+
+  launcher_accounting:
+    GAS_attempts: 1
+    CTD_attempts: 3
+    SAB_attempts: 1
+    SSI_attempts: 1
+    total_launcher_attempts: 6
+    invariant: {expected: 6, observed: 6, match: true}
+
+  execution_accounting:
+    planned_logical_obligations: 4
+    launcher_attempts: 6
+    protocol_physical_events: 4
+    external_launcher_incidents: 2
+    completed_with_verdict: 4
+    interrupted_agent_events: 'UNRESOLVED (0 proven, but cannot exclude)'
+
+  CTD_summary:
+    launcher_attempts: 3
+    completed_agent_executions: 1
+    interrupted_agent_executions: 'UNRESOLVED'
+    pre_execution_launcher_aborts: 'UNRESOLVED'
+    unresolved_attempts: 2
+
+  retry_policy_conformance: UNRESOLVED
+  final_protocol_PASS: NOT_AUTHORIZED
+  rationale: >
+    CTD-LAUNCH-01 and CTD-LAUNCH-02 both UNRESOLVED. Cannot prove both were
+    pre-execution aborts. Per §9 Case C: retry_policy_conformance UNRESOLVED,
+    final_protocol_PASS NOT_AUTHORIZED.

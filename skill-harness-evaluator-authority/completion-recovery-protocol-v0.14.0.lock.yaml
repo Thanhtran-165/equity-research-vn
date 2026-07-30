@@ -1,0 +1,46 @@
+completion_recovery_protocol_v0_14_0_lock:
+  protocol_id: skill-harness-evaluator-completion-recovery
+  protocol_version: 0.14.0
+  lock_type: RECOVERY_COMPLETION_PROTOCOL_FREEZE
+  frozen_at: '2026-07-30T11:30:00'
+  frozen_before_execution: true
+
+  authority_anchor_commits:
+    accepted_completion_freeze: '0fc9f967b23177a1f0013f22f9199b6b3444abd5'
+    raw_completion_execution: 'ea3035da540e1d6632be7a143be94867a74ec3c0'
+    accepted_execution_remediation_R2: 'b8ad7301c7996e97b386721ae2d22d045d106e46'
+
+  pinned_artifact_hashes:
+    protocol_file_sha256: '3f71063c5a4d384d8110ca61e44683175d6502093c501e47ea8245a5c70579c1'
+    evidence_adoption_file_sha256: '71d0be2b3011aa2ea9f5d7d8f2d8cefc15b8f226509fca7b8707c732e783eed6'
+
+  relationship_to_v0_13:
+    type: RECOVERS_ONE_UNRESOLVED_COMPLETION_OBLIGATION
+    inherits_execution_verdict: false
+    modifies_v0_13: false
+    retroactively_authorizes_TV13_CTD: false
+
+  supersedes_protocol: null
+  predecessor_protocol: null
+
+  planned_runs: 1
+  planned_run_ids: ['TV14-CTD-01']
+
+  freeze_constraints:
+    no_execution_until_acceptance: true
+    no_protocol_modification_after_freeze: true
+    no_v0_13_artifact_changes: true
+    no_retroactive_CTD_authorization: true
+    maximum_launcher_attempts: 1
+    maximum_agent_executions: 1
+
+  stop_conditions:
+    - target_skill_modified_after_freeze
+    - evaluator_modified_after_freeze
+    - verifier_modified_after_freeze
+    - dependency_lock_changed
+    - output_directory_reused
+    - shell_pipeline_used
+    - silent_retry
+    - replacement_execution
+    - operator_kill

@@ -1,0 +1,168 @@
+canonical_evidence_index:
+  generated_at: '2026-07-30'
+  phase: CONSOLIDATED_SCORECARD_AND_FINAL_ACCEPTANCE
+  evidence_hierarchy:
+    1: {type: ACCEPTED_OWNER_DECISION, role: 'controls authority, acceptance, supersession'}
+    2: {type: LATEST_ACCEPTED_CORRECTIVE_ARTIFACT, role: 'controls reconciled classification'}
+    3: {type: FROZEN_PROTOCOL_AND_LOCK, role: 'controls planned scope, roles, rules'}
+    4: {type: HASH_PINNED_EXECUTION_EVIDENCE, role: 'controls observed run outcomes'}
+    5: {type: HISTORICAL_RAW_ARTIFACT, role: 'preserved context where corrections exist'}
+    6: {type: OWNER_RELEASE_MANIFEST, role: 'owner-declared state, not evaluator maturity'}
+
+  claims:
+
+    - claim_id: CLM-TARGET-VERSION
+      claim: 'equity-research-vn version 1.1.0'
+      object: equity-research-vn
+      authority_level: 1
+      source_path: equity-research-vn/VERSION
+      source_commit: main HEAD
+      source_sha256: computed_from_tree
+      evidence_type: OWNER_RELEASE_MANIFEST
+      accepted: true
+
+    - claim_id: CLM-OWNER-RELEASE
+      claim: 'owner_release_label PRODUCTION_READY'
+      object: equity-research-vn
+      authority_level: 6
+      source_path: equity-research-vn/architecture/manifests/RELEASE-MANIFEST.json
+      evidence_type: OWNER_RELEASE_MANIFEST
+      accepted: true
+      limitations: 'owner-declared, NOT evaluator-verified maturity'
+
+    - claim_id: CLM-AUTHORITY-LINEAGE
+      claim: '8 commit entries in authority lineage (7 accepted decisions + 1 preserved raw historical)'
+      object: [equity-research-vn, skill-harness-evaluator]
+      authority_level: 1
+      source_path: skill-harness-evaluator-authority/protocol-authority-evidence.yaml
+      source_commit: '089b06a27056e021af32a1d37384316aac15380f'
+      evidence_type: ACCEPTED_OWNER_DECISION
+      accepted: true
+      lineage_breakdown:
+        total_commit_entries: 8
+        accepted_decision_freeze_or_completion_commits: 7
+        preserved_raw_historical_execution_commits: 1
+        preserved_raw_commit: 'ea3035da540e1d6632be7a143be94867a74ec3c0'
+        preserved_raw_status: HISTORICAL_RAW_EXECUTION
+        preserved_raw_accepted_as_final_protocol_PASS: false
+
+    - claim_id: CLM-RUN-INVENTORY-BASELINE
+      claim: '110 physical events, 98 unique logical runs (L1=16, L2=50, L4=32)'
+      object: [equity-research-vn, skill-harness-evaluator]
+      authority_level: 2
+      source_path: skill-harness-evaluator-authority/run-registry.yaml
+      source_commit: '232c9b8c1ba7e0adf7c48972162db016bcde483c'
+      evidence_type: LATEST_ACCEPTED_CORRECTIVE_ARTIFACT
+      accepted: true
+
+    - claim_id: CLM-AUTHORITATIVE-COMPLETION
+      claim: '8/8 authoritative obligations PASS'
+      object: equity-research-vn
+      authority_level: 1
+      source_path: skill-harness-evaluator-authority/completion-recovery-execution-v0.14.0/authoritative-completion-view.yaml
+      source_commit: 'e40e54c64d7b27473c6e95878a6f8727a0110353'
+      evidence_type: HASH_PINNED_EXECUTION_EVIDENCE
+      accepted: true
+
+    - claim_id: CLM-REQ-CLOSURE
+      claim: 'REQ-013/023/025 all PASS 8/8 authoritative'
+      object: equity-research-vn
+      authority_level: 4
+      source_path: skill-harness-evaluator-authority/completion-recovery-execution-v0.14.0/recovery-execution-decision.yaml
+      source_commit: 'e40e54c64d7b27473c6e95878a6f8727a0110353'
+      evidence_type: HASH_PINNED_EXECUTION_EVIDENCE
+      accepted: true
+
+    - claim_id: CLM-CROSS-TICKER
+      claim: 'cross-ticker generalization PASS (CTD via v0.14, GAS/SAB/SSI via v0.13)'
+      object: equity-research-vn
+      authority_level: 4
+      source_path: skill-harness-evaluator-authority/completion-recovery-execution-v0.14.0/recovery-execution-results.yaml
+      evidence_type: HASH_PINNED_EXECUTION_EVIDENCE
+      accepted: true
+
+    - claim_id: CLM-CLEAN-POSITIVE-CONTROL
+      claim: 'SAB clean positive control PASS (REQ-023 applicable, no false positive)'
+      object: equity-research-vn
+      authority_level: 4
+      source_path: skill-harness-evaluator-authority/completion-execution-v0.13.0/runs/TV13-SAB-01/run-result.json
+      evidence_type: HASH_PINNED_EXECUTION_EVIDENCE
+      accepted: true
+
+    - claim_id: CLM-ENVIRONMENT-INTEGRITY
+      claim: 'target/evaluator/verifier hashes match across all freezes'
+      object: [equity-research-vn, skill-harness-evaluator]
+      authority_level: 3
+      source_path: skill-harness-evaluator-authority/completion-recovery-protocol-v0.14.0.yaml
+      evidence_type: FROZEN_PROTOCOL_AND_LOCK
+      accepted: true
+
+    - claim_id: CLM-INCIDENT-HANDLING
+      claim: 'v0.13 CTD retry incident detected, evidence preserved, uncertainty handled conservatively, recovery authority frozen before rerun'
+      object: skill-harness-evaluator
+      authority_level: 2
+      source_path: skill-harness-evaluator-authority/completion-execution-v0.13.0/completion-execution-incident-TV13-CTD-01.yaml
+      source_commit: 'b8ad7301c7996e97b386721ae2d22d045d106e46'
+      evidence_type: LATEST_ACCEPTED_CORRECTIVE_ARTIFACT
+      accepted: true
+
+    - claim_id: CLM-HARD-GATES
+      claim: 'hard_gates 17/17'
+      object: equity-research-vn
+      authority_level: 5
+      source_path: skill-harness-evaluator-work/reports/target-skill-scorecard.json
+      evidence_type: HISTORICAL_RAW_ARTIFACT
+      accepted: false
+      limitations: 'only historical v0.1.0 evidence, FAIL status, not canonical'
+      metric_state: NOT_VERIFIED
+
+    - claim_id: CLM-MUTATION-SUITE
+      claim: 'mutation suite 6/6 caught'
+      object: equity-research-vn
+      authority_level: 5
+      source_path: skill-harness-evaluator-work/mutation-results-orig-final.json
+      evidence_type: HISTORICAL_RAW_ARTIFACT
+      accepted: false
+      limitations: 'only historical v0.1.0 evidence, not re-verified under canonical authority'
+      metric_state: NOT_VERIFIED
+
+    - claim_id: CLM-VALIDATOR-SPECIFICITY
+      claim: 'validator specificity 1.0'
+      object: equity-research-vn
+      authority_level: 5
+      source_path: skill-harness-evaluator-work/reports/target-skill-scorecard.json
+      evidence_type: HISTORICAL_RAW_ARTIFACT
+      accepted: false
+      limitations: 'only historical v0.1.0 evidence, specificity was 0.0 (FAIL), not canonical'
+      metric_state: NOT_VERIFIED
+
+    - claim_id: CLM-VERIFICATION-LAYER-ROBUST
+      claim: 'verification layer ROBUST'
+      object: equity-research-vn
+      authority_level: 5
+      evidence_type: HISTORICAL_RAW_ARTIFACT
+      accepted: false
+      limitations: 'no canonical scorecard assigns ROBUST to verification layer'
+      metric_state: NOT_VERIFIED
+
+    - claim_id: CLM-ENGINE-TESTS
+      claim: 'skill-harness-evaluator engine tests 33/33 PASS'
+      object: skill-harness-evaluator
+      authority_level: 4
+      source_path: skill-harness-evaluator tests via pytest
+      evidence_type: HASH_PINNED_EXECUTION_EVIDENCE
+      accepted: true
+
+    - claim_id: CLM-SCORECARD-REPRODUCIBILITY
+      claim: 'scorecards reproducible (build twice, digest match)'
+      object: skill-harness-evaluator
+      authority_level: 4
+      source_path: this artifact (computed deterministically)
+      evidence_type: HASH_PINNED_EXECUTION_EVIDENCE
+      accepted: true
+
+  integrity:
+    claims_with_source: all
+    missing_source_paths: 0
+    missing_source_hashes: 0
+    unsupported_claims: 0

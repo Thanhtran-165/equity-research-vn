@@ -1,0 +1,93 @@
+skill_harness_evaluator_scorecard:
+  generated_at: '2026-07-30'
+  phase: CONSOLIDATED_SCORECARD_AND_FINAL_ACCEPTANCE
+  target: skill-harness-evaluator
+  version: '0.1.0'
+
+  harness_score_dimensions:
+    engine_test_integrity:
+      evidence: '33/33 unit tests PASS'
+      status: PASS
+    protocol_locking:
+      evidence: 'SHA-256 hash lock implemented, frozen_before_execution enforced across v0.13/v0.14'
+      status: PASS
+    hash_integrity:
+      evidence: 'all artifacts hash-pinned, byte-distinct verified, no self-reference'
+      status: PASS
+    clean_control_support:
+      evidence: 'SAB clean positive control designed + executed + verified'
+      status: PASS
+    mutation_support:
+      evidence: 'mutation framework built (v0.1.0), 5 oracle-corrupted fixtures, correct_detection_rate KPI'
+      status: PASS
+    sensitivity_accounting:
+      evidence: 'mutation sensitivity framework built (historical), not re-run under canonical'
+      status: PARTIAL
+    specificity_accounting:
+      evidence: 'clean-control specificity framework built (historical), not re-run under canonical'
+      status: PARTIAL
+    wrong_reason_detection:
+      evidence: 'mutation correct_detection_rate (not raw failure) implemented'
+      status: PASS
+    deterministic_replay:
+      evidence: 'reproducibility check built into scoring (build twice, compare digest)'
+      status: PASS
+    genuine_agent_evidence_handling:
+      evidence: 'L1-L4 evidence classification, logical vs physical run accounting'
+      status: PASS
+    logical_vs_physical_run_accounting:
+      evidence: '110 physical / 98 logical, invariants verified, L3 excluded from logical'
+      status: PASS
+    protocol_authority_handling:
+      evidence: 'supersession chain analysis, v0.12 UNRESOLVED classification, authority registry'
+      status: PASS
+    supersession_reconciliation:
+      evidence: 'chain intact v0.1→v0.10, broken v0.10→v0.12, honestly classified'
+      status: PASS
+    incident_detection:
+      evidence: 'v0.13 CTD retry issue detected, launcher safety contract created'
+      status: PASS
+    uncertainty_handling:
+      evidence: 'CTD attempts UNRESOLVED (not resolved in favor of PASS), recovery protocol created'
+      status: PASS
+    no_retry_enforcement:
+      evidence: 'v0.14 maximum_launcher_attempts: 1, replacement prohibited'
+      status: PASS
+    recovery_protocol_handling:
+      evidence: 'v0.14 recovery freeze + execution, clean authority, TV14-CTD-01 PASS'
+      status: PASS
+    evidence_lineage:
+      evidence: '7 accepted authority commits form traceable lineage'
+      status: PASS
+    self_dogfood_execution:
+      evidence: 'evaluator used to evaluate equity-research-vn (target) + itself (this scorecard)'
+      status: PASS
+    final_scorecard_reproducibility:
+      evidence: 'deterministic build from evidence index, digest match verified'
+      status: PASS
+
+  harness_accepted_evidence:
+    engine_tests: '33/33_PASS'
+    authority_registry: PASS
+    run_accounting: {status: PASS, baseline_physical: 110, baseline_logical: 98}
+    protocol_authority: {status: PASS, unresolved_historical_preserved: true}
+    completion_freeze: PASS
+    incident_detection: {v0_13_CTD_retry_issue: true}
+    uncertainty_handling: {uncertainty_resolved_in_favor_of_PASS: false}
+    recovery_freeze: PASS
+    recovery_execution: PASS
+    authoritative_completion: COMPLETE_8_OF_8
+    self_dogfood: completed
+
+  harness_maturity_decision:
+    evaluator_assigned_maturity: FUNCTIONAL_MACHINE
+    maturity_cap_applied: true
+    cap_reason: 'sensitivity/specificity accounting only PARTIAL (historical framework, not re-run canonical). Self-dogfood single-pass. Mutation not re-verified under canonical authority.'
+    critical_blockers: 0
+    limitations:
+      - 'sensitivity/specificity not re-run under canonical authority'
+      - 'self-dogfood single-pass (not multi-pass)'
+      - 'mutation suite historical only'
+    final_verdict: PASS_WITH_MATURITY_CAP
+
+  release_status: RELEASED_WITH_MATURITY_CAP
