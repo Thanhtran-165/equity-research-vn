@@ -25,26 +25,22 @@ canonical_evidence_index:
     claim: equity-research-vn version 1.1.0
     object: equity-research-vn
     authority_level: 1
-    source_path: equity-research-vn/VERSION
+    source_path: skill-harness-evaluator-authority/final-acceptance/equity-research-vn-VERSION
     source_commit: main HEAD
     source_sha256: a531e0c1e4d6d81ab30eb31d3cffb9f59c20c45561de6043df725c366190ae62
     evidence_type: OWNER_RELEASE_MANIFEST
     accepted: true
-    source_location_type: DURABLE_EVIDENCE_ARCHIVE
-    archive_member_path: agent-eval/runner/agent_runner.py
-    source_note: VERSION file in skill dir ~/.zcode/skills/equity-research-vn/VERSION. Owner-declared,
-      not in main repo tree. SHA-256 computed from actual file content.
+    source_location_type: MAIN_REPOSITORY
   - claim_id: CLM-OWNER-RELEASE
     claim: owner_release_label PRODUCTION_READY
     object: equity-research-vn
     authority_level: 6
-    source_path: equity-research-vn/architecture/manifests/RELEASE-MANIFEST.json
+    source_path: skill-harness-evaluator-authority/final-acceptance/equity-research-vn-RELEASE-MANIFEST-compact.json
     evidence_type: OWNER_RELEASE_MANIFEST
     accepted: true
     limitations: owner-declared, NOT evaluator-verified maturity
-    source_location_type: SKILL_DIR_REFERENCE
-    source_sha256: NOT_IN_MAIN_REPO
-    source_note: Release manifest in skill dir, not in main repo tree.
+    source_location_type: MAIN_REPOSITORY
+    source_sha256: 53e06a99cca203e116b025d1e79f8491b316345cf36f1c25f86fdbf770c91627
   - claim_id: CLM-AUTHORITY-LINEAGE
     claim: 8 commit entries in authority lineage (7 accepted decisions + 1 preserved raw historical)
     object:
@@ -146,6 +142,9 @@ canonical_evidence_index:
     limitations: only historical v0.1.0 evidence, FAIL status, not canonical
     metric_state: NOT_VERIFIED
     source_location_type: DURABLE_EVIDENCE_ARCHIVE
+    archive_sha256: 181bd7eb14a6e97ee978fb3c4ca7eb96ade6626c874cca0cc60313b073ce86d0
+    archive_member_path: skill-harness-evaluator-work/reports/target-skill-scorecard.json
+    member_sha256: COMPUTED_AT_ARCHIVE_TIME
   - claim_id: CLM-MUTATION-SUITE
     claim: mutation suite 6/6 caught
     object: equity-research-vn
@@ -156,6 +155,9 @@ canonical_evidence_index:
     limitations: only historical v0.1.0 evidence, not re-verified under canonical authority
     metric_state: NOT_VERIFIED
     source_location_type: DURABLE_EVIDENCE_ARCHIVE
+    archive_sha256: 181bd7eb14a6e97ee978fb3c4ca7eb96ade6626c874cca0cc60313b073ce86d0
+    archive_member_path: skill-harness-evaluator-work/mutation-results-orig-final.json
+    member_sha256: COMPUTED_AT_ARCHIVE_TIME
   - claim_id: CLM-VALIDATOR-SPECIFICITY
     claim: validator specificity 1.0
     object: equity-research-vn
@@ -166,6 +168,9 @@ canonical_evidence_index:
     limitations: only historical v0.1.0 evidence, specificity was 0.0 (FAIL), not canonical
     metric_state: NOT_VERIFIED
     source_location_type: DURABLE_EVIDENCE_ARCHIVE
+    archive_sha256: 181bd7eb14a6e97ee978fb3c4ca7eb96ade6626c874cca0cc60313b073ce86d0
+    archive_member_path: skill-harness-evaluator-work/reports/target-skill-scorecard.json
+    member_sha256: COMPUTED_AT_ARCHIVE_TIME
   - claim_id: CLM-VERIFICATION-LAYER-ROBUST
     claim: verification layer ROBUST
     object: equity-research-vn
@@ -175,31 +180,38 @@ canonical_evidence_index:
     limitations: no canonical scorecard assigns ROBUST to verification layer
     metric_state: NOT_VERIFIED
     source_location_type: DURABLE_EVIDENCE_ARCHIVE
+    archive_sha256: 181bd7eb14a6e97ee978fb3c4ca7eb96ade6626c874cca0cc60313b073ce86d0
+    archive_member_path: skill-harness-evaluator-work/reports/target-skill-scorecard.json
+    member_sha256: NO_CANONICAL_SOURCE (metric never verified under canonical authority)
   - claim_id: CLM-ENGINE-TESTS
     claim: skill-harness-evaluator engine tests 33/33 PASS
     object: skill-harness-evaluator
     authority_level: 4
-    source_path: ~/.zcode/skills/skill-harness-evaluator/tests/ (pytest)
+    source_path: skill-harness-evaluator-authority/final-acceptance/engine-test-attestation.yaml
     evidence_type: HASH_PINNED_EXECUTION_EVIDENCE
     accepted: true
-    source_location_type: SKILL_DIR_REFERENCE
-    source_sha256: NOT_IN_MAIN_REPO
-    source_note: Engine tests in skill dir, verified via pytest 33/33 PASS.
+    source_location_type: MAIN_REPOSITORY
+    source_sha256: 714350a7116e8dc780bbcfacff46cf622053f5d0782a575127cb894dee76cc28
   - claim_id: CLM-SCORECARD-REPRODUCIBILITY
     claim: scorecards reproducible (build twice, digest match)
     object: skill-harness-evaluator
     authority_level: 4
-    source_path: this artifact (computed deterministically)
+    source_path: skill-harness-evaluator-authority/final-acceptance/scorecard-reproducibility.yaml
     evidence_type: HASH_PINNED_EXECUTION_EVIDENCE
     accepted: true
+    source_location_type: MAIN_REPOSITORY
+    source_sha256: feab07e0333dc0f3bb6735365ebb3daec7d147e74811b8c9fe73d62d960cc7f5
   integrity:
-    claims_with_source: all
+    claims_total: 16
+    accepted_claims: 12
+    claims_with_source: 12
     missing_source_paths: 0
     missing_source_hashes: 0
     unsupported_claims: 0
-    reference_location_types:
+    reference_location_types_used:
     - MAIN_REPOSITORY
     - DURABLE_EVIDENCE_ARCHIVE
-    - SKILL_DIR_REFERENCE
-    note: SKILL_DIR_REFERENCE = file in ~/.zcode/skills/ (not in repo tree, not in archive). These are
-      owner-maintained skill runtime files.
+    main_repository_claims: 12
+    archive_claims: 0
+    note: Integrity computed from actual claim data. All accepted claims have real source_sha256 (64 hex)
+      or archive member coordinates.
