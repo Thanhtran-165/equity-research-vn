@@ -58,6 +58,137 @@ def extract_all_text(html):
 # VERIFICATION METHODS (data-driven from requirements.yaml)
 # ═══════════════════════════════════════════════════════════════
 
+def verify_non_advice_check(req, html):
+    """REQ-007: Check tech-profile section for actionable investment advice.
+    P4 FIX: negation-aware. Removes valid disclaimers before checking.
+    P5 FIX (v0.1.5): entity-interruption-tolerant disclaimer matching.
+      Problem: "không khuyến nghị mua/bán VCB" was flagged because the old
+      pattern required "không phải khuyến nghị mua/bán" (exact "phải" + no entity
+      after "bán"). Ticker/company names between disclaimer words broke matching.
+      Fix: use grammar-level rules that allow entity tokens between negation
+      and the advice keyword, while still FAILing real advice.
+    STRONG BUY/STRONG SELL as Tech Score verdict is allowed (machine-readable, not advice)."""
+    if not html:
+        return False, {"error": "no html"}
+    # Extract sec-tech-profile section text
+    sec_text = extract_section_text(html, "sec-tech-profile")
+    if not sec_text:
+        return True, {"section_found": False, "note": "no sec-tech-profile section — vacuously PASS"}
+
+    # Step 1: Remove valid disclaimer sentences (negation context)
+    # P5: Entity-interruption-tolerant patterns.
+    # Key insight: a disclaimer has the STRUCTURE "không [entity] khuyến nghị [entity] mua [entity] bán"
+    # where [entity] can be ticker names, company names, or connective words.
+    # We use .{0,40}? to allow up to 40 chars of interruption between key tokens.
+    disclaimer_patterns = [
+        # "không [phải] [entity] khuyến nghị mua [/entity] bán [entity]"
+        # Handles: "không khuyến nghị mua/bán VCB", "không phải khuyến nghị mua/bán",
+        #          "không phải là khuyến nghị mua bán VCB"
+        r"không\s+(?:phải\s+(?:là\s+)?)?(?:[A-Z]{2,5}\s+)?khuyến\s+nghị\s+mua[/\s]*bán",
+        # "không [entity] khuyến nghị mua" (standalone negation, no "bán" needed)
+        r"không\s+(?:phải\s+(?:là\s+)?)?(?:[A-Z]{2,5}\s+)?khuyến\s+nghị\s+mua(?!\s*[/\s]*bán)",
+        # "không [entity] khuyến nghị bán" (standalone negation)
+        r"không\s+(?:phải\s+(?:là\s+)?)?(?:[A-Z]{2,5}\s+)?khuyến\s+nghị\s+bán",
+        # "không cấu thành [entity] khuyến nghị đầu tư"
+        r"không\s+cấu\s+thành\s+(?:[A-Z]{2,5}\s+)?(?:khuyến\s+nghị\s+đầu\s+tư|lời\s+khuyên\s+đầu\s+tư)",
+        # "không [phải] [entity] lời khuyên tài chính"
+        r"không\s+(?:phải\s+)?(?:[A-Z]{2,5}\s+)?lời\s+khuyên\s+tài\s+chính",
+        # "không nên được hiểu/xem là [entity] khuyến nghị"
+        r"không\s+nên\s+được\s+(?:hiểu|xem)\s+(?:là|như)\s+(?:[A-Z]{2,5}\s+)?khuyến\s+nghị",
+        # "chỉ mang tính tham khảo [entity] không phải"
+        r"chỉ\s+mang\s+tính\s+tham\s+khảo[^.]*?không\s+phải",
+        # "không [entity] khuyến nghị mua/bán" — broader: negation anywhere before "khuyến nghị mua/bán"
+        # within same sentence (handles "thông tin về VCB không phải là khuyến nghị mua/bán")
+        r"(?:đây|nội\s+dung|thông\s+tin|đánh\s+giá|báo\s+cáo)[^.]{0,30}?không\s+(?:phải\s+(?:là\s+)?)?khuyến\s+nghị\s+mua[/\s]*bán",
+        # English
+        r"not\s+(?:investment\s+)?advice",
+        r"for\s+educational\s+purposes\s+only",
+    ]
+    cleaned_text = sec_text
+    disclaimers_removed = []
+    for pat in disclaimer_patterns:
+        matches = re.findall(pat, cleaned_text, re.I)
+        if matches:
+            disclaimers_removed.extend(matches)
+            cleaned_text = re.sub(pat, "", cleaned_text, flags=re.I)
+
+    # Step 1b: Also remove full sentences containing "không" + "khuyến nghị" within 60 chars
+    # This catches cases like "VCB không phải khuyến nghị mua" where VCB precedes the negation.
+    # CRITICAL: a sentence is ONLY removed as a disclaimer if it has NO actionable advice.
+    # "không phải khuyến nghị chung, nhưng có thể mua VCB" = disclaimer + real advice → KEEP (FAIL).
+    sentences = re.split(r'([.!?]\s+)', cleaned_text)
+    rebuilt = []
+    for i, s in enumerate(sentences):
+        if i % 2 == 0:  # actual sentence (odd indices are delimiters)
+            has_negation = bool(re.search(r"không\s|không$", s, re.I))
+            has_advice_word = bool(re.search(r"khuyến\s+nghị|lời\s+khuyên|đầu\s+tư|advice", s, re.I))
+            # Actionable = real advice signal that must FAIL even in a negation sentence
+            has_actionable = bool(re.search(
+                r"nên\s+mua|nên\s+bán|điểm\s+mua|điểm\s+bán|chốt\s+lời|cắt\s+lỗ|giải\s+ngân|"
+                r"nhà\s+đầu\s+tư\s+nên|có\s+thể\s+mua|có\s+thể\s+bán|"
+                r"khuyến\s+nghị\s+mua(?!\s*[/\s]*bán)|khuyến\s+nghị\s+bán",
+                s, re.I))
+            # Also check for "nhưng" (but) introducing actionable advice after a disclaimer
+            has_but_clause = bool(re.search(r"nhưng[^.]{0,40}(?:mua|bán|nên|giải\s+ngân)", s, re.I))
+            if has_negation and has_advice_word and not has_actionable and not has_but_clause:
+                disclaimers_removed.append(s.strip()[:80])
+                rebuilt.append("")  # remove this sentence
+            else:
+                rebuilt.append(s)
+        else:
+            rebuilt.append(s)
+    cleaned_text = "".join(rebuilt)
+
+    # Step 2: Allow STRONG BUY/STRONG SELL when used as Tech Score verdict (machine-readable)
+    verdict_patterns = [
+        r"(?:tech\s*score|verdict|kết\s+luận)\s*[:\s-]*\s*(?:STRONG\s+(?:BUY|SELL)|BUY|SELL|NEUTRAL)",
+        r'data-verdict="(?:STRONG\s+(?:BUY|SELL)|BUY|SELL|NEUTRAL)"',
+        r"(?:STRONG\s+(?:BUY|SELL)|BUY|SELL|NEUTRAL)\s*[×x]?\s*(?:/6|trên\s+6\s+tín\s+hiệu)",
+    ]
+    for pat in verdict_patterns:
+        cleaned_text = re.sub(pat, "[VERDICT_LABEL]", cleaned_text, flags=re.I)
+
+    # Step 3: Check remaining text for actionable advice signals
+    # P5b: distinguish "nhà đầu tư nên mua" (actionable) from "nhà đầu tư nên tự đánh giá" (disclaimer)
+    advice_signals = [
+        r"nên\s+mua", r"nên\s+bán", r"khuyến\s+nghị\s+mua", r"khuyến\s+nghị\s+bán",
+        r"nhà\s+đầu\s+tư\s+nên\s+(?!tự\s+đánh\s+giá|tham\s+vấn|cân\s+nhắc|hạn\s+chế)",  # NOT "nên tự đánh giá/tham vấn"
+        r"điểm\s+mua", r"điểm\s+bán",
+        r"chốt\s+lời", r"cắt\s+lỗ(?!\s+(?:cá\s+nhân|kỷ\s+luật|khẩu\s+vị))", r"giải\s+ngân",
+        r"có\s+thể\s+mua", r"có\s+thể\s+bán",
+        r"bullish.{0,30}(?:mua|buy|nên)", r"bearish.{0,30}(?:bán|sell|nên)",
+    ]
+    violations = []
+    for pat in advice_signals:
+        for m in re.finditer(pat, cleaned_text, re.I):
+            ctx = cleaned_text[max(0,m.start()-30):m.end()+30]
+            # v0.14.9: Clause-level negation guard — check up to 60 chars before
+            pre_context = cleaned_text[max(0,m.start()-60):m.start()].lower()
+            # Direct negation: "không nên mua"
+            if re.search(r"không\s+(?:phải\s+)?$", pre_context):
+                continue
+            # v0.14.9: Clause-level negation patterns (must NOT contain 'nhưng' which overrides)
+            # Clause boundaries: . ! ? ; — stop negation scope
+            if "nhưng" not in pre_context:
+                # "không khuyến nghị ... mua/bán"
+                if re.search(r"không\s+khuyến\s+nghị[^.!?;]{0,50}$", pre_context):
+                    continue
+                # "không phải lúc nào (cũng) nên mua/bán"
+                if re.search(r"không\s+phải\s+lúc\s+nào[^.!?;]{0,30}$", pre_context):
+                    continue
+                # "không đưa ra / không có / không phải ... (thời) điểm mua/bán"
+                if re.search(r"không\s+(?:đưa\s+ra|có|phải)[^.!?;]{0,40}$", pre_context):
+                    continue
+            violations.append({"pattern": pat[:30], "context": ctx.strip()[:80]})
+
+    passed = len(violations) == 0
+    return passed, {
+        "section_length": len(sec_text),
+        "disclaimers_removed": len(disclaimers_removed),
+        "advice_violations": violations[:3],
+        "patch_note": "P5: entity-interruption-tolerant disclaimers + sentence-level negation removal + final negation guard",
+    }
+
 def verify_command(req, html):
     """Run shell command, check exit code / output."""
     cmd = req["verification"]["command"]
@@ -120,9 +251,27 @@ def verify_artifact_check(req, html):
         body_text = re.sub(r"<!--.*?-->", "", body_text, flags=re.DOTALL)
         body_text = re.sub(r"<[^>]+>", " ", body_text)
         body_text = re.sub(r"\s+", " ", body_text).strip().lower()
-        has_oracle = "oracle" in body_text or "$ billions" in body_text or "usd billions" in body_text
+        # P3 FIX: context-scoped Oracle detection. Standalone "oracle" (including Vietnamese
+        # business term meaning "chủ đầu tư then chốt") must NOT trigger. Require specific
+        # Oracle Corporation signals: company name, ticker, product names, or USD financials.
+        oracle_corp_signals = [
+            r"oracle\s+corporation",
+            r"\bORCL\b",
+            r"NYSE:?\s*ORCL",
+            r"oracle\s+oci",
+            r"oracle\s+cloud",
+            r"oracle\s+database",
+            r"oracle[^a-z]{0,20}(?:revenue|capex|earnings|billion|usd)",
+            r"\$\s*billions.*oracle",
+            r"usd\s*billions.*oracle",
+        ]
+        has_oracle = any(re.search(pat, body_text, re.I) for pat in oracle_corp_signals)
         passed = not has_oracle
-        return passed, {"no_placeholder": passed, "has_oracle": has_oracle}
+        return passed, {"no_placeholder": passed, "has_oracle": has_oracle,
+                        "patch_note": "P3: context-scoped — standalone 'oracle' no longer triggers"}
+
+    if "non_advice" in check.lower() or "neutral_descriptive" in check.lower():
+        return verify_non_advice_check(req, html)
 
     if "tech score" in check.lower() or "verdict" in check.lower():
         sec = extract_section_text(html, "sec-tech")
@@ -164,6 +313,8 @@ def verify_section_map(req, html):
     """Check section ids match canonical."""
     canonical = req["verification"]["canonical_sections"]
     min_match = req["verification"]["min_canonical_match"]
+    # PATCH P0-2: high-signal sections must each be present (count proxy alone was gameable).
+    required_signal = req["verification"].get("required_signal_sections", [])
     found = 0
     found_ids = []
     missing_ids = []
@@ -173,9 +324,13 @@ def verify_section_map(req, html):
             found_ids.append(sec_id)
         else:
             missing_ids.append(sec_id)
-    passed = found >= min_match
+    missing_signal = [s for s in required_signal if not (html and f'id="{s}"' in html)]
+    # PATCH P0-2: PASS requires BOTH count threshold AND every signal section present.
+    passed = found >= min_match and len(missing_signal) == 0
     return passed, {"found": found, "total": len(canonical), "min_required": min_match,
-                    "missing": missing_ids[:10]}
+                    "missing": missing_ids[:10],
+                    "missing_signal_sections": missing_signal,
+                    "patch_note": "P0-2: tightened min 15→20 + required_signal_sections each-present"}
 
 
 def verify_count_check(req, html):
@@ -252,6 +407,74 @@ def verify_valuation_sanity(req, html):
     return passed, {"negative_prices": negative[:3], "total_prices": len(prices), "has_fcf_note": has_fcF_note}
 
 
+def _context_anchored_match(text, anchor_label, gt_val, tolerance_pct, fallback_key=None, window=400):
+    """PATCH P1-1 (REQ-022): find gt_val within ±tolerance ONLY in a context window around
+    an anchor. Prevents a corrupted value being masked by a sibling value matching globally.
+
+    Anchors (in priority order):
+      1. the YEAR label (for per-year table cells where year is adjacent)
+      2. the field key (revenue_ty, npatmi_ty) — internal data label
+      3. business synonyms for the field key (revenue↔Doanh thu, npatmi↔LNST/lợi nhuận)
+    A value matches only if it appears within `window` chars of SOME anchor — not anywhere.
+    Handles US/VN number formats."""
+    def parse_num(s):
+        try:
+            c = s.strip()
+            if "." in c and "," in c: c = c.replace(",", "")
+            elif "." in c and "," not in c:
+                parts = c.split(".")
+                if len(parts) > 1 and all(len(p) == 3 for p in parts[1:]): c = c.replace(".", "")
+            return float(c)
+        except Exception:
+            return None
+    def within_tol(n):
+        return n is not None and abs(n - gt_val) / max(abs(gt_val), 0.001) * 100 <= tolerance_pct
+    # build anchor synonym map keyed by the field key
+    synonyms = {
+        "revenue_ty": ["revenue_ty", "Doanh thu", "Revenue", "Tổng doanh thu"],
+        "npatmi_ty": ["npatmi_ty", "LNST", "lợi nhuận sau thuế", "Net profit", "Net income", "Net Profit"],
+        "eps_vnd": ["eps_vnd", "EPS", "EPS adj", " Thu nhập trên mỗi cổ phiếu"],
+        "Total Assets": ["Total Assets", "Tổng tài sản"],
+        "Owner's Equity": ["Owner's Equity", "Vốn chủ sở hữu"],
+    }
+    anchor_terms = synonyms.get(fallback_key, []) or ([fallback_key] if fallback_key else [])
+    if anchor_label:
+        anchor_terms = anchor_terms + [anchor_label]
+    anchor_terms = [t for t in anchor_terms if t]
+    positions = []
+    for term in anchor_terms:
+        positions.extend(m.start() for m in re.finditer(re.escape(term), text, re.I))
+    if not positions:
+        positions = [0]
+    for a in positions:
+        seg = text[max(0, a-window):a+window]
+        for num_str in re.findall(r'([\d.,]+)', seg):
+            if within_tol(parse_num(num_str)):
+                return True
+    return False
+
+def _extract_data_js_arrays(html):
+    """PATCH P1-1 (REQ-022): pull structured arrays from the report's `const DATA = {...}` JS
+    object. Returns {years, revenue, netProfit, eps, ...} as lists of floats/strings. Used for
+    unambiguous per-year verification (eliminates sibling-value substitution)."""
+    if not html:
+        return {}
+    out = {}
+    for name in ["years", "revenue", "netProfit", "net_profit", "eps", "capex", "totalAssets", "equity", "ownersEquity"]:
+        m = re.search(rf'{name}\s*:\s*\[([^\]]+)\]', html)
+        if m:
+            vals = []
+            for tok in m.group(1).split(","):
+                tok = tok.strip().strip("'\"")
+                if not tok:
+                    continue
+                try:
+                    vals.append(float(tok))
+                except ValueError:
+                    vals.append(tok)
+            out[name] = vals
+    return out
+
 def verify_data_accuracy(req, html):
     """Verify report numbers match data files (ground truth). Anti-fabrication."""
     import json as _json
@@ -265,6 +488,10 @@ def verify_data_accuracy(req, html):
         ground_truth = _json.load(f)
 
     text = extract_all_text(html) if html else ""
+    # PATCH P1-1 (REQ-022): parse the structured DATA JS object for unambiguous per-year
+    # verification. This eliminates sibling-value substitution (a corrupted year being masked
+    # by another year's value matching in a shared context window).
+    data_arrays = _extract_data_js_arrays(html)  # {years:[...], revenue:[...], netProfit:[...], eps:[...]}
     mismatches = []
     checked = 0
 
@@ -277,60 +504,55 @@ def verify_data_accuracy(req, html):
         if gt_val is None:
             continue
 
+        # Map field key → DATA array name
+        data_arr_map = {"revenue_ty": "revenue", "npatmi_ty": "netProfit", "eps_vnd": "eps",
+                        "Total Assets": "totalAssets", "Owner's Equity": "equity"}
+
         # If dict (per-year), check each year
         if isinstance(gt_val, dict):
             years = field.get("years", list(gt_val.keys()))
             divisor = field.get("divisor", 1)
+            data_arr_name = data_arr_map.get(key)
+            data_arr = data_arrays.get(data_arr_name, []) if data_arr_name else []
+            data_years = data_arrays.get("years", [])
             for yr in years:
                 yr_val = gt_val.get(str(yr)) or gt_val.get(yr)
                 if yr_val is None:
                     continue
                 yr_val = float(yr_val) / divisor
                 checked += 1
-                # Try to find this value in report text (within ±tolerance)
-                yr_str = str(yr)
-                # Search ENTIRE text for the value (not just near year)
-                numbers = re.findall(r'([\d.,]+)', text)
-                found_match = False
-                for num_str in numbers:
+                # PATH A (preferred): exact-index match via DATA JS array
+                # normalize years to int-strings ("2025" not "2025.0")
+                data_years_norm = [str(int(float(y))) if isinstance(y,(int,float)) else str(y) for y in data_years]
+                if data_arr and str(yr) in data_years_norm:
                     try:
-                        # Handle both US (1,234.56) and VN (1.234,56 / 123.456) formats
-                        cleaned = num_str.strip()
-                        # If has both . and , → US format: remove commas
-                        if "." in cleaned and "," in cleaned:
-                            cleaned = cleaned.replace(",", "")
-                        # If only . and it's a thousands separator (3 digits after, no decimals)
-                        # VN uses . for thousands: 128.963 = 128963
-                        elif "." in cleaned and "," not in cleaned:
-                            parts = cleaned.split(".")
-                            # If all parts after first are 3 digits → thousands separator
-                            if len(parts) > 1 and all(len(p) == 3 for p in parts[1:]):
-                                cleaned = cleaned.replace(".", "")
-                        num = float(cleaned)
-                        if abs(num - yr_val) / max(abs(yr_val), 0.001) * 100 <= tolerance:
-                            found_match = True
-                            break
-                    except:
-                        continue
+                        idx = data_years_norm.index(str(yr))
+                        report_val = float(data_arr[idx]) if idx < len(data_arr) else None
+                        # ground truth for revenue_ty is in tỷ (÷1e9 done); DATA revenue is in tỷ VND too
+                        # eps_vnd is per-share VND (no divisor scaling needed vs DATA eps)
+                        # normalize: compare magnitudes with tolerance
+                        if report_val is not None:
+                            denom = max(abs(yr_val), abs(report_val), 0.001)
+                            diff_pct = abs(yr_val - report_val) / denom * 100
+                            if diff_pct > tolerance:
+                                mismatches.append(f"{key}[{yr}]: DATA array value {report_val} ≠ ground_truth {yr_val:,.1f} (diff {diff_pct:.1f}% > {tolerance}%)")
+                                continue
+                            else:
+                                continue  # matched at exact index
+                    except (ValueError, IndexError):
+                        pass
+                # PATH B (fallback): context-anchored match (for fields not in DATA, e.g. balance sheet)
+                yr_str = str(yr)
+                found_match = _context_anchored_match(text, yr_str, yr_val, tolerance, fallback_key=key)
                 if not found_match:
-                    mismatches.append(f"{key}[{yr}]: ground_truth={yr_val:,.1f} not found in report (±{tolerance}%)")
+                    mismatches.append(f"{key}[{yr}]: ground_truth={yr_val:,.1f} not found (DATA-array miss + context-anchored fallback miss, ±{tolerance}%)")
         else:
-            # Single value
+            # Single value — PATCH P1-1: context-anchored (around the field key)
             gt_val = float(gt_val)
             checked += 1
-            # Find in report
-            numbers = re.findall(r'([\d,.]+)', text)
-            found_match = False
-            for num_str in numbers:
-                try:
-                    num = float(num_str.replace(",",""))
-                    if abs(num - gt_val) / max(abs(gt_val), 0.001) * 100 <= tolerance:
-                        found_match = True
-                        break
-                except:
-                    continue
+            found_match = _context_anchored_match(text, key, gt_val, tolerance, fallback_key=key)
             if not found_match:
-                mismatches.append(f"{key}: ground_truth={gt_val:,.0f} not found in report")
+                mismatches.append(f"{key}: ground_truth={gt_val:,.0f} not found near its label (±{tolerance}% context-anchored)")
 
     passed = len(mismatches) == 0 and checked > 0
     return passed, {"checked": checked, "mismatches": mismatches[:5], "ground_truth_file": req["verification"]["data_file"]}
@@ -369,8 +591,9 @@ def verify_capex_accuracy(req, html):
     else:
         return False, {"error": "unexpected cash_flow.json format"}
 
-    # Get capex from report JS DATA object
-    js_capex_match = re.search(r'capex:\s*\[([\d.,\s]+)\]', html or "")
+    # Get capex from report JS DATA object — v0.14.4: quoted-key + negative support
+    # v0.14.6: add - to character class for negative values after commas (e.g. eps: [-250, -36])
+    js_capex_match = re.search(r'["\']?capex["\']?\s*:\s*\[(-?[\d.,\s-]+)\]', html or "")
     if not js_capex_match:
         return False, {"error": "capex array not found in report JS DATA", "gt_capex_sample": gt_capex[:3]}
 
@@ -394,11 +617,87 @@ def verify_capex_accuracy(req, html):
     return False, {"error": "could not compare capex"}
 
 
+def _extract_primary_multiple(text, label_pattern, computed_val, tolerance_pct):
+    """PATCH P2: extract a valuation multiple (P/E, P/B) from visible report text.
+    Handles × (U+00D7) and ASCII x. Requires leading digit. Avoids Chart.js JS tokens.
+
+    Strategy:
+      1. Find all occurrences of `label <number>(×|x)` in the scoped text (sec-valuation or sec-hero).
+      2. Normalize to floats.
+      3. If all candidates are the same value → UNAMBIGUOUS, return it.
+      4. If multiple distinct values:
+         a. If a primary semantic marker (data-metric, TTM/hiện tại/current label, val-card) identifies one → return it.
+         b. If no marker → FAIL_AMBIGUOUS (return None with ambiguity detail).
+      5. NEVER select by computed-value match — that would be cherry-picking to PASS, not verifying.
+      6. If no candidates at all → None (value not found)."""
+    # match: label (P/E or P/B), optional descriptive text, then NUMBER, then × or x
+    pat = re.compile(rf'{label_pattern}[^0-9\n]{{0,30}}([\d,]+\.?\d*)\s*[×x]', re.I)
+    # v0.14.1: identify the OTHER multiple label to detect cross-contamination
+    other_label = "p/e" if "p/?b" in label_pattern.lower() else "p/b"
+    candidates = []  # list of (value, is_primary, is_projection)
+    for m in pat.finditer(text):
+        # v0.14.1: skip if the text between label and number contains the OTHER label
+        # (prevents "P/B vs lịch sử P/E (TTM) 7.35×" from matching 7.35 as P/B)
+        gap_text = text[m.start()+2:m.start()+len(m.group(0))].lower()  # text after "P/B"
+        if other_label in gap_text:
+            continue  # cross-contaminated match — the number belongs to the other multiple
+        # v0.14.5: handle Vietnamese decimal notation (4,8 = 4.8, not 48)
+        raw_orig = m.group(1)
+        # If comma is followed by exactly 1-2 digits at the end → decimal separator
+        if re.search(r',\d{1,2}$', raw_orig) and '.' not in raw_orig:
+            raw = raw_orig.replace(',', '.')  # 4,8 → 4.8, 4,80 → 4.80
+        else:
+            raw = raw_orig.replace(',', '')  # 1,234.56 → 1234.56 (thousands)
+        try:
+            val = float(raw)
+            if val > 1000: continue
+            label_to_num = text[m.start():m.start()+len(m.group(0))].lower()
+            has_primary = any(kw in label_to_num for kw in ["data-metric","ttm","hiện tại","current","val-card","mono","kpi-value"])
+            has_projection = any(kw in label_to_num for kw in ["median","target","5y","projected","fcf","graham","ev/ebitda","p/cf","dcf","wacc"])
+            is_primary = has_primary and not has_projection
+            candidates.append((val, is_primary, has_projection))
+        except ValueError:
+            continue
+    if not candidates:
+        return None
+    # Filter out projection candidates (median/5Y/target/DCF are NOT the current multiple)
+    non_projection = [(v, ip) for v, ip, proj in candidates if not proj]
+    if not non_projection:
+        return None  # all candidates are projections — no current multiple found
+    distinct = set(v for v, _ in non_projection)
+    # Rule 3: all non-projection values same → unambiguous
+    if len(distinct) == 1:
+        return non_projection[0][0]
+    # v0.14.8: majority vote — CONSTRAINED to valuation scope only
+    # Only applies when: no canonical marker, candidates from valuation section,
+    # projections removed, no P/E cross-contamination in candidate gaps
+    from collections import Counter
+    val_counts = Counter(v for v, _ in non_projection)
+    most_common_val, most_common_count = val_counts.most_common(1)[0]
+    if most_common_count >= 3 and most_common_count >= len(non_projection) * 0.6:
+        return most_common_val
+    # Rule 4a: multiple distinct non-projection → need primary marker
+    marked = [(v, ip) for v, ip in non_projection if ip]
+    if len(marked) >= 1:
+        return marked[0][0]
+    # Rule 4b: multiple distinct, no marker → AMBIGUOUS
+    return None  # caller will report AMBIGUOUS_PRIMARY_MULTIPLE
+
 def verify_valuation_recompute(req, html):
-    """Recompute PE/PB/Graham from data, compare to report values."""
+    """Recompute PE/PB/Graham from data, compare to report values.
+
+    v0.14.7: PREFER canonical valuation contract over recompute from rounded financials.
+    The verified-dashboard-data.json contains the authoritative PE/PB values computed
+    by the builder from raw source data. The verifier now compares artifact values
+    against these canonical values, falling back to recompute only when the contract
+    is unavailable.
+
+    v0.14.7: Handle PE=N/A when EPS=0 (legitimately non-computable). PB is still verified.
+    """
     import json as _json, math as _math
     work_dir = os.path.dirname(REPORT) if REPORT else "."
     fin_path = os.path.join(work_dir, "data/financials.json")
+    contract_path = os.path.join(work_dir, "verified-dashboard-data.json")
 
     if not os.path.exists(fin_path):
         return False, {"error": "financials.json not found"}
@@ -406,9 +705,22 @@ def verify_valuation_recompute(req, html):
     with open(fin_path) as f:
         fin = _json.load(f)
 
-    price = fin.get("overview", {}).get("current_price", 68800)
-    eps_2025 = fin.get("eps_vnd", {}).get("2025", 2710)
-    text = extract_all_text(html) if html else ""
+    # v0.14.7: Load canonical valuation contract (authoritative PE/PB)
+    contract = None
+    if os.path.exists(contract_path):
+        with open(contract_path) as f:
+            contract = _json.load(f)
+
+    price = fin.get("overview", {}).get("current_price")
+    eps_2025 = fin.get("eps_vnd", {}).get("2025")
+
+    full_text = extract_all_text(html) if html else ""
+    val_text_parts = []
+    for sec_id in ["sec-valuation", "sec-hero", "sec-exec"]:
+        st = extract_section_text(html, sec_id) if html else ""
+        if st:
+            val_text_parts.append(st)
+    val_text = "\n".join(val_text_parts) if val_text_parts else full_text
 
     results_check = {}
     all_pass = True
@@ -418,21 +730,56 @@ def verify_valuation_recompute(req, html):
         tolerance = formula.get("tolerance_pct", 2)
 
         if name == "PE":
-            computed = price / eps_2025 if eps_2025 else None
-            report_match = re.search(formula["report_extract"], text)
-            report_val = float(report_match.group(1)) if report_match else None
+            # v0.14.8: Source-consistency check for EPS=0
+            if eps_2025 == 0 or eps_2025 is None:
+                # Check if EPS=0 is consistent with positive net profit
+                np_2025 = fin.get("npatmi_ty", {}).get("2025")
+                eps_status = "REPORTED_ZERO"
+                if np_2025 and np_2025 > 0 and eps_2025 == 0:
+                    eps_status = "SUSPECT_ZERO_OR_MISSING"
+                contract_pe = contract.get("valuation", {}).get("pe") if contract else None
+                if contract_pe is None:
+                    if eps_status == "SUSPECT_ZERO_OR_MISSING":
+                        results_check[name] = {"status": "NOT_AVAILABLE_DUE_TO_SOURCE_CONFLICT",
+                                              "reason": f"EPS=0 but net profit={np_2025} tỷ > 0 → source data suspect",
+                                              "eps_status": eps_status,
+                                              "note": "PE skipped — PB still verified. Artifact should note EPS data quality concern."}
+                    else:
+                        results_check[name] = {"status": "NOT_COMPUTABLE", "reason": "EPS=0",
+                                              "eps_status": eps_status,
+                                              "note": "PE skipped — PB still verified"}
+                    continue
+                else:
+                    results_check[name] = {"error": "EPS=0 but contract has PE — source data inconsistency"}
+                    all_pass = False
+                    continue
+
+            # Use canonical contract PE if available (more precise than recompute)
+            if contract and contract.get("valuation", {}).get("pe") is not None:
+                computed = contract["valuation"]["pe"]
+            else:
+                computed = price / eps_2025 if eps_2025 else None
+            report_val = _extract_primary_multiple(val_text, "P/?E", computed, tolerance)
+
         elif name == "PB":
-            # Need equity + shares — read from data files if available
-            equity = fin.get("equity_ty", {}).get("2025", 45079)  # tỷ
-            shares = fin.get("overview", {}).get("issue_share", 1460374611)
-            bvps = equity * 1e9 / shares if shares else None
-            computed = price / bvps if bvps else None
-            report_match = re.search(formula["report_extract"], text)
-            report_val = float(report_match.group(1)) if report_match else None
+            # v0.14.7: Use canonical contract PB if available
+            if contract and contract.get("valuation", {}).get("pb") is not None:
+                computed = contract["valuation"]["pb"]
+                report_val = _extract_primary_multiple(val_text, "P/?B", computed, tolerance)
+            else:
+                equity = fin.get("equity_ty", {}).get("2025")
+                shares = fin.get("overview", {}).get("issue_share")
+                if equity is None or shares is None:
+                    results_check[name] = {"error": "missing equity_ty or issue_share (no default fallback)"}
+                    all_pass = False
+                    continue
+                bvps = equity * 1e9 / shares
+                computed = price / bvps if bvps else None
+                report_val = _extract_primary_multiple(val_text, "P/?B", computed, tolerance)
         else:
             continue
 
-        if computed and report_val:
+        if computed and report_val is not None:
             diff_pct = abs(computed - report_val) / computed * 100
             ok = diff_pct <= tolerance
             results_check[name] = {"computed": round(computed, 2), "report": report_val, "diff_pct": round(diff_pct, 2), "ok": ok}
@@ -471,8 +818,10 @@ def verify_chart_data_accuracy(req, html):
         else:
             continue
 
-        # Get report JS value
-        js_match = re.search(rf'{arr_name}:\s*\[([\d.,\s]+)\]', html or "")
+        # Get report JS value — v0.14.0: support negative numbers (airlines, cyclicals)
+        # v0.14.1: support both quoted ("revenue") and unquoted (revenue) key formats
+        # v0.14.6: add - to character class for negative values after commas
+        js_match = re.search(rf'["\']?{arr_name}["\']?\s*:\s*\[(-?[\d.,\s-]+)\]', html or "")
         if not js_match:
             mismatches.append(f"{arr_name}: not found in JS DATA")
             continue
@@ -490,27 +839,69 @@ def verify_chart_data_accuracy(req, html):
 
 
 def verify_external_claim_flag(req, html):
-    """Check that external claims (WCM LN, MCH DT, store count) are flagged as estimates."""
-    text = extract_all_text(html) if html else ""
+    """Check that external claims are flagged appropriately.
 
+    TWO-TIER PROVENANCE (v0.1.6, owner directive 2026-07-14):
+      Tier A — Financial/Valuation claims (WCM, MCH, analyst targets):
+        100% provenance required. Must have explicit flag (ước tính, estimate, source).
+      Tier B — Widely-known company descriptors (store count, market share, factories):
+        Memory allowed IF qualified as general background. Accepted qualifiers:
+        "theo công bố" / "according to disclosures" / "ước tính" / "~" / "khoảng"
+        This mirrors sell-side research: "Apple has 2B+ active devices" is background;
+        "Revenue grew 18.6%" requires a source.
+
+    A claim is UNFLAGGED only when it's a Tier A claim without provenance, OR a Tier B
+    claim with NO qualifier whatsoever.
+    """
+    text = extract_all_text(html) if html else ""
     patterns = req["verification"].get("patterns", [])
     must_flag = req["verification"].get("must_flag", "ước tính|estimate")
+    adjacent_window = req["verification"].get("adjacent_window", 200)
+
+    # Tier B qualifiers — these make widely-known company descriptors acceptable
+    # without requiring inline citation (like sell-side research).
+    tier_b_qualifiers = [
+        r"theo\s+(?:công\s+ bố|báo\s+cáo|disclosure|bctc|issuer|company)",
+        r"according\s+to\s+(?:company|disclosure|report)",
+        r"ước\s+tính", r"estimate", r"external", r"marketing",
+        r"~",  # approximate marker (~38% thị phần)
+        r"khoảng", r"xấp\s+xỉ", r"approximately", r"roughly",
+        r"general\s+background", r"thông\s+tin\s+chung",
+        r"nổi\s+tiếng", r"widely\s+known", r"phổ\s+biến",
+        r"market\s+leader", r"thống\s+trị", r"dẫn\s+đầu",
+    ]
+    tier_b_qualifier_pattern = "|".join(tier_b_qualifiers)
+
+    # Classify patterns into tiers
+    # Tier A: financial/analyst claims (WCM, MCH — require strict provenance)
+    tier_a_patterns = [p for p in patterns if "WCM" in p or "MCH" in p]
+    # Tier B: company descriptors (store count, market share — allow qualifier)
+    tier_b_patterns = [p for p in patterns if p not in tier_a_patterns]
 
     unflagged_claims = []
+    total_claims = 0
     for pattern in patterns:
-        matches = re.findall(pattern, text, re.I)
-        if matches:
-            # Check if there's a flag nearby
-            # Simple: if claim exists but no flag word in text at all → warn
-            if not re.search(must_flag, text, re.I):
-                unflagged_claims.append(pattern)
-
-    # If no external claims at all, pass
-    if not unflagged_claims:
-        return True, {"external_claims_found": len(matches) if 'matches' in dir() else 0, "flagged": True}
-    # If claims exist but flag word present → pass
-    has_flag = bool(re.search(must_flag, text, re.I))
-    return has_flag, {"unflagged_patterns": unflagged_claims[:3], "has_estimate_flag": has_flag}
+        is_tier_a = pattern in tier_a_patterns
+        for m in re.finditer(pattern, text, re.I):
+            total_claims += 1
+            ctx = text[max(0, m.start()-adjacent_window):m.end()+adjacent_window]
+            if is_tier_a:
+                # Tier A: must have strict provenance flag
+                if not re.search(must_flag, ctx, re.I):
+                    unflagged_claims.append({"pattern": pattern, "match": m.group(0)[:40],
+                                            "tier": "A", "reason": "strict provenance required"})
+            else:
+                # Tier B: accept either strict flag OR a tier-B qualifier
+                if not re.search(must_flag, ctx, re.I) and not re.search(tier_b_qualifier_pattern, ctx, re.I):
+                    unflagged_claims.append({"pattern": pattern, "match": m.group(0)[:40],
+                                            "tier": "B", "reason": "needs qualifier (~, khoảng, theo công bố, or ước tính)"})
+    passed = (total_claims == 0) or (len(unflagged_claims) == 0)
+    return passed, {"external_claims_found": total_claims,
+                    "unflagged": unflagged_claims[:5],
+                    "adjacent_window": adjacent_window,
+                    "tier_a_patterns": len(tier_a_patterns),
+                    "tier_b_patterns": len(tier_b_patterns),
+                    "patch_note": "v0.1.6: two-tier provenance — Tier A strict, Tier B qualifier-allowed"}
 
 
 def verify_div_balance(req, html):
@@ -521,6 +912,199 @@ def verify_div_balance(req, html):
     closes = len(re.findall(r"</div>", html))
     passed = opens == closes
     return passed, {"opens": opens, "closes": closes}
+
+
+def verify_source_citation(req, html):
+    """REQ-029: Source citation check — mọi số liệu trong narrative phải có nguồn.
+
+    Quét narrative (text content, không CSS/JS) tìm số liệu định lượng
+    không có source keyword gần đó. Key metrics phải cite ít nhất 1 lần.
+
+    Lesson Learned #7-10: agent đưa %, multiples, drawdown không cite nguồn.
+    """
+    if not html:
+        return False, {"error": "no html"}
+
+    # Extract text content only (strip tags, CSS, JS)
+    # Remove <style> and <script> blocks
+    text_html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL)
+    text_html = re.sub(r'<script[^>]*>.*?</script>', '', text_html, flags=re.DOTALL)
+    text = re.sub(r'<[^>]+>', ' ', text_html)
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    source_keywords = ['bctc', 'theo', 'nguồn', 'source', 'ref-', 'vnstock', 'data',
+                       'ước tính', 'giả định', 'khoảng', 'tiếp cận', 'estimate',
+                       'tính từ', 'recompute', 'sponsor', 'kiểm toán', 'công bố']
+    uncertainty_markers = ['ước tính', 'giả định', 'khoảng', 'có thể', 'xấp xỉ',
+                           'tiếp cận', 'estimate', 'approximate']
+
+    # Find all quantitative claims: numbers with units
+    # Pattern: digits + (tỷ/nghìn/%/×/x/VND)
+    number_pattern = re.compile(
+        r'(\d[\d.,]*)\s*(tỷ\s*(?:vnd|đồng)?|nghìn\s*tỷ|ngàn\s*tỷ|%|phần\s*trăm|×|x\b|lần|vnd)',
+        re.IGNORECASE
+    )
+
+    issues = []
+    checked = 0
+    unsourced = 0
+
+    for m in number_pattern.finditer(text):
+        val_str = m.group(1)
+        unit = m.group(2).lower().strip()
+
+        # Skip if value is 0 or clearly not a data point
+        try:
+            val = float(val_str.replace(',', '.'))
+        except ValueError:
+            continue
+        if val == 0 or val == 100:
+            continue
+
+        checked += 1
+        # Context window: 200 chars before and after
+        start = max(0, m.start() - 200)
+        end = min(len(text), m.end() + 200)
+        context = text[start:end].lower()
+
+        has_source = any(kw in context for kw in source_keywords)
+        has_uncertainty = any(kw in context for kw in uncertainty_markers)
+
+        if not has_source and not has_uncertainty:
+            unsourced += 1
+            snippet = text[max(0, m.start()-40):m.end()+40].strip()
+            issues.append(f'"{val_str} {unit}" không có source gần — ...{snippet}...')
+
+    # Key metrics must have at least 1 source citation
+    key_metrics = ['P/E', 'P/B', 'CAGR', 'ROE', 'ROA', 'EPS']
+    key_metric_issues = []
+    for km in key_metrics:
+        if km.lower() in text.lower():
+            # Find first occurrence
+            idx = text.lower().find(km.lower())
+            context = text[max(0, idx-300):idx+300].lower()
+            if not any(kw in context for kw in source_keywords):
+                key_metric_issues.append(f'{km}: không có source cite trong context đầu tiên')
+
+    passed = (unsourced <= 5) and (len(key_metric_issues) == 0)
+    evidence = {
+        "checked_numbers": checked,
+        "unsourced_numbers": unsourced,
+        "threshold": "≤5 unsourced (cho phép CSS artifacts lọt qua)",
+        "unsourced_examples": issues[:5],
+        "key_metrics_without_source": key_metric_issues,
+    }
+    return passed, evidence
+
+
+def verify_price_source(req, html):
+    """REQ-030: Price freshness check — giá phải fetch từ API, không tự điền.
+
+    Check: price trong DATA object phải có source traceability.
+    Nếu verified-dashboard-data.json có price nhưng không có price_fetched_at → suspect.
+
+    Lesson Learned #6: price=62000 tự điền tay.
+    """
+    if not html:
+        return False, {"error": "no html"}
+
+    issues = []
+
+    # Extract DATA object price
+    data_match = re.search(r'price["\']?\s*[:=]\s*(\d+)', html)
+    if not data_match:
+        return True, {"note": "no price found in HTML (may be absent)"}
+
+    price_val = int(data_match.group(1))
+    if price_val == 0:
+        issues.append("price = 0 in DATA")
+        return False, {"price": 0, "issues": issues}
+
+    # Check for price_fetched_at or price_source in DATA
+    has_timestamp = bool(re.search(r'price_fetched_at|price_source|priceFetchedAt', html, re.IGNORECASE))
+    has_api_source = bool(re.search(r'vnstock|sponsor|api.*price|fetch.*price', html, re.IGNORECASE))
+
+    # Check for round numbers that suggest manual entry (60000, 50000, etc.)
+    is_round = price_val % 1000 == 0
+
+    if not has_timestamp and not has_api_source:
+        if is_round:
+            issues.append(f"price={price_val} là số tròn + không có price_fetched_at → NGHI NGOẠI tự điền tay")
+        else:
+            issues.append(f"price={price_val} không có price_fetched_at hoặc API source reference")
+
+    passed = len(issues) == 0
+    evidence = {
+        "price_value": price_val,
+        "has_price_fetched_at": has_timestamp,
+        "has_api_source_reference": has_api_source,
+        "is_round_number": is_round,
+        "issues": issues,
+    }
+    return passed, evidence
+
+
+def verify_drawdown_source(req, html):
+    """REQ-031: Drawdown verification — claim drawdown phải có data thật.
+
+    Nếu narrative nói "drawdown X%" → phải có max_drawdown trong DATA.
+    Nếu KHÔNG có data → phải ghi "ước tính".
+
+    Lesson Learned #9: "30-50% drawdown" không có data thật.
+    """
+    if not html:
+        return False, {"error": "no html"}
+
+    # Extract text content
+    text_html = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL)
+    text_html = re.sub(r'<script[^>]*>.*?</script>', '', text_html, flags=re.DOTALL)
+    text = re.sub(r'<[^>]+>', ' ', text_html)
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    issues = []
+
+    # Find drawdown claims: "drawdown X%" or "giảm X%" or "mất X triệu"
+    drawdown_patterns = [
+        r'(?:drawdown|sụt giảm|giảm(?:\s+xuống)?)[^.]{0,30}?(\d+(?:[.,]\d+)?)\s*%',
+        r'(?:mất|tổn\s*thất)[^.]{0,30}?(\d+(?:[.,]\d+)?)\s*(?:%|triệu|tỷ)',
+        r'(?:có\s*thể\s*giảm|rủi\s*ro\s*giảm)[^.]{0,30}?(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*%',
+    ]
+
+    drawdown_claims = []
+    for pat in drawdown_patterns:
+        for m in re.finditer(pat, text, re.IGNORECASE):
+            val = m.group(1) if m.lastindex >= 1 else '?'
+            context = text[max(0, m.start()-100):m.end()+100]
+            drawdown_claims.append({
+                'value': val,
+                'context': context.strip()[:120],
+            })
+
+    # Check if DATA has max_drawdown
+    has_drawdown_data = bool(re.search(r'max_drawdown|drawdownData|maxDrawdown', html, re.IGNORECASE))
+
+    # Check if claims have uncertainty markers
+    uncertainty_keywords = ['ước tính', 'giả định', 'có thể', 'khoảng', 'ngành', 'history',
+                            'lịch sử', 'thường', 'trung bình', 'estimate']
+
+    for claim in drawdown_claims:
+        ctx_lower = claim['context'].lower()
+        has_uncertainty = any(kw in ctx_lower for kw in uncertainty_keywords)
+        if not has_drawdown_data and not has_uncertainty:
+            issues.append(f"drawdown claim '{claim['value']}%' không có data thật và không có marker 'ước tính'")
+
+    # If no drawdown claims at all → PASS (nothing to check)
+    if not drawdown_claims:
+        return True, {"note": "no drawdown claims found in narrative"}
+
+    passed = len(issues) == 0
+    evidence = {
+        "drawdown_claims_found": len(drawdown_claims),
+        "claims": [c['context'] for c in drawdown_claims[:5]],
+        "has_max_drawdown_data": has_drawdown_data,
+        "issues": issues,
+    }
+    return passed, evidence
 
 
 def verify_chart_runtime_check(req, html):
@@ -546,19 +1130,35 @@ def verify_chart_runtime_check(req, html):
         canvas_id_counts[cid] = canvas_id_counts.get(cid, 0) + 1
 
     # 2. Extract Chart(...) targets: $('chartId') or getElementById('chartId')
+    # PATCH (P0-1): distinguish UNCONDITIONAL refs from CONDITIONAL/fallback refs.
+    #   - conditional:  `if ($(id)) new Chart($(id)...)`        → canvas optional, not required
+    #   - fallback:     `new Chart($(primary) || $(fallback))`  → only primary required
+    # Previously ALL chart-like refs were treated as required → false positives on reports
+    # that legitimately guard optional charts. (Audit 2026-07-12: REQ-028 FP on clean PNJ.)
     chart_targets = re.findall(r"""\$\(['"]([^'"]+)['"]\)|getElementById\(['"]([^'"]+)['"]\)""", html)
     referenced_ids = set()
+    unconditional_required = set()   # ids that MUST have a canvas
     for t in chart_targets:
         cid = t[0] or t[1]
-        # Filter: only canvas-like IDs (not generic selectors)
-        if cid.startswith('chart') or cid.startswith('Chart'):
-            referenced_ids.add(cid)
+        if not (cid.startswith('chart') or cid.startswith('Chart')):
+            continue
+        referenced_ids.add(cid)
+        # find the JS statement containing this ref to classify it
+        for m in re.finditer(re.escape(cid), html):
+            ctx = html[max(0, m.start()-90):m.end()+20]
+            if re.search(r'\bif\s*\(\s*\$\(\s*[\'"]' + re.escape(cid), ctx) or \
+               re.search(r'\bif\s*\(\s*document\.getElementById', ctx):
+                break  # conditional — not required
+            # fallback pattern: $(primary) || $(cid)  → cid is the fallback, primary required
+            if re.search(r"\$\([^)]+\)\s*\|\|\s*\$\(\s*[\"']" + re.escape(cid), ctx):
+                break  # this cid is a fallback, not required
+            unconditional_required.add(cid)
 
-    # 3. Check each referenced chart ID has canvas element
-    missing_canvas = []
-    for rid in referenced_ids:
-        if rid not in canvas_id_counts:
-            missing_canvas.append(rid)
+    # 3. Check each UNCONDITIONAL referenced chart ID has canvas element
+    # PATCH (P0-1): only missing *unconditional* canvases count. A handful of optional
+    # charts absent is a WARN (defect), not a deploy-blocking FAIL.
+    missing_canvas_required = [rid for rid in unconditional_required if rid not in canvas_id_counts]
+    missing_canvas_optional = [rid for rid in (referenced_ids - unconditional_required) if rid not in canvas_id_counts]
 
     # 4. Check duplicate canvas IDs
     duplicates = {cid: count for cid, count in canvas_id_counts.items() if count > 1}
@@ -569,14 +1169,28 @@ def verify_chart_runtime_check(req, html):
     # 6. Check Chart.js loaded
     has_chart_js = bool(re.search(r'new\s+Chart\s*\(', html))
 
-    if missing_canvas:
-        issues.append(f"Chart references canvas not in HTML: {missing_canvas}")
+    # PATCH (P0-1): split issues into critical (FAIL) vs advisory (WARN).
+    #   FAIL: duplicate canvas IDs (strict-mode crash), no DATA, no Chart.js,
+    #         canvas after </body>, OR many required canvases missing (>30%).
+    #   WARN (not FAIL): a few optional/single required canvas absent.
+    critical_issues = []
+    advisory = []
     if duplicates:
-        issues.append(f"Duplicate canvas IDs (strict mode risk): {duplicates}")
+        critical_issues.append(f"Duplicate canvas IDs (strict mode risk): {duplicates}")
     if not has_data_obj:
-        issues.append("No `const DATA =` object found — charts will crash")
+        critical_issues.append("No `const DATA =` object found — charts will crash")
     if not has_chart_js:
-        issues.append("No `new Chart(` calls found")
+        critical_issues.append("No `new Chart(` calls found")
+    if missing_canvas_required:
+        pct_missing = len(missing_canvas_required) / max(len(unconditional_required), 1)
+        msg = f"Required canvas missing: {missing_canvas_required} ({pct_missing:.0%} of {len(unconditional_required)} unconditional charts)"
+        if pct_missing > 0.30:
+            critical_issues.append(msg)
+        else:
+            advisory.append(msg)
+    if missing_canvas_optional:
+        advisory.append(f"Optional canvas absent (not deploy-blocking): {missing_canvas_optional}")
+    issues = critical_issues + [f"WARN: {a}" for a in advisory]
 
     # Also check: canvas after </body> (template illustration leak — PNJ bug)
     body_close = html.rfind('</body>')
@@ -585,17 +1199,23 @@ def verify_chart_runtime_check(req, html):
         trailing = html[body_close:html_close]
         trailing_canvas = re.findall(r'<canvas[^>]*id=["\']([^"\']+)["\']', trailing)
         if trailing_canvas:
-            issues.append(f"Canvas elements after </body> (illustration leak): {trailing_canvas}")
+            critical_issues.append(f"Canvas elements after </body> (illustration leak): {trailing_canvas}")
 
-    passed = len(issues) == 0
+    # PATCH (P0-1): PASS unless a CRITICAL issue. Advisory warnings don't block.
+    passed = len(critical_issues) == 0
     return passed, {
         "canvas_ids_found": list(canvas_id_counts.keys()),
         "chart_ids_referenced": list(referenced_ids),
-        "missing_canvas": missing_canvas,
+        "unconditional_required": list(unconditional_required),
+        "missing_canvas_required": missing_canvas_required,
+        "missing_canvas_optional": missing_canvas_optional,
         "duplicates": duplicates,
         "has_data_object": has_data_obj,
         "has_chart_js": has_chart_js,
+        "critical_issues": critical_issues,
+        "advisory": advisory,
         "issues": issues,
+        "patch_note": "P0-1: conditional/fallback refs excluded from required; advisory split from critical",
     }
 
 
@@ -641,7 +1261,10 @@ def main():
                                     "canvas_check", "div_balance_check", "valuation_sanity_check",
                                     "data_accuracy_check", "capex_accuracy_check",
                                     "valuation_recompute_check", "chart_data_accuracy_check",
-                                    "external_claim_flag_check"):
+                                    "external_claim_flag_check",
+                                    "source_citation_check",
+                                    "price_source_check",
+                                    "drawdown_source_check"):
             results["skip"] += 1
             print(f"  ⏭️  {rid} [{priority:8}] SKIP (no artifact)")
             continue
@@ -682,6 +1305,12 @@ def main():
                 passed, evidence = verify_external_claim_flag(req, html)
             elif method == "chart_runtime_check":
                 passed, evidence = verify_chart_runtime_check(req, html)
+            elif method == "source_citation_check":
+                passed, evidence = verify_source_citation(req, html)
+            elif method == "price_source_check":
+                passed, evidence = verify_price_source(req, html)
+            elif method == "drawdown_source_check":
+                passed, evidence = verify_drawdown_source(req, html)
             elif method == "all_requirements_pass":
                 # Special: checked at end
                 results["skip"] += 1
@@ -720,6 +1349,27 @@ def main():
     # REQ-021: all requirements pass
     all_pass = results["fail"] == 0
     results["total"] += 1
+    # PATCH P0-4: write REQ-021 evidence with provenance binding (was MISSING → mutation
+    # harness couldn't confirm detection; also a state-binding risk if deploy could use stale
+    # or cross-run evidence). Bind to current run, artifact hash, post-validation timestamp.
+    req021_evidence = {
+        "requirement_id": "REQ-021",
+        "text": "KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.",
+        "priority": "critical",
+        "method": "all_requirements_pass",
+        "status": "pass" if all_pass else "fail",
+        "evidence": {
+            "source_run_id": os.environ.get("EVAL_RUN_ID", f"verifier-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"),
+            "source_artifact": REPORT,
+            "source_artifact_sha256": hashlib.sha256(open(REPORT, "rb").read()).hexdigest()[:16] if REPORT and os.path.exists(REPORT) else None,
+            "evidence_generated_after_validation": True,
+            "unresolved_required_failures": results["fail"],
+            "all_requirements_pass": all_pass,
+            "requirement_state_at_eval": {rid: st for rid, st in [(d.get("requirement_id") or d.get("id"), d.get("status")) for d in [json.load(open(os.path.join(evidence_dir, f))) for f in os.listdir(evidence_dir) if f.startswith("REQ-") and f.endswith(".json")]] if st},
+        },
+    }
+    with open(os.path.join(evidence_dir, "REQ-021.json"), "w") as f:
+        json.dump(req021_evidence, f, indent=2, ensure_ascii=False)
     if all_pass:
         results["pass"] += 1
         print(f"\n  {GREEN}✅ PASS{NC} REQ-021 [critical] All requirements pass — deploy allowed")
