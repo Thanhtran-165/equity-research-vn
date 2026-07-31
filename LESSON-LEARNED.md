@@ -176,3 +176,34 @@ else:
 ### REQ liên quan
 - REQ-022 (data accuracy): hiện chỉ check CTD → **cần mở rộng check peer**
 - REQ-027 (external claim): peer data là external claim → cần flag source
+
+---
+
+## Lỗi 5 — Fiscal year alignment: năm DN ≠ năm data provider
+
+### Tình huống thật
+- CTD báo cáo Q1/2026 đã có, nhưng "năm 2026" chưa có BCTC kiểm toán
+- Skill giả định tất cả DN dùng dương lịch (1/1-31/12)
+- Một số DN VN (đặc biệt ngân hàng) có thể có fiscal year khác
+
+### Vấn đề
+- `report_period` từ vnstock: 'year' / 'quarter' — nhưng year = năm nào?
+- Nếu DN có fiscal year khác dương lịch → label kỳ SAI
+- Phase 0 quy tắc "N-1" chỉ đúng cho DN dùng dương lịch
+
+### Cách tránh
+```yaml
+đề_xuất:
+  phase_1: 'Kiểm tra fiscal year từ company_profile.json'
+  'Nếu DN dùng dương lịch → dùng year label trực tiếp'
+  'Nếu DN có fiscal year khác → label theo fiscal year, không dương lịch'
+  'Log rõ: "fiscal_year_type: calendar" hoặc "fiscal_year_type: custom"'
+  
+verifier: 'REQ mới kiểm tra period alignment giữa fiscal year và data labels'
+```
+
+### Mức độ nghiêm trọng
+- CT
+D: KHÔNG (dương lịch, khớp)
+- Ngân hàng (VCB, BID, CTG): CẦN KIỂM TRA (có thể khác)
+- Đây là vấn đề data interpretation, không phải data correctness
