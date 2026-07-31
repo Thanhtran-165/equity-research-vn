@@ -374,6 +374,144 @@ requirements:
       - 'Nếu claim "drawdown X%" → check có max_drawdown trong verified-dashboard-data.json'
       - 'Nếu KHÔNG có data drawdown → claim phải ghi "chưa có data, ước tính dựa trên ngành"'
       - 'KHÔNG được ghi số cụ thể (%) nếu không có source'
+- id: REQ-032
+  text: 'Peer provenance: mọi số liệu peer trong narrative (tên DN cùng ngành + giá trị so sánh) phải lấy từ peers.json HOẶC verified-dashboard-data.json. KHÔNG bịa peer data từ bộ nhớ. (Lesson Learned #4: agent bịa "peer" data.)'
+  type: mandatory
+  priority: critical
+  failure_mode: FM-05
+  case_ref: CTD-live-demo
+  verification:
+    method: peer_provenance_check
+    rules:
+      - 'Nếu narrative mention peer company + số liệu (PE, PB, revenue, market cap) → phải có peers.json hoặc peer section trong verified-dashboard-data.json'
+      - 'Nếu KHÔNG có peer data file → peer comparison section phải ghi "chưa có data peer" thay vì số cụ thể'
+      - 'Peer values trong report phải khớp peer data (±10%)'
+- id: REQ-033
+  text: 'Cross-section consistency: cùng 1 số liệu key (revenue, NPAT, EPS, PE, PB, CAGR, market cap) xuất hiện ở nhiều section phải KHỚP nhau (±5%). Section exec summary vs section detail không được mâu thuẫn. (Review agent: đây là gap lớn nhất — cùng con số nhưng mỗi section 1 giá trị.)'
+  type: mandatory
+  priority: critical
+  failure_mode: FM-05
+  case_ref: review-agent-v2
+  verification:
+    method: cross_section_consistency_check
+    rules:
+      - 'Extract tất cả số liệu key từ mọi section'
+      - 'Nếu 2 section cùng mention 1 metric với giá trị lệch >5% → FAIL'
+      - 'sec-exec phải là "single source of truth": nếu sec-exec khác section detail → FAIL'
+- id: REQ-034
+  text: 'Temporal alignment: số liệu theo năm phải khớp đúng năm. Revenue/npatmi 2024 không được gắn nhãn 2025. Period labels (FY2021-FY2025) phải khớp data files. CAGR phải tính từ đúng khoảng năm được tuyên bố. (Review agent: agent trộn năm khi narrative.)'
+  type: mandatory
+  priority: critical
+  failure_mode: FM-05
+  case_ref: review-agent-v2
+  verification:
+    method: temporal_alignment_check
+    rules:
+      - 'Mỗi số liệu theo năm trong narrative phải khớp data file của năm đó (không lệch năm)'
+      - 'Chart x-axis labels phải khớp years array trong data'
+      - 'Nếu claim "tăng trưởng từ 2021-2025" → CAGR phải tính từ 2021 baseline, không phải 2022'
+- id: REQ-035
+  text: 'Segment data: mọi segment breakdown (doanh thu theo mảng, % contribution) phải có nguồn (segments.json / company_profile.json / data files). KHÔNG bịa segment ratio. (Review agent: segment split là nơi agent hay bịa nhất.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: review-agent-v2
+  verification:
+    method: segment_check
+    rules:
+      - 'Nếu narrative có segment revenue/contribution % → phải có nguồn data'
+      - 'Nếu không có data → phải ghi "ước tính" hoặc bỏ'
+- id: REQ-036
+  text: 'CAGR recompute: mọi claim CAGR (%) phải recompute được từ data files (financials.json) ±2%. KHÔNG bịa CAGR. (Review agent: keyword-check lách được; phải recompute thật.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: review-agent-v2
+  verification:
+    method: cagr_recompute_check
+    data_file: data/financials.json
+    fields: [revenue_ty, npatmi_ty]
+    tolerance_pct: 2
+- id: REQ-037
+  text: 'Technical recompute: Tech Score + Verdict phải recompute được từ price data (weekly 52 tuần) HOẶC technical_active.json. KHÔNG bịa tech score. (Review agent: tech score là claim định lượng phải có nguồn tính toán.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: review-agent-v2
+  verification:
+    method: tech_recompute_check
+    rules:
+      - 'Tech score trong report phải khớp technical_active.json / verified-dashboard-data.json.technical (±2)'
+      - 'Verdict phải tương ứng scale: score âm → SELL side, score dương → BUY side'
+      - 'Nếu không có tech data file → FAIL (thiếu nguồn)'
+- id: REQ-038
+  text: 'Claim basis: mọi claim so sánh/đánh giá (tăng trưởng nhanh nhất, dẫn đầu, cao nhất ngành, tốt hơn peer) phải có basis cụ thể (số liệu, data file, hoặc nguồn). Claims không có basis → phải ghi "theo đánh giá" hoặc bỏ. (Review agent: agent claim "leading" không data.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: review-agent-v2
+  verification:
+    method: claim_basis_check
+    rules:
+      - 'Superlative claims (dẫn đầu, nhất, lớn nhất, top) phải có số liệu hỗ trợ trong ±200 chars'
+      - 'So sánh với peer phải có peer data trong ±200 chars'
+      - 'Nếu không có basis → FAIL'
+- id: REQ-039
+  text: 'Industry claim: mọi claim về ngành (thị phần ngành, tốc độ tăng trưởng ngành, quy mô thị trường) phải cite nguồn (báo cáo ngành, công bố, ước tính). KHÔNG bịa thị phần ngành. (Review agent: industry figure hay bịa.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: review-agent-v2
+  verification:
+    method: industry_claim_check
+    rules:
+      - 'Industry %/size claims phải có nguồn keyword (báo cáo, công bố, ước tính, theo, nghiên cứu)'
+      - 'Nếu không có nguồn → FAIL'
+- id: REQ-040
+  text: 'Identity: ticker + company name trong report phải khớp target (CTD=Coteccons). KHÔNG nhầm ticker khác (Oracle, HPG...). (REQ-004 cũ: chart data trộn Oracle/HPG.)'
+  type: mandatory
+  priority: medium
+  failure_mode: FM-08
+  case_ref: CTD-live-demo
+  verification:
+    method: identity_check
+    rules:
+      - 'Report title/hero phải có đúng ticker + company name'
+      - 'KHÔNG được mention ticker khác (trừ peer section có nguồn)'
+- id: REQ-041
+  text: 'News window: news digest phải fetch trong 30 ngày gần nhất, KHÔNG dùng news cũ/không date. (Review agent: news 3 tháng trước vẫn được đưa vào.)'
+  type: mandatory
+  priority: medium
+  failure_mode: FM-02
+  case_ref: review-agent-v2
+  verification:
+    method: news_window_check
+    rules:
+      - 'news_digest.json articles phải có date trong 30 ngày'
+      - 'Nếu article date >30 ngày hoặc không có date → FAIL'
+- id: REQ-042
+  text: 'Investment amount: investment_amount từ task-state phải được dùng trong scenario/insight (3 mức: 100tr/500tr/1 tỷ). KHÔNG hardcode mức đầu tư khác. (Lesson Learned #3: agent hardcode investment.)'
+  type: mandatory
+  priority: medium
+  failure_mode: FM-05
+  case_ref: CTD-live-demo
+  verification:
+    method: investment_amount_check
+    rules:
+      - 'investment_amount trong task-state.json phải xuất hiện trong narrative (sec-scenario/insight)'
+      - 'Nếu không có investment_amount → PASS với note "no amount set"'
+      - 'Số tiền nhắc trong narrative phải khớp task-state (±10%)'
+- id: REQ-043
+  text: 'Source freshness: references phải có date (ngày truy cập/năm), không "stale" quá 24 tháng so với ngày report. (Review agent: source date rỗng.)'
+  type: mandatory
+  priority: medium
+  failure_mode: FM-05
+  case_ref: review-agent-v2
+  verification:
+    method: source_freshness_check
+    rules:
+      - 'Mỗi ref phải có năm (20xx) hoặc date'
+      - 'Nếu ref date rỗng → FAIL (trừ "standard" sources như BCTC, filings)'
 - id: REQ-021
   text: KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.
   type: mandatory
@@ -381,7 +519,7 @@ requirements:
   failure_mode: FM-05
   verification:
     method: all_requirements_pass
-total: 31
+total: 43
 critical:
 - REQ-001
 - REQ-002
@@ -392,6 +530,9 @@ critical:
 - REQ-023
 - REQ-024
 - REQ-030
+- REQ-032
+- REQ-033
+- REQ-034
 high:
 - REQ-003
 - REQ-005
@@ -410,9 +551,18 @@ high:
 - REQ-028
 - REQ-029
 - REQ-031
+- REQ-035
+- REQ-036
+- REQ-037
+- REQ-038
+- REQ-039
 medium:
 - REQ-008
 - REQ-015
 - REQ-017
 - REQ-018
 - REQ-027
+- REQ-040
+- REQ-041
+- REQ-042
+- REQ-043

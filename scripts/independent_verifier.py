@@ -54,6 +54,15 @@ def extract_all_text(html):
     text = re.sub(r"<[^>]+>", " ", html)
     return re.sub(r"\s+", " ", text).strip()
 
+def _narrative_text(html):
+    """Text thuần của narrative — strip <style>/<script> từ HTML GỐC trước khi
+    extract tags (extract_all_text giữ nội dung script vì chỉ thay tags bằng space)."""
+    if not html:
+        return ""
+    cleaned = re.sub(r"<style[^>]*>.*?</style>", " ", html, flags=re.DOTALL)
+    cleaned = re.sub(r"<script[^>]*>.*?</script>", " ", cleaned, flags=re.DOTALL)
+    return extract_all_text(cleaned)
+
 # ═══════════════════════════════════════════════════════════════
 # VERIFICATION METHODS (data-driven from requirements.yaml)
 # ═══════════════════════════════════════════════════════════════
@@ -1220,6 +1229,803 @@ def verify_chart_runtime_check(req, html):
 
 
 # ═══════════════════════════════════════════════════════════════
+# V2 REVIEW-AGENT CHECKS (REQ-032..043)
+# Chống 8 evasion patterns: keyword-stuffing, vacuous pass, bịa peer/segment/
+# industry/tech data, trộn năm, cross-section mâu thuẫn, identity nhầm ticker.
+# ═══════════════════════════════════════════════════════════════
+
+_KNOWN_TICKERS = [
+    # HOSE
+    "ACB","BCM","BID","BVH","CTG","DIG","FPT","GAS","GEX","GMD","HDB","HPG","KDH",
+    "MBB","MSN","MWG","NVL","OCB","PDR","PLX","PNJ","POW","REE","SAB","SSB","SSI",
+    "STB","TCB","TPB","VCB","VHM","VIC","VJC","VNM","VPB","VRE","VSC","SBT",
+    # HNX
+    "CE1","IDC","MBS","NDN","NTP","PVS","SHB","SHS","TIG","VCS","VGS","VCG",
+    # UpCOM
+    "ACV","BAB","BVB","DPM","GVR","LPB","MCH","MSB","NAB","NKG","SMC","TCH","VGI",
+    # NOTE: "VND" cố ý KHÔNG có trong danh sách — VND là đơn vị tiền tệ, xuất hiện
+    # khắp report (giá 62,000 VND). VNDirect không nên được check như ticker lạ.
+]
+
+def _work_dir():
+    return os.path.dirname(REPORT) if REPORT else "."
+
+def _load_json_rel(path):
+    """Load JSON relative to report work dir. Returns None on any failure."""
+    full = os.path.join(_work_dir(), path)
+    if not os.path.exists(full):
+        return None
+    try:
+        with open(full) as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+def _normalize_number(tok):
+    """'12.345,6' / '12,345' / '9,078' / '12345' → float. VN thousands='.', decimal=','.
+    Heuristic VN tiền tệ: 3 chữ số sau dấu phẩy = nghìn separator (9,078 = 9078);
+    1-2 chữ số sau dấu phẩy = decimal (1,5 = 1.5). Dấu chấm luôn là nghìn separator
+    khi có 3 chữ số sau (12.345 = 12345), nếu không (1.5) là decimal."""
+    tok = tok.strip().replace(" ", "").replace("đ", "")
+    if not tok:
+        return None
+    # Both separators → dot = thousands, comma = decimal
+    if "." in tok and "," in tok:
+        tok = tok.replace(".", "").replace(",", ".")
+    elif "," in tok:
+        after = tok.split(",")[1]
+        if len(after) == 3:
+            tok = tok.replace(",", "")
+        else:
+            tok = tok.replace(",", ".")
+    elif "." in tok:
+        after = tok.split(".")[1]
+        if len(after) == 3:
+            tok = tok.replace(".", "")
+    try:
+        return float(tok)
+    except ValueError:
+        return None
+
+def _scale_to_tỷ(text_val, unit):
+    """Convert a number+unit pair to tỷ VND."""
+    unit = (unit or "").lower()
+    if "nghìn tỷ" in unit or "ngan ty" in unit:
+        return text_val * 1000
+    if "triệu" in unit or "m" == unit.strip() or "tr" == unit.strip():
+        return text_val / 1000
+    if "tỷ" in unit or "tỉ" in unit or "b" == unit.strip():
+        return text_val
+    if "%" in unit:
+        return text_val  # percent, no scaling
+    return text_val
+
+def _find_numeric_claims(text, keywords, window=120):
+    """Find (keyword, value, context) claims: keyword then number within window."""
+    claims = []
+    for kw in keywords:
+        pat = re.compile(re.escape(kw) + r"[^0-9%]{0," + str(window) + r"}?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|m|%)?", re.I)
+        for m in pat.finditer(text):
+            val = _normalize_number(m.group(1))
+            if val is None:
+                continue
+            claims.append({
+                "keyword": kw,
+                "value": val,
+                "unit": m.group(2) or "",
+                "context": text[max(0, m.start()-80):m.end()+80].strip()[:160],
+            })
+    return claims
+
+
+def verify_peer_provenance(req, html):
+    """REQ-032: Peer data phải có nguồn (peers.json / verified-dashboard-data.json).
+
+    Chống bịa peer (Lesson Learned #4): nếu narrative có số liệu định lượng về peer
+    (P/E, P/B, market cap của công ty khác) → phải có peer data file, value khớp ±10%.
+    Chỉ mention tên peer không kèm số → không vi phạm.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    peer_text = extract_section_text(html, "sec-peer")
+    if not peer_text:
+        return True, {"note": "no sec-peer section — nothing to check"}
+
+    # Find quantitative peer claims (number near ticker/company or P/E P/B x-value)
+    claims = []
+    # pattern 1: ticker + number nearby (e.g. "HBC P/E 8x", "SSI vốn hóa 50.000 tỷ")
+    for m in re.finditer(r"\b([A-Z]{3})\b[^.%0-9]{0,60}?(\d[\d.,]*)\s*(x|tỷ|tỉ|triệu|nghìn tỷ)?", peer_text):
+        claims.append({"type": "ticker_value", "ticker": m.group(1), "value": m.group(2), "unit": m.group(3) or ""})
+    # pattern 2: P/E or P/B multiple without ticker (e.g. "P/E 5x" — must come from data)
+    for m in re.finditer(r"P/\s*[EB]\s*[^0-9]{0,10}?(\d[\d.,]*)\s*x?", peer_text, re.I):
+        claims.append({"type": "multiple", "value": m.group(1)})
+
+    # Check peer data source
+    peers_data = None
+    for cand in ("peers.json", "data/peers.json", "verified-dashboard-data.json"):
+        d = _load_json_rel(cand)
+        if d is not None:
+            if cand.endswith("peers.json"):
+                peers_data = d
+            elif isinstance(d, dict) and ("peers" in d or "peer" in d):
+                peers_data = d
+        if peers_data is not None:
+            break
+
+    if not peers_data:
+        # No peer data file → quantitative peer claims are unprovenanced
+        if claims:
+            return False, {
+                "peer_claims_found": len(claims),
+                "claims": [c for c in claims[:5]],
+                "error": "quantitative peer claims without peers.json / verified-dashboard-data.json.peers",
+                "hint": "phase1 phải fetch peers.json; nếu không fetch được → ghi 'chưa có data peer'",
+            }
+        return True, {"note": "peer names mentioned without quantitative claims — acceptable"}
+
+    # Peer data exists → verify each claim value matches (contextual string match ±10%)
+    peers_blob = json.dumps(peers_data, ensure_ascii=False)
+    mismatches = []
+    checked = 0
+    for c in claims:
+        v = _normalize_number(c.get("value"))
+        if v is None:
+            continue
+        # find any number in peers blob within 10%
+        for pv in re.findall(r"\d[\d.,]*", peers_blob):
+            pv_f = _normalize_number(pv)
+            if pv_f is None or pv_f == 0:
+                continue
+            if abs(v - pv_f) / max(abs(pv_f), 0.001) <= 0.10:
+                checked += 1
+                break
+        else:
+            mismatches.append(f"peer claim value {c.get('value')}{c.get('unit','')} not in peer data (±10%)")
+    passed = len(mismatches) == 0
+    return passed, {
+        "peer_data_source": "peers.json" if peers_data else "verified-dashboard-data.json",
+        "peer_claims_found": len(claims),
+        "claims_verified": checked,
+        "mismatches": mismatches[:5],
+    }
+
+
+def verify_cross_section_consistency(req, html):
+    """REQ-033: Cùng 1 số liệu key ở nhiều section phải khớp (±5%).
+
+    Trích (metric, year?, value) từ mọi section. Nếu 2 section cùng year-metric
+    lệch >5% → FAIL. Nếu metric không gắn year → so chung nhóm.
+    """
+    if not html:
+        return False, {"error": "no html"}
+
+    metrics = {
+        "revenue": [r"doanh thu", r"revenue"],
+        "net_profit": [r"lợi nhuận ròng", r"lợi nhuận sau thuế", r"LNST", r"npatmi", r"net profit", r"NPAT"],
+        "eps": [r"EPS"],
+        "pe": [r"P\s*/\s*E", r"P/E"],
+        "pb": [r"P\s*/\s*B", r"P/B"],
+        "market_cap": [r"vốn hóa", r"market cap", r"marketcap"],
+        "total_assets": [r"tổng tài sản", r"total assets"],
+        "equity": [r"vốn chủ sở hữu", r"equity"],
+    }
+    # Metric không đo bằng % (revenue/profit/eps/assets/equity/market cap là số tuyệt đối)
+    NO_PCT_UNIT = {"revenue", "net_profit", "eps", "market_cap", "total_assets", "equity"}
+
+    # Collect per-section claims
+    # Sections mang claim số liệu kinh doanh. Loại: source/glossary/analyst/checklist/
+    # tech (ref numbers, định nghĩa, scale — gây false positive).
+    CLAIM_SECTIONS = {
+        "sec-hero", "sec-exec", "sec-biz", "sec-industry", "sec-history",
+        "sec-segment", "sec-thesis", "sec-valuation", "sec-peer", "sec-bs",
+        "sec-risk", "sec-scenario", "sec-insight-1", "sec-insight-2", "sec-insight-3",
+    }
+    section_ids = set(re.findall(r'<section[^>]*id="(sec-[a-z0-9-]+)"', html)) & CLAIM_SECTIONS
+    per_metric = {}  # metric → [(year_or_None, value, section, context)]
+    for sid in sorted(section_ids):
+        sec_text = extract_section_text(html, sid)
+        if not sec_text or len(sec_text) < 30:
+            continue
+        for metric, kws in metrics.items():
+            for kw in kws:
+                pat = re.compile(kw + r"[^0-9]{0,60}?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|x|%)?", re.I)
+                for m in pat.finditer(sec_text):
+                    val = _normalize_number(m.group(1))
+                    if val is None:
+                        continue
+                    unit = m.group(2) or ""
+                    # "%" không phải đơn vị của metric số tuyệt đối (vd "Doanh thu CAGR 35%")
+                    if unit == "%" and metric in NO_PCT_UNIT:
+                        continue
+                    # "CAGR" giữa keyword và số → đây là claim tăng trưởng, không phải giá trị metric
+                    between = sec_text[m.start():m.start(1)]
+                    if re.search(r"cagr|tăng trưởng|growth|biên|margin", between, re.I):
+                        continue
+                    scaled = _scale_to_tỷ(val, unit)
+                    # Skip years-as-values (2021..2029, 4-digit, no unit)
+                    if 2000 <= scaled <= 2099 and not unit:
+                        continue
+                    # Skip tiny unitless numbers (ref ids, points, index values)
+                    if not unit and scaled < 20:
+                        continue
+                    # year near the claim? (trước HOẶC sau số — "…30,699 tỷ (FY2025)")
+                    ctx = sec_text[max(0, m.start()-60):m.end()+60]
+                    ym = re.search(r"20\d\d", ctx)
+                    year = ym.group(0) if ym else None
+                    # Claim không gắn year → không so sánh được (có thể là năm khác nhau)
+                    if not year:
+                        continue
+                    per_metric.setdefault(metric, []).append({
+                        "year": year, "value": scaled, "section": sid,
+                        "context": ctx.strip()[:120],
+                    })
+                break  # first keyword hit per metric per section is enough
+
+    issues = []
+    checked_pairs = 0
+    for metric, items in per_metric.items():
+        if len(items) < 2:
+            continue
+        # group by year (None = "current" bucket)
+        buckets = {}
+        for it in items:
+            buckets.setdefault(it["year"], []).append(it)
+        for year, group in buckets.items():
+            if len(group) < 2:
+                continue
+            vals = [g["value"] for g in group]
+            vmin, vmax = min(vals), max(vals)
+            if vmin == 0:
+                continue
+            diff_pct = (vmax - vmin) / vmin * 100
+            checked_pairs += 1
+            if diff_pct > 5:
+                issues.append(
+                    f"{metric}{'/'+year if year else ''}: {vmin:,.1f} vs {vmax:,.1f} (lệch {diff_pct:.1f}% > 5%) — "
+                    + "; ".join(f"{g['section']}: {g['value']:,.1f}" for g in group)
+                )
+
+    passed = len(issues) == 0
+    return passed, {
+        "sections_scanned": len(section_ids),
+        "metrics_with_multiple_claims": {m: len(v) for m, v in per_metric.items() if len(v) > 1},
+        "pairs_compared": checked_pairs,
+        "issues": issues[:5],
+        "note": "sec-exec vs detail phải đồng nhất; 2 số khác năm không tính là mâu thuẫn",
+    }
+
+
+def verify_temporal_alignment(req, html):
+    """REQ-034: Số liệu theo năm trong narrative phải khớp data file đúng năm.
+
+    Chống trộn năm: 'doanh thu 2024 = 30.000' khi data 2024 = 22.905 → FAIL.
+    Chart years phải khớp financials years.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    fin = _load_json_rel(req["verification"].get("data_file", "data/financials.json"))
+    if not fin:
+        return False, {"error": f"financials.json not found: {req['verification'].get('data_file')}"}
+
+    issues = []
+    checked = 0
+
+    # 1. Narrative claims with explicit year (năm có thể đứng TRƯỚC keyword
+    #    "năm 2025 doanh thu..." HOẶC SAU số "...30,699 tỷ (FY2025)")
+    text = _narrative_text(html)
+    metric_kws = {
+        "revenue_ty": [r"doanh thu", r"revenue"],
+        "npatmi_ty": [r"lợi nhuận ròng", r"lợi nhuận sau thuế", r"LNST", r"npatmi"],
+        "eps_vnd": [r"EPS"],
+    }
+    NO_PCT_UNIT = {"revenue_ty", "npatmi_ty", "eps_vnd"}
+    for field, kws in metric_kws.items():
+        gt = fin.get(field)
+        if not isinstance(gt, dict):
+            continue
+        for kw in kws:
+            pat = re.compile(kw + r"[^0-9]{0,80}?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr)?", re.I)
+            for m in pat.finditer(text):
+                claimed = _normalize_number(m.group(1))
+                unit = m.group(2) or ""
+                if claimed is None:
+                    continue
+                # Skip year-as-value / tiny unitless numbers
+                if 2000 <= claimed <= 2099 and not unit:
+                    continue
+                if not unit and claimed < 20:
+                    continue
+                if unit == "%" and field in NO_PCT_UNIT:
+                    continue
+                scaled = _scale_to_tỷ(claimed, unit)
+                # tìm năm trong ±60 chars quanh claim (trước hoặc sau số)
+                ctx = text[max(0, m.start()-60):m.end()+60]
+                ym = re.search(r"20\d\d", ctx)
+                if not ym:
+                    continue  # claim không gắn năm cụ thể — không verify được
+                year = ym.group(0)
+                if year not in gt:
+                    continue
+                truth = float(gt[year])
+                if truth == 0:
+                    continue
+                checked += 1
+                if abs(scaled - truth) / abs(truth) > 0.05:
+                    issues.append(f"{field}[{year}]: narrative nói {scaled:,.0f}, data = {truth:,.1f} (>5%)")
+            break  # one keyword per field
+
+    # 2. Chart years vs financials years
+    data_arrays = _extract_data_js_arrays(html)
+    chart_years = data_arrays.get("years", [])
+    gt_years = sorted(gt.keys())
+    if chart_years:
+        norm_chart = [str(int(float(y))) if isinstance(y, (int, float)) else str(y) for y in chart_years]
+        if norm_chart and sorted(norm_chart) != [str(y) for y in gt_years]:
+            issues.append(f"chart years {norm_chart} ≠ data years {gt_years}")
+
+    passed = len(issues) == 0 and checked > 0
+    return passed, {
+        "checked": checked,
+        "chart_years": chart_years,
+        "data_years": gt_years,
+        "issues": issues[:5],
+        "note": "narrative claim theo năm phải khớp data đúng năm; CAGR baseline phải là năm đầu data",
+    }
+
+
+def verify_segment_check(req, html):
+    """REQ-035: Segment breakdown phải có nguồn (segments.json/company_profile.json).
+
+    Nếu sec-segment có % contribution hoặc revenue per segment → cần data source.
+    Không có data → phải có marker 'ước tính'.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    seg_text = extract_section_text(html, "sec-segment")
+    if not seg_text:
+        return True, {"note": "no sec-segment — nothing to check"}
+
+    # Quantitative segment claims?
+    has_numbers = bool(re.search(r"\d[\d.,]*\s*(?:%|tỷ|tỉ|triệu)", seg_text))
+    if not has_numbers:
+        return True, {"note": "sec-segment present but no quantitative breakdown"}
+
+    # Source: segments.json / company_profile.json / financials.json segment keys
+    segment_source = None
+    for cand in ("segments.json", "data/segments.json", "company_profile.json"):
+        d = _load_json_rel(cand)
+        if d is not None:
+            blob = json.dumps(d, ensure_ascii=False).lower()
+            if any(k in blob for k in ("segment", "mảng", "cơ cấu", "contribution", "doanh thu theo")):
+                segment_source = cand
+                break
+    # fallback: verified-dashboard-data.json may carry segments
+    if not segment_source:
+        d = _load_json_rel("verified-dashboard-data.json")
+        if d and isinstance(d, dict) and any(k in json.dumps(d).lower() for k in ("segment", "contribution")):
+            segment_source = "verified-dashboard-data.json"
+
+    if not segment_source:
+        # no data → numbers must be flagged as estimate
+        has_estimate = bool(re.search(r"ước tính|giả định|estimate|theo công bố|khoảng", seg_text, re.I))
+        if not has_estimate:
+            return False, {
+                "error": "segment numbers without segment data source AND without 'ước tính' marker",
+                "segment_text": seg_text[:200],
+                "hint": "phase1 phải tạo segments.json; nếu không có data → ghi 'ước tính'",
+            }
+        return True, {"note": "segment numbers flagged as estimate — acceptable"}
+
+    return True, {"segment_source": segment_source, "note": "segment data source found"}
+
+
+def verify_cagr_recompute(req, html):
+    """REQ-036: CAGR claims phải recompute từ financials.json (±2%).
+
+    Chống bịa CAGR: không chỉ keyword-check mà tính thật từ data.
+    CAGR = (last/first)^(1/(n-1)) - 1. So với mọi claim 'CAGR X%'.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    fin = _load_json_rel(req["verification"].get("data_file", "data/financials.json"))
+    if not fin:
+        return False, {"error": f"financials.json not found: {req['verification'].get('data_file')}"}
+
+    text = _narrative_text(html)
+    claims = _find_numeric_claims(text, ["CAGR", "tăng trưởng kép", "compound annual"], window=60)
+    if not claims:
+        # vacuous-pass guard: if "CAGR" mentioned without number → FAIL; absent → PASS note
+        if re.search(r"CAGR|tăng trưởng kép", text, re.I):
+            return False, {"error": "CAGR mentioned without numeric claim — cannot verify"}
+        return True, {"note": "no CAGR claim in narrative"}
+
+    def _claim_metric(ctx):
+        """Xác định claim CAGR nói về metric nào từ ngữ cảnh."""
+        c = ctx.lower()
+        if any(k in c for k in ("doanh thu", "revenue")):
+            return "revenue_ty"
+        if any(k in c for k in ("lợi nhuận", "lnst", "npat", "profit")):
+            return "npatmi_ty"
+        return None  # không rõ → so với mọi field
+
+    issues = []
+    checked = 0
+    for field in req["verification"].get("fields", ["revenue_ty", "npatmi_ty"]):
+        gt = fin.get(field)
+        if not isinstance(gt, dict) or len(gt) < 2:
+            continue
+        years = sorted(int(y) for y in gt.keys())
+        first, last = str(years[0]), str(years[-1])
+        v0, v1 = float(gt[first]), float(gt[last])
+        if v0 <= 0:
+            continue
+        n = len(years)
+        cagr = (v1 / v0) ** (1 / (n - 1)) - 1
+        cagr_pct = cagr * 100
+        tolerance = req["verification"].get("tolerance_pct", 2)
+        for c in claims:
+            claim_metric = _claim_metric(c["context"])
+            if claim_metric is not None and claim_metric != field:
+                continue  # claim này thuộc metric khác — không so với field này
+            claim_pct = c["value"]
+            diff = abs(claim_pct - cagr_pct)
+            # relative tolerance, floor 1.0pp cho CAGR nhỏ
+            tol_pp = max(tolerance, abs(cagr_pct) * tolerance / 100)
+            checked += 1
+            if diff > tol_pp:
+                issues.append(
+                    f"CAGR claim {claim_pct:.1f}% ≠ recomputed {cagr_pct:.1f}% for {field} ({first}-{last}, lệch {diff:.1f}pp > {tol_pp:.1f}pp)"
+                )
+
+    passed = len(issues) == 0 and checked > 0
+    return passed, {
+        "cagr_claims_found": len(claims),
+        "claims": [c["context"] for c in claims[:5]],
+        "checked": checked,
+        "issues": issues[:5],
+        "recompute_basis": "financials.json first→last year",
+    }
+
+
+def verify_tech_recompute(req, html):
+    """REQ-037: Tech Score + Verdict phải khớp technical_active.json (±2).
+
+    Chống bịa tech score: report score phải bằng data file score. Verdict phải
+    tương ứng dấu score (≥+3 BUY side, ≤-3 SELL side, giữa NEUTRAL).
+    """
+    if not html:
+        return False, {"error": "no html"}
+    tech = _load_json_rel("technical_active.json")
+    if not tech:
+        vdd = _load_json_rel("verified-dashboard-data.json")
+        tech = vdd.get("technical") if vdd and isinstance(vdd, dict) else None
+    if not tech:
+        return False, {"error": "technical_active.json / verified-dashboard-data.json.technical not found — thiếu nguồn"}
+
+    data_score = tech.get("tech_score")
+    data_verdict = (tech.get("verdict") or "").upper()
+    scale_min = tech.get("scale_min", -6)
+    scale_max = tech.get("scale_max", 6)
+    if data_score is None:
+        return False, {"error": "tech data file missing tech_score"}
+
+    # Extract report tech score from sec-tech (formats: "2/6", "Tech Score 2", "Điểm kỹ thuật 2")
+    tech_text = extract_section_text(html, "sec-tech")
+    m = re.search(r"([-+]?\d+)\s*/\s*" + re.escape(str(scale_max)), tech_text) if tech_text else None
+    if not m:
+        m = re.search(r"(?:tech score|điểm kỹ thuật|score)[^\d-]{0,20}([-+]?\d+)", tech_text or "", re.I)
+    if not m:
+        return False, {"error": "no tech score number found in sec-tech"}
+
+    report_score = int(m.group(1))
+    issues = []
+    if abs(report_score - data_score) > 2:
+        issues.append(f"report Tech Score {report_score}/{scale_max} ≠ data {data_score}/{scale_max} (lệch >2)")
+
+    # Verdict sign consistency
+    report_verdict_m = re.search(r"(STRONG SELL|SELL|NEUTRAL|BUY|STRONG BUY)", tech_text or "", re.I)
+    report_verdict = report_verdict_m.group(1).upper() if report_verdict_m else ""
+    def verdict_side(v):
+        v = v.upper()
+        if "SELL" in v:
+            return "sell"
+        if "BUY" in v:
+            return "buy"
+        return "neutral"
+    if report_verdict:
+        rv_side = verdict_side(report_verdict)
+        dv_side = verdict_side(data_verdict)
+        if rv_side != dv_side:
+            issues.append(f"report verdict '{report_verdict}' ≠ data verdict '{data_verdict}'")
+        # scale consistency: score ≥ +3 → BUY; ≤ -3 → SELL; else NEUTRAL acceptable
+        if report_score >= 3 and rv_side == "sell":
+            issues.append(f"score +{report_score} nhưng verdict '{report_verdict}' (SELL side) — mâu thuẫn")
+        if report_score <= -3 and rv_side == "buy":
+            issues.append(f"score {report_score} nhưng verdict '{report_verdict}' (BUY side) — mâu thuẫn")
+
+    passed = len(issues) == 0
+    return passed, {
+        "data_tech_score": data_score,
+        "report_tech_score": report_score,
+        "data_verdict": data_verdict,
+        "report_verdict": report_verdict,
+        "issues": issues,
+    }
+
+
+def verify_claim_basis(req, html):
+    """REQ-038: Superlative/comparative claims phải có basis (số liệu/nguồn gần đó).
+
+    Chống claim rỗng: 'dẫn đầu thị trường' không kèm số/nguồn → FAIL.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    superlatives = [
+        r"dẫn đầu", r"lớn nhất", r"cao nhất", r"thấp nhất", r"nhanh nhất", r"tốt nhất",
+        r"top\s*\d", r"số\s*1", r"duy nhất", r"vượt trội", r"đứng đầu", r"leading", r"dominant",
+        r"chiếm\s*ưu thế", r"mạnh nhất",
+    ]
+    issues = []
+    found = 0
+    for pat in superlatives:
+        for m in re.finditer(pat, text, re.I):
+            found += 1
+            ctx = text[max(0, m.start()-80):m.end()+200]
+            has_basis = bool(re.search(r"\d[\d.,]*\s*(?:%|tỷ|tỉ|triệu|x)|ref-\d|BCTC|vnstock|data", ctx))
+            if not has_basis:
+                issues.append(f"claim '{m.group(0)}' không có số liệu/nguồn hỗ trợ trong ±200 chars: ...{ctx.strip()[:120]}...")
+
+    # comparative claims vs peer: "cao hơn/thấp hơn X" needs a number
+    for m in re.finditer(r"(?:cao|thấp|nhiều|ít)\s+hơn[^.%0-9]{0,40}?(\d[\d.,]*)\s*(?:%|x|tỷ|tỉ|triệu)", text, re.I):
+        found += 1
+        ctx = text[max(0, m.start()-80):m.end()+150]
+        has_basis = bool(re.search(r"ref-\d|BCTC|vnstock|peers\.json|data|ước tính", ctx, re.I))
+        if not has_basis:
+            issues.append(f"so sánh '{m.group(1)}' không có nguồn gần đó: ...{ctx.strip()[:120]}...")
+
+    passed = len(issues) == 0
+    return passed, {
+        "superlative_claims_found": found,
+        "unbased_claims": issues[:5],
+    }
+
+
+def verify_industry_claim(req, html):
+    """REQ-039: Claim về ngành (thị phần, quy mô thị trường, tăng trưởng ngành)
+    phải cite nguồn. Chống bịa số ngành.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    industry_kws = [
+        r"thị phần", r"quy mô thị trường", r"tăng trưởng ngành", r"toàn ngành",
+        r"thị trường\s+(?:xây dựng|bán lẻ|ngân hàng|thép|bất động sản|chứng khoán|sữa|vàng|dược)",
+        r"market share", r"industry growth", r"market size",
+    ]
+    source_kws = [
+        r"báo cáo", r"công bố", r"ước tính", r"theo\s+", r"nghiên cứu", r"khảo sát",
+        r"ref-\d", r"statista", r"fiinpro", r"world bank", r"imf", r"vietnam report",
+        r"bộ xây dựng", r"gso", r"tổng cục thống kê", r"vneconomy", r"vir", r"cafef",
+    ]
+    issues = []
+    found = 0
+    for kw in industry_kws:
+        for m in re.finditer(kw, text, re.I):
+            ctx = text[max(0, m.start()-60):m.end()+200]
+            has_number = bool(re.search(r"\d[\d.,]*\s*%?", ctx))
+            if not has_number:
+                continue  # mention without figure — not a claim
+            found += 1
+            if not re.search("|".join(source_kws), ctx, re.I):
+                issues.append(f"industry claim '{m.group(0)}' không có nguồn: ...{ctx.strip()[:130]}...")
+
+    passed = len(issues) == 0
+    return passed, {
+        "industry_claims_with_figures": found,
+        "uncited_claims": issues[:5],
+    }
+
+
+def verify_identity(req, html):
+    """REQ-040: Ticker + company name khớp target; không nhầm ticker khác.
+
+    Ticker lạ trong narrative (ngoài sec-peer/sec-source) → FAIL.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    profile = _load_json_rel("company_profile.json")
+    company_name = None
+    if profile and isinstance(profile, dict):
+        company_name = profile.get("company_name") or profile.get("organ_name")
+
+    issues = []
+    text = extract_all_text(html)
+
+    # 1. Target ticker present
+    if TICKER != "UNKNOWN" and not re.search(rf"\b{TICKER}\b", text):
+        issues.append(f"report không nhắc ticker {TICKER}")
+
+    # 2. Company name present (fuzzy: first word of name)
+    if company_name:
+        name_words = [w for w in company_name.replace("JSC", "").replace("Corp", "").split() if len(w) > 3]
+        if name_words and not any(w.lower() in text.lower() for w in name_words[:2]):
+            issues.append(f"report không nhắc company name '{company_name}'")
+
+    # 3. Foreign tickers outside allowed sections
+    allowed_sections = {"sec-peer", "sec-source", "sec-glossary", "sec-analyst"}
+    foreign = []
+    for ticker in _KNOWN_TICKERS:
+        if ticker == TICKER:
+            continue
+        for m in re.finditer(rf"\b{ticker}\b", html):
+            # which section contains this occurrence?
+            before = html[:m.start()]
+            sec_open = list(re.finditer(r'<section[^>]*id="(sec-[a-z0-9-]+)"', before))
+            sec = sec_open[-1].group(1) if sec_open else "pre-section"
+            if sec not in allowed_sections:
+                foreign.append((ticker, sec))
+                break  # one hit per ticker is enough
+    if foreign:
+        issues.append(f"ticker khác xuất hiện ngoài peer/source: {foreign[:5]}")
+
+    passed = len(issues) == 0
+    return passed, {
+        "ticker": TICKER,
+        "company_name": company_name,
+        "foreign_tickers": foreign[:5],
+        "issues": issues,
+    }
+
+
+def verify_news_window(req, html):
+    """REQ-041: News phải trong 30 ngày (news_digest.json hoặc date trong HTML).
+
+    Article cũ >30 ngày hoặc thiếu date (khi không phải source standard) → FAIL.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    nd = _load_json_rel("news_digest.json")
+    today = datetime.date.today()
+
+    # Try digest articles
+    if nd and isinstance(nd, dict) and nd.get("articles"):
+        articles = nd["articles"]
+        issues = []
+        checked = 0
+        for a in articles:
+            ds = a.get("date") or a.get("published_at") or a.get("time") or ""
+            if not ds:
+                issues.append(f"article thiếu date: {(a.get('title') or '')[:60]}")
+                continue
+            m = re.search(r"(\d{4})-(\d{2})-(\d{2})", str(ds)) or re.search(r"(\d{2})/(\d{2})/(\d{4})", str(ds))
+            if not m:
+                issues.append(f"article date không parse được: {ds}")
+                continue
+            if m.group(1) and len(m.group(1)) == 4:  # YYYY-MM-DD
+                d = datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            else:  # DD/MM/YYYY
+                d = datetime.date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+            checked += 1
+            age = (today - d).days
+            if age > 30:
+                issues.append(f"article {d.isoformat()} cũ {age} ngày (>30): {(a.get('title') or '')[:50]}")
+        passed = len(issues) == 0
+        return passed, {"articles_checked": checked, "issues": issues[:5]}
+
+    # Fallback: dates in HTML (e.g. "31/07/2026")
+    text = re.sub(r'<[^>]+>', ' ', html)
+    dates = re.findall(r"\b(\d{2})/(\d{2})/(\d{4})\b|\b(\d{4})-(\d{2})-(\d{2})\b", text)
+    parsed = []
+    for d1, m1, y1, y2, m2, d2 in dates:
+        if y1:
+            parsed.append(datetime.date(int(y1), int(m1), int(d1)))
+        else:
+            parsed.append(datetime.date(int(y2), int(m2), int(d2)))
+    if not parsed:
+        return False, {"error": "no news_digest.json articles AND no dates in HTML — không verify được news window"}
+
+    latest = max(parsed)
+    oldest_ok = today - datetime.timedelta(days=30)
+    stale = [p.isoformat() for p in parsed if p < oldest_ok]
+    passed = len(stale) == 0
+    return passed, {
+        "dates_found": [p.isoformat() for p in sorted(set(parsed))],
+        "stale_dates": stale,
+        "note": "news_digest.json rỗng — fallback check date trong HTML",
+    }
+
+
+def verify_investment_amount(req, html):
+    """REQ-042: investment_amount từ task-state phải xuất hiện trong narrative.
+
+    task-state không có amount → PASS note. Có amount → narrative phải nhắc ±10%.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    ts = _load_json_rel(".task-state/task-state.json")
+    amount = None
+    if ts and isinstance(ts, dict):
+        amount = ts.get("investment_amount")
+        if amount is None:
+            # nested? some runs store under state
+            for k, v in ts.items():
+                if isinstance(v, dict) and "investment_amount" in v:
+                    amount = v["investment_amount"]
+                    break
+    if amount is None:
+        return True, {"note": "task-state không có investment_amount — không có gì để check"}
+
+    text = extract_all_text(html)
+    # normalize amount to number: 100000000, 100tr, 100 triệu, 1 tỷ
+    target = float(amount)
+    found = False
+    # numeric form with commas
+    if re.search(rf"{int(target):,}".replace(",", "[.,]"), text):
+        found = True
+    # "100 triệu" / "100tr" / "1 tỷ" forms
+    for m in re.finditer(r"(\d[\d.,]*)\s*(triệu|tr|tỷ|tỉ)\b", text, re.I):
+        v = _scale_to_tỷ(_normalize_number(m.group(1)), m.group(2))
+        if v and abs(v * 1e9 - target) / target <= 0.10:
+            found = True
+            break
+
+    if not found:
+        return False, {
+            "error": f"investment_amount={amount:,} không xuất hiện trong narrative (sec-scenario/insight)",
+            "hint": "phase0 thu amount từ user; phase6 phải dùng đúng amount trong kịch bản",
+        }
+    return True, {"investment_amount": amount, "found_in_narrative": True}
+
+
+def verify_source_freshness(req, html):
+    """REQ-043: References phải có date/năm (standard sources được miễn).
+
+    Ref rỗng date và không phải standard → FAIL. Ref năm < report năm - 2 → FAIL.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    text = extract_all_text(html)
+    if "ref-" not in text:
+        return True, {"note": "no refs found (REQ-018 sẽ check số lượng)"}
+
+    standard_kws = ["standard", "bctc", "filings", "disclosure", "báo cáo tài chính", "công bố"]
+    # collect ref blocks: id="ref-N" ... up to next ref or 200 chars
+    refs = []
+    for m in re.finditer(r'id="ref-\d+"[^>]*>(.{0,220}?)', html, re.DOTALL):
+        block = re.sub(r'<[^>]+>', ' ', m.group(1))
+        block = re.sub(r'\s+', ' ', block).strip()
+        refs.append(block)
+
+    issues = []
+    checked = 0
+    report_year = datetime.date.today().year
+    for b in refs:
+        if not b:
+            continue
+        checked += 1
+        has_year = bool(re.search(r"20\d\d", b))
+        is_standard = any(kw in b.lower() for kw in standard_kws)
+        if not has_year and not is_standard:
+            issues.append(f"ref không date và không phải standard: '{b[:80]}'")
+        elif has_year:
+            ym = re.search(r"(20\d\d)", b)
+            yr = int(ym.group(1))
+            if yr < report_year - 2 and not is_standard:
+                issues.append(f"ref năm {yr} stale (>2 năm so với {report_year}): '{b[:80]}'")
+
+    passed = len(issues) == 0
+    return passed, {
+        "refs_checked": checked,
+        "refs_total": len(refs),
+        "issues": issues[:5],
+        "note": "standard sources (BCTC, filings, disclosure) được miễn date",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════
 # MAIN VERIFIER
 # ═══════════════════════════════════════════════════════════════
 
@@ -1264,7 +2070,19 @@ def main():
                                     "external_claim_flag_check",
                                     "source_citation_check",
                                     "price_source_check",
-                                    "drawdown_source_check"):
+                                    "drawdown_source_check",
+                                    "peer_provenance_check",
+                                    "cross_section_consistency_check",
+                                    "temporal_alignment_check",
+                                    "segment_check",
+                                    "cagr_recompute_check",
+                                    "tech_recompute_check",
+                                    "claim_basis_check",
+                                    "industry_claim_check",
+                                    "identity_check",
+                                    "news_window_check",
+                                    "investment_amount_check",
+                                    "source_freshness_check"):
             results["skip"] += 1
             print(f"  ⏭️  {rid} [{priority:8}] SKIP (no artifact)")
             continue
@@ -1311,6 +2129,30 @@ def main():
                 passed, evidence = verify_price_source(req, html)
             elif method == "drawdown_source_check":
                 passed, evidence = verify_drawdown_source(req, html)
+            elif method == "peer_provenance_check":
+                passed, evidence = verify_peer_provenance(req, html)
+            elif method == "cross_section_consistency_check":
+                passed, evidence = verify_cross_section_consistency(req, html)
+            elif method == "temporal_alignment_check":
+                passed, evidence = verify_temporal_alignment(req, html)
+            elif method == "segment_check":
+                passed, evidence = verify_segment_check(req, html)
+            elif method == "cagr_recompute_check":
+                passed, evidence = verify_cagr_recompute(req, html)
+            elif method == "tech_recompute_check":
+                passed, evidence = verify_tech_recompute(req, html)
+            elif method == "claim_basis_check":
+                passed, evidence = verify_claim_basis(req, html)
+            elif method == "industry_claim_check":
+                passed, evidence = verify_industry_claim(req, html)
+            elif method == "identity_check":
+                passed, evidence = verify_identity(req, html)
+            elif method == "news_window_check":
+                passed, evidence = verify_news_window(req, html)
+            elif method == "investment_amount_check":
+                passed, evidence = verify_investment_amount(req, html)
+            elif method == "source_freshness_check":
+                passed, evidence = verify_source_freshness(req, html)
             elif method == "all_requirements_pass":
                 # Special: checked at end
                 results["skip"] += 1
