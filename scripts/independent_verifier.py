@@ -222,8 +222,11 @@ def verify_command(req, html):
 
         if "expect_min" in req["verification"]:
             try:
-                val = int(output)
-                passed = val >= req["verification"]["expect_min"]
+                # G11 (REQ-002): output có thể nhiều số ("41 41 41" cho 3 báo cáo)
+                # → lấy MIN: yêu cầu "CẢ 3 ≥ ngưỡng" thì số nhỏ nhất phải đạt
+                nums = [int(x) for x in re.findall(r"\d+", output)]
+                val = min(nums) if nums else None
+                passed = val is not None and val >= req["verification"]["expect_min"]
             except:
                 passed = False
                 val = None
@@ -311,10 +314,9 @@ def verify_artifact_check(req, html):
         passed = len(negative) == 0
         return passed, {"negative_prices": negative[:3], "total_prices": len(prices)}
 
-    if "split-adjusted" in check.lower():
-        passed = any(w in text.lower() for w in ["split-adjusted", "bẫy 5b", "cross-check"])
-        return passed, {"found": passed}
-
+    # G12 (review V4 Flash): nhánh "split-adjusted" lặp lần 2 (dòng 314 cũ) là dead
+    # code — nhánh chính ở dòng 250 đã return. Đã xóa; keyword "audit split" đã có
+    # trong nhánh chính.
     return False, {"error": f"unknown check: {check[:60]}"}
 
 
@@ -985,16 +987,32 @@ def verify_source_citation(req, html):
             issues.append(f'"{val_str} {unit}" không có source gần — ...{snippet}...')
 
     # Key metrics must have at least 1 DIRECT source citation (V3: not just uncertainty)
+    # FIX-3b (review V4 Pro M4): 'data'/'theo' là từ generic xuất hiện khắp narrative
+    # ("không có data", "theo đánh giá"...) → trước đây key metric vẫn PASS dù không
+    # có nguồn thật. Key metrics giờ yêu cầu NAMED source: tên nguồn cụ thể.
     key_metrics = ['P/E', 'P/B', 'CAGR', 'ROE', 'ROA', 'EPS']
-    direct_source_kws = ['bctc', 'vnstock', 'data', 'ref-', 'sponsor', 'kiểm toán', 'công bố']
+    direct_source_kws = ['bctc', 'vnstock', 'ref-', 'sponsor', 'kiểm toán', 'công bố',
+                         'hose', 'filings', 'báo cáo tài chính', 'cafef', 'vietstock',
+                         'finance', 'api']
     key_metric_issues = []
     for km in key_metrics:
         if km.lower() in text.lower():
             # Find first occurrence
             idx = text.lower().find(km.lower())
-            context = text[max(0, idx-300):idx+300].lower()
+            # FIX-3b (review V4 Pro M4): window 300 quá rộng → source của metric
+            # KHÁC ("theo BCTC" của EPS) nằm trong window → P/E "mượn nguồn".
+            # Giới hạn: source phải nằm trong CÙNG CÂU chứa metric (đến dấu câu,
+            # tối đa 120 chars) — "P/E 9.3x, P/B 0.85x (theo vnstock)" hợp lệ,
+            # "P/E 9.3x (ước tính). EPS... theo BCTC" không hợp lệ.
+            # Lưu ý: dấu chấm trong số thập phân ("9.3x", "2.5%") KHÔNG phải hết câu.
+            end = len(text)
+            seg = text[idx:min(idx + 120, len(text))]
+            m_sep = re.search(r"[.!?;](?!\d)", seg)
+            if m_sep:
+                end = idx + m_sep.start()
+            context = text[idx:end].lower()
             if not any(kw in context for kw in direct_source_kws):
-                key_metric_issues.append(f'{km}: không có DIRECT source cite trong context đầu tiên (V3: uncertainty marker không đủ)')
+                key_metric_issues.append(f'{km}: không có DIRECT source cite trong CÙNG CÂU (V3: uncertainty marker không đủ; FIX-3b: từ generic "data"/"theo" không tính)')
 
     passed = (unsourced <= 3) and (len(key_metric_issues) == 0)
     evidence = {
@@ -1091,18 +1109,56 @@ def verify_drawdown_source(req, html):
                 'context': context.strip()[:120],
             })
 
-    # Check if DATA has max_drawdown
-    has_drawdown_data = bool(re.search(r'max_drawdown|drawdownData|maxDrawdown', html, re.IGNORECASE))
+    # Check if DATA has max_drawdown — FIX-3a (review V4 Pro M3): trước đây check
+    # regex trên TOÀN BỘ html → JS config/chart data attribute cũng làm match
+    # ('drawdownData' trong script) → guard không trigger dù narrative không dùng.
+    # Giờ chỉ tin 2 nguồn: narrative text (script/style đã strip) HOẶC data file.
+    narrative_lower = _narrative_text(html).lower()
+    has_drawdown_data = bool(re.search(r'max_drawdown|drawdown\s*52|drawdown\s*data|sụt\s*\d+%|giảm\s*từ.*đỉnh', narrative_lower))
+    dd_data_file = _load_json_rel("verified-dashboard-data.json")
+    if dd_data_file and isinstance(dd_data_file, dict):
+        if dd_data_file.get("max_drawdown_52w") or dd_data_file.get("drawdown"):
+            has_drawdown_data = True
 
-    # Check if claims have uncertainty markers
-    uncertainty_keywords = ['ước tính', 'giả định', 'có thể', 'khoảng', 'ngành', 'history',
+    # Giá trị max_drawdown THẬT (nếu có): từ narrative ("max drawdown 52 tuần của 28.5%")
+    # hoặc data file — dùng để so khớp claim, không chỉ "có data" là đủ.
+    # Lưu ý: ".{0,60}?" vượt qua số trung gian ("52 tuần") — [^0-9] sẽ kẹt.
+    dd_value = None
+    m_dd = re.search(r'max[_\s]*drawdown.{0,60}?(\d+(?:[.,]\d+)?)\s*%', narrative_lower)
+    if m_dd:
+        try:
+            dd_value = float(m_dd.group(1).replace(',', '.'))
+        except ValueError:
+            dd_value = None
+    if dd_value is None and dd_data_file and isinstance(dd_data_file, dict):
+        try:
+            dd_value = float(dd_data_file.get("max_drawdown_52w"))
+        except (TypeError, ValueError):
+            dd_value = None
+
+    # Check if claims have uncertainty markers — "có thể" KHÔNG đủ (M3: "giá có thể
+    # sụt giảm 60-70%" vẫn là claim số cụ thể cần nguồn). Marker hợp lệ phải là
+    # "ước tính/giả định/khoảng..." — thể hiện số KHÔNG phải từ data thật.
+    uncertainty_keywords = ['ước tính', 'giả định', 'khoảng', 'ngành', 'history',
                             'lịch sử', 'thường', 'trung bình', 'estimate']
 
     for claim in drawdown_claims:
         ctx_lower = claim['context'].lower()
         has_uncertainty = any(kw in ctx_lower for kw in uncertainty_keywords)
+        # FIX-3a: claim có số phải KHỚP dd_value thật (±15pp) — "có data ở đâu đó
+        # trong report" không còn đủ. Report sạch có "max drawdown 52 tuần của 33%"
+        # nhưng claim "sụt giảm 30-50%" bịa vẫn phải bị bắt.
+        matches_dd = False
+        if dd_value is not None:
+            try:
+                claim_val = float(claim['value'].replace(',', '.'))
+                matches_dd = abs(claim_val - dd_value) <= 15
+            except ValueError:
+                matches_dd = False
         if not has_drawdown_data and not has_uncertainty:
             issues.append(f"drawdown claim '{claim['value']}%' không có data thật và không có marker 'ước tính'")
+        elif has_drawdown_data and not matches_dd and not has_uncertainty:
+            issues.append(f"drawdown claim '{claim['value']}%' KHÔNG khớp max_drawdown thật ({dd_value}% nếu có) và không có marker 'ước tính'")
 
     # If no drawdown claims at all → check vacuous-pass guard (V3)
     if not drawdown_claims:
@@ -1678,6 +1734,14 @@ def verify_temporal_alignment(req, html):
             break  # one keyword per field
 
     # 2. Chart years vs financials years
+    # FIX-7 (review V4 Pro): `gt` chỉ gán trong for loop — nếu loop không chạy
+    # (mọi field không phải dict) → UnboundLocalError. Khởi tạo trước.
+    gt = {}
+    for field, kws in metric_kws.items():
+        cand = fin.get(field)
+        if isinstance(cand, dict):
+            gt = cand
+            break
     data_arrays = _extract_data_js_arrays(html)
     chart_years = data_arrays.get("years", [])
     gt_years = sorted(gt.keys())
@@ -2747,8 +2811,8 @@ def verify_causal_chain(req, html):
     text = _narrative_text(html)
 
     causal_connectors = [
-        r"nhờ\s+", r"do\s+", r"vì\s+", r"bởi\s+", r"dẫn đến",
-        r"khiến\s+", r"gây\s+ra", r"tác\s+động", r"ảnh\s+hưởng",
+        r"nhờ\s+(?!vào\s+đó)", r"do\s+(?!đó|vậy|vì\s+vậy)", r"vì\s+(?!vậy)", r"bởi\s+",
+        r"dẫn\s+đến", r"khiến\s+", r"gây\s+ra", r"tác\s+động", r"ảnh\s+hưởng",
         r"kết\s+quả\s+của", r"nguyên\s+nhân", r"động\s+lực",
         r"nhờ\s+vào", r"được\s+hỗ\s+trợ\s+bởi",
     ]
@@ -2757,21 +2821,47 @@ def verify_causal_chain(req, html):
     found = 0
     for conn in causal_connectors:
         for m in re.finditer(conn, text, re.I):
+            # FIX-3c (review V4 Pro M5): chỉ bắt causal claim ĐỊNH LƯỢNG — số kết quả
+            # nằm TRƯỚC connector ("Lợi nhuận tăng 35% nhờ...") HOẶC sau
+            # ("nhờ X, doanh thu đạt 30.699 tỷ"). Claim thuần định tính ("ngành hồi
+            # phục nhờ giải ngân") là phát biểu chung hợp lệ — bỏ qua để tránh FP.
+            before = text[max(0, m.start() - 80):m.start()]
+            after = text[m.end():m.end() + 80]
+            if not re.search(r"\d[\d.,]*\s*(?:%|tỷ|tỉ|triệu|x|lần)", before + " " + after):
+                continue
             found += 1
-            ctx = text[max(0, m.start() - 60):m.end() + 200]
+            # Evidence CỤ THỂ trong CÙNG CÂU chứa connector. FIX-3c: số "%" của CHÍNH
+            # claim ("tăng 35% nhờ...") không được tính là evidence — cần số định lượng
+            # khác (tỷ/triệu/x) hoặc named source. Từ generic "theo/nguồn/data" KHÔNG
+            # tính. Window sau nới +140 (câu dài: evidence "tính từ BCTC" có thể cách
+            # connector ~90 chars) nhưng vẫn dừng ở dấu câu — không ăn sang câu sau.
+            ctx = text[m.start():m.end() + 140]
+            m_sep = re.search(r"[.!?;](?!\d)", ctx)
+            if m_sep:
+                ctx = ctx[:m_sep.start() + 1]
+            # Vùng TRƯỚC connector: chỉ 40 chars gần nhất — evidence thật luôn sát
+            # connector ("đạt 30.699 tỷ đồng nhờ..."). Số của câu trước ("Vốn hóa
+            # 8.018 tỷ") cách xa hơn → không tính (strip tags làm mất dấu phân cách
+            # câu </p>, nên không thể dựa vào dấu câu).
+            pre = text[max(0, m.start() - 40):m.start()]
             has_evidence = bool(re.search(
-                r"\d[\d.,]*\s*(%|tỷ|tỉ|triệu|x)|ref-\d|BCTC|theo|nguồn|data|công bố|nghị quyết",
+                r"\d[\d.,]*\s*(tỷ|tỉ|triệu|x)|ref-\d|BCTC|vnstock|công bố|nghị quyết|"
+                r"kiểm toán|báo cáo tài chính|filings",
                 ctx, re.I
+            )) or bool(re.search(
+                r"\d[\d.,]*\s*(tỷ|tỉ|triệu|x)|ref-\d|BCTC|vnstock|công bố|nghị quyết|"
+                r"kiểm toán|báo cáo tài chính|filings",
+                pre, re.I
             ))
             if not has_evidence:
-                issues.append(f"causal claim không evidence: ...{ctx.strip()[:120]}...")
+                issues.append(f"causal claim định lượng không evidence: ...{(pre + ctx).strip()[:120]}...")
 
     passed = len(issues) == 0 or found == 0
     return passed, {
         "causal_claims_found": found,
         "unverified": len(issues),
         "issues": issues[:5],
-        "note": "≥3 uncited causal chains → FAIL",
+        "note": "bất kỳ causal chain không evidence → FAIL (FIX-10: spec/code thống nhất fail-closed; FIX-3c: window ±120, named evidence only)",
     }
 
 

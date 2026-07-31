@@ -7,26 +7,22 @@ requirements:
   case_ref: LC-006
   verification:
     method: command
-    command: python3 -c "from vnstock_data import Finance; print('OK')" 2>/dev/null
-      | grep -q OK
+    command: python3 -c "from vnstock_data import Finance; print('OK')" 2>/dev/null | grep -q OK
     expect_exit: 0
   fix_hint: pip3 install 'vnstock==3.5.1' --break-system-packages
 - id: REQ-002
-  text: Sponsor data phải trả ≥20 kỳ (không phải community 8 kỳ).
+  text: 'Sponsor data phải trả ≥20 kỳ trên CẢ 3 báo cáo (income_statement + balance_sheet + cash_flow, không phải community 8 kỳ). (G11: trước chỉ check income_statement.)'
   type: mandatory
   priority: critical
   failure_mode: FM-02
   case_ref: LC-006
   verification:
     method: command
-    command: python3 -c "import warnings; warnings.filterwarnings('ignore'); from
-      vnstock_data import Finance; f=Finance(symbol='$TICKER',source='VCI'); print(len(f.income_statement()))"
-      2>/dev/null | grep -E '^[0-9]+$' | tail -1
+    command: python3 -c "import warnings; warnings.filterwarnings('ignore'); from vnstock_data import Finance; f=Finance(symbol='$TICKER',source='VCI'); print(len(f.income_statement()), len(f.balance_sheet()), len(f.cash_flow()))" 2>/dev/null | grep -E '^[0-9]+ [0-9]+ [0-9]+$' | tail -1
     expect_min: 20
   fix_hint: 'Downgrade vnstock: pip3 install ''vnstock==3.5.1'''
 - id: REQ-003
-  text: Audit split (Bẫy 5B) trước khi tính EPS/PE/PB. Back-calc CP = LNST/EPS từng
-    năm.
+  text: Audit split (Bẫy 5B) trước khi tính EPS/PE/PB. Back-calc CP = LNST/EPS từng năm.
   type: mandatory
   priority: high
   failure_mode: FM-08
@@ -48,8 +44,7 @@ requirements:
   failure_mode: FM-01
   verification:
     method: artifact_check
-    check: Report phải có sec-tech với Tech Score số + Verdict (STRONG SELL→STRONG
-      BUY)
+    check: Report phải có sec-tech với Tech Score số + Verdict (STRONG SELL→STRONG BUY)
 - id: REQ-006
   text: Technical mode PROFILE (daily ~2 năm, 15 block, archetype, NON-ADVICE).
   type: mandatory
@@ -57,8 +52,7 @@ requirements:
   failure_mode: FM-01
   verification:
     method: artifact_check
-    check: Report phải có sec-tech-profile, KHÔNG chứa 'bullish|bearish|khuyến nghị
-      mua|strong buy|strong sell'
+    check: Report phải có sec-tech-profile, KHÔNG chứa 'bullish|bearish|khuyến nghị mua|strong buy|strong sell'
 - id: REQ-007
   text: Section PROFILE phải dùng ngôn ngữ neutral_descriptive_non_advice.
   type: mandatory
@@ -66,8 +60,7 @@ requirements:
   failure_mode: FM-03
   verification:
     method: artifact_check
-    check: 'Section PROFILE phải dùng ngôn ngữ neutral_descriptive_non_advice (P4:
-      negation-aware)'
+    check: 'Section PROFILE phải dùng ngôn ngữ neutral_descriptive_non_advice (P4: negation-aware)'
 - id: REQ-008
   text: News digest 30 ngày với sentiment score + category breakdown.
   type: mandatory
@@ -77,8 +70,7 @@ requirements:
     method: artifact_check
     check: Report phải có sentiment score (số) + ít nhất 2 category
 - id: REQ-009
-  text: Dashboard copy từ dashboard_template.html (22 sections canonical). KHÔNG tự
-    chế section ids.
+  text: Dashboard copy từ dashboard_template.html (22 sections canonical). KHÔNG tự chế section ids.
   type: mandatory
   priority: critical
   failure_mode: FM-06
@@ -114,8 +106,7 @@ requirements:
     - sec-exec
     - sec-valuation
 - id: REQ-010
-  text: 'Tất cả tokens {{...}} phải được replace. Không token rỗng. (V5 — pattern bắt
-    cả token chữ thường, trước chỉ bắt {{UPPER}}.)'
+  text: Tất cả tokens {{...}} phải được replace. Không token rỗng. (V5 — pattern bắt cả token chữ thường, trước chỉ bắt {{UPPER}}.)
   type: mandatory
   priority: high
   failure_mode: FM-02
@@ -124,16 +115,14 @@ requirements:
     command: grep -oE '\{\{[^}]+\}\}' $REPORT | wc -l | tr -d ' '
     expect_max: 0
 - id: REQ-011
-  text: Canvas elements phải có height-wrapper (chặn Chart.js feedback loop giãn vô
-    hạn).
+  text: Canvas elements phải có height-wrapper (chặn Chart.js feedback loop giãn vô hạn).
   type: mandatory
   priority: high
   failure_mode: FM-02
   case_ref: LC-004
   verification:
     method: canvas_check
-    check: Mỗi <canvas> phải có parent với class chart-wrap/tech-chart-wrap hoặc style
-      height
+    check: Mỗi <canvas> phải có parent với class chart-wrap/tech-chart-wrap hoặc style height
 - id: REQ-012
   text: Charts ≥10, Sections ≥20, Refs ≥10.
   type: mandatory
@@ -175,8 +164,7 @@ requirements:
     method: artifact_check
     check: Section risk phải có content (không rỗng)
 - id: REQ-016
-  text: Valuation targets phải hợp lý (dương, không âm vô lý). DCF với FCF<0 phải
-    flag + dùng alternative.
+  text: Valuation targets phải hợp lý (dương, không âm vô lý). DCF với FCF<0 phải flag + dùng alternative.
   type: mandatory
   priority: high
   failure_mode: FM-05
@@ -270,8 +258,7 @@ requirements:
       divisor: 1000000000
       tolerance_pct: 5
 - id: REQ-024
-  text: Capex trong chart/report KHỚP cash_flow.json 'Purchases of fixed assets'.
-    KHÔNG bịa capex array.
+  text: Capex trong chart/report KHỚP cash_flow.json 'Purchases of fixed assets'. KHÔNG bịa capex array.
   type: mandatory
   priority: critical
   failure_mode: FM-05
@@ -283,7 +270,7 @@ requirements:
     report_chart_var: capex
     tolerance_pct: 10
 - id: REQ-025
-  text: Valuation multiples (PE, PB, Graham) recomputed từ data == report values (±2%).
+  text: 'Valuation multiples (PE, PB) recomputed từ data == report values (±2%). Graham verified riêng bởi REQ-063. (G10: text trước ghi sai "Graham" trong khi formulas chỉ có PE/PB.)'
   type: mandatory
   priority: high
   failure_mode: FM-05
@@ -312,8 +299,7 @@ requirements:
     - netProfit
     - eps
 - id: REQ-027
-  text: Số liệuexternal (WCM LN, MCH DT, store count) phải flag 'ước tính' nếu không
-    có data file.
+  text: Số liệuexternal (WCM LN, MCH DT, store count) phải flag 'ước tính' nếu không có data file.
   type: mandatory
   priority: medium
   failure_mode: FM-05
@@ -325,9 +311,7 @@ requirements:
     - \d+\s*điểm bán
     must_flag: ước tính|estimate|external|marketing
 - id: REQ-028
-  text: 'Chart render-readiness: mỗi canvas ID referenced trong Chart() phải có HTML
-    element, không duplicate, có DATA object. (Học từ PNJ v2 test: 27/27 PASS nhưng
-    charts vẫn crash do duplicate canvas sau </body>.)'
+  text: 'Chart render-readiness: mỗi canvas ID referenced trong Chart() phải có HTML element, không duplicate, có DATA object. (Học từ PNJ v2 test: 27/27 PASS nhưng charts vẫn crash do duplicate canvas sau </body>.)'
   type: mandatory
   priority: high
   failure_mode: FM-08
@@ -343,14 +327,14 @@ requirements:
   verification:
     method: source_citation_check
     rules:
-      - 'Mỗi số VND/ty/%/x trong narrative: check có source keyword gần (BCTC, vnstock, data, ref-) HOẶC marker "ước tính/giả định"'
-      - 'Key metrics (PE, PB, CAGR, ROE): cite source ít nhất 1 lần trong section đầu xuất hiện'
-      - 'Drawdown/risk claims: phải cite data thật (max drawdown từ price history) HOẶC ghi "ước tính dựa trên"'
-      - 'Percentages >0 và <100: phải có context/source, KHÔNG trôi nổi'
+    - 'Mỗi số VND/ty/%/x trong narrative: check có source keyword gần (BCTC, vnstock, data, ref-) HOẶC marker "ước tính/giả định"'
+    - 'Key metrics (PE, PB, CAGR, ROE): cite source ít nhất 1 lần trong section đầu xuất hiện'
+    - 'Drawdown/risk claims: phải cite data thật (max drawdown từ price history) HOẶC ghi "ước tính dựa trên"'
+    - 'Percentages >0 và <100: phải có context/source, KHÔNG trôi nổi'
     exempt:
-      - 'Số trong CSS/style (width, height, font-size)'
-      - 'Số trong timestamp/date'
-      - 'Số section ID (sec-1, sec-2)'
+    - Số trong CSS/style (width, height, font-size)
+    - Số trong timestamp/date
+    - Số section ID (sec-1, sec-2)
 - id: REQ-030
   text: 'Price freshness: giá hiện tại phải fetch real-time từ API, KHÔNG tự điền tay. Nếu API giá down → ghi "giá tại thời điểm fetch" + timestamp. (Lesson Learned #6: price=62000 tự điền, có thể sai.)'
   type: mandatory
@@ -360,9 +344,9 @@ requirements:
   verification:
     method: price_source_check
     rules:
-      - 'Price trong overview.json phải có source: API hoặc verified-dashboard-data.json'
-      - 'KHÔNG cho phép user/agent tự điền price'
-      - 'Nếu API down → price field = null + FAIL với lý do "price unavailable"'
+    - 'Price trong overview.json phải có source: API hoặc verified-dashboard-data.json'
+    - KHÔNG cho phép user/agent tự điền price
+    - Nếu API down → price field = null + FAIL với lý do "price unavailable"
 - id: REQ-031
   text: 'Drawdown verification: mọi claim về drawdown (%) hoặc rủi ro giá phải dựa trên data giá thật (max drawdown từ price history 52 tuần). KHÔNG ước tính từ bộ nhớ. (Lesson Learned #9: "30-50% drawdown" không có data.)'
   type: mandatory
@@ -372,9 +356,9 @@ requirements:
   verification:
     method: drawdown_source_check
     rules:
-      - 'Nếu claim "drawdown X%" → check có max_drawdown trong verified-dashboard-data.json'
-      - 'Nếu KHÔNG có data drawdown → claim phải ghi "chưa có data, ước tính dựa trên ngành"'
-      - 'KHÔNG được ghi số cụ thể (%) nếu không có source'
+    - Nếu claim "drawdown X%" → check có max_drawdown trong verified-dashboard-data.json
+    - Nếu KHÔNG có data drawdown → claim phải ghi "chưa có data, ước tính dựa trên ngành"
+    - KHÔNG được ghi số cụ thể (%) nếu không có source
 - id: REQ-032
   text: 'Peer provenance: mọi số liệu peer trong narrative (tên DN cùng ngành + giá trị so sánh) phải lấy từ peers.json HOẶC verified-dashboard-data.json. KHÔNG bịa peer data từ bộ nhớ. (Lesson Learned #4: agent bịa "peer" data.)'
   type: mandatory
@@ -384,9 +368,9 @@ requirements:
   verification:
     method: peer_provenance_check
     rules:
-      - 'Nếu narrative mention peer company + số liệu (PE, PB, revenue, market cap) → phải có peers.json hoặc peer section trong verified-dashboard-data.json'
-      - 'Nếu KHÔNG có peer data file → peer comparison section phải ghi "chưa có data peer" thay vì số cụ thể'
-      - 'Peer values trong report phải khớp peer data (±10%)'
+    - Nếu narrative mention peer company + số liệu (PE, PB, revenue, market cap) → phải có peers.json hoặc peer section trong verified-dashboard-data.json
+    - Nếu KHÔNG có peer data file → peer comparison section phải ghi "chưa có data peer" thay vì số cụ thể
+    - Peer values trong report phải khớp peer data (±10%)
 - id: REQ-033
   text: 'Cross-section consistency: cùng 1 số liệu key (revenue, NPAT, EPS, PE, PB, CAGR, market cap) xuất hiện ở nhiều section phải KHỚP nhau (±5%). Section exec summary vs section detail không được mâu thuẫn. (Review agent: đây là gap lớn nhất — cùng con số nhưng mỗi section 1 giá trị.)'
   type: mandatory
@@ -396,9 +380,9 @@ requirements:
   verification:
     method: cross_section_consistency_check
     rules:
-      - 'Extract tất cả số liệu key từ mọi section'
-      - 'Nếu 2 section cùng mention 1 metric với giá trị lệch >5% → FAIL'
-      - 'sec-exec phải là "single source of truth": nếu sec-exec khác section detail → FAIL'
+    - Extract tất cả số liệu key từ mọi section
+    - Nếu 2 section cùng mention 1 metric với giá trị lệch >5% → FAIL
+    - 'sec-exec phải là "single source of truth": nếu sec-exec khác section detail → FAIL'
 - id: REQ-034
   text: 'Temporal alignment: số liệu theo năm phải khớp đúng năm. Revenue/npatmi 2024 không được gắn nhãn 2025. Period labels (FY2021-FY2025) phải khớp data files. CAGR phải tính từ đúng khoảng năm được tuyên bố. (Review agent: agent trộn năm khi narrative.)'
   type: mandatory
@@ -408,9 +392,9 @@ requirements:
   verification:
     method: temporal_alignment_check
     rules:
-      - 'Mỗi số liệu theo năm trong narrative phải khớp data file của năm đó (không lệch năm)'
-      - 'Chart x-axis labels phải khớp years array trong data'
-      - 'Nếu claim "tăng trưởng từ 2021-2025" → CAGR phải tính từ 2021 baseline, không phải 2022'
+    - Mỗi số liệu theo năm trong narrative phải khớp data file của năm đó (không lệch năm)
+    - Chart x-axis labels phải khớp years array trong data
+    - Nếu claim "tăng trưởng từ 2021-2025" → CAGR phải tính từ 2021 baseline, không phải 2022
 - id: REQ-035
   text: 'Segment data: mọi segment breakdown (doanh thu theo mảng, % contribution) phải có nguồn (segments.json / company_profile.json / data files). KHÔNG bịa segment ratio. (Review agent: segment split là nơi agent hay bịa nhất.)'
   type: mandatory
@@ -420,8 +404,8 @@ requirements:
   verification:
     method: segment_check
     rules:
-      - 'Nếu narrative có segment revenue/contribution % → phải có nguồn data'
-      - 'Nếu không có data → phải ghi "ước tính" hoặc bỏ'
+    - Nếu narrative có segment revenue/contribution % → phải có nguồn data
+    - Nếu không có data → phải ghi "ước tính" hoặc bỏ
 - id: REQ-036
   text: 'CAGR recompute: mọi claim CAGR (%) phải recompute được từ data files (financials.json) ±2%. KHÔNG bịa CAGR. (Review agent: keyword-check lách được; phải recompute thật.)'
   type: mandatory
@@ -431,7 +415,9 @@ requirements:
   verification:
     method: cagr_recompute_check
     data_file: data/financials.json
-    fields: [revenue_ty, npatmi_ty]
+    fields:
+    - revenue_ty
+    - npatmi_ty
     tolerance_pct: 2
 - id: REQ-037
   text: 'Technical recompute: Tech Score + Verdict phải recompute được từ price data (weekly 52 tuần) HOẶC technical_active.json. KHÔNG bịa tech score. (Review agent: tech score là claim định lượng phải có nguồn tính toán.)'
@@ -442,9 +428,9 @@ requirements:
   verification:
     method: tech_recompute_check
     rules:
-      - 'Tech score trong report phải khớp technical_active.json / verified-dashboard-data.json.technical (±2)'
-      - 'Verdict phải tương ứng scale: score âm → SELL side, score dương → BUY side'
-      - 'Nếu không có tech data file → FAIL (thiếu nguồn)'
+    - Tech score trong report phải khớp technical_active.json / verified-dashboard-data.json.technical (±2)
+    - 'Verdict phải tương ứng scale: score âm → SELL side, score dương → BUY side'
+    - Nếu không có tech data file → FAIL (thiếu nguồn)
 - id: REQ-038
   text: 'Claim basis: mọi claim so sánh/đánh giá (tăng trưởng nhanh nhất, dẫn đầu, cao nhất ngành, tốt hơn peer) phải có basis cụ thể (số liệu, data file, hoặc nguồn). Claims không có basis → phải ghi "theo đánh giá" hoặc bỏ. (Review agent: agent claim "leading" không data.)'
   type: mandatory
@@ -454,9 +440,9 @@ requirements:
   verification:
     method: claim_basis_check
     rules:
-      - 'Superlative claims (dẫn đầu, nhất, lớn nhất, top) phải có số liệu hỗ trợ trong ±200 chars'
-      - 'So sánh với peer phải có peer data trong ±200 chars'
-      - 'Nếu không có basis → FAIL'
+    - Superlative claims (dẫn đầu, nhất, lớn nhất, top) phải có số liệu hỗ trợ trong ±200 chars
+    - So sánh với peer phải có peer data trong ±200 chars
+    - Nếu không có basis → FAIL
 - id: REQ-039
   text: 'Industry claim: mọi claim về ngành (thị phần ngành, tốc độ tăng trưởng ngành, quy mô thị trường) phải cite nguồn (báo cáo ngành, công bố, ước tính). KHÔNG bịa thị phần ngành. (Review agent: industry figure hay bịa.)'
   type: mandatory
@@ -466,8 +452,8 @@ requirements:
   verification:
     method: industry_claim_check
     rules:
-      - 'Industry %/size claims phải có nguồn keyword (báo cáo, công bố, ước tính, theo, nghiên cứu)'
-      - 'Nếu không có nguồn → FAIL'
+    - Industry %/size claims phải có nguồn keyword (báo cáo, công bố, ước tính, theo, nghiên cứu)
+    - Nếu không có nguồn → FAIL
 - id: REQ-040
   text: 'Identity: ticker + company name trong report phải khớp target (CTD=Coteccons). KHÔNG nhầm ticker khác (Oracle, HPG...). (REQ-004 cũ: chart data trộn Oracle/HPG.)'
   type: mandatory
@@ -477,8 +463,8 @@ requirements:
   verification:
     method: identity_check
     rules:
-      - 'Report title/hero phải có đúng ticker + company name'
-      - 'KHÔNG được mention ticker khác (trừ peer section có nguồn)'
+    - Report title/hero phải có đúng ticker + company name
+    - KHÔNG được mention ticker khác (trừ peer section có nguồn)
 - id: REQ-041
   text: 'News window: news digest phải fetch trong 30 ngày gần nhất, KHÔNG dùng news cũ/không date. (Review agent: news 3 tháng trước vẫn được đưa vào.)'
   type: mandatory
@@ -488,8 +474,8 @@ requirements:
   verification:
     method: news_window_check
     rules:
-      - 'news_digest.json articles phải có date trong 30 ngày'
-      - 'Nếu article date >30 ngày hoặc không có date → FAIL'
+    - news_digest.json articles phải có date trong 30 ngày
+    - Nếu article date >30 ngày hoặc không có date → FAIL
 - id: REQ-042
   text: 'Investment amount: investment_amount từ task-state phải được dùng trong scenario/insight (3 mức: 100tr/500tr/1 tỷ). KHÔNG hardcode mức đầu tư khác. (Lesson Learned #3: agent hardcode investment.)'
   type: mandatory
@@ -499,9 +485,9 @@ requirements:
   verification:
     method: investment_amount_check
     rules:
-      - 'investment_amount trong task-state.json phải xuất hiện trong narrative (sec-scenario/insight)'
-      - 'Nếu không có investment_amount → PASS với note "no amount set"'
-      - 'Số tiền nhắc trong narrative phải khớp task-state (±10%)'
+    - investment_amount trong task-state.json phải xuất hiện trong narrative (sec-scenario/insight)
+    - Nếu không có investment_amount → PASS với note "no amount set"
+    - Số tiền nhắc trong narrative phải khớp task-state (±10%)
 - id: REQ-043
   text: 'Source freshness: references phải có date (ngày truy cập/năm), không "stale" quá 24 tháng so với ngày report. (Review agent: source date rỗng.)'
   type: mandatory
@@ -511,12 +497,10 @@ requirements:
   verification:
     method: source_freshness_check
     rules:
-      - 'Mỗi ref phải có năm (20xx) hoặc date'
-      - 'Nếu ref date rỗng → FAIL (trừ "standard" sources như BCTC, filings)'
+    - Mỗi ref phải có năm (20xx) hoặc date
+    - Nếu ref date rỗng → FAIL (trừ "standard" sources như BCTC, filings)
 - id: REQ-044
-  text: 'News authenticity: mỗi article trong news digest phải có URL gốc còn sống
-    hoặc source_name rõ ràng. KHÔNG bịa tin. Ít nhất 50% article phải có URL accessible
-    hoặc source_name xác định được.'
+  text: 'News authenticity: mỗi article phải có URL hoặc source_name. URL phải thuộc whitelist báo chí VN/nguồn tài chính HOẶC truy cập được (HTTP <400). Domain lạ + unreachable (example.com/.xyz/...) → FAIL — nghi tin giả. Ít nhất 50% article có URL/source_name hợp lệ. (G5: text đồng bộ với code whitelist.)'
   type: mandatory
   priority: critical
   failure_mode: FM-05
@@ -524,13 +508,11 @@ requirements:
   verification:
     method: news_authenticity_check
     rules:
-    - 'Mỗi article trong news_digest.json phải có url hoặc source_name'
+    - Mỗi article trong news_digest.json phải có url hoặc source_name
     - 'Nếu có URL: HEAD request kiểm tra (fallback nếu không mạng: check source_name)'
-    - '≥50% article phải có URL hoặc source_name hợp lệ'
+    - ≥50% article phải có URL hoặc source_name hợp lệ
 - id: REQ-045
-  text: 'Forecast source: mọi forward-looking claim (dự kiến, kế hoạch, dự phóng, mục
-    tiêu) kèm số phải cite nguồn. KHÔNG tự "dự phóng" không basis. Nếu agent tự tính
-    (DCF) → phải ghi rõ assumptions.'
+  text: 'Forecast source: mọi forward-looking claim (dự kiến, kế hoạch, dự phóng, mục tiêu) kèm số phải cite nguồn. KHÔNG tự "dự phóng" không basis. Nếu agent tự tính (DCF) → phải ghi rõ assumptions.'
   type: mandatory
   priority: critical
   failure_mode: FM-05
@@ -538,13 +520,11 @@ requirements:
   verification:
     method: forecast_source_check
     rules:
-    - 'Forward-looking phrases + số → cần cite (ref-, BCTC, ĐHCĐ, Nghị quyết, KHKD,
-      guidance, CTCK)'
-    - 'Agent tự tính DCF phải có bảng assumptions'
-    - 'Tối đa 2 uncited forecast claims'
+    - Forward-looking phrases + số → cần cite (ref-, BCTC, ĐHCĐ, Nghị quyết, KHKD, guidance, CTCK)
+    - Agent tự tính DCF phải có bảng assumptions
+    - Tối đa 2 uncited forecast claims
 - id: REQ-046
-  text: 'Technical indicator verify: RSI, MACD, MA50/MA200 trong dashboard phải tính
-    được từ price data thật. KHÔNG bịa chỉ báo kỹ thuật. Verify ít nhất RSI và MA50.'
+  text: 'Technical indicator verify: RSI, MACD, MA50/MA200 trong dashboard phải tính được từ price data thật. KHÔNG bịa chỉ báo kỹ thuật. Verify ít nhất RSI và MA50.'
   type: mandatory
   priority: high
   failure_mode: FM-05
@@ -552,149 +532,132 @@ requirements:
   verification:
     method: technical_indicator_verify
     rules:
-    - 'Load price data từ price_daily.json hoặc price_weekly.json'
-    - 'Tính RSI(14) từ giá đóng cửa → so với dashboard claim ±5 điểm'
-    - 'Tính MA50 từ giá đóng cửa → so với dashboard claim ±10%'
-    - 'MACD histogram sign phải khớp (dương/âm)'
+    - Load price data từ price_daily.json hoặc price_weekly.json
+    - Tính RSI(14) từ giá đóng cửa → so với dashboard claim ±5 điểm
+    - Tính MA50 từ giá đóng cửa → so với dashboard claim ±10%
+    - MACD histogram sign phải khớp (dương/âm)
 - id: REQ-047
-  text: 'Macro data citation: mọi số liệu vĩ mô/ngành (GDP, CPI, lãi suất, FDI, tăng
-    trưởng ngành) phải cite nguồn. KHÔNG bịa số vĩ mô.'
+  text: 'Macro data citation: mọi số liệu vĩ mô/ngành (GDP, CPI, lãi suất, FDI, tăng trưởng ngành) phải cite nguồn. KHÔNG bịa số vĩ mô.'
   type: mandatory
   priority: high
   failure_mode: FM-05
   verification:
     method: macro_data_citation_check
     rules:
-    - 'Macro keywords + số → cần cite (GSO, NHNN, World Bank, IMF, FiinPro, báo cáo ngành)'
-    - 'Thiếu cite → FAIL'
+    - Macro keywords + số → cần cite (GSO, NHNN, World Bank, IMF, FiinPro, báo cáo ngành)
+    - Thiếu cite → FAIL
 - id: REQ-048
-  text: 'Management claim: mọi claim về ban lãnh đạo, cổ đông lớn, sở hữu phải có
-    nguồn hoặc disclaimer [CHƯA KIỂM CHỨNG]. KHÔNG bịa thông tin lãnh đạo.'
+  text: 'Management claim: mọi claim về ban lãnh đạo, cổ đông lớn, sở hữu phải có nguồn hoặc disclaimer [CHƯA KIỂM CHỨNG]. KHÔNG bịa thông tin lãnh đạo.'
   type: mandatory
   priority: high
   failure_mode: FM-05
   verification:
     method: management_claim_check
     rules:
-    - 'Tên người + chức danh → cần cite hoặc disclaimer'
-    - 'Claim đơn giản (tên CEO từ company_profile.json) → PASS'
+    - Tên người + chức danh → cần cite hoặc disclaimer
+    - Claim đơn giản (tên CEO từ company_profile.json) → PASS
 - id: REQ-049
-  text: 'Historical return verify: mọi claim "tăng/giảm X% trong Y năm/tháng" phải
-    tính được từ price data trong source pack. KHÔNG bịa historical return.'
+  text: 'Historical return verify: mọi claim "tăng/giảm X% trong Y năm/tháng" phải tính được từ price data trong source pack. KHÔNG bịa historical return.'
   type: mandatory
   priority: high
   failure_mode: FM-05
   verification:
     method: historical_return_verify
     rules:
-    - 'Load price weekly data → tính return từ data thật'
-    - 'So sánh với dashboard claim ±20% (chênh lệch ngày bắt đầu)'
+    - Load price weekly data → tính return từ data thật
+    - So sánh với dashboard claim ±20% (chênh lệch ngày bắt đầu)
 - id: REQ-050
-  text: 'Comparison baseline: mọi so sánh (cao hơn, thấp hơn, tốt hơn, cải thiện)
-    phải có baseline cụ thể (số, kỳ, nguồn). KHÔNG so sánh mơ hồ.'
-  type: mandatory
-  priority: medium
+  text: 'Comparison baseline: mọi so sánh (cao hơn, thấp hơn, tốt hơn, cải thiện) phải có baseline cụ thể (số, kỳ, nguồn). KHÔNG so sánh mơ hồ.'
+  type: advisory
+  priority: advisory
   failure_mode: FM-05
   verification:
     method: comparison_baseline_check
     rules:
-    - 'Comparative phrase → cần số baseline hoặc citation trong ±100 chars'
-    - 'Thiếu baseline → WARN'
+    - Comparative phrase → cần số baseline hoặc citation trong ±100 chars
+    - Thiếu baseline → WARN
 - id: REQ-051
-  text: 'Unit consistency: tất cả số tiền trong dashboard phải thống nhất đơn vị (tỷ
-    đồng). KHÔNG dùng lẫn "nghìn tỷ" và "tỷ" gây hiểu nhầm.'
+  text: 'Unit consistency: tất cả số tiền trong dashboard phải thống nhất đơn vị (tỷ đồng). KHÔNG dùng lẫn "nghìn tỷ" và "tỷ" gây hiểu nhầm.'
   type: mandatory
   priority: medium
   failure_mode: FM-02
   verification:
     method: unit_consistency_check
     rules:
-    - 'Cùng metric giữa các section phải dùng consistent unit'
-    - 'Nếu magnitude chênh 1000x giữa 2 section → flag'
+    - Cùng metric giữa các section phải dùng consistent unit
+    - Nếu magnitude chênh 1000x giữa 2 section → flag
 - id: REQ-052
-  text: 'Liquidity: dashboard phải có thông tin thanh khoản (KLGD trung bình, GTGD,
-    free float) nếu có data. Nếu không có data → ghi chú.'
-  type: mandatory
-  priority: medium
+  text: 'Liquidity: dashboard phải có thông tin thanh khoản (KLGD trung bình, GTGD, free float) nếu có data. Nếu không có data → ghi chú.'
+  type: advisory
+  priority: advisory
   failure_mode: FM-02
   verification:
     method: liquidity_check
     rules:
-    - 'Kiểm tra dashboard có liquidity info không'
-    - 'Nếu có volume data trong source pack mà không hiển thị → WARN'
+    - Kiểm tra dashboard có liquidity info không
+    - Nếu có volume data trong source pack mà không hiển thị → WARN
 - id: REQ-053
-  text: 'Audit opinion: nếu BCTC có ý kiến kiểm toán "ngoại trừ" hoặc "không chấp
-    nhận" → dashboard PHẢI có disclaimer. KHÔNG dùng data từ BCTC không đáng tin cậy
-    mà không cảnh báo.'
+  text: 'Audit opinion: nếu BCTC có ý kiến kiểm toán "ngoại trừ" hoặc "không chấp nhận" → dashboard PHẢI có disclaimer. KHÔNG dùng data từ BCTC không đáng tin cậy mà không cảnh báo.'
   type: mandatory
   priority: high
   failure_mode: FM-08
   verification:
     method: audit_opinion_check
     rules:
-    - 'Check audit_opinion từ company_profile hoặc BCTC'
-    - 'Qualified/adverse opinion → dashboard phải có disclaimer'
+    - Check audit_opinion từ company_profile hoặc BCTC
+    - Qualified/adverse opinion → dashboard phải có disclaimer
 - id: REQ-054
-  text: 'Causal chain evidence: mọi chuỗi nhân quả (A nhờ B, A do B, A vì B) phải
-    có evidence cho phần "cause". KHÔNG viết causal chain rỗng.'
+  text: 'Causal chain evidence: mọi chuỗi nhân quả (A nhờ B, A do B, A vì B) phải có evidence định lượng HOẶC named source (BCTC, vnstock, ref-, công bố...) trong ±120 chars. BẤT KỲ causal chain không evidence → FAIL (fail-closed, không chờ ≥3). (FIX-10: spec/code thống nhất; FIX-3c: từ generic "theo/data" không tính.)'
   type: mandatory
   priority: high
   failure_mode: FM-05
   verification:
     method: causal_chain_evidence_check
     rules:
-    - 'Causal connectors + claim → phần cause phải có cite hoặc dẫn chứng số'
-    - '≥3 uncited causal chains → FAIL'
+    - Causal connectors + claim → phần cause phải có cite hoặc dẫn chứng số
+    - ≥3 uncited causal chains → FAIL
 - id: REQ-055
-  text: 'Vague language: hạn chế ngôn ngữ mơ hồ (có thể, dự kiến, tiềm năng, ấn tượng)
-    không kèm số liệu. Nếu >15 hedging phrases trong dashboard → WARN.'
-  type: mandatory
-  priority: medium
+  text: 'Vague language: hạn chế ngôn ngữ mơ hồ (có thể, dự kiến, tiềm năng, ấn tượng) không kèm số liệu. Nếu >15 hedging phrases trong dashboard → WARN.'
+  type: advisory
+  priority: advisory
   failure_mode: FM-03
   verification:
     method: vague_language_check
     rules:
-    - 'Đếm hedging phrases trong toàn dashboard'
+    - Đếm hedging phrases trong toàn dashboard
     - '>15 → WARN về chất lượng phân tích'
 - id: REQ-056
-  text: 'Timeframe consistency: mọi comparison phải có baseline rõ ràng (YoY, QoQ,
-    3Y, 5Y). KHÔNG cherry-pick timeframe có lợi. Nếu chỉ show short-term positive
-    → phải có long-term context.'
+  text: 'Timeframe consistency: mọi comparison phải có baseline rõ ràng (YoY, QoQ, 3Y, 5Y). KHÔNG cherry-pick timeframe có lợi. Nếu chỉ show short-term positive → phải có long-term context.'
   type: mandatory
   priority: high
   failure_mode: FM-05
   verification:
     method: timeframe_consistency_check
     rules:
-    - 'Short-term comparison (QoQ) → cần long-term context (YoY/3Y) gần đó'
-    - 'Short-term positive + long-term negative từ data → WARN cherry-pick'
+    - Short-term comparison (QoQ) → cần long-term context (YoY/3Y) gần đó
+    - Short-term positive + long-term negative từ data → WARN cherry-pick
 - id: REQ-057
-  text: 'Dividend claim: mọi claim về cổ tức, dividend yield, payout ratio phải có
-    nguồn hoặc flag [CHƯA XÁC MINH] nếu không có dividend data trong source pack.'
+  text: 'Dividend claim: mọi claim về cổ tức, dividend yield, payout ratio phải có nguồn hoặc flag [CHƯA XÁC MINH] nếu không có dividend data trong source pack.'
   type: mandatory
   priority: medium
   failure_mode: FM-05
   verification:
     method: dividend_claim_check
     rules:
-    - 'Dividend keywords + số → cần cite hoặc source pack có dividend data'
-    - 'Không có data + không cite → FAIL'
+    - Dividend keywords + số → cần cite hoặc source pack có dividend data
+    - Không có data + không cite → FAIL
 - id: REQ-058
-  text: 'Support/Resistance method: mỗi mức hỗ trợ/kháng cự trong dashboard phải kèm
-    method (swing, Fibonacci, MA, round number, pivot). KHÔNG đưa S/R không rõ method.'
+  text: 'Support/Resistance method: mỗi mức hỗ trợ/kháng cự trong dashboard phải kèm method (swing, Fibonacci, MA, round number, pivot). KHÔNG đưa S/R không rõ method.'
   type: mandatory
   priority: medium
   failure_mode: FM-05
   verification:
     method: support_resistance_method_check
     rules:
-    - 'S/R level + số → cần method keyword trong ±200 chars'
-    - '≥2 S/R levels không method → FAIL'
+    - S/R level + số → cần method keyword trong ±200 chars
+    - ≥2 S/R levels không method → FAIL
 - id: REQ-062
-  text: 'Period integrity: mọi (period, value) pair trong verified-dashboard-data.json
-    phải khớp raw source CSV. Chống đảo kỳ (ERVN-PERIOD-001 regression fix). 6 sub-gates:
-    raw_periods_unique, values_length_match, period_order_detected, period_value_pairs_preserved,
-    latest_matches, oldest_matches.'
+  text: 'Period integrity: mọi (period, value) pair trong verified-dashboard-data.json phải khớp raw source CSV. Chống đảo kỳ (ERVN-PERIOD-001 regression fix). 6 sub-gates: raw_periods_unique, values_length_match, period_order_detected, period_value_pairs_preserved, latest_matches, oldest_matches.'
   type: mandatory
   priority: critical
   failure_mode: FM-08
@@ -702,15 +665,11 @@ requirements:
   verification:
     method: period_integrity_check
     rules:
-    - '6 sub-checks từ period_integrity_gate.py (v1.0.1 hotfix)'
+    - 6 sub-checks từ period_integrity_gate.py (v1.0.1 hotfix)
     - 'Per-field cross-check: revenue, net_profit, eps, total_assets, total_equity, capex'
-    - 'Mọi period-value pair phải round-trip khớp CSV gốc'
+    - Mọi period-value pair phải round-trip khớp CSV gốc
 - id: REQ-059
-  text: 'Data provenance: data files (financials.json, overview.json) phải có nguồn
-    thật. Verifier spot-check revenue năm mới nhất vs source-pack CSV hoặc API vnstock
-    (±10%). Price phải có price_fetched_at ở data level. task-state phase1 phải log
-    data_source. peers.json phải có source; contract phải có _provenance. (Review agent:
-    agent có thể bịa CẢ data files lẫn report — verifier phải tự đối chiếu nguồn.)'
+  text: 'Data provenance: data files (financials.json, overview.json) phải có nguồn thật. Verifier spot-check revenue năm mới nhất vs source-pack CSV hoặc API vnstock (±10%). Price phải có price_fetched_at ở data level. task-state phase1 phải log data_source. peers.json phải có source; contract phải có _provenance. (Review agent: agent có thể bịa CẢ data files lẫn report — verifier phải tự đối chiếu nguồn.)'
   type: mandatory
   priority: critical
   failure_mode: FM-05
@@ -718,13 +677,11 @@ requirements:
   verification:
     method: data_provenance_check
     rules:
-    - 'Spot-check revenue vs source-pack CSV (source-pack/income_statement_sponsor.csv) hoặc API vnstock live'
-    - 'current_price tồn tại → bắt buộc có price_fetched_at (data/overview.json | financials overview | task-state phase1)'
-    - 'task-state phase1 phải log data_source; peers.json phải có source; contract phải có _provenance'
+    - Spot-check revenue vs source-pack CSV (source-pack/income_statement_sponsor.csv) hoặc API vnstock live
+    - current_price tồn tại → bắt buộc có price_fetched_at (data/overview.json | financials overview | task-state phase1)
+    - task-state phase1 phải log data_source; peers.json phải có source; contract phải có _provenance
 - id: REQ-060
-  text: 'Internal identity (cross-footing): các số trong report phải tự khớp nhau —
-    PE×EPS ≈ giá, PB×BVPS ≈ giá, vốn hóa ≈ giá×cổ phiếu, EPS ≈ NPAT/shares, contract
-    price ≈ financials price (±5%). Chống bịa 1 số lẻ không khớp với các số còn lại.'
+  text: 'Internal identity (cross-footing): các số trong report phải tự khớp nhau — PE×EPS ≈ giá, PB×BVPS ≈ giá, vốn hóa ≈ giá×cổ phiếu, EPS ≈ NPAT/shares, contract price ≈ financials price (±5%). Chống bịa 1 số lẻ không khớp với các số còn lại.'
   type: mandatory
   priority: high
   failure_mode: FM-05
@@ -732,15 +689,13 @@ requirements:
   verification:
     method: internal_identity_check
     rules:
-    - 'PE claim × EPS(2025) ≈ current_price ±5%'
-    - 'PB claim × BVPS(2025) ≈ current_price ±5%'
-    - 'vốn hóa claim ≈ price × issue_share ±5%'
-    - 'EPS(2025) ≈ npatmi(2025)×1e9 / shares ±15% (EPS có thể tính theo diluted/CP bình quân; lệch >15% → data tự mâu thuẫn)'
-    - 'contract price vs financials price ±5%'
+    - PE claim × EPS(2025) ≈ current_price ±5%
+    - PB claim × BVPS(2025) ≈ current_price ±5%
+    - vốn hóa claim ≈ price × issue_share ±5%
+    - EPS(2025) ≈ npatmi(2025)×1e9 / shares ±15% (EPS có thể tính theo diluted/CP bình quân; lệch >15% → data tự mâu thuẫn)
+    - contract price vs financials price ±5%
 - id: REQ-061
-  text: 'Derived metrics recompute: mọi claim ROE/ROA/net margin/tăng trưởng YoY/vốn
-    hóa phải recompute được từ financials.json + balance_sheet.json (±5% tương đối hoặc
-    ±1pp tuyệt đối). Chống "ROE 24%" bịa khi data cho ROE 8%.'
+  text: 'Derived metrics recompute: mọi claim ROE/ROA/net margin/tăng trưởng YoY/vốn hóa phải recompute được từ financials.json + balance_sheet.json (±5% tương đối hoặc ±1pp tuyệt đối). Chống "ROE 24%" bịa khi data cho ROE 8%.'
   type: mandatory
   priority: high
   failure_mode: FM-05
@@ -750,29 +705,28 @@ requirements:
     data_file: data/financials.json
     tolerance_pct: 5
     rules:
-    - 'ROE = NPAT/equity; ROA = NPAT/total_assets; net margin = NPAT/revenue'
-    - 'YoY growth = (Y / Y-1) - 1 theo năm gần claim'
-    - 'vốn hóa = price × issue_share'
+    - ROE = NPAT/equity; ROA = NPAT/total_assets; net margin = NPAT/revenue
+    - YoY growth = (Y / Y-1) - 1 theo năm gần claim
+    - vốn hóa = price × issue_share
 - id: REQ-063
-  text: 'Valuation methods completeness: các phương pháp định giá (EV/EBITDA, P/CF,
-    P/S, DCF, Graham...) — method không có giá trị trong nguồn phải được nhắc với lý
-    do N/A (ngân hàng: EV/EBITDA vô nghĩa; công ty lỗ: PE N/A) hoặc không nhắc tới.
-    Graham number recompute từ EPS+BVPS ±5%. (REQ-025 chỉ verify PE/PB — 7/9 method
-    còn lại không ai check.)'
+  text: 'Valuation methods completeness: các phương pháp định giá (EV/EBITDA, P/CF, P/S, DCF, Graham...) — method không có giá trị trong nguồn phải được nhắc với lý do N/A (ngân hàng: EV/EBITDA vô nghĩa; công ty lỗ: PE N/A) hoặc không nhắc tới. Graham number recompute từ EPS+BVPS ±5%. (REQ-025 chỉ verify PE/PB — 7/9 method còn lại không ai check.)'
   type: mandatory
   priority: high
   failure_mode: FM-05
   case_ref: review-agent-v3-valuation
   verification:
     method: valuation_methods_check
-    methods: [ev_ebitda, ps, pcf, dcf_per_share, graham_number]
+    methods:
+    - ev_ebitda
+    - ps
+    - pcf
+    - dcf_per_share
+    - graham_number
     rules:
-    - 'Method nhắc trong narrative nhưng không có giá trị và không N/A → FAIL'
-    - 'Graham = sqrt(22.5 × EPS × BVPS) khớp ±5%'
+    - Method nhắc trong narrative nhưng không có giá trị và không N/A → FAIL
+    - Graham = sqrt(22.5 × EPS × BVPS) khớp ±5%
 - id: REQ-064
-  text: 'Trend consistency: từ ngữ tăng/giảm gần metric (doanh thu, lợi nhuận) phải
-    cùng dấu với dữ liệu (overall hoặc theo năm gần claim). Chống narrative "nghe có
-    vẻ đúng" nhưng ngược dữ liệu (chart giảm 3 năm mà viết "tăng trưởng ổn định").'
+  text: 'Trend consistency: từ ngữ tăng/giảm gần metric (doanh thu, lợi nhuận) phải cùng dấu với dữ liệu (overall hoặc theo năm gần claim). Chống narrative "nghe có vẻ đúng" nhưng ngược dữ liệu (chart giảm 3 năm mà viết "tăng trưởng ổn định").'
   type: mandatory
   priority: high
   failure_mode: FM-05
@@ -780,13 +734,11 @@ requirements:
   verification:
     method: trend_consistency_check
     rules:
-    - 'Trend word (tăng/giảm/phục hồi...) trong ±140 chars của metric label'
-    - 'Sign claim phải khớp sign data (có năm → theo năm đó; không → overall)'
-    - 'Loại trừ biên lợi nhuận/lợi nhuận gộp (chuỗi khác); phủ định "không tăng" bỏ qua'
+    - Trend word (tăng/giảm/phục hồi...) trong ±140 chars của metric label
+    - Sign claim phải khớp sign data (có năm → theo năm đó; không → overall)
+    - Loại trừ biên lợi nhuận/lợi nhuận gộp (chuỗi khác); phủ định "không tăng" bỏ qua
 - id: REQ-065
-  text: 'Verdict consistency: tone kết luận (sec-exec/sec-thesis) phải cùng dấu với
-    upside/downside trung bình từ valuation targets. Chống "kết luận tích cực" trong
-    khi mọi phương pháp cho giá hợp lý thấp hơn giá thị trường >5%.'
+  text: 'Verdict consistency: tone kết luận (sec-exec/sec-thesis) phải cùng dấu với upside/downside trung bình từ valuation targets. Chống "kết luận tích cực" trong khi mọi phương pháp cho giá hợp lý thấp hơn giá thị trường >5%.'
   type: mandatory
   priority: medium
   failure_mode: FM-05
@@ -794,12 +746,10 @@ requirements:
   verification:
     method: verdict_consistency_check
     rules:
-    - 'upside = median(targets)/price - 1; targets từ task-state phase3 hoặc narrative sec-valuation'
-    - 'upside > +5% mà từ tiêu cực > từ tích cực → FAIL; upside < -5% ngược lại → FAIL'
+    - upside = median(targets)/price - 1; targets từ task-state phase3 hoặc narrative sec-valuation
+    - upside > +5% mà từ tiêu cực > từ tích cực → FAIL; upside < -5% ngược lại → FAIL
 - id: REQ-066
-  text: 'API fallback log: phase 0 phải log api_source + tier vào task-state (Lesson
-    Learned #1 — pipeline chết vì chỉ dùng 1 nguồn VCI). Community tier được phép nhưng
-    report phải flag "community/dữ liệu giới hạn".'
+  text: 'API fallback log: phase 0 phải log api_source + tier vào task-state (Lesson Learned #1 — pipeline chết vì chỉ dùng 1 nguồn VCI). Community tier được phép nhưng report phải flag "community/dữ liệu giới hạn".'
   type: mandatory
   priority: high
   failure_mode: FM-05
@@ -807,12 +757,10 @@ requirements:
   verification:
     method: api_fallback_check
     rules:
-    - 'task-state phase0 result phải có api_source (chuỗi fallback đã thử)'
-    - 'api_source chứa "community" → report phải có marker community/dữ liệu giới hạn'
+    - task-state phase0 result phải có api_source (chuỗi fallback đã thử)
+    - api_source chứa "community" → report phải có marker community/dữ liệu giới hạn
 - id: REQ-067
-  text: 'Fiscal year alignment: task-state phase1 phải log fiscal_year_type
-    (calendar|custom) — chống giả định mọi DN dùng dương lịch (Lesson Learned #5:
-    ngân hàng VCB/BID/CTG có thể khác). Nếu custom → narrative phải ghi rõ "năm tài chính/niên độ".'
+  text: 'Fiscal year alignment: task-state phase1 phải log fiscal_year_type (calendar|custom) — chống giả định mọi DN dùng dương lịch (Lesson Learned #5: ngân hàng VCB/BID/CTG có thể khác). Nếu custom → narrative phải ghi rõ "năm tài chính/niên độ".'
   type: mandatory
   priority: medium
   failure_mode: FM-05
@@ -820,8 +768,8 @@ requirements:
   verification:
     method: fiscal_year_check
     rules:
-    - 'fiscal_year_type phải tồn tại trong task-state (calendar|custom)'
-    - 'custom → narrative phải mention "năm tài chính/fiscal/niên độ"'
+    - fiscal_year_type phải tồn tại trong task-state (calendar|custom)
+    - custom → narrative phải mention "năm tài chính/fiscal/niên độ"
 - id: REQ-021
   text: KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.
   type: mandatory
@@ -892,10 +840,7 @@ medium:
 - REQ-041
 - REQ-042
 - REQ-043
-- REQ-050
 - REQ-051
-- REQ-052
-- REQ-055
 - REQ-057
 - REQ-058
 - REQ-065
