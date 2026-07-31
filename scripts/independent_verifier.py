@@ -251,8 +251,32 @@ def verify_artifact_check(req, html):
     text = extract_all_text(html) if html else ""
 
     if "split-adjusted" in check.lower() or "bẫy 5b" in check.lower():
-        passed = any(w in text.lower() for w in ["split-adjusted", "bẫy 5b", "cross-check eps", "audit split"])
-        return passed, {"found": passed}
+        # G13 (review V4 Flash): keyword-check "report chứa chữ split-adjusted" lách
+        # được bằng cách thả chữ. Verify từ task-state phase1: split_audit phải log
+        # kết quả audit (cp_consistent) — report mention chỉ là điều kiện phụ.
+        ts = _load_json_rel(".task-state/task-state.json")
+        audit = None
+        if ts:
+            p1 = (ts.get("phases", {}).get("phase1_data", {}) or {}).get("result") or {}
+            audit = p1.get("split_audit") or ts.get("split_audit")
+        report_mentions = any(w in text.lower() for w in ["split-adjusted", "bẫy 5b", "cross-check eps", "audit split"])
+        if isinstance(audit, dict):
+            cp_ok = audit.get("cp_consistent") in (True, "true", "True")
+            if not cp_ok:
+                return False, {"found": report_mentions, "split_audit": audit,
+                               "error": "task-state split_audit có cp_consistent != true — audit split không đạt"}
+            if not report_mentions:
+                return False, {"found": False, "split_audit": audit,
+                               "error": "split_audit OK nhưng report không mention 'split-adjusted/Bẫy 5B/cross-check EPS'"}
+            return True, {"found": True, "split_audit": audit, "audit_verified_from_task_state": True}
+        if audit:
+            return False, {"found": report_mentions, "split_audit": audit,
+                           "error": "split_audit không đúng format (cần dict với cp_consistent)"}
+        # Không có log audit trong task-state → fail-closed (không tin chữ trong report)
+        if report_mentions:
+            return False, {"found": report_mentions,
+                           "error": "report mention split-adjusted NHƯNG task-state phase1 không log split_audit — nghi keyword-stuffing (G13 fail-closed)"}
+        return False, {"found": False, "error": "không có split_audit trong task-state và report không mention"}
 
     if "placeholder" in check.lower() or "oracle" in check.lower():
         # Check for Oracle placeholder data in VISIBLE TEXT (not JS/CSS/comments)
@@ -664,7 +688,9 @@ def _extract_primary_multiple(text, label_pattern, computed_val, tolerance_pct):
             if val > 1000: continue
             label_to_num = text[m.start():m.start()+len(m.group(0))].lower()
             has_primary = any(kw in label_to_num for kw in ["data-metric","ttm","hiện tại","current","val-card","mono","kpi-value"])
-            has_projection = any(kw in label_to_num for kw in ["median","target","5y","projected","fcf","graham","ev/ebitda","p/cf","dcf","wacc"])
+            # FP-M6 (batch-3): "P/E trung bình NGÀNH 12x" là claim ngành, không phải
+            # multiple của CTD → thêm ngành/trung bình/bình quân vào projection filter
+            has_projection = any(kw in label_to_num for kw in ["median","target","5y","projected","fcf","graham","ev/ebitda","p/cf","dcf","wacc","ngành","trung bình","bình quân"])
             is_primary = has_primary and not has_projection
             candidates.append((val, is_primary, has_projection))
         except ValueError:
@@ -1700,7 +1726,7 @@ def verify_temporal_alignment(req, html):
         if not isinstance(gt, dict):
             continue
         for kw in kws:
-            pat = re.compile(kw + r"[^0-9]{0,80}?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr)?", re.I)
+            pat = re.compile(kw + r"[^0-9]{0,80}?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|vnd|đồng)?", re.I)
             for m in pat.finditer(text):
                 claimed = _normalize_number(m.group(1))
                 unit = m.group(2) or ""
@@ -1709,6 +1735,11 @@ def verify_temporal_alignment(req, html):
                 # V5 fix: "34%" — unit regex lazy-empty bỏ qua % → kiểm tra ký tự sau số
                 if not unit and "%" in text[m.end(1):m.end(1)+2]:
                     unit = "%"
+                # Batch-3 (FP phát hiện khi test G6): "doanh thu ... giá hiện tại
+                # 71.700 VND" — window ăn số của câu khác. Số đơn vị VND/đồng là GIÁ,
+                # không phải revenue/npatmi/eps → bỏ qua.
+                if unit.lower() in ("vnd", "đồng"):
+                    continue
                 # Skip year-as-value / tiny unitless numbers
                 if 2000 <= claimed <= 2099 and not unit:
                     continue
@@ -3460,6 +3491,11 @@ def verify_internal_identity(req, html):
         mc_ty = float(price) * float(shares) / 1e9
         text = _narrative_text(html)
         for m in re.finditer(r"(?:vốn hóa|market cap)[^.\d]{0,30}?(\d[\d.,]*)\s*((?:nghìn\s*tỷ|tỷ|tỉ|triệu))?", text, re.I):
+            # G7 (review V4 Flash): "vốn hóa TOÀN NGÀNH 500.000 tỷ" là quy mô ngành,
+            # không phải vốn hóa của CTD → bỏ qua
+            between = text[m.start():m.start(1)]
+            if re.search(r"ngành|thị trường|industry|toàn", between, re.I):
+                continue
             nval = _scale_to_tỷ(_normalize_number(m.group(1)), m.group(2) or "")
             if nval and abs(nval - mc_ty) / mc_ty * 100 > tol:
                 issues.append(f"vốn hóa claim {m.group(1)}{m.group(2) or ''} ≈ {nval:,.0f} tỷ ≠ price×shares {mc_ty:,.0f} tỷ (lệch >{tol}%)")
@@ -3573,6 +3609,10 @@ def verify_derived_metrics_recompute(req, html):
     if ov.get("current_price") and ov.get("issue_share"):
         mc_ty = float(ov["current_price"]) * float(ov["issue_share"]) / 1e9
         for m in re.finditer(r"(?:vốn hóa|market cap)[^.\d]{0,30}?(\d[\d.,]*)\s*((?:nghìn\s*tỷ|tỷ|tỉ|triệu))?", text, re.I):
+            # G7 (review V4 Flash): "vốn hóa TOÀN NGÀNH" là quy mô ngành → bỏ qua
+            between = text[m.start():m.start(1)]
+            if re.search(r"ngành|thị trường|industry|toàn", between, re.I):
+                continue
             nval = _scale_to_tỷ(_normalize_number(m.group(1)), m.group(2) or "")
             if nval is None or nval == 0:
                 continue
@@ -3675,6 +3715,12 @@ def verify_trend_consistency(req, html):
                 ctx = text[max(0, m.start()-40):m.end()+140]
                 tm = re.search(r"(tăng trưởng|tăng đều|đi lên|phục hồi|tăng|giảm|sụt giảm|suy giảm|đi xuống|sụt|lao dốc|co lại)", ctx, re.I)
                 if not tm:
+                    continue
+                # G6 (review V4 Flash): "chi phí tăng nhanh hơn doanh thu" — trend word
+                # "tăng" thuộc về CHI PHÍ, không phải doanh thu → bỏ qua (tránh báo oan
+                # khi revenue giảm). Check vùng ±60 quanh trend word.
+                tm_zone = text[max(0, tm.start()-60):tm.end()+20]
+                if re.search(r"chi phí|giá vốn|expense|cost", tm_zone, re.I):
                     continue
                 neg_win = ctx[max(0, tm.start()-40):tm.end()+20]
                 if re.search(r"không\s+(?:còn\s+)?(?:tăng|giảm)|không\s+tăng", neg_win, re.I):
@@ -4003,6 +4049,11 @@ def main():
         if passed:
             results["pass"] += 1
             status_color = GREEN + "✅ PASS" + NC
+        elif priority == "advisory":
+            # Advisory (batch-3, đề xuất V4 Flash): priority=advisory từ YAML là 1 nguồn
+            # sự thật — check fail KHÔNG block deploy (WARN-only), không đếm vào fail
+            results["skip"] += 1
+            status_color = YELLOW + f"⚠️ ADVISORY ({len(evidence.get('issues', []))} issue)" + NC
         else:
             results["fail"] += 1
             status_color = RED + "❌ FAIL" + NC
