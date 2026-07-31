@@ -3180,48 +3180,65 @@ def verify_data_provenance(req, html):
             if fin_key in spots:
                 break
 
-    # 1b) Fallback + bổ sung qua API vnstock live (annual rows)
+    # 1b) API vnstock live — G1-fix (nghiệm thu V4 Flash): luôn fetch live cả 4 field
+    #     khi API sống (bỏ 'if fk in spots: continue' — trước đây API chỉ FILL field
+    #     thiếu, không OVERRIDE field đã có spot từ CSV → bịa CẢ CSV vẫn lọt).
+    #     API live là nguồn KHÔNG thể giả mạo — hàng rào cuối thật sự.
+    api_spots = {}  # fin_key → (value, desc, tol) — chỉ từ API live
     try:
         from vnstock_data import Finance
         fapi = Finance(source='VCI', symbol=TICKER)
         # income statement → Net sales / Attributable to parent company / EPS basic
-        if "revenue_ty" not in spots or "npatmi_ty" not in spots or "eps_vnd" not in spots:
-            df = fapi.income_statement()
-            annual = df[df['report_period'] == 'year'] if 'report_period' in df.columns else df
-            col_map = {"revenue_ty": "Net sales", "npatmi_ty": "Attributable to parent company", "eps_vnd": "EPS basic"}
-            for fk, col in col_map.items():
-                if fk in spots or col not in annual.columns:
+        df = fapi.income_statement()
+        annual = df[df['report_period'] == 'year'] if 'report_period' in df.columns else df
+        col_map = {"revenue_ty": "Net sales", "npatmi_ty": "Attributable to parent company", "eps_vnd": "EPS basic"}
+        for fk, col in col_map.items():
+            if col not in annual.columns:
+                continue
+            best_yr, best_val = None, None
+            for idx in annual.index:
+                try:
+                    yv = int(str(idx)[:4])
+                except Exception:
                     continue
-                best_yr, best_val = None, None
-                for idx in annual.index:
-                    try:
-                        yv = int(str(idx)[:4])
-                    except Exception:
-                        continue
-                    v = float(annual.loc[idx, col])
-                    if best_yr is None or yv > best_yr:
-                        best_yr, best_val = yv, v
-                if best_val is not None:
-                    spots[fk] = (best_val / (1e9 if fk != "eps_vnd" else 1), f"API vnstock live ({col} {best_yr})", 10 if fk != "eps_vnd" else 15)
+                v = float(annual.loc[idx, col])
+                if best_yr is None or yv > best_yr:
+                    best_yr, best_val = yv, v
+            if best_val is not None:
+                api_spots[fk] = (best_val / (1e9 if fk != "eps_vnd" else 1), f"API vnstock live ({col} {best_yr})", 10 if fk != "eps_vnd" else 15)
         # balance sheet → Total assets
-        if "Total Assets" not in spots:
-            bdf = fapi.balance_sheet()
-            bannual = bdf[bdf['report_period'] == 'year'] if 'report_period' in bdf.columns else bdf
-            if "Total assets" in bannual.columns:
-                best_yr, best_val = None, None
-                for idx in bannual.index:
-                    try:
-                        yv = int(str(idx)[:4])
-                    except Exception:
-                        continue
-                    v = float(bannual.loc[idx, "Total assets"])
-                    if best_yr is None or yv > best_yr:
-                        best_yr, best_val = yv, v
-                if best_val is not None:
-                    spots["Total Assets"] = (best_val / 1e9, f"API vnstock live (Total assets {best_yr})", 10)
+        bdf = fapi.balance_sheet()
+        bannual = bdf[bdf['report_period'] == 'year'] if 'report_period' in bdf.columns else bdf
+        if "Total assets" in bannual.columns:
+            best_yr, best_val = None, None
+            for idx in bannual.index:
+                try:
+                    yv = int(str(idx)[:4])
+                except Exception:
+                    continue
+                v = float(bannual.loc[idx, "Total assets"])
+                if best_yr is None or yv > best_yr:
+                    best_yr, best_val = yv, v
+            if best_val is not None:
+                api_spots["Total Assets"] = (best_val / 1e9, f"API vnstock live (Total assets {best_yr})", 10)
     except Exception as e:
         if not spots:
             issues.append(f"API spot-check lỗi: {str(e)[:60]}")
+
+    # G1-fix: so chéo CSV-spot vs API-spot — lệch > tolerance → FAIL (CSV do agent
+    # viết được; API live không thể giả mạo). API chết → CSV là nguồn cuối.
+    for fk, (api_val, api_desc, api_tol) in api_spots.items():
+        if fk in spots:
+            csv_val, csv_desc, _ = spots[fk]
+            if abs(csv_val - api_val) / max(abs(api_val), 0.001) * 100 > api_tol:
+                issues.append(
+                    f"{fk} CSV-vs-API CONFLICT: {csv_desc} = {csv_val:,.1f} ≠ API live = {api_val:,.1f} "
+                    f"(lệch >{api_tol}%) — CSV có thể bị agent viết, nghi bịa nguồn"
+                )
+            else:
+                spots[fk] = (api_val, api_desc, api_tol)  # tin API live hơn CSV
+        else:
+            spots[fk] = (api_val, api_desc, api_tol)
 
     # 1c) So sánh từng spot với data files (khoan dung 10%; EPS 15% do diluted)
     bal = _load_json_rel("data/balance_sheet.json")
