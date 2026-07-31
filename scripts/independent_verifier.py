@@ -1516,12 +1516,25 @@ def verify_cross_section_consistency(req, html):
             continue
         for metric, kws in metrics.items():
             for kw in kws:
-                pat = re.compile(kw + r"[^0-9]{0,60}?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|x|%)?", re.I)
+                # FIX-4b (nghiệm thu V4 Pro M2 gốc): regex cũ `[^0-9]{0,60}?(\d...)`
+                # ăn "2025" (năm) làm số trước, rồi skip year → số THẬT phía sau
+                # ("Doanh thu thuần năm 2025 đạt 50,000 tỷ") không bao giờ capture.
+                # Thêm optional year prefix: keyword → ... → (năm)? → ... → SỐ.
+                pat = re.compile(kw + r"[^0-9]{0,60}?(?:20\d\d[^0-9]{0,60}?)?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|x|%)?", re.I)
                 for m in pat.finditer(sec_text):
                     val = _normalize_number(m.group(1))
                     if val is None:
                         continue
                     unit = m.group(2) or ""
+                    # Fallback dự phòng: nếu bắt được năm-as-value (regex không ăn
+                    # optional year vì lý do nào đó) → quét số kế tiếp trong 60 chars
+                    if 2000 <= val <= 2099 and not unit:
+                        nxt = re.search(r"(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|x|%)?", sec_text[m.end():m.end()+60])
+                        if nxt:
+                            val = _normalize_number(nxt.group(1))
+                            unit = nxt.group(2) or ""
+                        else:
+                            continue
                     if unit == "%" and metric in NO_PCT_UNIT:
                         continue
                     between = sec_text[m.start():m.start(1)]
