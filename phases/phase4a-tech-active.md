@@ -10,9 +10,10 @@ Bạn là subagent Phase 4a. Context tách biệt.
 1. Fetch giá **weekly** 52 tuần qua `Quote.history(interval='1W')`
 2. Fetch VNINDEX + VN30 cho Beta/Correlation/Alpha
 3. Market cap, số CP, 52W high/low từ `Company.overview()`
-4. Tính: MA10/20/50, RSI(14), MACD, Bollinger, Beta
+4. Tính: MA10/20/50, RSI(14), MACD, Bollinger, Beta — **GHI RÕ công thức**: RSI = 100 - 100/(1+RS), MA = SMA, MACD = EMA12 - EMA26
 5. Phát hiện patterns (Double Bottom, Channel, Candlestick, Divergence) CHỈ KHI có evidence
-6. Output: **Tech Score -6→+6, Verdict (STRONG SELL → STRONG BUY)**, trading strategy 3 kịch bản
+6. **SUPPORT/RESISTANCE (REQ-058)**: mỗi mức S/R phải kèm method (swing high/low, Fibonacci, MA, round number, pivot)
+7. Output: **Tech Score -6→+6, Verdict (STRONG SELL → STRONG BUY)**, trading strategy 3 kịch bản
 
 ## Output — ghi vào task-state.json
 ```json

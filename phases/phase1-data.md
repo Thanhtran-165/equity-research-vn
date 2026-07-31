@@ -24,8 +24,9 @@ Bạn là subagent Phase 1. Context tách biệt.
    - Lưu vào verified-dashboard-data.json: `"max_drawdown_52w": -28.5` (ví dụ)
    - Phase 6 sẽ cite số này thay vì "ước tính 30-50%"
 5. **PEER DATA FETCH (Lesson Learned #4) — BẮT BUỘC**:
-   - Xác định 4-5 peer cùng ngành (dựa trên industry từ company_profile.json)
+   - Xác định 4-5 peer cùng ngành (dựa trên industry từ company_profile.json, **cùng ICB cấp 3**)
    - Fetch P/B, PE, revenue CAGR, market_cap cho mỗi peer qua `vnstock_data`
+   - **Peer selection criteria**: cùng ngành ICB cấp 3, ≥4 peers, còn niêm yết (không ticker đã hủy)
    - Lưu vào `[WORK_DIR]/data/peers.json` với schema:
    ```json
    {
@@ -39,7 +40,10 @@ Bạn là subagent Phase 1. Context tách biệt.
    ```
    - **KHÔNG ĐƯỢC** tự ghi peer data từ bộ nhớ — phải có API call
    - Nếu API không có peer data → ghi `peers.json` với `"status": "unavailable"` → Phase 6 sẽ BỎ scatter chart
-6. **PRE-CHECK SOURCE PACK (Lesson Learned #2)**:
+6. **LIQUIDITY DATA (REQ-052)**: fetch KLGD trung bình 10 phiên, GTGD trung bình, free float % nếu có
+   - Lưu vào `data/liquidity.json` hoặc `overview.json`
+7. **FISCAL YEAR DETECT (REQ-051)**: đọc `fiscal_year_type` từ company_profile; nếu custom → log cảnh báo
+8. **PRE-CHECK SOURCE PACK (Lesson Learned #2)**:
    - Nếu chạy từ source pack (không phải fetch trực tiếp): verify đủ fields
    - Required: revenue, net_profit, **equity**, total_assets, cost_of_sales cho mỗi năm
    - Nếu thiếu → BÁO LỖI, không chạy tiếp

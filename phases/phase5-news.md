@@ -13,6 +13,11 @@ Bạn là subagent Phase 5. Context tách biệt.
 4. Sentiment score (-100 → +100) + category breakdown
 5. Timeline + key takeaways
 
+## Yêu cầu bắt buộc (REQ-044)
+- **Mỗi article phải có URL gốc** (field `url`) hoặc `source_name` (tên báo)
+- **KHÔNG** được paraphrase tự do — phải trích nguyên văn tiêu đề hoặc tóm tắt có cite rõ nguồn
+- ≥50% article phải có URL hoặc source_name xác định được
+
 ## Output — ghi vào task-state.json
 ```json
 {

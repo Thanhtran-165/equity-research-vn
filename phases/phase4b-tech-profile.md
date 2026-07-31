@@ -14,6 +14,7 @@ Bạn là subagent Phase 4b. Context tách biệt. **HOÀN TOÀN khác Phase 4a.
    - return_distribution, tail_risk (VaR/ES), volume_price, VPCI, money_flow (OBV/CMF)
    - effort_result (Wyckoff), high_volume_behavior, VAP
 3. Tính **8 setup heuristic** + **archetype** (trend_following / accumulation_breakout / trap_prone / mixed)
+   - **PATTERN QUALIFIER (REQ-039)**: mọi Wyckoff phase, chart pattern, archetype phải gắn `[DIỄN GIẢI]` hoặc confidence score — không viết như fact
 4. Output: profile JSON schema `vn-technical-profile-v1`
 
 ## NGÔN NGỮ BẮT BUỘC: `neutral_descriptive_non_advice`

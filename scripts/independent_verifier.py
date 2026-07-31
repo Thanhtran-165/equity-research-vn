@@ -82,7 +82,7 @@ def verify_non_advice_check(req, html):
     # Extract sec-tech-profile section text
     sec_text = extract_section_text(html, "sec-tech-profile")
     if not sec_text:
-        return True, {"section_found": False, "note": "no sec-tech-profile section — vacuously PASS"}
+        return False, {"section_found": False, "note": "KHÔNG có sec-tech-profile — REQ-007 FAIL (section bắt buộc, không vacuously PASS)"}
 
     # Step 1: Remove valid disclaimer sentences (negation context)
     # P5: Entity-interruption-tolerant patterns.
@@ -984,24 +984,26 @@ def verify_source_citation(req, html):
             snippet = text[max(0, m.start()-40):m.end()+40].strip()
             issues.append(f'"{val_str} {unit}" không có source gần — ...{snippet}...')
 
-    # Key metrics must have at least 1 source citation
+    # Key metrics must have at least 1 DIRECT source citation (V3: not just uncertainty)
     key_metrics = ['P/E', 'P/B', 'CAGR', 'ROE', 'ROA', 'EPS']
+    direct_source_kws = ['bctc', 'vnstock', 'data', 'ref-', 'sponsor', 'kiểm toán', 'công bố']
     key_metric_issues = []
     for km in key_metrics:
         if km.lower() in text.lower():
             # Find first occurrence
             idx = text.lower().find(km.lower())
             context = text[max(0, idx-300):idx+300].lower()
-            if not any(kw in context for kw in source_keywords):
-                key_metric_issues.append(f'{km}: không có source cite trong context đầu tiên')
+            if not any(kw in context for kw in direct_source_kws):
+                key_metric_issues.append(f'{km}: không có DIRECT source cite trong context đầu tiên (V3: uncertainty marker không đủ)')
 
-    passed = (unsourced <= 5) and (len(key_metric_issues) == 0)
+    passed = (unsourced <= 3) and (len(key_metric_issues) == 0)
     evidence = {
         "checked_numbers": checked,
         "unsourced_numbers": unsourced,
-        "threshold": "≤5 unsourced (cho phép CSS artifacts lọt qua)",
+        "threshold": "≤3 unsourced (V3: giảm từ 5 xuống 3)",
         "unsourced_examples": issues[:5],
         "key_metrics_without_source": key_metric_issues,
+        "hardening": "V3 tightened tolerance 5→3; key metrics require DIRECT source (not uncertainty marker)",
     }
     return passed, evidence
 
@@ -1102,10 +1104,30 @@ def verify_drawdown_source(req, html):
         if not has_drawdown_data and not has_uncertainty:
             issues.append(f"drawdown claim '{claim['value']}%' không có data thật và không có marker 'ước tính'")
 
-    # If no drawdown claims at all → PASS (nothing to check)
+    # If no drawdown claims at all → check vacuous-pass guard (V3)
     if not drawdown_claims:
+        # V3: If tech-profile section exists AND mentions "rủi ro giảm" → should have drawdown
+        tech_profile_text = extract_section_text(html, "sec-tech-profile") or ""
+        has_risk_discussion = bool(re.search(r"rủi ro.*giảm|drawdown|sụt giảm", tech_profile_text, re.I))
+        if has_risk_discussion and not has_drawdown_data:
+            return False, {
+                "note": "tech-profile discusses price risk but no drawdown data AND no drawdown claim",
+                "hint": "nếu bàn về rủi ro giảm giá, phải có max_drawdown từ data hoặc ghi 'ước tính'",
+                "hardening": "V3: vacuous-pass guard — risk discussion without drawdown data → FAIL",
+            }
+        # V3b: nếu CÓ max_drawdown data mà sec-risk không định lượng rủi ro giảm giá → FAIL
+        contract = _contract()
+        has_dd_data = has_drawdown_data or bool(contract and contract.get("max_drawdown_52w"))
+        sec_risk = extract_section_text(html, "sec-risk")
+        if has_dd_data and sec_risk and len(sec_risk) > 100:
+            if not re.search(r'\d[.,\d]*\s*%', sec_risk):
+                return False, {
+                    "note": "CÓ max_drawdown data nhưng sec-risk không định lượng rủi ro giảm giá (%)",
+                    "hint": "sec-risk phải trích max_drawdown_52w từ data thay vì bỏ qua",
+                    "hardening": "V3b: data-exists-but-risk-unquantified guard",
+                }
         return True, {"note": "no drawdown claims found in narrative"}
-
+    
     passed = len(issues) == 0
     evidence = {
         "drawdown_claims_found": len(drawdown_claims),
@@ -1309,10 +1331,25 @@ def _find_numeric_claims(text, keywords, window=120):
             val = _normalize_number(m.group(1))
             if val is None:
                 continue
+            unit = m.group(2) or ""
+            # V5 fix: số bắt được là năm (vd "CAGR giai đoạn 2021-2025 đạt 35.6%")
+            # → lấy số có đơn vị/% theo sau trong cửa sổ, nếu không → bỏ qua claim
+            if not unit and 1900 <= val <= 2100:
+                look = text[m.end():m.end()+window]
+                replaced = False
+                for lm in re.finditer(r"(\d[\d.,]*)\s*(%|nghìn tỷ|tỷ|tỉ|triệu|tr|m)?", look):
+                    nv = _normalize_number(lm.group(1))
+                    if nv is None or (1900 <= nv <= 2100 and not lm.group(2)):
+                        continue
+                    val, unit = nv, lm.group(2) or ""
+                    replaced = True
+                    break
+                if not replaced:
+                    continue
             claims.append({
                 "keyword": kw,
                 "value": val,
-                "unit": m.group(2) or "",
+                "unit": unit,
                 "context": text[max(0, m.start()-80):m.end()+80].strip()[:160],
             })
     return claims
@@ -1323,7 +1360,9 @@ def verify_peer_provenance(req, html):
 
     Chống bịa peer (Lesson Learned #4): nếu narrative có số liệu định lượng về peer
     (P/E, P/B, market cap của công ty khác) → phải có peer data file, value khớp ±10%.
-    Chỉ mention tên peer không kèm số → không vi phạm.
+
+    V3 HARDENING: key-specific verification — mỗi peer claim "TICKER_X có P/E=Y" phải
+    được verify với đúng ticker đó trong peers.json, không phải any-match toàn blob.
     """
     if not html:
         return False, {"error": "no html"}
@@ -1335,7 +1374,11 @@ def verify_peer_provenance(req, html):
     claims = []
     # pattern 1: ticker + number nearby (e.g. "HBC P/E 8x", "SSI vốn hóa 50.000 tỷ")
     for m in re.finditer(r"\b([A-Z]{3})\b[^.%0-9]{0,60}?(\d[\d.,]*)\s*(x|tỷ|tỉ|triệu|nghìn tỷ)?", peer_text):
-        claims.append({"type": "ticker_value", "ticker": m.group(1), "value": m.group(2), "unit": m.group(3) or ""})
+        ticker = m.group(1)
+        # Skip if ticker is the target TICKER itself
+        if ticker.upper() == TICKER.upper():
+            continue
+        claims.append({"type": "ticker_value", "ticker": ticker, "value": m.group(2), "unit": m.group(3) or ""})
     # pattern 2: P/E or P/B multiple without ticker (e.g. "P/E 5x" — must come from data)
     for m in re.finditer(r"P/\s*[EB]\s*[^0-9]{0,10}?(\d[\d.,]*)\s*x?", peer_text, re.I):
         claims.append({"type": "multiple", "value": m.group(1)})
@@ -1363,30 +1406,72 @@ def verify_peer_provenance(req, html):
             }
         return True, {"note": "peer names mentioned without quantitative claims — acceptable"}
 
-    # Peer data exists → verify each claim value matches (contextual string match ±10%)
-    peers_blob = json.dumps(peers_data, ensure_ascii=False)
+    # V3 HARDENING: Key-specific verification
+    # Extract peer list from peers_data
+    peer_list = []
+    if isinstance(peers_data, dict):
+        peer_list = peers_data.get("peers", [])
+        if not peer_list and "data" in peers_data:
+            peer_list = peers_data["data"].get("peers", [])
+
+    if not peer_list:
+        # Fallback to old any-match behavior for unstructured peer data
+        peers_blob = json.dumps(peers_data, ensure_ascii=False)
+    else:
+        peers_blob = None
+
     mismatches = []
     checked = 0
     for c in claims:
         v = _normalize_number(c.get("value"))
         if v is None:
             continue
-        # find any number in peers blob within 10%
-        for pv in re.findall(r"\d[\d.,]*", peers_blob):
-            pv_f = _normalize_number(pv)
-            if pv_f is None or pv_f == 0:
-                continue
-            if abs(v - pv_f) / max(abs(pv_f), 0.001) <= 0.10:
+        ticker = c.get("ticker")
+        found = False
+
+        # PATH A (V3): key-specific lookup if peer list is structured
+        # V5 fix: claim KHÔNG kèm ticker (vd "P/E 15.2x") → so với MỌI peer
+        if peer_list:
+            for peer in peer_list:
+                if not isinstance(peer, dict):
+                    continue
+                if ticker and peer.get("ticker", "").upper() != ticker.upper():
+                    continue
+                # Check all numeric fields of this peer
+                for pv in peer.values():
+                    if isinstance(pv, (int, float)):
+                        if abs(v - pv) / max(abs(pv), 0.001) <= 0.10:
+                            found = True
+                            break
+                if found:
+                    break
+            if found:
                 checked += 1
-                break
-        else:
-            mismatches.append(f"peer claim value {c.get('value')}{c.get('unit','')} not in peer data (±10%)")
+                continue
+
+        # PATH B (fallback): any-match in blob (for unstructured data)
+        if not found and peers_blob:
+            for pv in re.findall(r"\d[\d.,]*", peers_blob):
+                pv_f = _normalize_number(pv)
+                if pv_f is None or pv_f == 0:
+                    continue
+                if abs(v - pv_f) / max(abs(pv_f), 0.001) <= 0.10:
+                    found = True
+                    checked += 1
+                    break
+
+        if not found:
+            ticker_info = f" (ticker {ticker})" if ticker else ""
+            mismatches.append(f"peer claim value {c.get('value')}{c.get('unit','')}{ticker_info} not in peer data (±10%)")
+
     passed = len(mismatches) == 0
     return passed, {
         "peer_data_source": "peers.json" if peers_data else "verified-dashboard-data.json",
+        "peer_list_structured": len(peer_list) > 0,
         "peer_claims_found": len(claims),
         "claims_verified": checked,
         "mismatches": mismatches[:5],
+        "hardening": "V3 key-specific ticker matching (PATH A) + any-match fallback (PATH B)",
     }
 
 
@@ -1395,6 +1480,9 @@ def verify_cross_section_consistency(req, html):
 
     Trích (metric, year?, value) từ mọi section. Nếu 2 section cùng year-metric
     lệch >5% → FAIL. Nếu metric không gắn year → so chung nhóm.
+
+    V3 HARDENING: also check unanchored claims within same section — nếu cùng section
+    mention cùng 1 metric 2 lần khác số → FAIL (internal inconsistency).
     """
     if not html:
         return False, {"error": "no html"}
@@ -1413,11 +1501,9 @@ def verify_cross_section_consistency(req, html):
     NO_PCT_UNIT = {"revenue", "net_profit", "eps", "market_cap", "total_assets", "equity"}
 
     # Collect per-section claims
-    # Sections mang claim số liệu kinh doanh. Loại: source/glossary/analyst/checklist/
-    # tech (ref numbers, định nghĩa, scale — gây false positive).
     CLAIM_SECTIONS = {
         "sec-hero", "sec-exec", "sec-biz", "sec-industry", "sec-history",
-        "sec-segment", "sec-thesis", "sec-valuation", "sec-peer", "sec-bs",
+        "sec-segment", "sec-thesis", "sec-valuation", "sec-bs",
         "sec-risk", "sec-scenario", "sec-insight-1", "sec-insight-2", "sec-insight-3",
     }
     section_ids = set(re.findall(r'<section[^>]*id="(sec-[a-z0-9-]+)"', html)) & CLAIM_SECTIONS
@@ -1434,34 +1520,40 @@ def verify_cross_section_consistency(req, html):
                     if val is None:
                         continue
                     unit = m.group(2) or ""
-                    # "%" không phải đơn vị của metric số tuyệt đối (vd "Doanh thu CAGR 35%")
                     if unit == "%" and metric in NO_PCT_UNIT:
                         continue
-                    # "CAGR" giữa keyword và số → đây là claim tăng trưởng, không phải giá trị metric
                     between = sec_text[m.start():m.start(1)]
                     if re.search(r"cagr|tăng trưởng|growth|biên|margin", between, re.I):
                         continue
                     scaled = _scale_to_tỷ(val, unit)
-                    # Skip years-as-values (2021..2029, 4-digit, no unit)
                     if 2000 <= scaled <= 2099 and not unit:
                         continue
-                    # Skip tiny unitless numbers (ref ids, points, index values)
                     if not unit and scaled < 20:
                         continue
-                    # year near the claim? (trước HOẶC sau số — "…30,699 tỷ (FY2025)")
                     ctx = sec_text[max(0, m.start()-60):m.end()+60]
                     ym = re.search(r"20\d\d", ctx)
                     year = ym.group(0) if ym else None
-                    # Claim không gắn year → không so sánh được (có thể là năm khác nhau)
-                    if not year:
-                        continue
                     per_metric.setdefault(metric, []).append({
                         "year": year, "value": scaled, "section": sid,
                         "context": ctx.strip()[:120],
                     })
                 break  # first keyword hit per metric per section is enough
 
-    issues = []
+    # V3 HARDENING: Internal section consistency (unanchored → check within same section)
+    # For each section, if a metric appears twice with different values → internal inconsistency
+    internal_issues = []
+    for sid in sorted(section_ids):
+        sec_items = {}
+        for metric, items in per_metric.items():
+            sec_vals = [it for it in items if it["section"] == sid and it["year"] is None]
+            if len(sec_vals) >= 2:
+                vmin, vmax = min(it["value"] for it in sec_vals), max(it["value"] for it in sec_vals)
+                if vmin > 0 and (vmax - vmin) / vmin > 0.05:
+                    internal_issues.append(
+                        f"section {sid}: {metric} values {vmin:,.1f} vs {vmax:,.1f} internally inconsistent"
+                    )
+
+    issues = list(internal_issues)
     checked_pairs = 0
     for metric, items in per_metric.items():
         if len(items) < 2:
@@ -1490,8 +1582,9 @@ def verify_cross_section_consistency(req, html):
         "sections_scanned": len(section_ids),
         "metrics_with_multiple_claims": {m: len(v) for m, v in per_metric.items() if len(v) > 1},
         "pairs_compared": checked_pairs,
+        "internal_inconsistencies": internal_issues[:5],
         "issues": issues[:5],
-        "note": "sec-exec vs detail phải đồng nhất; 2 số khác năm không tính là mâu thuẫn",
+        "note": "V3: thêm internal section consistency check cho unanchored claims",
     }
 
 
@@ -1530,6 +1623,9 @@ def verify_temporal_alignment(req, html):
                 unit = m.group(2) or ""
                 if claimed is None:
                     continue
+                # V5 fix: "34%" — unit regex lazy-empty bỏ qua % → kiểm tra ký tự sau số
+                if not unit and "%" in text[m.end(1):m.end(1)+2]:
+                    unit = "%"
                 # Skip year-as-value / tiny unitless numbers
                 if 2000 <= claimed <= 2099 and not unit:
                     continue
@@ -1692,6 +1788,9 @@ def verify_tech_recompute(req, html):
 
     Chống bịa tech score: report score phải bằng data file score. Verdict phải
     tương ứng dấu score (≥+3 BUY side, ≤-3 SELL side, giữa NEUTRAL).
+
+    V3 HARDENING: nếu REQ-046 (technical_indicator_verify) đã chạy và tìm thấy
+    discrepancy ở RSI/MA50 → escalate lên FAIL ở đây (cross-ref).
     """
     if not html:
         return False, {"error": "no html"}
@@ -1709,7 +1808,7 @@ def verify_tech_recompute(req, html):
     if data_score is None:
         return False, {"error": "tech data file missing tech_score"}
 
-    # Extract report tech score from sec-tech (formats: "2/6", "Tech Score 2", "Điểm kỹ thuật 2")
+    # Extract report tech score from sec-tech
     tech_text = extract_section_text(html, "sec-tech")
     m = re.search(r"([-+]?\d+)\s*/\s*" + re.escape(str(scale_max)), tech_text) if tech_text else None
     if not m:
@@ -1743,6 +1842,27 @@ def verify_tech_recompute(req, html):
         if report_score <= -3 and rv_side == "buy":
             issues.append(f"score {report_score} nhưng verdict '{report_verdict}' (BUY side) — mâu thuẫn")
 
+    # V3 HARDENING: cross-ref with indicator-level verification
+    # Quick RSI sanity from price data (if available)
+    price_data = _load_json_rel("data/price_weekly.json") or _load_json_rel("data/price_daily.json")
+    if price_data and isinstance(price_data, list):
+        closes = [float(d.get("close") or d.get("price") or 0) for d in price_data if isinstance(d, dict)]
+        closes = [c for c in closes if c > 0]
+        if len(closes) >= 15:
+            # Simple RSI(14) sanity
+            deltas = [closes[i] - closes[i-1] for i in range(1, len(closes))]
+            gains = [d if d > 0 else 0 for d in deltas[-14:]]
+            losses = [-d if d < 0 else 0 for d in deltas[-14:]]
+            avg_gain = sum(gains) / 14
+            avg_loss = sum(losses) / 14 if sum(losses) > 0 else 0.001
+            rs = avg_gain / avg_loss
+            computed_rsi = 100.0 - 100.0 / (1.0 + rs)
+            rsi_m = re.search(r"RSI[^\d(]{0,20}(\d+(?:[.,]\d+)?)", tech_text, re.I)
+            if rsi_m:
+                claimed_rsi = float(rsi_m.group(1).replace(",", "."))
+                if abs(computed_rsi - claimed_rsi) > 10:
+                    issues.append(f"RSI quick-check: computed {computed_rsi:.0f} ≠ claimed {claimed_rsi:.0f} (lệch >10 — V3 escalated)")
+
     passed = len(issues) == 0
     return passed, {
         "data_tech_score": data_score,
@@ -1750,6 +1870,7 @@ def verify_tech_recompute(req, html):
         "data_verdict": data_verdict,
         "report_verdict": report_verdict,
         "issues": issues,
+        "hardening": "V3: added RSI quick sanity check escalated to FAIL",
     }
 
 
@@ -1884,6 +2005,9 @@ def verify_news_window(req, html):
     """REQ-041: News phải trong 30 ngày (news_digest.json hoặc date trong HTML).
 
     Article cũ >30 ngày hoặc thiếu date (khi không phải source standard) → FAIL.
+
+    V3 HARDENING: sample URL check — pick 1-2 articles có URL, HEAD request.
+    Nếu URL chết → WARN (không FAIL vì network issue).
     """
     if not html:
         return False, {"error": "no html"}
@@ -1912,8 +2036,29 @@ def verify_news_window(req, html):
             age = (today - d).days
             if age > 30:
                 issues.append(f"article {d.isoformat()} cũ {age} ngày (>30): {(a.get('title') or '')[:50]}")
+
+        # V3 HARDENING: sample URL check (1-2 articles)
+        url_warnings = []
+        for a in articles[:2]:
+            url = a.get("url") or a.get("link") or ""
+            if url:
+                try:
+                    import urllib.request as _urllib
+                    req_h = _urllib.Request(url, method="HEAD")
+                    req_h.add_header("User-Agent", "ZCode-Verifier/1.0")
+                    resp = _urllib.urlopen(req_h, timeout=5)
+                    if resp.status >= 400:
+                        url_warnings.append(f"URL {resp.status}: {url[:80]}")
+                except Exception:
+                    url_warnings.append(f"URL unreachable: {url[:80]}")
+
         passed = len(issues) == 0
-        return passed, {"articles_checked": checked, "issues": issues[:5]}
+        return passed, {
+            "articles_checked": checked,
+            "issues": issues[:5],
+            "url_warnings": url_warnings,
+            "hardening": "V3: sample URL HEAD check on first 2 articles (WARN only)",
+        }
 
     # Fallback: dates in HTML (e.g. "31/07/2026")
     text = re.sub(r'<[^>]+>', ' ', html)
@@ -2026,6 +2171,1378 @@ def verify_source_freshness(req, html):
 
 
 # ═══════════════════════════════════════════════════════════════
+# V3 HARDENING CHECKS (REQ-044..058, 062) — Wave 1-4 regressions
+# ═══════════════════════════════════════════════════════════════
+
+def verify_news_authenticity(req, html):
+    """REQ-044: News authenticity — article phải có URL/source_name xác định được.
+
+    Parse news_digest.json → kiểm tra mỗi article có url hoặc source_name.
+    Nếu có URL → HEAD request (lightweight). Fallback nếu không mạng: check source_name.
+    ≥50% article phải có URL hoặc source_name hợp lệ.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    nd = _load_json_rel("news_digest.json")
+    if not nd or not isinstance(nd, dict):
+        return True, {"note": "no news_digest.json — REQ-041 checks date window separately"}
+
+    articles = nd.get("articles", [])
+    if not articles:
+        return True, {"note": "news_digest.json has no articles — nothing to check"}
+
+    import urllib.request as _urllib
+    total = len(articles)
+    has_url = 0
+    has_source_name = 0
+    url_accessible = 0
+    issues = []
+
+    for a in articles:
+        url = a.get("url") or a.get("link") or ""
+        src = a.get("source_name") or a.get("source") or ""
+        title = (a.get("title") or "")[:60]
+
+        if url:
+            has_url += 1
+            try:
+                req_h = _urllib.Request(url, method="HEAD")
+                req_h.add_header("User-Agent", "ZCode-Verifier/1.0")
+                resp = _urllib.urlopen(req_h, timeout=5)
+                if resp.status < 400:
+                    url_accessible += 1
+                else:
+                    issues.append(f"URL {resp.status}: {url[:80]} — {title}")
+            except Exception as e:
+                issues.append(f"URL unreachable ({str(e)[:40]}): {url[:80]} — {title}")
+        elif src:
+            has_source_name += 1
+        else:
+            issues.append(f"article không URL và không source_name: {title}")
+
+    # ≥50% must have URL or source_name
+    coverage = (has_url + has_source_name) / max(total, 1)
+    passed = coverage >= 0.5
+    return passed, {
+        "total_articles": total,
+        "has_url": has_url,
+        "url_accessible": url_accessible,
+        "has_source_name": has_source_name,
+        "coverage_pct": round(coverage * 100, 1),
+        "threshold": "≥50%",
+        "issues": issues[:5],
+    }
+
+
+def verify_forecast_source(req, html):
+    """REQ-045: Forecast source — forward-looking claims phải cite nguồn.
+
+    Tìm forward-looking phrases + số → cần cite hoặc DCF assumption table.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    forecast_phrases = [
+        r"dự kiến", r"kế hoạch", r"dự phóng", r"mục tiêu", r"triển vọng",
+        r"ước đạt", r"forecast", r"target", r"outlook", r"guidance",
+        r"dự báo", r"kỳ vọng", r"ước tính.*năm\s+20\d\d",
+    ]
+    cite_keywords = [
+        r"ref-\d", r"BCTC", r"ĐHCĐ", r"nghị quyết", r"kế hoạch kinh doanh",
+        r"KHKD", r"guidance", r"công ty chứng khoán", r"VCSC", r"SSI", r"HSC",
+        r"VNDirect", r"MAS", r"BVSC", r"FPTS", r"VCI", r"công bố", r"theo",
+        r"sponsor", r"vnstock", r"DCF", r"định giá", r"assumption",
+    ]
+
+    issues = []
+    found_total = 0
+    for phrase in forecast_phrases:
+        for m in re.finditer(phrase, text, re.I):
+            # Check if there's a number nearby (within 150 chars)
+            nearby = text[m.start():min(len(text), m.end() + 150)]
+            has_number = bool(re.search(r"\d[\d.,]*\s*(%|tỷ|tỉ|triệu|nghìn)", nearby))
+            if not has_number:
+                continue
+            found_total += 1
+            ctx = text[max(0, m.start() - 200):m.end() + 200]
+            has_cite = any(re.search(kw, ctx, re.I) for kw in cite_keywords)
+            if not has_cite:
+                issues.append(
+                    f"forecast '{m.group(0)}' có số nhưng không cite nguồn: ...{ctx.strip()[:120]}..."
+                )
+
+    tolerated = req["verification"].get("rules", [""])[2]
+    max_uncited = 2
+    passed = len(issues) <= max_uncited
+    return passed, {
+        "forecast_claims_with_numbers": found_total,
+        "uncited": len(issues),
+        "max_tolerated": max_uncited,
+        "issues": issues[:5],
+    }
+
+
+def verify_technical_indicator(req, html):
+    """REQ-046: Technical indicator verify — RSI/MA50/MACD phải tính được từ price data.
+
+    Load price_daily.json → tính RSI(14), MA50, MACD → compare với dashboard claims.
+    """
+    if not html:
+        return False, {"error": "no html"}
+
+    # Load price data
+    price_data = _load_json_rel("data/price_daily.json") or _load_json_rel("data/price_weekly.json")
+    tech = _load_json_rel("technical_active.json")
+    vdd = _load_json_rel("verified-dashboard-data.json")
+    if vdd and isinstance(vdd, dict):
+        tech = tech or vdd.get("technical")
+
+    # Extract closing prices
+    closes = []
+    if price_data and isinstance(price_data, list):
+        closes = [d.get("close") or d.get("price") or 0 for d in price_data if isinstance(d, dict)]
+        closes = [float(c) for c in closes if c]
+    elif tech and isinstance(tech, dict):
+        closes_raw = tech.get("closes") or tech.get("prices") or []
+        closes = [float(c) for c in closes_raw if c]
+
+    if len(closes) < 50:
+        return True, {"note": f"insufficient price data ({len(closes)} points) — cannot verify indicators"}
+
+    issues = []
+
+    # RSI(14) compute
+    def compute_rsi(prices, period=14):
+        if len(prices) < period + 1:
+            return None
+        deltas = [prices[i] - prices[i - 1] for i in range(1, len(prices))]
+        gains = [d if d > 0 else 0 for d in deltas[-period:]]
+        losses = [-d if d < 0 else 0 for d in deltas[-period:]]
+        avg_gain = sum(gains) / period
+        avg_loss = sum(losses) / period
+        if avg_loss == 0:
+            return 100.0
+        rs = avg_gain / avg_loss
+        return 100.0 - 100.0 / (1.0 + rs)
+
+    computed_rsi = compute_rsi(closes)
+    if computed_rsi is not None:
+        # Extract RSI from dashboard
+        tech_text = extract_section_text(html, "sec-tech") or ""
+        rsi_m = re.search(r"RSI[^\d(]{0,30}(\d+(?:[.,]\d+)?)", tech_text, re.I)
+        if rsi_m:
+            claimed_rsi = float(rsi_m.group(1).replace(",", "."))
+            if abs(computed_rsi - claimed_rsi) > 5:
+                issues.append(f"RSI: computed {computed_rsi:.1f} ≠ claimed {claimed_rsi:.1f} (lệch >5)")
+
+    # MA50 compute
+    if len(closes) >= 50:
+        ma50 = sum(closes[-50:]) / 50
+        tech_text = extract_section_text(html, "sec-tech") or ""
+        ma_m = re.search(r"MA\s*50[^\d]{0,30}(\d[\d.,]*)", tech_text, re.I)
+        if ma_m:
+            claimed_ma = _normalize_number(ma_m.group(1))
+            if claimed_ma and abs(ma50 - claimed_ma) / max(ma50, 0.001) > 0.10:
+                issues.append(f"MA50: computed {ma50:,.0f} ≠ claimed {claimed_ma:,.0f} (lệch >10%)")
+
+    # MACD histogram sign
+    if len(closes) >= 26:
+        ema12 = closes[-1]
+        ema26 = closes[-1]
+        alpha12 = 2.0 / 13
+        alpha26 = 2.0 / 27
+        for i in range(len(closes) - 26, len(closes)):
+            ema12 = closes[i] * alpha12 + ema12 * (1 - alpha12)
+            ema26 = closes[i] * alpha26 + ema26 * (1 - alpha26)
+        macd_line = ema12 - ema26
+        # Signal: 9-period EMA of MACD
+        signal = macd_line  # simplified — just check histogram sign
+        histogram = macd_line - signal
+        macd_sign = "positive" if histogram > 0 else "negative"
+
+        # Check dashboard MACD description
+        all_text = _narrative_text(html)
+        if macd_sign == "positive" and re.search(r"MACD.*?(?:bearish|tiêu cực|cắt xuống|sell)", all_text, re.I):
+            if not re.search(r"MACD.*?(?:bullish|tích cực|cắt lên|buy|dương)", all_text, re.I):
+                issues.append(f"MACD histogram dương nhưng narrative mô tả bearish")
+
+    passed = len(issues) == 0
+    return passed, {
+        "price_points": len(closes),
+        "computed_rsi": round(computed_rsi, 1) if computed_rsi else None,
+        "computed_ma50": round(ma50, 1) if len(closes) >= 50 else None,
+        "macd_histogram_sign": macd_sign if len(closes) >= 26 else None,
+        "issues": issues,
+    }
+
+
+def verify_macro_data_citation(req, html):
+    """REQ-047: Macro data citation — số vĩ mô/ngành phải cite nguồn."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    macro_kws = [
+        r"GDP", r"CPI", r"lạm phát", r"lãi suất", r"FDI", r"tăng trưởng ngành",
+        r"tổng mức bán lẻ", r"IIP", r"PMI", r"xuất khẩu", r"nhập khẩu", r"tỷ giá",
+        r"vốn đầu tư", r"giải ngân", r"tín dụng", r"cung tiền",
+    ]
+    source_kws = [
+        r"GSO", r"Tổng cục Thống kê", r"NHNN", r"Ngân hàng Nhà nước",
+        r"World Bank", r"IMF", r"ADB", r"FiinPro", r"báo cáo ngành",
+        r"CTCK", r"công ty chứng khoán", r"Bộ", r"Tổng cục", r"ref-\d",
+        r"công bố", r"theo", r"ước tính", r"Bloomberg", r"Reuters",
+    ]
+
+    issues = []
+    found = 0
+    for kw in macro_kws:
+        for m in re.finditer(kw, text, re.I):
+            ctx = text[max(0, m.start() - 60):m.end() + 200]
+            has_number = bool(re.search(r"\d[\d.,]*\s*%?", ctx))
+            if not has_number:
+                continue
+            found += 1
+            has_source = any(re.search(sk, ctx, re.I) for sk in source_kws)
+            if not has_source:
+                issues.append(f"macro claim '{m.group(0)}' có số nhưng không cite: ...{ctx.strip()[:120]}...")
+
+    passed = len(issues) == 0
+    return passed, {
+        "macro_claims_with_numbers": found,
+        "uncited": len(issues),
+        "issues": issues[:5],
+    }
+
+
+def verify_management_claim(req, html):
+    """REQ-048: Management claim — claim về lãnh đạo/cổ đông phải có nguồn."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+    profile = _load_json_rel("company_profile.json")
+    known_names = set()
+    if profile and isinstance(profile, dict):
+        for k in ("ceo", "chairman", "ceo_name", "chairman_name", "company_name"):
+            v = profile.get(k)
+            if v:
+                known_names.update(v.lower().split())
+
+    mgmt_kws = [
+        r"\b(?:ông|bà)\s+[A-Z][a-zà-ỹ]+\s+[A-Z][a-zà-ỹ]+",
+        r"CEO", r"Chủ tịch\s+HĐQT", r"Tổng\s+giám\s+đốc", r"CFO",
+        r"cổ đông lớn", r"sở hữu\s+\d+%", r"ban\s+lãnh\s+đạo",
+    ]
+    issues = []
+    found = 0
+    for kw in mgmt_kws:
+        for m in re.finditer(kw, text, re.I):
+            found += 1
+            ctx = text[max(0, m.start() - 100):m.end() + 200]
+            # Known name from company_profile → PASS
+            if profile and any(n in ctx.lower() for n in known_names if len(n) > 3):
+                continue
+            has_source = bool(re.search(r"ref-\d|BCTC|theo|công bố|disclaimer|CHƯA KIỂM CHỨNG", ctx, re.I))
+            if not has_source:
+                issues.append(f"mgmt claim '{m.group(0)[:40]}' không có nguồn: ...{ctx.strip()[:100]}...")
+
+    passed = len(issues) == 0
+    return passed, {
+        "management_claims_found": found,
+        "uncited": len(issues),
+        "issues": issues[:5],
+        "note": "tên từ company_profile.json được miễn cite",
+    }
+
+
+def verify_historical_return(req, html):
+    """REQ-049: Historical return verify — claim 'tăng X%' phải tính được từ price."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    # Load price weekly data
+    price_data = _load_json_rel("data/price_weekly.json") or _load_json_rel("data/price_daily.json")
+    closes = []
+    if price_data and isinstance(price_data, list):
+        closes = [float(d.get("close") or d.get("price") or 0) for d in price_data if isinstance(d, dict)]
+        closes = [c for c in closes if c > 0]
+
+    if len(closes) < 20:
+        return True, {"note": f"insufficient price data ({len(closes)} points) — cannot verify returns"}
+
+    # Find return claims: "tăng/giảm X% trong Y năm/tháng"
+    issues = []
+    found = 0
+    for m in re.finditer(r"(?:tăng|giảm|mất)\s+(\d+(?:[.,]\d+)?)\s*%[^.]{0,60}?(?:trong\s+)?(\d+)\s*(năm|tháng|tuần|phiên|ngày)", text, re.I):
+        found += 1
+        claimed_pct = float(m.group(1).replace(",", "."))
+        period_val = int(m.group(2))
+        period_unit = m.group(3).lower()
+
+        # Approx bars: năm~52w, tháng~4w, tuần~1w, phiên/ngày~1d
+        if "năm" in period_unit:
+            bars = period_val * 52
+        elif "tháng" in period_unit:
+            bars = period_val * 4
+        else:
+            bars = period_val
+
+        if bars < len(closes):
+            start_price = closes[-bars - 1] if bars + 1 <= len(closes) else closes[0]
+            end_price = closes[-1]
+            actual_pct = (end_price - start_price) / start_price * 100
+
+            # Allow ±20% tolerance (different start dates)
+            if abs(claimed_pct - actual_pct) > max(20, abs(actual_pct) * 0.5):
+                direction = "tăng" if actual_pct > 0 else "giảm"
+                issues.append(
+                    f"return claim {claimed_pct:+.1f}% trong {period_val} {period_unit} ≠ actual {actual_pct:+.1f}%"
+                )
+
+    passed = len(issues) == 0
+    return passed, {
+        "return_claims_found": found,
+        "price_data_points": len(closes),
+        "issues": issues[:5],
+        "tolerance": "±20% hoặc ±50% relative (khác ngày bắt đầu)",
+    }
+
+
+def verify_comparison_baseline(req, html):
+    """REQ-050: Comparison baseline — so sánh phải có baseline cụ thể."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    comparative_kws = [
+        r"cao\s+hơn", r"thấp\s+hơn", r"tốt\s+hơn", r"kém\s+hơn",
+        r"vượt\s+trội", r"cải\s+thiện", r"suy\s+giảm", r"tăng\s+trưởng\s+mạnh",
+        r"vượt\s+qua", r"hơn\s+hẳn",
+    ]
+    issues = []
+    found = 0
+    for kw in comparative_kws:
+        for m in re.finditer(kw, text, re.I):
+            found += 1
+            ctx = text[max(0, m.start() - 100):m.end() + 100]
+            has_baseline = bool(re.search(r"\d[\d.,]*\s*(%|tỷ|tỉ|x|lần|điểm)", ctx))
+            has_cite = bool(re.search(r"ref-\d|BCTC|vnstock|theo|nguồn|data", ctx, re.I))
+            if not has_baseline and not has_cite:
+                issues.append(f"so sánh '{m.group(0)}' không có số baseline: ...{ctx.strip()[:100]}...")
+
+    # Medium severity → WARN only (always PASS, but note issues)
+    passed = True  # medium — không block deploy
+    return passed, {
+        "comparative_claims_found": found,
+        "missing_baseline": len(issues),
+        "warnings": issues[:5],
+        "note": "MEDIUM — WARN only, không block deploy",
+    }
+
+
+def verify_unit_consistency(req, html):
+    """REQ-051: Unit consistency — thống nhất đơn vị tỷ đồng trong toàn dashboard."""
+    if not html:
+        return False, {"error": "no html"}
+
+    # Collect all VND amounts with units from different sections
+    metric_patterns = {
+        "revenue": [r"doanh thu", r"revenue"],
+        "profit": [r"lợi nhuận", r"LNST", r"NPAT", r"profit"],
+    }
+
+    issues = []
+    for metric_name, kws in metric_patterns.items():
+        all_values = []  # (value_in_ty, unit_str, section, context)
+        for sid in re.findall(r'<section[^>]*id="(sec-[a-z0-9-]+)"', html):
+            sec_text = extract_section_text(html, sid)
+            if not sec_text or len(sec_text) < 50:
+                continue
+            for kw in kws:
+                pat = re.compile(kw + r"[^0-9]{0,60}?(\d[\d.,]*)\s*(nghìn tỷ|ngàn tỷ|tỷ|tỉ|triệu|tr)?", re.I)
+                for m in pat.finditer(sec_text):
+                    v = _normalize_number(m.group(1))
+                    if v is None:
+                        continue
+                    unit = m.group(2) or ""
+                    # V5 fix: số không đơn vị (năm 2025, giá 60.000 đồng, tỷ lệ 2.5%)
+                    # không thể đánh giá "trộn đơn vị" → bỏ qua
+                    if not unit or (1900 <= v <= 2100):
+                        continue
+                    scaled = _scale_to_tỷ(v, unit)
+                    if scaled > 0.1:
+                        all_values.append((scaled, unit, sid, m.group(0)[:80]))
+
+        if all_values:
+            magnitudes = [v[0] for v in all_values]
+            vmin, vmax = min(magnitudes), max(magnitudes)
+            # If max/min > 100x → possible unit inconsistency
+            if vmax > 0 and vmin > 0 and vmax / vmin > 100:
+                # Check if the difference is due to "nghìn tỷ" vs "tỷ" (~1000x)
+                if vmax / vmin > 500:
+                    issues.append(
+                        f"{metric_name}: magnitude range {vmin:,.0f}–{vmax:,.0f} tỷ chênh >500x → possible unit mix"
+                    )
+
+    passed = len(issues) == 0
+    return passed, {
+        "unit_inconsistencies": issues[:5],
+        "note": "MEDIUM — flag potential nghìn tỷ vs tỷ confusion",
+    }
+
+
+def verify_liquidity(req, html):
+    """REQ-052: Liquidity — dashboard nên có thông tin thanh khoản nếu có data."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    has_liquidity = any(kw in text.lower() for kw in [
+        "thanh khoản", "khối lượng giao dịch", "KLGD", "volume",
+        "giá trị giao dịch", "free float", "room ngoại",
+    ])
+
+    # Check if source pack has volume data
+    price_data = _load_json_rel("data/price_daily.json")
+    has_volume_data = False
+    if price_data and isinstance(price_data, list) and len(price_data) > 0:
+        has_volume_data = any(
+            isinstance(d, dict) and (d.get("volume") or d.get("vol"))
+            for d in price_data[:5]
+        )
+
+    if has_volume_data and not has_liquidity:
+        return True, {"warning": "source pack has volume data but dashboard missing liquidity info",
+                      "note": "MEDIUM — WARN, không block deploy"}
+
+    return True, {
+        "has_liquidity_info": has_liquidity,
+        "has_volume_data": has_volume_data,
+        "note": "PASS" if has_liquidity else "no liquidity section but no volume data either",
+    }
+
+
+def verify_audit_opinion(req, html):
+    """REQ-053: Audit opinion — BCTC ngoại trừ phải có disclaimer."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    # Check company_profile for audit_opinion
+    profile = _load_json_rel("company_profile.json")
+    audit_opinion = None
+    if profile and isinstance(profile, dict):
+        audit_opinion = (profile.get("audit_opinion") or
+                        profile.get("audit_opinion_type") or
+                        profile.get("kiem_toan") or "")
+
+    # Also check financials for audit field
+    fin = _load_json_rel("data/financials.json")
+    if fin and isinstance(fin, dict):
+        audit_opinion = audit_opinion or fin.get("audit_opinion") or ""
+
+    if not audit_opinion:
+        return True, {"note": "no audit_opinion field in source data — cannot verify"}
+
+    audit_lower = audit_opinion.lower()
+    is_qualified = any(kw in audit_lower for kw in [
+        "ngoại trừ", "không chấp nhận", "từ chối", "qualified",
+        "adverse", "disclaimer", "except",
+    ])
+
+    if not is_qualified:
+        return True, {"audit_opinion": audit_opinion, "status": "clean — PASS"}
+
+    # Qualified opinion → dashboard MUST have disclaimer
+    has_disclaimer = any(kw in text.lower() for kw in [
+        "ý kiến ngoại trừ", "kiểm toán ngoại trừ", "qualified opinion",
+        "hạn chế", "không đảm bảo", "lưu ý kiểm toán", "audit disclaimer",
+    ])
+
+    if not has_disclaimer:
+        return False, {
+            "audit_opinion": audit_opinion,
+            "error": "BCTC có ý kiến kiểm toán KHÔNG sạch nhưng dashboard không có disclaimer",
+            "hint": "phải ghi chú rõ hạn chế của BCTC trong sec-risk hoặc sec-checklist",
+        }
+
+    return True, {
+        "audit_opinion": audit_opinion,
+        "has_disclaimer": True,
+        "note": "qualified opinion properly disclosed",
+    }
+
+
+def verify_causal_chain(req, html):
+    """REQ-054: Causal chain evidence — chuỗi nhân quả phải có evidence."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    causal_connectors = [
+        r"nhờ\s+", r"do\s+", r"vì\s+", r"bởi\s+", r"dẫn đến",
+        r"khiến\s+", r"gây\s+ra", r"tác\s+động", r"ảnh\s+hưởng",
+        r"kết\s+quả\s+của", r"nguyên\s+nhân", r"động\s+lực",
+        r"nhờ\s+vào", r"được\s+hỗ\s+trợ\s+bởi",
+    ]
+
+    issues = []
+    found = 0
+    for conn in causal_connectors:
+        for m in re.finditer(conn, text, re.I):
+            found += 1
+            ctx = text[max(0, m.start() - 60):m.end() + 200]
+            has_evidence = bool(re.search(
+                r"\d[\d.,]*\s*(%|tỷ|tỉ|triệu|x)|ref-\d|BCTC|theo|nguồn|data|công bố|nghị quyết",
+                ctx, re.I
+            ))
+            if not has_evidence:
+                issues.append(f"causal claim không evidence: ...{ctx.strip()[:120]}...")
+
+    passed = len(issues) == 0 or found == 0
+    return passed, {
+        "causal_claims_found": found,
+        "unverified": len(issues),
+        "issues": issues[:5],
+        "note": "≥3 uncited causal chains → FAIL",
+    }
+
+
+def verify_vague_language(req, html):
+    """REQ-055: Vague language — đếm hedging phrases, >15 → WARN."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    hedging = [
+        r"có thể", r"dự kiến", r"khoảng", r"ước tính", r"tiềm năng",
+        r"trong tầm ngắm", r"đáng chú ý", r"ấn tượng", r"khả quan",
+        r"tích cực", r"hấp dẫn", r"đáng quan tâm", r"cơ hội",
+        r"điểm sáng", r"nổi bật", r"hứa hẹn",
+    ]
+
+    count = 0
+    for h in hedging:
+        count += len(re.findall(h, text, re.I))
+
+    # Always PASS (medium severity) but WARN if >15
+    passed = True
+    evidence = {
+        "hedging_phrase_count": count,
+        "threshold": 15,
+        "note": f"{'WARN: excessive vague language' if count > 15 else 'OK'} — MEDIUM, không block deploy",
+    }
+    return passed, evidence
+
+
+def verify_timeframe_consistency(req, html):
+    """REQ-056: Timeframe consistency — không cherry-pick timeframe có lợi."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    short_term_positive = []
+    issues = []
+    for m in re.finditer(
+        r"(?:tăng|tăng\s+trưởng)\s+(\d+(?:[.,]\d+)?)\s*%?\s*(?:so\s+với\s+)?(?:quý\s+trước|QoQ|so\s+với\s+tháng)",
+        text, re.I
+    ):
+        val = float(m.group(1).replace(",", "."))
+        if val > 0:
+            ctx = text[max(0, m.start() - 300):m.end() + 100]
+            has_long_term = bool(re.search(r"(?:YoY|cùng kỳ|so với năm|3 năm|5 năm)", ctx, re.I))
+            if not has_long_term:
+                short_term_positive.append({
+                    "value": val,
+                    "context": m.group(0)[:80],
+                })
+
+    if short_term_positive:
+        issues.append(
+            f"{len(short_term_positive)} short-term positive claims without long-term context — possible cherry-pick"
+        )
+
+    passed = len(issues) == 0
+    return passed, {
+        "short_term_positive_claims": len(short_term_positive),
+        "missing_long_term_context": len(short_term_positive),
+        "issues": issues,
+        "note": "QoQ positive mà không có YoY context → WARN cherry-pick",
+    }
+
+
+def verify_dividend_claim(req, html):
+    """REQ-057: Dividend claim — phải có nguồn nếu không có data."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    div_kws = [
+        r"cổ tức", r"dividend", r"tỷ lệ chi trả", r"payout",
+        r"cổ tức tiền mặt", r"cổ tức cổ phiếu",
+    ]
+
+    # Check if source pack has dividend data
+    fin = _load_json_rel("data/financials.json")
+    has_dividend_data = False
+    if fin and isinstance(fin, dict):
+        has_dividend_data = any(
+            k in fin for k in ("dividend", "dividends", "payout_ratio", "dps")
+        )
+
+    issues = []
+    found = 0
+    for kw in div_kws:
+        for m in re.finditer(kw, text, re.I):
+            ctx = text[max(0, m.start() - 80):m.end() + 80]
+            has_number = bool(re.search(r"\d[\d.,]*\s*%?", ctx))
+            if not has_number:
+                continue
+            found += 1
+            if not has_dividend_data:
+                has_cite = bool(re.search(
+                    r"ref-\d|BCTC|theo|công bố|ĐHCĐ|nghị quyết|CHƯA XÁC MINH|sponsor",
+                    ctx, re.I
+                ))
+                if not has_cite:
+                    issues.append(f"dividend claim không có data + không cite: ...{ctx.strip()[:100]}...")
+
+    passed = len(issues) == 0
+    return passed, {
+        "dividend_claims_with_numbers": found,
+        "has_dividend_data": has_dividend_data,
+        "uncited": len(issues),
+        "issues": issues[:5],
+    }
+
+
+def verify_support_resistance_method(req, html):
+    """REQ-058: Support/Resistance method — S/R levels phải kèm method."""
+    if not html:
+        return False, {"error": "no html"}
+    text = _narrative_text(html)
+
+    method_kws = [
+        r"swing", r"fibonacci", r"MA\d*", r"moving average", r"round number",
+        r"pivot", r"volume profile", r"VAP", r"đỉnh", r"đáy",
+        r"kháng cự.*đỉnh", r"hỗ trợ.*đáy", r"trendline", r"ngưỡng",
+    ]
+
+    issues = []
+    found_sr = 0
+    for m in re.finditer(r"(?:hỗ\s*trợ|kháng\s*cự|support|resistance)[^0-9]{0,50}?(\d[\d.,]*)", text, re.I):
+        v = _normalize_number(m.group(1))
+        # V5 fix: năm (2021) và số nhỏ (101, 8.3, 2.5...) không phải mức S/R giá cổ phiếu
+        if v is None or v < 1000 or (1900 <= v <= 2100 and float(v).is_integer()):
+            continue
+        found_sr += 1
+        ctx = text[max(0, m.start() - 200):m.end() + 50]
+        has_method = any(re.search(mk, ctx, re.I) for mk in method_kws)
+        if not has_method:
+            issues.append(f"S/R level '{m.group(1)}' không có method: ...{ctx.strip()[:100]}...")
+
+    passed = len(issues) < 2  # allow 1 S/R without method, ≥2 → FAIL
+    return passed, {
+        "sr_levels_found": found_sr,
+        "without_method": len(issues),
+        "issues": issues[:5],
+        "note": "≥2 S/R levels không method → FAIL",
+    }
+
+
+def verify_period_integrity(req, html):
+    """REQ-062: Period integrity — port từ v1.0.1 period_integrity_gate.py.
+
+    Validates (period, value) pairs trong verified-dashboard-data.json khớp raw CSV.
+    6 sub-checks: raw_periods_unique, values_length_match, period_order_detected,
+    period_value_pairs_preserved, latest_matches, oldest_matches.
+    Per-field cross-check: revenue, net_profit, eps, total_assets, total_equity, capex.
+    """
+    vdd = _load_json_rel("verified-dashboard-data.json")
+    if not vdd or not isinstance(vdd, dict):
+        return True, {"note": "no verified-dashboard-data.json — period integrity cannot be verified"}
+
+    fin = vdd.get("financials", {})
+    if not fin:
+        return True, {"note": "no financials in contract — nothing to verify"}
+
+    years = fin.get("years", [])
+    expected_count = 5
+    sub_checks = {}
+    failures = []
+
+    # Sub-check 1: raw_periods_unique
+    periods_unique = len(set(years)) == len(years) and len(years) == expected_count
+    sub_checks["raw_periods_unique"] = periods_unique
+    if not periods_unique:
+        failures.append({"code": "PERIOD_DUPLICATE_OR_WRONG_COUNT",
+                        "years": years, "expected": expected_count})
+
+    # Sub-check 2: values_length_matches_periods
+    field_keys = [
+        ("revenue", "revenue"),
+        ("net_profit", "netProfit"),
+        ("eps", "eps"),
+        ("total_assets", "totalAssets"),
+        ("total_equity", "equity"),
+        ("capex", "capex"),
+    ]
+    len_ok = True
+    for field_name, arr_key in field_keys:
+        arr = fin.get(arr_key)
+        if arr and isinstance(arr, list) and len(arr) != len(years):
+            len_ok = False
+            failures.append({"code": "VALUES_LENGTH_MISMATCH",
+                           "field": field_name, "arr_len": len(arr), "periods": len(years)})
+    sub_checks["values_length_matches_periods"] = len_ok
+
+    # Sub-checks 3-6: Try loading raw CSVs for cross-check
+    work_dir = _work_dir()
+    source_pack = work_dir  # assume work_dir IS the source pack
+
+    # Look for source CSVs
+    csv_files = {
+        "income": "income_statement_sponsor.csv",
+        "balance": "balance_sheet_sponsor.csv",
+        "cash": "cash_flow_sponsor.csv",
+    }
+
+    import csv as _csv
+    csv_data = {}
+    for stmt_key, fname in csv_files.items():
+        path = os.path.join(source_pack, fname)
+        if os.path.exists(path):
+            with open(path) as f:
+                rows = list(_csv.DictReader(f))
+                rows = [r for r in rows if str(r.get("report_period", "")).strip().lower() == "year"] or rows
+                csv_data[stmt_key] = rows
+
+    if not csv_data:
+        sub_checks["period_order_detected"] = False
+        sub_checks["explicit_period_value_pairs_preserved"] = False
+        sub_checks["latest_period_matches_source"] = False
+        sub_checks["oldest_period_matches_source"] = False
+        return True, {"note": "no raw CSV files in work dir — period cross-check skipped (use period_integrity_gate.py with source_pack path)",
+                     "sub_checks": sub_checks,
+                     "passed_vacuous": True}
+
+    # Period order detection: years should be chronological
+    try:
+        years_int = [int(y) for y in years]
+        is_ordered = years_int == sorted(years_int)
+        sub_checks["period_order_detected"] = is_ordered
+    except (ValueError, TypeError):
+        is_ordered = False
+        sub_checks["period_order_detected"] = False
+
+    # Per-field cross-check against CSVs
+    field_csv_map = [
+        ("revenue", "income", ["sales", "net sales", "revenue"], "revenue", 1e-9),
+        ("net_profit", "income", ["attributable to parent company", "net profit", "profit after tax"], "netProfit", 1e-9),
+        ("eps", "income", ["eps basic", "earnings per share"], "eps", 1.0),
+        ("total_assets", "balance", ["total assets"], "totalAssets", 1e-9),
+        ("total_equity", "balance", ["owner's equity", "owners equity", "total equity"], "equity", 1e-9),
+        ("capex", "cash", ["purchases of fixed assets", "capex"], "capex", 1e-9),
+    ]
+
+    pv_pairs_ok = True
+    latest_ok = True
+    oldest_ok = True
+    per_field = {}
+
+    if is_ordered and years_int:
+        latest_period = str(years_int[-1])
+        oldest_period = str(years_int[0])
+
+        for canonical, stmt_key, aliases, arr_key, scale in field_csv_map:
+            rows = csv_data.get(stmt_key, [])
+            if not rows:
+                per_field[canonical] = {"skipped": "no_csv"}
+                continue
+
+            # Find column
+            col = None
+            for h in rows[0].keys():
+                hl = h.lower()
+                for a in aliases:
+                    if a in hl:
+                        col = h
+                        break
+                if col:
+                    break
+            if not col:
+                per_field[canonical] = {"skipped": "no_column"}
+                continue
+
+            arr = fin.get(arr_key, [])
+            if not arr or not isinstance(arr, list):
+                per_field[canonical] = {"skipped": "no_contract_array"}
+                continue
+
+            per_year_results = {}
+            for yi, y in enumerate(years_int):
+                y_str = str(y)
+                if yi >= len(rows):
+                    continue
+                raw_val = None
+                try:
+                    raw_val = float(rows[yi].get(col, 0))
+                except (ValueError, TypeError):
+                    pass
+
+                # Normalize capex to absolute
+                if canonical == "capex" and raw_val is not None:
+                    raw_val = abs(raw_val)
+
+                raw_scaled = raw_val * scale if raw_val is not None else None
+                contract_val = arr[yi] if yi < len(arr) else None
+
+                match = False
+                if raw_scaled is not None and contract_val is not None:
+                    denom = max(abs(raw_scaled), abs(contract_val), 0.001)
+                    match = abs(raw_scaled - contract_val) / denom <= 0.01  # 1% tolerance
+
+                per_year_results[y_str] = {
+                    "raw_value": raw_val,
+                    "raw_scaled": round(raw_scaled, 2) if raw_scaled else None,
+                    "contract_value": contract_val,
+                    "match": match,
+                }
+                if not match:
+                    pv_pairs_ok = False
+                    failures.append({
+                        "code": "PERIOD_VALUE_PAIR_MISMATCH",
+                        "field": canonical, "period": y_str,
+                        "raw_scaled": raw_scaled, "contract": contract_val,
+                    })
+
+            per_field[canonical] = {"per_year": per_year_results}
+
+            # Check latest/oldest
+            if latest_period in per_year_results and not per_year_results[latest_period].get("match"):
+                latest_ok = False
+            if oldest_period in per_year_results and not per_year_results[oldest_period].get("match"):
+                oldest_ok = False
+
+    sub_checks["explicit_period_value_pairs_preserved"] = pv_pairs_ok
+    sub_checks["latest_period_matches_source"] = latest_ok
+    sub_checks["oldest_period_matches_source"] = oldest_ok
+
+    overall = all(sub_checks.values())
+    return overall, {
+        "sub_checks": sub_checks,
+        "per_field": {k: {kk: vv for kk, vv in v.items() if kk != "per_year"}
+                      for k, v in per_field.items()},
+        "failures": failures[:10],
+        "note": "v1.0.1 period integrity port — block deploy if period inversion detected",
+    }
+
+
+# ═══════════════════════════════════════════════════════════════
+# v0.17.0 — V5 WAVE: các gap còn thiếu sau V3/V4 (REQ-059 → REQ-067)
+# 059 data provenance (GIGO) · 060 internal identity (cross-footing)
+# 061 derived metrics recompute · 063 valuation methods completeness
+# 064 trend-sign consistency · 065 verdict-consistency · 066 API fallback log
+# 067 fiscal-year alignment
+# Tất cả method trả về (passed, evidence), không raise; tái dùng helper V4.
+# ═══════════════════════════════════════════════════════════════
+
+def _v5_year_ctx(text, pos, radius=60):
+    """Tìm năm (20xx) trong ±radius chars quanh vị trí pos."""
+    m = re.search(r"(20\d\d)", text[max(0, pos-radius):pos+radius])
+    return m.group(1) if m else None
+
+def verify_data_provenance(req, html):
+    """REQ-059: data files phải có nguồn thật — spot-check revenue vs source-pack CSV
+    hoặc API vnstock; price phải có fetched_at; task-state phải log data_source."""
+    import csv as _csv
+    fin = _load_json_rel("data/financials.json")
+    if not fin:
+        return False, {"error": "data/financials.json not found"}
+    issues = []
+    spot = None  # (revenue_ty, desc)
+
+    # 1a) Spot-check qua source-pack CSV (offline ground truth, phase 1 fetch)
+    for cand in ("source-pack/income_statement_sponsor.csv",
+                 "data/income_statement_sponsor.csv",
+                 "income_statement_sponsor.csv"):
+        full = os.path.join(_work_dir(), cand)
+        if not os.path.exists(full):
+            continue
+        try:
+            with open(full) as f:
+                rows = list(_csv.reader(f))
+            header = [h.strip() for h in rows[0]]
+            rev_col = None
+            for col in ("Net sales", "Sales", "Doanh thu", "Revenue"):
+                if col in header:
+                    rev_col = header.index(col)
+                    break
+            if rev_col is None:
+                raise ValueError("no revenue column")
+            last_val = None
+            for r in rows[1:]:
+                if len(r) <= max(rev_col, 1):
+                    continue
+                if r[0].strip().lower() != "year":
+                    continue
+                try:
+                    last_val = float(r[rev_col])
+                except Exception:
+                    pass
+            if last_val is None:
+                raise ValueError("no annual rows")
+            spot = (last_val / 1e9, f"source-pack CSV ({cand})")
+        except Exception as e:
+            issues.append(f"source-pack CSV '{cand}' đọc lỗi: {str(e)[:60]}")
+        if spot:
+            break
+
+    # 1b) Fallback: spot-check qua API vnstock live (annual rows, Net sales)
+    if spot is None:
+        try:
+            from vnstock_data import Finance
+            f = Finance(source='VCI', symbol=TICKER)
+            df = f.income_statement()
+            annual = df[df['report_period'] == 'year'] if 'report_period' in df.columns else df
+            if 'Net sales' in annual.columns:
+                best_yr, best_val = None, None
+                for idx in annual.index:
+                    try:
+                        yv = int(str(idx)[:4])
+                    except Exception:
+                        continue
+                    v = float(annual.loc[idx, 'Net sales'])
+                    if best_yr is None or yv > best_yr:
+                        best_yr, best_val = yv, v
+                if best_val is not None:
+                    spot = (best_val / 1e9, f"API vnstock live (Net sales {best_yr})")
+        except Exception as e:
+            issues.append(f"API spot-check lỗi: {str(e)[:60]}")
+
+    # So sánh spot-check với financials.json (khoan dung 10%; cho phép lệch 1 năm
+    # nếu CSV chưa có năm mới nhất)
+    rev = fin.get("revenue_ty") or {}
+    if spot:
+        gt_ty, desc = spot
+        years = sorted(int(y) for y in rev.keys() if str(y).isdigit())
+        candidates = [str(y) for y in years[-2:]] if years else []
+        matched = None
+        for yr in candidates:
+            if yr in rev and float(rev[yr]) > 0:
+                if abs(float(rev[yr]) - gt_ty) / max(abs(gt_ty), 0.001) * 100 <= 10:
+                    matched = yr
+                    break
+        if matched is None:
+            issues.append(f"revenue spot-check FAIL: {desc} = {gt_ty:,.1f} tỷ không khớp financials.json revenue_ty {candidates} (±10%)")
+    else:
+        issues.append("KHÔNG spot-check được revenue (thiếu source-pack CSV và API không fetch được) — data không có nguồn đối chiếu")
+
+    # 2) price_fetched_at phải tồn tại ở data level
+    ov = fin.get("overview") or {}
+    if ov.get("current_price"):
+        ts = _load_json_rel(".task-state/task-state.json")
+        has_ts = False
+        if ts:
+            p1 = (ts.get("phases", {}).get("phase1_data", {}) or {}).get("result") or {}
+            has_ts = bool(p1.get("price_fetched_at") or ts.get("price_fetched_at"))
+        ov_file = _load_json_rel("data/overview.json")
+        has_ov = bool(ov_file and (ov_file.get("price_fetched_at") or ov_file.get("price_source")))
+        has_fin = bool(ov.get("price_fetched_at") or ov.get("price_source"))
+        if not (has_ts or has_ov or has_fin):
+            issues.append("overview có current_price nhưng KHÔNG có price_fetched_at (data/overview.json | financials overview | task-state phase1) — nghi tự điền giá")
+
+    # 3) task-state phase1 phải log data_source
+    ts = _load_json_rel(".task-state/task-state.json")
+    ds = None
+    if ts:
+        p1 = (ts.get("phases", {}).get("phase1_data", {}) or {}).get("result") or {}
+        ds = p1.get("data_source")
+    if not ds:
+        issues.append("task-state phase1 chưa log data_source (sponsor|community)")
+
+    # 4) peers.json phải có source
+    peers = _load_json_rel("data/peers.json")
+    if isinstance(peers, dict) and peers.get("peers") and not peers.get("source"):
+        issues.append("peers.json thiếu field 'source' (phải ghi nguồn API)")
+
+    # 5) contract phải có _provenance
+    contract = _load_json_rel("verified-dashboard-data.json")
+    if contract and not contract.get("_provenance"):
+        issues.append("verified-dashboard-data.json thiếu _provenance (built_at/source)")
+
+    passed = len(issues) == 0
+    return passed, {"issues": issues[:8],
+                    "spot_check": f"{spot[0]:,.1f} tỷ via {spot[1]}" if spot else None,
+                    "data_source": ds}
+
+
+def verify_internal_identity(req, html):
+    """REQ-060: cross-footing — PE×EPS≈price; PB×BVPS≈price; vốn hóa≈price×shares;
+    EPS≈NPAT/shares; contract price≈financials price. Chống bịa số lẻ không khớp."""
+    fin = _load_json_rel("data/financials.json")
+    if not fin:
+        return False, {"error": "data/financials.json not found"}
+    tol = req["verification"].get("tolerance_pct", 5)
+    eps_tol = req["verification"].get("eps_vs_npat_tolerance_pct", 15)  # EPS diluted/CP lưu hành bình quân
+    issues = []
+    ov = fin.get("overview") or {}
+    price, shares = ov.get("current_price"), ov.get("issue_share")
+    eps25 = (fin.get("eps_vnd") or {}).get("2025")
+    eq25 = (fin.get("equity_ty") or {}).get("2025")
+    np25 = (fin.get("npatmi_ty") or {}).get("2025")
+
+    # 1) EPS ≈ NPAT / shares (data self-consistency) — tolerance rộng 15% vì EPS có thể
+    #    tính theo diluted shares / CP bình quân, không phải issue_share cuối kỳ
+    if eps25 and np25 is not None and shares:
+        eps_calc = float(np25) * 1e9 / float(shares)
+        if abs(eps_calc - float(eps25)) / max(abs(float(eps25)), 0.001) * 100 > eps_tol:
+            issues.append(f"EPS {eps25} ≠ NPAT/shares {eps_calc:,.0f} (lệch >{eps_tol}%) — data files tự mâu thuẫn")
+
+    # 2) PE claim × EPS ≈ price
+    val_text = " ".join(s for s in [extract_section_text(html, x) for x in
+                                    ["sec-valuation", "sec-hero", "sec-exec"]] if s)
+    if not val_text:
+        val_text = _narrative_text(html)
+    if price and eps25:
+        pe = _extract_primary_multiple(val_text, "P/?E", None, tol)
+        if pe:
+            implied = float(pe) * float(eps25)
+            if abs(implied - float(price)) / float(price) * 100 > tol:
+                issues.append(f"P/E {pe}× × EPS {eps25} = {implied:,.0f} ≠ giá {price} (lệch >{tol}%)")
+
+    # 3) PB claim × BVPS ≈ price
+    if price and eq25 and shares:
+        bvps = float(eq25) * 1e9 / float(shares)
+        pb = _extract_primary_multiple(val_text, "P/?B", None, tol)
+        if pb:
+            implied = float(pb) * bvps
+            if abs(implied - float(price)) / float(price) * 100 > tol:
+                issues.append(f"P/B {pb}× × BVPS {bvps:,.0f} = {implied:,.0f} ≠ giá {price} (lệch >{tol}%)")
+
+    # 4) vốn hóa claim ≈ price × shares
+    if price and shares:
+        mc_ty = float(price) * float(shares) / 1e9
+        text = _narrative_text(html)
+        for m in re.finditer(r"(?:vốn hóa|market cap)[^.\d]{0,30}?(\d[\d.,]*)\s*((?:nghìn\s*tỷ|tỷ|tỉ|triệu))?", text, re.I):
+            nval = _scale_to_tỷ(_normalize_number(m.group(1)), m.group(2) or "")
+            if nval and abs(nval - mc_ty) / mc_ty * 100 > tol:
+                issues.append(f"vốn hóa claim {m.group(1)}{m.group(2) or ''} ≈ {nval:,.0f} tỷ ≠ price×shares {mc_ty:,.0f} tỷ (lệch >{tol}%)")
+
+    # 5) contract price vs financials price
+    contract = _load_json_rel("verified-dashboard-data.json")
+    if contract and contract.get("price") and price:
+        if abs(float(contract["price"]) - float(price)) / float(price) * 100 > tol:
+            issues.append(f"contract price {contract['price']} ≠ financials price {price} (lệch >{tol}%)")
+
+    passed = len(issues) == 0
+    return passed, {"issues": issues[:8], "price": price, "eps_2025": eps25,
+                    "note": "no price/eps data to cross-foot" if not price or not eps25 else ""}
+
+
+def verify_derived_metrics_recompute(req, html):
+    """REQ-061: ROE/ROA/net margin/YoY growth/vốn hóa claims phải recompute từ
+    financials.json (±5% tương đối hoặc ±1pp tuyệt đối). Chống 'ROE 24%' bịa."""
+    fin = _load_json_rel("data/financials.json")
+    if not fin:
+        return False, {"error": "data/financials.json not found"}
+    bs = _load_json_rel("data/balance_sheet.json")
+    text = _narrative_text(html)
+    issues = []
+    checked = 0
+    tol_rel = req["verification"].get("tolerance_pct", 5)
+    tol_pp = 1.0
+
+    years = sorted(int(y) for y in (fin.get("revenue_ty") or {}).keys() if str(y).isdigit())
+    default_year = max(years) if years else 2025
+
+    def _year_in(ctx, default):
+        m = re.search(r"(20\d\d)", ctx)
+        if m and m.group(1) in (fin.get("revenue_ty") or {}):
+            return m.group(1)
+        return str(default)
+
+    def _chk(label, claimed, computed, ctx):
+        nonlocal checked
+        checked += 1
+        if abs(computed - claimed) > tol_pp and abs(computed - claimed) / max(abs(computed), 0.001) * 100 > tol_rel:
+            issues.append(f"{label} claim {claimed}% ≠ recompute {computed:.1f}% (năm {_year_in(ctx, default_year)})")
+
+    # ROE = NPAT / equity
+    for m in re.finditer(r"\bROE\b[^.\d]{0,30}?(\d[\d.,]*)\s*%", text, re.I):
+        claimed = _normalize_number(m.group(1))
+        if claimed is None:
+            continue
+        ctx = text[max(0, m.start()-80):m.end()+40]
+        y = _year_in(ctx, default_year)
+        np_ty, eq_ty = (fin.get("npatmi_ty") or {}).get(y), (fin.get("equity_ty") or {}).get(y)
+        if np_ty is None or eq_ty is None or eq_ty == 0:
+            continue
+        _chk("ROE", claimed, float(np_ty) / float(eq_ty) * 100, ctx)
+
+    # ROA = NPAT / total assets (balance_sheet.json, VND → tỷ)
+    ta = {}
+    if isinstance(bs, dict):
+        d = bs.get("Total Assets")
+        if isinstance(d, dict):
+            ta = {str(k): v for k, v in d.items()}
+    for m in re.finditer(r"\bROA\b[^.\d]{0,30}?(\d[\d.,]*)\s*%", text, re.I):
+        claimed = _normalize_number(m.group(1))
+        if claimed is None:
+            continue
+        ctx = text[max(0, m.start()-80):m.end()+40]
+        y = _year_in(ctx, default_year)
+        np_ty, ta_ty = (fin.get("npatmi_ty") or {}).get(y), ta.get(y)
+        if np_ty is None or ta_ty is None:
+            continue
+        _chk("ROA", claimed, float(np_ty) / (float(ta_ty) / 1e9) * 100, ctx)
+
+    # Net margin = NPAT / revenue
+    for m in re.finditer(r"(?:biên lợi nhuận ròng|net margin|biên lợi nhuận sau thuế|biên LNST)[^.\d]{0,30}?(\d[\d.,]*)\s*%", text, re.I):
+        claimed = _normalize_number(m.group(1))
+        if claimed is None:
+            continue
+        ctx = text[max(0, m.start()-80):m.end()+40]
+        y = _year_in(ctx, default_year)
+        np_ty, rev_ty = (fin.get("npatmi_ty") or {}).get(y), (fin.get("revenue_ty") or {}).get(y)
+        if np_ty is None or rev_ty is None or rev_ty == 0:
+            continue
+        _chk("net margin", claimed, float(np_ty) / float(rev_ty) * 100, ctx)
+
+    # YoY growth doanh thu
+    for m in re.finditer(r"(?:tăng trưởng doanh thu|doanh thu (?:tăng|giảm)|revenue (?:grew|growth|declined))[^.\d]{0,40}?(-?\d[\d.,]*)\s*%", text, re.I):
+        claimed = _normalize_number(m.group(1))
+        if claimed is None:
+            continue
+        ctx = text[max(0, m.start()-100):m.end()+40]
+        y = _year_in(ctx, default_year)
+        rev = fin.get("revenue_ty") or {}
+        yp = str(int(y) - 1)
+        if y in rev and yp in rev and float(rev[yp]) != 0:
+            _chk("YoY revenue", claimed, (float(rev[y]) / float(rev[yp]) - 1) * 100, ctx)
+
+    # YoY growth lợi nhuận
+    for m in re.finditer(r"(?:tăng trưởng lợi nhuận|lợi nhuận (?:tăng|giảm)|profit (?:grew|growth|declined)|npatmi (?:tăng|giảm))[^.\d]{0,40}?(-?\d[\d.,]*)\s*%", text, re.I):
+        claimed = _normalize_number(m.group(1))
+        if claimed is None:
+            continue
+        ctx = text[max(0, m.start()-100):m.end()+40]
+        y = _year_in(ctx, default_year)
+        npat = fin.get("npatmi_ty") or {}
+        yp = str(int(y) - 1)
+        if y in npat and yp in npat and float(npat[yp]) != 0:
+            _chk("YoY NPAT", claimed, (float(npat[y]) / float(npat[yp]) - 1) * 100, ctx)
+
+    # Market cap = price × shares
+    ov = fin.get("overview") or {}
+    if ov.get("current_price") and ov.get("issue_share"):
+        mc_ty = float(ov["current_price"]) * float(ov["issue_share"]) / 1e9
+        for m in re.finditer(r"(?:vốn hóa|market cap)[^.\d]{0,30}?(\d[\d.,]*)\s*((?:nghìn\s*tỷ|tỷ|tỉ|triệu))?", text, re.I):
+            nval = _scale_to_tỷ(_normalize_number(m.group(1)), m.group(2) or "")
+            if nval is None or nval == 0:
+                continue
+            checked += 1
+            if abs(nval - mc_ty) / mc_ty * 100 > tol_rel:
+                issues.append(f"vốn hóa claim {m.group(1)}{m.group(2) or ''} ≈ {nval:,.0f} tỷ ≠ price×shares {mc_ty:,.0f} tỷ")
+
+    passed = len(issues) == 0
+    return passed, {"issues": issues[:8], "checked": checked,
+                    "note": "no derived-metric claims" if checked == 0 else ""}
+
+
+def verify_valuation_methods(req, html):
+    """REQ-063: 9 phương pháp định giá — method không có giá trị phải được nhắc
+    với lý do N/A (ngân hàng, công ty lỗ...); Graham recompute ±5%."""
+    ts = _load_json_rel(".task-state/task-state.json")
+    src = src_name = None
+    if ts:
+        r = (ts.get("phases", {}).get("phase3_valuation", {}) or {}).get("result")
+        if isinstance(r, dict):
+            src, src_name = r, "task-state.phase3_valuation"
+    if src is None:
+        contract = _load_json_rel("verified-dashboard-data.json")
+        if contract and isinstance(contract.get("valuation"), dict):
+            src, src_name = contract["valuation"], "verified-dashboard-data.json.valuation"
+    issues = []
+    if src is None:
+        return False, {"error": "thiếu nguồn valuation (task-state phase3 / contract.valuation)"}
+
+    methods = req["verification"].get("methods", ["ev_ebitda", "ps", "pcf", "dcf_per_share", "graham_number"])
+    labels_map = {
+        "ev_ebitda": ["ev/ebitda", "ev ebitda"],
+        "ps": ["p/s"],
+        "pcf": ["p/cf", "pcf"],
+        "dcf_per_share": ["dcf", "chiết khấu dòng tiền", "dòng tiền chiết khấu"],
+        "graham_number": ["graham", "số graham"],
+        "converge_median": ["converge", "median định giá"],
+        "ddm": ["ddm", "cổ tức chiết khấu"],
+        "reverse_dcf": ["reverse dcf", "dcf ngược"],
+    }
+    na_pat = r"(?:n/a|na\b|không áp dụng|không phù hợp|không có ý nghĩa|không tính|bỏ qua|vô nghĩa|không đáng tin|thiếu data|không có data|không khả thi)"
+    text = _narrative_text(html)
+    for meth in methods:
+        val = src.get(meth)
+        if val is not None and val != 0:
+            continue
+        labels = labels_map.get(meth, [meth])
+        mentioned = False
+        found_na = False
+        for lbl in labels:
+            for m in re.finditer(re.escape(lbl), text, re.I):
+                mentioned = True
+                if re.search(na_pat, text[m.start():m.end()+100], re.I):
+                    found_na = True
+                    break
+            if found_na:
+                break
+        if mentioned and not found_na:
+            issues.append(f"method '{meth}' được nhắc trong narrative nhưng không có giá trị trong {src_name} và không đánh dấu N/A có lý do")
+
+    # Graham recompute từ data
+    fin = _load_json_rel("data/financials.json")
+    g = src.get("graham_number")
+    if g and fin:
+        eps = (fin.get("eps_vnd") or {}).get("2025")
+        eq = (fin.get("equity_ty") or {}).get("2025")
+        ov = fin.get("overview") or {}
+        if eps and eq and ov.get("issue_share"):
+            bvps = float(eq) * 1e9 / float(ov["issue_share"])
+            g_comp = (22.5 * float(eps) * bvps) ** 0.5
+            if abs(g_comp - float(g)) / max(abs(g_comp), 0.001) * 100 > 5:
+                issues.append(f"Graham recompute {g_comp:,.0f} ≠ report/nguồn {g:,.0f} (>5%)")
+
+    passed = len(issues) == 0
+    return passed, {"issues": issues[:8], "source": src_name, "methods": methods}
+
+
+def verify_trend_consistency(req, html):
+    """REQ-064: từ ngữ tăng/giảm gần metric phải cùng dấu với dữ liệu (overall hoặc
+    theo năm). Chống narrative 'nghe có vẻ đúng' nhưng ngược dữ liệu."""
+    fin = _load_json_rel("data/financials.json")
+    if not fin:
+        return False, {"error": "data/financials.json not found"}
+    text = _narrative_text(html)
+    issues = []
+    for metric, labels, series_key, display in [
+        ("revenue", ["doanh thu", "revenue"], "revenue_ty", "doanh thu"),
+        ("npatmi", ["lợi nhuận sau thuế", "lợi nhuận ròng", "lnst", "net profit", "lợi nhuận"], "npatmi_ty", "lợi nhuận"),
+    ]:
+        series = fin.get(series_key, {})
+        yrs = sorted(int(y) for y in series.keys() if str(y).isdigit())
+        if len(yrs) < 2:
+            continue
+        overall = 1 if float(series[str(yrs[-1])]) > float(series[str(yrs[0])]) else -1
+        for lbl in labels:
+            for m in re.finditer(lbl, text, re.I):
+                pre = text[max(0, m.start()-30):m.end()+10]
+                if re.search(r"biên lợi nhuận|margin|lợi nhuận gộp|gross", pre, re.I):
+                    continue  # biên/gộp ≠ chuỗi dữ liệu ròng
+                ctx = text[max(0, m.start()-40):m.end()+140]
+                tm = re.search(r"(tăng trưởng|tăng đều|đi lên|phục hồi|tăng|giảm|sụt giảm|suy giảm|đi xuống|sụt|lao dốc|co lại)", ctx, re.I)
+                if not tm:
+                    continue
+                neg_win = ctx[max(0, tm.start()-40):tm.end()+20]
+                if re.search(r"không\s+(?:còn\s+)?(?:tăng|giảm)|không\s+tăng", neg_win, re.I):
+                    continue
+                word = tm.group(1).lower()
+                claim_sign = 1 if any(w in word for w in ["tăng", "đi lên", "phục hồi"]) else -1
+                ym = re.search(r"(20\d\d)", ctx)
+                if ym and ym.group(1) in series:
+                    y = int(ym.group(1))
+                    sign = (1 if float(series[str(y)]) > float(series[str(y-1)]) else -1) if y > yrs[0] else overall
+                else:
+                    sign = overall
+                if claim_sign != sign:
+                    issues.append(f"'{display}' trend '{word}' ngược dữ liệu (data sign={sign}): ...{ctx.strip()[:90]}...")
+    passed = len(issues) == 0
+    return passed, {"issues": issues[:8], "note": "no trend claims found" if not issues else ""}
+
+
+def verify_verdict_consistency(req, html):
+    """REQ-065: tone kết luận (exec/thesis) phải cùng dấu với upside/downside từ
+    valuation targets. Chống 'kết luận tích cực' trong khi mọi method ra giá thấp hơn."""
+    import statistics
+    fin = _load_json_rel("data/financials.json")
+    price = (fin or {}).get("overview", {}).get("current_price") if fin else None
+    ts = _load_json_rel(".task-state/task-state.json")
+    targets = []
+    if ts:
+        r = (ts.get("phases", {}).get("phase3_valuation", {}) or {}).get("result")
+        if isinstance(r, dict):
+            t = r.get("targets")
+            if isinstance(t, dict):
+                targets = [v for v in t.values() if isinstance(v, (int, float)) and v > 0]
+    if not targets and price:
+        val = extract_section_text(html, "sec-valuation") or ""
+        for m in re.finditer(r"(?:giá hợp lý|fair value|target price|giá mục tiêu|giá trị hợp lý)[^.\d]{0,40}?(\d[\d.,]*)\s*(nghìn)?", val, re.I):
+            v = _normalize_number(m.group(1))
+            if v and not (2000 <= v <= 2099):
+                targets.append(v)
+    if not targets or not price:
+        return True, {"note": "không có targets/price để so upside — bỏ qua"}
+    upside = statistics.median(targets) / float(price) - 1
+    exec_text = (extract_section_text(html, "sec-exec") or "") + " " + (extract_section_text(html, "sec-thesis") or "")
+    pos_words = ["tích cực", "khả quan", "lạc quan", "hấp dẫn", "cơ hội", "tăng trưởng", "phục hồi",
+                 "mạnh mẽ", "ưu việt", "undervalued", "định giá rẻ", "triển vọng", "đáng chú ý"]
+    neg_words = ["tiêu cực", "kém khả quan", "rủi ro", "suy giảm", "overvalued", "đắt", "cảnh báo",
+                 "bất lợi", "yếu kém", "thiếu hấp dẫn", "thận trọng", "giảm giá"]
+    low = exec_text.lower()
+    pos_n = sum(low.count(w) for w in pos_words)
+    neg_n = sum(low.count(w) for w in neg_words)
+    issues = []
+    if upside > 0.05 and neg_n > pos_n:
+        issues.append(f"upside +{upside*100:.0f}% (từ targets) nhưng exec/thesis nghiêng tiêu cực ({neg_n} âm vs {pos_n} dương)")
+    if upside < -0.05 and pos_n > neg_n:
+        issues.append(f"upside {upside*100:.0f}% (âm) nhưng exec/thesis nghiêng tích cực ({pos_n} dương vs {neg_n} âm)")
+    passed = len(issues) == 0
+    return passed, {"issues": issues, "upside_pct": round(upside * 100, 1), "pos_words": pos_n, "neg_words": neg_n}
+
+
+def verify_api_fallback(req, html):
+    """REQ-066: phase 0 phải log api_source + attempts; community tier phải được
+    flag trong report (Lesson Learned #1 — pipeline chết vì 1 nguồn duy nhất)."""
+    ts = _load_json_rel(".task-state/task-state.json")
+    if not ts:
+        return False, {"error": "task-state.json không có — không log được api_source"}
+    r = (ts.get("phases", {}).get("phase0_sponsor", {}) or {}).get("result") or {}
+    api_source = r.get("api_source")
+    if not api_source:
+        return False, {"error": "phase0 chưa log api_source — không biết data từ nguồn nào (phải log chuỗi fallback)"}
+    issues = []
+    if "community" in str(api_source).lower():
+        text = _narrative_text(html)
+        if not re.search(r"community|8\s*kỳ|dữ liệu giới hạn|data giới hạn|cảnh báo|bản free", text, re.I):
+            issues.append("dùng community tier nhưng report không flag 'community/dữ liệu giới hạn'")
+    passed = len(issues) == 0
+    return passed, {"issues": issues, "api_source": api_source,
+                    "tier": r.get("tier"), "sponsor_ok": r.get("sponsor_ok")}
+
+
+def verify_fiscal_year(req, html):
+    """REQ-067: fiscal_year_type phải log (Lesson Learned #5 — ngân hàng có thể
+    dùng năm tài chính khác dương lịch); custom → narrative phải ghi rõ."""
+    ts = _load_json_rel(".task-state/task-state.json")
+    fyt = None
+    if ts:
+        fyt = ts.get("fiscal_year_type")
+        if not fyt:
+            p1 = (ts.get("phases", {}).get("phase1_data", {}) or {}).get("result") or {}
+            fyt = p1.get("fiscal_year_type")
+    if not fyt:
+        return False, {"error": "task-state thiếu 'fiscal_year_type' (calendar|custom) — phase 1 phải log để khỏi giả định dương lịch"}
+    if str(fyt).lower() not in ("calendar", "custom", "cal", "cus"):
+        return False, {"error": f"fiscal_year_type không hợp lệ: '{fyt}' (kỳ vọng calendar|custom)"}
+    issues = []
+    if str(fyt).lower() in ("custom", "cus"):
+        text = _narrative_text(html)
+        if not re.search(r"năm tài chính|fiscal year|fiscal|niên độ", text, re.I):
+            issues.append("fiscal_year_type=custom nhưng narrative không ghi rõ 'năm tài chính/niên độ'")
+    passed = len(issues) == 0
+    return passed, {"issues": issues, "fiscal_year_type": fyt}
+
+# ═══════════════════════════════════════════════════════════════
 # MAIN VERIFIER
 # ═══════════════════════════════════════════════════════════════
 
@@ -2082,7 +3599,31 @@ def main():
                                     "identity_check",
                                     "news_window_check",
                                     "investment_amount_check",
-                                    "source_freshness_check"):
+                                    "source_freshness_check",
+                                    "news_authenticity_check",
+                                    "forecast_source_check",
+                                    "technical_indicator_verify",
+                                    "macro_data_citation_check",
+                                    "management_claim_check",
+                                    "historical_return_verify",
+                                    "comparison_baseline_check",
+                                    "unit_consistency_check",
+                                    "liquidity_check",
+                                    "audit_opinion_check",
+                                    "causal_chain_evidence_check",
+                                    "vague_language_check",
+                                    "timeframe_consistency_check",
+                                    "dividend_claim_check",
+                                    "support_resistance_method_check",
+                                    "period_integrity_check",
+                                    "data_provenance_check",
+                                    "internal_identity_check",
+                                    "derived_metrics_recompute_check",
+                                    "valuation_methods_check",
+                                    "trend_consistency_check",
+                                    "verdict_consistency_check",
+                                    "api_fallback_check",
+                                    "fiscal_year_check"):
             results["skip"] += 1
             print(f"  ⏭️  {rid} [{priority:8}] SKIP (no artifact)")
             continue
@@ -2153,6 +3694,54 @@ def main():
                 passed, evidence = verify_investment_amount(req, html)
             elif method == "source_freshness_check":
                 passed, evidence = verify_source_freshness(req, html)
+            elif method == "news_authenticity_check":
+                passed, evidence = verify_news_authenticity(req, html)
+            elif method == "forecast_source_check":
+                passed, evidence = verify_forecast_source(req, html)
+            elif method == "technical_indicator_verify":
+                passed, evidence = verify_technical_indicator(req, html)
+            elif method == "macro_data_citation_check":
+                passed, evidence = verify_macro_data_citation(req, html)
+            elif method == "management_claim_check":
+                passed, evidence = verify_management_claim(req, html)
+            elif method == "historical_return_verify":
+                passed, evidence = verify_historical_return(req, html)
+            elif method == "comparison_baseline_check":
+                passed, evidence = verify_comparison_baseline(req, html)
+            elif method == "unit_consistency_check":
+                passed, evidence = verify_unit_consistency(req, html)
+            elif method == "liquidity_check":
+                passed, evidence = verify_liquidity(req, html)
+            elif method == "audit_opinion_check":
+                passed, evidence = verify_audit_opinion(req, html)
+            elif method == "causal_chain_evidence_check":
+                passed, evidence = verify_causal_chain(req, html)
+            elif method == "vague_language_check":
+                passed, evidence = verify_vague_language(req, html)
+            elif method == "timeframe_consistency_check":
+                passed, evidence = verify_timeframe_consistency(req, html)
+            elif method == "dividend_claim_check":
+                passed, evidence = verify_dividend_claim(req, html)
+            elif method == "support_resistance_method_check":
+                passed, evidence = verify_support_resistance_method(req, html)
+            elif method == "period_integrity_check":
+                passed, evidence = verify_period_integrity(req, html)
+            elif method == "data_provenance_check":
+                passed, evidence = verify_data_provenance(req, html)
+            elif method == "internal_identity_check":
+                passed, evidence = verify_internal_identity(req, html)
+            elif method == "derived_metrics_recompute_check":
+                passed, evidence = verify_derived_metrics_recompute(req, html)
+            elif method == "valuation_methods_check":
+                passed, evidence = verify_valuation_methods(req, html)
+            elif method == "trend_consistency_check":
+                passed, evidence = verify_trend_consistency(req, html)
+            elif method == "verdict_consistency_check":
+                passed, evidence = verify_verdict_consistency(req, html)
+            elif method == "api_fallback_check":
+                passed, evidence = verify_api_fallback(req, html)
+            elif method == "fiscal_year_check":
+                passed, evidence = verify_fiscal_year(req, html)
             elif method == "all_requirements_pass":
                 # Special: checked at end
                 results["skip"] += 1

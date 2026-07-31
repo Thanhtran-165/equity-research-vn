@@ -90,6 +90,21 @@ __TEMPLATE_INLINE_PLACEHOLDER__
 - **KHÔNG ĐƯỢC** hardcode 1 con số cụ thể (800 triệu) — phải đọc từ task-state hoặc dùng 3 mức
 - Section "Góc nhìn khoản đầu tư" phải hiển thị đúng số từ investment_amount
 
+### LIQUIDITY SECTION (REQ-052)
+- Nếu có data KLGD/GTGD/free float từ Phase 1 → hiển thị trong dashboard
+- Nếu không có data → ghi chú "Thanh khoản: chưa có data" thay vì bỏ trống
+
+### UNIT CONSISTENCY (REQ-051)
+- Tất cả số tiền trong dashboard dùng đơn vị **tỷ đồng** (thống nhất)
+- KHÔNG dùng lẫn "nghìn tỷ" và "tỷ" trong cùng 1 metric
+
+### DCF ASSUMPTION TABLE (REQ-045, REQ-048)
+- Nếu có DCF valuation → phải có bảng assumptions với source cho từng assumption
+- Rf, ERP, Beta, growth rate — mỗi cái phải có dòng giải thích nguồn
+
+### AUDIT OPINION DISCLAIMER (REQ-053)
+- Nếu Phase 0 phát hiện audit opinion "ngoại trừ"/"không chấp nhận" → dashboard PHẢI có disclaimer trong sec-risk hoặc sec-checklist
+
 ## REMINDER LẦN CUỐI
 Trả về HTML. Chỉ HTML. Từ `<!DOCTYPE html>` đến `</html>`. Không narration.
 
