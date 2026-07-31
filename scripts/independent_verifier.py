@@ -1116,7 +1116,9 @@ def verify_drawdown_source(req, html):
                 "hardening": "V3: vacuous-pass guard — risk discussion without drawdown data → FAIL",
             }
         # V3b: nếu CÓ max_drawdown data mà sec-risk không định lượng rủi ro giảm giá → FAIL
-        contract = _contract()
+        # FIX-1 (review V4 Pro): `_contract()` không tồn tại → NameError crash. Thay bằng
+        # _load_json_rel (helper có sẵn). Trước đây nhánh này là "bom nổ chậm".
+        contract = _load_json_rel("verified-dashboard-data.json")
         has_dd_data = has_drawdown_data or bool(contract and contract.get("max_drawdown_52w"))
         sec_risk = extract_section_text(html, "sec-risk")
         if has_dd_data and sec_risk and len(sec_risk) > 100:
@@ -1523,21 +1525,33 @@ def verify_cross_section_consistency(req, html):
                     if unit == "%" and metric in NO_PCT_UNIT:
                         continue
                     between = sec_text[m.start():m.start(1)]
-                    if re.search(r"cagr|tăng trưởng|growth|biên|margin", between, re.I):
+                    # G4 (review V4 Flash): "P/E trung bình ngành 12x" là claim NGÀNH,
+                    # không phải claim của CTD → exclude ngữ cảnh này
+                    if re.search(r"cagr|tăng trưởng|growth|biên|margin|ngành|thị trường|"
+                                 r"trung bình|median|bình quân|5\s*năm|5y|peer|dự phóng|"
+                                 r"forward|target|ước tính|khoảng", between, re.I):
                         continue
                     scaled = _scale_to_tỷ(val, unit)
                     if 2000 <= scaled <= 2099 and not unit:
                         continue
                     if not unit and scaled < 20:
                         continue
-                    ctx = sec_text[max(0, m.start()-60):m.end()+60]
-                    ym = re.search(r"20\d\d", ctx)
-                    year = ym.group(0) if ym else None
+                    # FIX-4b (review V4 Pro M2): năm có thể cách claim >60 chars
+                    # ("...50.000 tỷ đồng ... trong năm 2025"). Nới window ±100 và
+                    # chọn năm GẦN claim nhất (trước hoặc sau) — tránh hút năm câu khác.
+                    ctx = sec_text[max(0, m.start()-100):m.end()+100]
+                    best_year, best_dist = None, None
+                    for ym in re.finditer(r"20\d\d", ctx):
+                        dist = min(abs(ym.start() - m.start()), abs(ym.end() - m.start()))
+                        if best_year is None or dist < best_dist:
+                            best_year, best_dist = ym.group(0), dist
+                    year = best_year
                     per_metric.setdefault(metric, []).append({
                         "year": year, "value": scaled, "section": sid,
                         "context": ctx.strip()[:120],
                     })
-                break  # first keyword hit per metric per section is enough
+                # FIX-4 (review V4 Pro): không break — chạy cả 2 keyword của metric
+                # (vd cả "doanh thu" lẫn "revenue") để không bỏ sót match
 
     # V3 HARDENING: Internal section consistency (unanchored → check within same section)
     # For each section, if a metric appears twice with different values → internal inconsistency
@@ -2177,9 +2191,10 @@ def verify_source_freshness(req, html):
 def verify_news_authenticity(req, html):
     """REQ-044: News authenticity — article phải có URL/source_name xác định được.
 
-    Parse news_digest.json → kiểm tra mỗi article có url hoặc source_name.
-    Nếu có URL → HEAD request (lightweight). Fallback nếu không mạng: check source_name.
-    ≥50% article phải có URL hoặc source_name hợp lệ.
+    G2 (review V4 Flash): trước đây chỉ đếm sự hiện diện URL → tin giả
+    (example.com, .xyz không tồn tại) vẫn PASS dù REQ-044 là critical.
+    Fix: whitelist báo chí VN + HEAD check. Domain lạ + không truy cập được → FAIL.
+    Domain whitelist không cần mạng (không HEAD) → an toàn khi offline.
     """
     if not html:
         return False, {"error": "no html"}
@@ -2191,11 +2206,27 @@ def verify_news_authenticity(req, html):
     if not articles:
         return True, {"note": "news_digest.json has no articles — nothing to check"}
 
+    # Báo chí + sàn giao dịch + nguồn tài chính hợp lệ (domain không cần HEAD check)
+    WHITELIST_DOMAINS = (
+        "cafef.vn", "vnexpress.net", "vietstock.vn", "ndh.vn", "vietnamfinance.vn",
+        "baodautu.vn", "stockbiz.vn", "tinnhanhchungkhoan.vn", "vietnamnet.vn",
+        "tuoitre.vn", "thanhnien.vn", "vtv.vn", "voh.com.vn", "zingnews.vn",
+        "cafebiz.vn", "vietnambiz.vn", "dantri.com.vn", "tienphong.vn", "plo.vn",
+        "kinhtedothi.vn", "doanhnghiepvn.vn", "vietq.vn", "vneconomy.vn", "vietnamplus.vn",
+        "hsx.vn", "hnx.vn", "upcom.vn", "vnstock.vn", "ssi.com.vn", "vndirect.com.vn",
+        "tcbs.com.vn", "bvsc.com.vn", "vcbs.com.vn", "fpts.com.vn", "msi.com.vn",
+        "sbsi.vn", "wsi.com.vn", "dragoncapital.com.vn", "reuters.com", "bloomberg.com",
+        "investing.com", "financialtimes.com",
+    )
+    FAKE_HINTS = ("example.com", "example.org", "test", "lorem", "localhost", ".xyz", ".top", ".info", "12345")
+
     import urllib.request as _urllib
+    from urllib.parse import urlparse
     total = len(articles)
     has_url = 0
     has_source_name = 0
     url_accessible = 0
+    fake_unreachable = []  # URL domain lạ + không truy cập được → tin giả
     issues = []
 
     for a in articles:
@@ -2205,31 +2236,52 @@ def verify_news_authenticity(req, html):
 
         if url:
             has_url += 1
+            domain = ""
             try:
-                req_h = _urllib.Request(url, method="HEAD")
-                req_h.add_header("User-Agent", "ZCode-Verifier/1.0")
-                resp = _urllib.urlopen(req_h, timeout=5)
-                if resp.status < 400:
-                    url_accessible += 1
-                else:
-                    issues.append(f"URL {resp.status}: {url[:80]} — {title}")
-            except Exception as e:
-                issues.append(f"URL unreachable ({str(e)[:40]}): {url[:80]} — {title}")
+                domain = (urlparse(url).netloc or "").lower()
+            except Exception:
+                pass
+            is_fake_hint = any(h in url.lower() for h in FAKE_HINTS)
+            is_whitelisted = any(domain == w or domain.endswith("." + w) for w in WHITELIST_DOMAINS)
+            if is_whitelisted:
+                url_accessible += 1  # nguồn tin cậy — không cần HEAD
+            elif not is_fake_hint and domain:
+                # domain lạ nhưng có thể là site thật → HEAD chứng minh
+                try:
+                    req_h = _urllib.Request(url, method="HEAD")
+                    req_h.add_header("User-Agent", "ZCode-Verifier/1.0")
+                    resp = _urllib.urlopen(req_h, timeout=5)
+                    if resp.status < 400:
+                        url_accessible += 1
+                    else:
+                        fake_unreachable.append(f"{domain} (HTTP {resp.status})")
+                        issues.append(f"URL {resp.status}: {url[:80]} — {title}")
+                except Exception as e:
+                    fake_unreachable.append(domain or "no-domain")
+                    issues.append(f"URL unreachable ({str(e)[:40]}): {url[:80]} — {title}")
+            else:
+                # domain rỗng hoặc chứa fake hint (example.com/.xyz/...) → tin giả mặc định
+                fake_unreachable.append(domain or "no-domain")
+                issues.append(f"URL nghi tin giả (domain '{domain or '?'}'): {url[:80]} — {title}")
         elif src:
             has_source_name += 1
+            if any(h in src.lower() for h in FAKE_HINTS):
+                fake_unreachable.append(f"source '{src[:30]}'")
+                issues.append(f"source_name nghi tin giả: {src[:60]} — {title}")
         else:
             issues.append(f"article không URL và không source_name: {title}")
 
-    # ≥50% must have URL or source_name
+    # G2: ≥50% có URL/source_name VÀ không có tin giả (domain lạ unreachable)
     coverage = (has_url + has_source_name) / max(total, 1)
-    passed = coverage >= 0.5
+    passed = coverage >= 0.5 and len(fake_unreachable) == 0
     return passed, {
         "total_articles": total,
         "has_url": has_url,
         "url_accessible": url_accessible,
         "has_source_name": has_source_name,
         "coverage_pct": round(coverage * 100, 1),
-        "threshold": "≥50%",
+        "threshold": "≥50% + 0 fake/unreachable",
+        "fake_unreachable": fake_unreachable[:5],
         "issues": issues[:5],
     }
 
@@ -2900,33 +2952,42 @@ def verify_period_integrity(req, html):
 
     # Sub-checks 3-6: Try loading raw CSVs for cross-check
     work_dir = _work_dir()
-    source_pack = work_dir  # assume work_dir IS the source pack
-
-    # Look for source CSVs
-    csv_files = {
-        "income": "income_statement_sponsor.csv",
-        "balance": "balance_sheet_sponsor.csv",
-        "cash": "cash_flow_sponsor.csv",
-    }
+    # G3 (review V4 Flash): trước đây chỉ tìm CSV ở work_dir ROOT — pipeline chuẩn
+    # đặt CSV ở source-pack/ → corrupt CSV root không bao giờ chạy, vacuous PASS.
+    # Mở rộng 3 path: root, source-pack/, data/.
+    csv_candidates = [
+        "income_statement_sponsor.csv", "balance_sheet_sponsor.csv", "cash_flow_sponsor.csv",
+    ]
 
     import csv as _csv
     csv_data = {}
-    for stmt_key, fname in csv_files.items():
-        path = os.path.join(source_pack, fname)
-        if os.path.exists(path):
-            with open(path) as f:
-                rows = list(_csv.DictReader(f))
-                rows = [r for r in rows if str(r.get("report_period", "")).strip().lower() == "year"] or rows
-                csv_data[stmt_key] = rows
+    stmt_map = {"income_statement_sponsor.csv": "income",
+                "balance_sheet_sponsor.csv": "balance",
+                "cash_flow_sponsor.csv": "cash"}
+    for fname in csv_candidates:
+        for sub in ("", "source-pack", "data"):
+            path = os.path.join(work_dir, sub, fname)
+            if os.path.exists(path):
+                try:
+                    with open(path) as f:
+                        rows = list(_csv.DictReader(f))
+                    rows = [r for r in rows if str(r.get("report_period", "")).strip().lower() == "year"] or rows
+                    csv_data[stmt_map[fname]] = {"rows": rows, "path": os.path.join(sub, fname)}
+                except Exception as e:
+                    csv_data[stmt_map[fname]] = {"rows": [], "path": os.path.join(sub, fname), "error": str(e)[:50]}
+                break
 
     if not csv_data:
         sub_checks["period_order_detected"] = False
         sub_checks["explicit_period_value_pairs_preserved"] = False
         sub_checks["latest_period_matches_source"] = False
         sub_checks["oldest_period_matches_source"] = False
-        return True, {"note": "no raw CSV files in work dir — period cross-check skipped (use period_integrity_gate.py with source_pack path)",
-                     "sub_checks": sub_checks,
-                     "passed_vacuous": True}
+        # G3: fail-closed — verified-dashboard-data tồn tại nhưng không có CSV nguồn
+        # ở bất kỳ path nào → không verify được period integrity → FAIL (không vacuous)
+        return False, {"note": "KHÔNG tìm thấy CSV nguồn ở work_dir / source-pack / data — "
+                                "period integrity không đối chiếu được (fail-closed)",
+                       "sub_checks": sub_checks,
+                       "searched": csv_candidates}
 
     # Period order detection: years should be chronological
     try:
@@ -2957,9 +3018,10 @@ def verify_period_integrity(req, html):
         oldest_period = str(years_int[0])
 
         for canonical, stmt_key, aliases, arr_key, scale in field_csv_map:
-            rows = csv_data.get(stmt_key, [])
+            entry = csv_data.get(stmt_key)
+            rows = entry["rows"] if isinstance(entry, dict) else (entry or [])
             if not rows:
-                per_field[canonical] = {"skipped": "no_csv"}
+                per_field[canonical] = {"skipped": "no_csv", "path": entry.get("path") if isinstance(entry, dict) else None}
                 continue
 
             # Find column
@@ -3062,83 +3124,133 @@ def verify_data_provenance(req, html):
     if not fin:
         return False, {"error": "data/financials.json not found"}
     issues = []
-    spot = None  # (revenue_ty, desc)
+    spots = {}  # fin_key → (value, desc, tolerance_pct)
 
-    # 1a) Spot-check qua source-pack CSV (offline ground truth, phase 1 fetch)
-    for cand in ("source-pack/income_statement_sponsor.csv",
-                 "data/income_statement_sponsor.csv",
-                 "income_statement_sponsor.csv"):
-        full = os.path.join(_work_dir(), cand)
-        if not os.path.exists(full):
-            continue
+    # G1 (review V4 Flash): trước đây chỉ spot-check revenue → bịa NPAT/EPS/Total
+    # assets ĐỒNG BỘ toàn stack (data files + report + DATA arrays) vẫn lọt 67/67.
+    # Mở rộng sang 4 field; luôn ưu tiên fetch live khi API sống.
+    # (fin_key, income_cols, balance_cols, divisor, tol%)
+    _field_specs = [
+        ("revenue_ty",  ("Net sales", "Sales", "Doanh thu", "Revenue"), (), 1e9, 10),
+        ("npatmi_ty",   ("Attributable to parent company", "Net profit", "Lợi nhuận sau thuế", "LNST"), (), 1e9, 10),
+        ("Total Assets", (), ("Total assets", "Total Assets", "Tổng tài sản"), 1e9, 10),
+        ("eps_vnd",     ("EPS basic", "EPS"), (), 1, 15),  # EPS basic, VND/share; tol 15% do diluted
+    ]
+
+    def _csv_last_annual(path, col):
+        """Lấy giá trị annual mới nhất của cột trong CSV (dòng 'year'/'FY')."""
         try:
-            with open(full) as f:
+            with open(path) as f:
                 rows = list(_csv.reader(f))
             header = [h.strip() for h in rows[0]]
-            rev_col = None
-            for col in ("Net sales", "Sales", "Doanh thu", "Revenue"):
-                if col in header:
-                    rev_col = header.index(col)
-                    break
-            if rev_col is None:
-                raise ValueError("no revenue column")
-            last_val = None
+            if col not in header:
+                return None
+            ci = header.index(col)
+            last = None
             for r in rows[1:]:
-                if len(r) <= max(rev_col, 1):
+                if len(r) <= ci:
                     continue
-                if r[0].strip().lower() != "year":
-                    continue
-                try:
-                    last_val = float(r[rev_col])
-                except Exception:
-                    pass
-            if last_val is None:
-                raise ValueError("no annual rows")
-            spot = (last_val / 1e9, f"source-pack CSV ({cand})")
-        except Exception as e:
-            issues.append(f"source-pack CSV '{cand}' đọc lỗi: {str(e)[:60]}")
-        if spot:
-            break
+                if r[0].strip().lower().startswith(("year", "fy")):
+                    try:
+                        last = float(r[ci])
+                    except Exception:
+                        pass
+            return last
+        except Exception:
+            return None
 
-    # 1b) Fallback: spot-check qua API vnstock live (annual rows, Net sales)
-    if spot is None:
-        try:
-            from vnstock_data import Finance
-            f = Finance(source='VCI', symbol=TICKER)
-            df = f.income_statement()
+    income_csvs = ("source-pack/income_statement_sponsor.csv", "data/income_statement_sponsor.csv", "income_statement_sponsor.csv")
+    balance_csvs = ("source-pack/balance_sheet_sponsor.csv", "data/balance_sheet_sponsor.csv", "balance_sheet_sponsor.csv")
+
+    # 1a) Spot-check qua source-pack CSV (offline ground truth, phase 1 fetch)
+    for fin_key, income_cols, balance_cols, divisor, tol in _field_specs:
+        if fin_key in spots:
+            continue
+        csvs = income_csvs if income_cols else balance_csvs
+        cols = income_cols or balance_cols
+        for cand in csvs:
+            full = os.path.join(_work_dir(), cand)
+            if not os.path.exists(full):
+                continue
+            for col in cols:
+                v = _csv_last_annual(full, col)
+                if v is not None:
+                    spots[fin_key] = (v / divisor, f"source-pack CSV ({os.path.basename(cand)}: {col})", tol)
+                    break
+            if fin_key in spots:
+                break
+
+    # 1b) Fallback + bổ sung qua API vnstock live (annual rows)
+    try:
+        from vnstock_data import Finance
+        fapi = Finance(source='VCI', symbol=TICKER)
+        # income statement → Net sales / Attributable to parent company / EPS basic
+        if "revenue_ty" not in spots or "npatmi_ty" not in spots or "eps_vnd" not in spots:
+            df = fapi.income_statement()
             annual = df[df['report_period'] == 'year'] if 'report_period' in df.columns else df
-            if 'Net sales' in annual.columns:
+            col_map = {"revenue_ty": "Net sales", "npatmi_ty": "Attributable to parent company", "eps_vnd": "EPS basic"}
+            for fk, col in col_map.items():
+                if fk in spots or col not in annual.columns:
+                    continue
                 best_yr, best_val = None, None
                 for idx in annual.index:
                     try:
                         yv = int(str(idx)[:4])
                     except Exception:
                         continue
-                    v = float(annual.loc[idx, 'Net sales'])
+                    v = float(annual.loc[idx, col])
                     if best_yr is None or yv > best_yr:
                         best_yr, best_val = yv, v
                 if best_val is not None:
-                    spot = (best_val / 1e9, f"API vnstock live (Net sales {best_yr})")
-        except Exception as e:
+                    spots[fk] = (best_val / (1e9 if fk != "eps_vnd" else 1), f"API vnstock live ({col} {best_yr})", 10 if fk != "eps_vnd" else 15)
+        # balance sheet → Total assets
+        if "Total Assets" not in spots:
+            bdf = fapi.balance_sheet()
+            bannual = bdf[bdf['report_period'] == 'year'] if 'report_period' in bdf.columns else bdf
+            if "Total assets" in bannual.columns:
+                best_yr, best_val = None, None
+                for idx in bannual.index:
+                    try:
+                        yv = int(str(idx)[:4])
+                    except Exception:
+                        continue
+                    v = float(bannual.loc[idx, "Total assets"])
+                    if best_yr is None or yv > best_yr:
+                        best_yr, best_val = yv, v
+                if best_val is not None:
+                    spots["Total Assets"] = (best_val / 1e9, f"API vnstock live (Total assets {best_yr})", 10)
+    except Exception as e:
+        if not spots:
             issues.append(f"API spot-check lỗi: {str(e)[:60]}")
 
-    # So sánh spot-check với financials.json (khoan dung 10%; cho phép lệch 1 năm
-    # nếu CSV chưa có năm mới nhất)
-    rev = fin.get("revenue_ty") or {}
-    if spot:
-        gt_ty, desc = spot
-        years = sorted(int(y) for y in rev.keys() if str(y).isdigit())
+    # 1c) So sánh từng spot với data files (khoan dung 10%; EPS 15% do diluted)
+    bal = _load_json_rel("data/balance_sheet.json")
+    for fin_key, _i, _b, _d, _t in _field_specs:
+        if fin_key not in spots:
+            continue
+        gt_val, desc, tol = spots[fin_key]
+        # ground truth từ financials.json (dict năm) hoặc balance_sheet.json ("Total Assets")
+        gt = fin.get(fin_key) if isinstance(fin.get(fin_key), dict) else None
+        if gt is None and bal and isinstance(bal.get(fin_key), dict):
+            gt = bal.get(fin_key)
+        if not gt:
+            issues.append(f"{fin_key}: spot-check có ({desc} = {gt_val:,.1f}) nhưng data file thiếu field — data không có nguồn đối chiếu")
+            continue
+        years = sorted(int(y) for y in gt.keys() if str(y).isdigit())
         candidates = [str(y) for y in years[-2:]] if years else []
         matched = None
         for yr in candidates:
-            if yr in rev and float(rev[yr]) > 0:
-                if abs(float(rev[yr]) - gt_ty) / max(abs(gt_ty), 0.001) * 100 <= 10:
+            if yr in gt and float(gt[yr]) > 0:
+                # revenue/npatmi (financials.json) đã ở tỷ; "Total Assets" (balance_sheet.json) ở VND → chia 1e9
+                gt_ty = float(gt[yr]) / 1e9 if fin_key == "Total Assets" else float(gt[yr])
+                if abs(gt_ty - gt_val) / max(abs(gt_val), 0.001) * 100 <= tol:
                     matched = yr
                     break
         if matched is None:
-            issues.append(f"revenue spot-check FAIL: {desc} = {gt_ty:,.1f} tỷ không khớp financials.json revenue_ty {candidates} (±10%)")
-    else:
-        issues.append("KHÔNG spot-check được revenue (thiếu source-pack CSV và API không fetch được) — data không có nguồn đối chiếu")
+            issues.append(f"{fin_key} spot-check FAIL: {desc} = {gt_val:,.1f} không khớp data {candidates} (±{tol}%)")
+
+    if not spots:
+        issues.append("KHÔNG spot-check được field nào (thiếu source-pack CSV và API không fetch được) — data không có nguồn đối chiếu")
 
     # 2) price_fetched_at phải tồn tại ở data level
     ov = fin.get("overview") or {}
@@ -3174,8 +3286,9 @@ def verify_data_provenance(req, html):
         issues.append("verified-dashboard-data.json thiếu _provenance (built_at/source)")
 
     passed = len(issues) == 0
+    spot_summary = {k: f"{v[0]:,.1f} via {v[1]}" for k, v in spots.items()}
     return passed, {"issues": issues[:8],
-                    "spot_check": f"{spot[0]:,.1f} tỷ via {spot[1]}" if spot else None,
+                    "spot_check_fields": spot_summary,
                     "data_source": ds}
 
 
