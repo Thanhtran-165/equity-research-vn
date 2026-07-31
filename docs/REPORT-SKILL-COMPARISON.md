@@ -41,13 +41,17 @@ Vì lỗi ở mỗi lớp có tính chất khác nhau, không thể dùng một 
 ## 3. Dependency graph
 
 ```text
-                         ┌─→ fundamental ─→ valuation ─┐
-ticker ─→ collector ─────┤                              │
-                         └──────────────────────────────┤
-ticker ─→ technical ─────────────────────────────────── ─┤
-ticker ─→ news-digest ───────────────────────────────── ─┤
-                                                         ↓
-                                                    dashboard
+ticker → collector ──────────────┐
+              │                  │
+              └→ fundamental ────┤
+                                 ↓
+                            valuation
+                                 │
+valuation ──────────────────────┐│
+technical ──────────────────────┤│
+news-digest ────────────────────┤│
+                                ↓
+                           dashboard
 ```
 
 ### Phân loại dependency
@@ -246,7 +250,7 @@ Mỗi risk có tính chất khác nhau → cần verifier khác nhau cho từng 
 product_criticality:
   vn-financial-data-collector: CRITICAL          # nền tảng data, lỗi lan truyền
   vn-fundamental-analysis: CRITICAL              # cốt lõi phân tích
-  vn-valuation-engine: CRITICAL                  # kết luận đầu tư
+  vn-valuation-engine: CRITICAL                  # lớp định giá cốt lõi
   vn-technical-analysis: OPTIONAL_DECISION_SUPPORT  # hỗ trợ timing
   vn-news-digest: OPTIONAL_CONTEXT               # bổ sung thời sự
   vn-research-dashboard: CRITICAL_DELIVERY_LAYER # sản phẩm cuối
@@ -265,6 +269,8 @@ evidence_maturity:
 ---
 
 ## 8. Harness coverage type (thay cho số file)
+
+> Các nhãn evidence maturity dưới đây là taxonomy kiến trúc dành riêng cho báo cáo này, dùng để mô tả cách từng skill được kiểm tra. Chúng không thay thế evaluator maturity chính thức của `equity-research-vn` (`FUNCTIONAL_WITH_GENERALIZATION_EVIDENCE`) hoặc `skill-harness-evaluator` (`FUNCTIONAL_MACHINE`).
 
 ```yaml
 vn-financial-data-collector:
@@ -304,3 +310,49 @@ Hệ thống được chia thành ba lớp: lớp tạo evidence, lớp diễn g
 Vì lỗi ở mỗi lớp có tính chất khác nhau — sai data (collector), diễn giải sai (fundamental), denominator sai (valuation), overfitting (technical), sentiment thiếu ngữ cảnh (news), che giấu missing (dashboard) — không thể dùng một verifier chung cho cả sáu skill.
 
 Mỗi skill cần verifier riêng, với failure mode và primary risk phù hợp với lớp chức năng của nó. Đây là lý do `equity-research-vn` được thiết kế thành 6 skill con có contract boundary rõ ràng, thay vì một skill khổng lồ.
+
+---
+
+## Phụ lục: Provenance
+
+```yaml
+source_baseline:
+  canonical_tag: skill-harness-evaluator-v0.1.0-final-r2
+  canonical_commit: 252798ea6b1ee845eda63d1202db49289cf44978
+
+sources:
+  vn_financial_data_collector:
+    - vn-financial-data-collector/SKILL.md (trigger, workflow, contract)
+    - skill-harness-evaluator-authority/final-acceptance/canonical-evidence-index.yaml (TRANSITIVE coverage)
+
+  vn_fundamental_analysis:
+    - vn-fundamental-analysis/SKILL.md (trigger, DuPont, CAGR)
+    - skill-harness-evaluator-authority/run-registry.yaml (12 phase dirs, 48 verifier)
+    - skill-harness-evaluator-authority/final-acceptance/canonical-evidence-index.yaml (DIRECT_HISTORICAL coverage)
+
+  vn_valuation_engine:
+    - vn-valuation-engine/SKILL.md (9 phương pháp: PE/PB/EV-EBITDA/P-CF/DCF/Reverse DCF/DDM/Graham/DuPont)
+    - skill-harness-evaluator-authority/run-registry.yaml (7 phase dirs, 51 verifier)
+    - skill-harness-evaluator-authority/final-acceptance/canonical-evidence-index.yaml (DIRECT_HISTORICAL coverage)
+
+  vn_technical_analysis:
+    - vn-technical-analysis/SKILL.md (2 mode ACTIVE+PROFILE, 28 blocks PROFILE)
+    - skill-harness-evaluator-authority/completion-recovery-execution-v0.14.0/recovery-execution-results.yaml
+      (Phase 3 qualify chain: 410 fixtures, 184 canonical, 33 mutations, authority chain)
+
+  vn_news_digest:
+    - vn-news-digest/SKILL.md (4 nhóm tin, sentiment, vnstock API)
+    - skill-harness-evaluator-authority/evidence-archive-manifest.yaml
+      (phase7-pit: 8 PIT, 64/64 PASS — trong archive member agent-eval/cohort-c/phase7-pit/)
+
+  vn_research_dashboard:
+    - vn-research-dashboard/SKILL.md (template, _viz-shared, Chart.js)
+    - skill-harness-evaluator-authority/evidence-archive-manifest.yaml
+      (phase6/7 end-to-end integration — trong archive member agent-eval/cohort-c/)
+
+documentation_set:
+  REPORT-SKILL-COMPARISON:
+    purpose: 'Hệ thống gồm những thành phần nào và rủi ro nằm ở đâu'
+  REPORT-BEFORE-AFTER-HARNESS:
+    purpose: 'Quy trình nghiệm thu các thành phần đó đã thay đổi như thế nào'
+```
