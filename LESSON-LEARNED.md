@@ -142,3 +142,37 @@ else:
 ### REQ liên quan
 - Không có REQ nào kiểm tra điều này → **cần thêm REQ** hoặc sửa phase 6 spec
 - Đây là vấn đề UX/personalization, không phải data correctness
+
+---
+
+## Lỗi 4 — Peer Comparison data từ bộ nhớ agent, không từ API
+
+### Tình huống thật
+- Section 9 "Peer Comparison" hiển thị scatter chart với HBC, C4G, FCN, DXG
+- P/B, CAGR, vốn hóa của các peer = **agent tự ghi từ bộ nhớ**
+- KHÔNG có API call nào fetch peer data
+- Text nói "Hòa Bình, Ricons, Coteccons" nhưng chart dùng HBC, C4G, FCN, DXG → không nhất quán
+- DXG (Đại Từ Gate) đã hủy niêm yết → data hoàn toàn sai
+
+### Vấn đề
+- Peer data **KHÔNG verify được** — không có source
+- Có thể chứa ticker đã hủy niêm yết (DXG, HBC)
+- P/B, CAGR có thể cũ hoặc sai
+- Verifier REQ-022 chỉ check CTD data, **không check peer data** → lọt verifier
+
+### Cách tránh
+```yaml
+đề_xuất_sửa_skill:
+  phase_1: 'Fetch data cho 4-5 peer cùng ngành (P/B, CAGR, market_cap)'
+           'Lưu vào verified-dashboard-data.json field "peers"'
+  phase_6: 'Render scatter từ DATA.peers (verified), KHÔNG từ bộ nhớ agent'
+  verifier: 'REQ-022 mở rộng: check peer data cũng phải có source path'
+  
+  hoặc_nếu_không_có_API:
+    'Bỏ scatter chart, chỉ hiển thị text comparison'
+    'KHÔNG render số liệu không có source'
+```
+
+### REQ liên quan
+- REQ-022 (data accuracy): hiện chỉ check CTD → **cần mở rộng check peer**
+- REQ-027 (external claim): peer data là external claim → cần flag source
