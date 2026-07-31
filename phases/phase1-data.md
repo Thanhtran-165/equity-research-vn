@@ -13,8 +13,36 @@ Bạn là subagent Phase 1. Context tách biệt.
    - Verify: PE_pre-split = PE_post-split
 2. Fetch BCTC 5 năm qua `vnstock_data` (sponsor, 40+ kỳ):
    - Income statement, Balance sheet, Cash flow
-3. Fetch giá: weekly 52 tuần + daily ~2 năm (cho Phase 4)
+3. Fetch giá: weekly 52 tuần + daily ~2 năm (cho Phase 4). **PRICE REAL-TIME (Lesson Learned #6)**:
+   - Giá hiện tại PHẢI fetch từ API (vnstock_data or vnstock)
+   - **KHÔNG ĐƯỢC** tự điền giá tay vào overview.json
+   - Nếu API giá down → ghi `price: null` + FAIL rõ ràng
+   - Lưu timestamp fetch: `"price_fetched_at": "2026-07-31T11:00:00"`
 4. Cross-check EPS: back-calc vs reported
+5. **MAX DRAWDOWN (Lesson Learned #9)**:
+   - Tính max drawdown từ data giá weekly 52 tuần
+   - Lưu vào verified-dashboard-data.json: `"max_drawdown_52w": -28.5` (ví dụ)
+   - Phase 6 sẽ cite số này thay vì "ước tính 30-50%"
+5. **PEER DATA FETCH (Lesson Learned #4) — BẮT BUỘC**:
+   - Xác định 4-5 peer cùng ngành (dựa trên industry từ company_profile.json)
+   - Fetch P/B, PE, revenue CAGR, market_cap cho mỗi peer qua `vnstock_data`
+   - Lưu vào `[WORK_DIR]/data/peers.json` với schema:
+   ```json
+   {
+     "source": "vnstock_data_sponsor_gold",
+     "peers": [
+       {"ticker": "HBC", "pb": 0.8, "pe": 15.2, "cagr_3y": -15.0, "market_cap_b": 1200},
+       {"ticker": "C4G", "pb": 1.2, "pe": 8.5, "cagr_3y": 10.0, "market_cap_b": 800}
+     ],
+     "notes": "Peer data fetched cùng lúc với ticker chính, từ cùng API"
+   }
+   ```
+   - **KHÔNG ĐƯỢC** tự ghi peer data từ bộ nhớ — phải có API call
+   - Nếu API không có peer data → ghi `peers.json` với `"status": "unavailable"` → Phase 6 sẽ BỎ scatter chart
+6. **PRE-CHECK SOURCE PACK (Lesson Learned #2)**:
+   - Nếu chạy từ source pack (không phải fetch trực tiếp): verify đủ fields
+   - Required: revenue, net_profit, **equity**, total_assets, cost_of_sales cho mỗi năm
+   - Nếu thiếu → BÁO LỖI, không chạy tiếp
 
 ## Data pitfall (9 bẫy) — đọc `vn-financial-data-collector/references/data_pitfalls.md`
 Áp dụng TẤT CẢ 9 bẫi. Đặc biệt:
@@ -52,3 +80,5 @@ Bạn là subagent Phase 1. Context tách biệt.
 - Mô phỏng data giá nếu fetch fail → nói thẳng "không có data"
 - Bỏ qua split audit → PE/PB sẽ sai hoàn toàn
 - Dùng community tier (8 kỳ) nếu sponsor OK từ Phase 0
+- **TỰ BỊA peer data từ bộ nhớ** (Lesson Learned #4) — phải fetch từ API
+- **Bỏ qua equity=0 hoặc null** trong source pack (Lesson Learned #2) — báo lỗi
