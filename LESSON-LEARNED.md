@@ -115,3 +115,30 @@ else:
 | REQ-025 PB=null | Source pack thiếu equity | Pre-check fields + lấy equity từ CSV | **Có** (verifier bắt đúng) |
 
 **Giá trị harness:** Lỗi 2 chứng minh verifier hoạt động đúng — nếu PB sai, nó FAIL và chặn deploy, không cho PASS giả.
+
+---
+
+## Lỗi 3 — "Góc nhìn khoản đầu tư" hardcode 800 triệu, không hỏi quy mô vốn
+
+### Tình huống thật
+- Phase 6 (dashboard) render section "Góc nhìn khoản đầu tư 800 triệu VND"
+- Agent tự chọn 800 triệu — KHÔNG hỏi user
+- Skill design KHÔNG có chỗ nào yêu cầu hỏi quy mô vốn
+- Mỗi lần chạy có thể ra số khác nhau (không deterministic)
+
+### Vấn đề
+- Section "khoản đầu tư" không có ý nghĩa nếu không biết vốn thật của người dùng
+- Hardcode 800 triệu không phù hợp cho mọi người (với người có 50 triệu thì 800 triệu là vô nghĩa)
+
+### Cách tránh
+```yaml
+đề_xuất_sửa_skill:
+  phase_0_hoặc_1: 'Hỏi user: "Anh muốn xem góc nhìn với quy mô vốn bao nhiêu VND?"'
+  default_nếu_không_chỉ_định: 'Bỏ section này, hoặc dùng 3 mức (100tr / 500tr / 1 tỷ)'
+  lưu_vào: 'task-state.json field "investment_amount"'
+  phase_6: 'Đọc investment_amount từ task-state → render đúng số'
+```
+
+### REQ liên quan
+- Không có REQ nào kiểm tra điều này → **cần thêm REQ** hoặc sửa phase 6 spec
+- Đây là vấn đề UX/personalization, không phải data correctness
