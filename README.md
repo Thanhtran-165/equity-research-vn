@@ -1,8 +1,8 @@
-# Equity Research VN v3.0 — Anti-Omission Harness Architecture
+# Equity Research VN v3.0.1 — Anti-Omission Harness Architecture
 
 Pipeline 8 phases phân tích cổ phiếu Việt Nam — từ sponsor data đến dashboard deploy được.
 
-## Kiến trúc v3.0 (breaking change từ v2.2.x)
+## Kiến trúc v3.0.1 (breaking change từ v2.2.x)
 
 | v2.2.x (cũ) | v3.0 (này) |
 |---|---|

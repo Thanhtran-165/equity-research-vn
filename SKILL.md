@@ -1,6 +1,6 @@
 ---
 name: equity-research-vn
-description: "Phân tích equity research đầy đủ cho cổ phiếu Việt Nam — kiến trúc subagent per phase (v3.0). Mỗi phase chạy trong context tách biệt, giao tiếp qua task-state.json, verify per-phase. TRIGGER khi user gõ /equity-research-vn [TICKER]."
+description: "Phân tích equity research đầy đủ cho cổ phiếu Việt Nam — kiến trúc subagent per phase (v3.0.1). Mỗi phase chạy trong context tách biệt, giao tiếp qua task-state.json, verify per-phase. TRIGGER khi user gõ /equity-research-vn [TICKER]."
 ---
 
 # equity-research-vn [TICKER]

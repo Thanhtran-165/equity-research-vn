@@ -10,7 +10,7 @@
 
 ```yaml
 equity_research_vn:
-  version: 1.1.0
+  version: 3.0.1
   owner_release_label: PRODUCTION_READY
   evaluator_maturity: FUNCTIONAL_WITH_GENERALIZATION_EVIDENCE
   verdict: PASS_WITH_MATURITY_CAP
