@@ -17,7 +17,7 @@ Usage:
 
 Output: cập nhật task-state.json + evidence/
 """
-import json, sys, os, subprocess, yaml
+import json, sys, os, re, shlex, subprocess, yaml
 
 TICKER = sys.argv[1] if len(sys.argv) > 1 else "UNKNOWN"
 WORK_DIR = sys.argv[2] if len(sys.argv) > 2 else "."
@@ -89,6 +89,42 @@ def read_phase_prompt(prompt_path):
                   "không tìm thấy dashboard_template.html — agent phải tự đọc file.")
     return prompt
 
+TICKER_RE = re.compile(r"^[A-Z][A-Z0-9]{1,9}$")
+
+def validate_inputs(ticker, report):
+    """P0-04 (Wave 1): validate input TRƯỚC khi dùng trong bất kỳ command nào.
+    - Ticker: allowlist [A-Z][A-Z0-9]{1,9} (chặn ký tự shell)
+    - Report: absolute path, phải nằm trong WORK_DIR (realpath chặn symlink traversal)
+    Raises ValueError nếu không hợp lệ."""
+    if not TICKER_RE.fullmatch(ticker or ""):
+        raise ValueError(f"TICKER không hợp lệ (chỉ chữ hoa/số, 2-10 ký tự): {ticker!r}")
+    if report:
+        rep_abs = os.path.realpath(report)
+        work_abs = os.path.realpath(WORK_DIR)
+        if not (rep_abs == work_abs or rep_abs.startswith(work_abs + os.sep)):
+            raise ValueError(f"REPORT nằm ngoài WORK_DIR: {report!r}")
+
+def run_command_safe(cmd, ticker, report):
+    """P0-04: chạy registry command KHÔNG dùng shell.
+    - Thay $TICKER/$REPORT bằng giá trị ĐÃ VALIDATE (allowlist) → không thể injection
+    - Pipe đơn giản (|) được xử lý thủ công argv→argv; không có shell semantics khác
+      (glob, redirect ngoài 2>/dev/null, &&, ;) — chúng KHÔNG được diễn giải.
+    Trả về (returncode, stdout_cuối)."""
+    validate_inputs(ticker, report)
+    cmd = cmd.replace("$TICKER", ticker).replace("$REPORT", report or "")
+    stderr = subprocess.DEVNULL if "2>/dev/null" in cmd else None
+    parts = [re.sub(r"\s*2>/dev/null\s*$", "", p).strip() for p in cmd.split("|")]
+    argv_parts = [shlex.split(p) for p in parts if p]
+    if not argv_parts:
+        raise ValueError(f"command rỗng: {cmd!r}")
+    prev_out = None
+    for i, argv in enumerate(argv_parts):
+        r = subprocess.run(argv, shell=False, stdout=subprocess.PIPE, text=True,
+                           input=prev_out, timeout=30,
+                           stderr=stderr if i == len(argv_parts) - 1 else subprocess.DEVNULL)
+        prev_out = r.stdout
+    return r.returncode, prev_out
+
 def verify_phase(phase_id):
     """Run verifier for specific phase REQs."""
     if not os.path.exists(PHASE_MAP_FILE):
@@ -135,17 +171,29 @@ def verify_phase(phase_id):
         req_data = yaml.safe_load(f)
 
     all_pass = True
+    checked = 0  # P0-03 (Wave 1): đếm REQ thực sự được check — SKIP/deferred không đủ quyền
     for req in req_data.get("requirements", []):
         if req["id"] not in phase_reqs:
             continue
         method = req["verification"]["method"]
         if method == "command":
-            cmd = req["verification"]["command"].replace("$TICKER", TICKER).replace("$REPORT", artifact or "")
+            checked += 1
+            # P1-03 (Wave 1): dùng CHUNG verification engine của verifier (verify_command)
+            # — expect_exit/expect_min/expect_max cùng một cách diễn giải, không duy trì
+            # hai bộ semantics riêng (runner cũ chỉ so exit code, bỏ qua expect_min/max).
             try:
-                result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
-                passed = result.returncode == req["verification"].get("expect_exit", 0)
+                import importlib.util as _ilu
+                _spec = _ilu.spec_from_file_location(
+                    "indep_verifier", os.path.join(SKILL_DIR, "scripts", "independent_verifier.py"))
+                _vm = _ilu.module_from_spec(_spec)
+                _spec.loader.exec_module(_vm)
+                _vm.TICKER = TICKER
+                _vm.REPORT = artifact or ""
+                # html=None: command REQ (sponsor) không cần artifact; $JS_FILE không dùng ở đây
+                passed, ev = _vm.verify_command(req, None)
                 if not passed:
-                    print(f"  ❌ {req['id']} FAIL: {req['text'][:60]}")
+                    detail = ev.get("value", ev.get("exit_code", ""))
+                    print(f"  ❌ {req['id']} FAIL: {req['text'][:60]} (evidence: {detail})")
                     all_pass = False
                 else:
                     print(f"  ✅ {req['id']} PASS: {req['text'][:60]}")
@@ -153,7 +201,14 @@ def verify_phase(phase_id):
                 print(f"  ❌ {req['id']} ERROR: {e}")
                 all_pass = False
         else:
-            print(f"  ⏭️  {req['id']} SKIP (artifact check, will verify at Phase 6/7)")
+            print(f"  ⏭️  {req['id']} DEFERRED (artifact check, verify ở Phase 6/7)")
+
+    # P0-03: phase chỉ có REQ deferred (0 check thật) → KHÔNG được completed.
+    # Trạng thái do agent ghi trong task-state sẽ được REQ-068 kiểm (result keys tối thiểu).
+    if checked == 0:
+        print(f"  ⚠️  Phase {phase_id}: 0 REQ check được ở pre-deploy (tất cả deferred) — "
+              f"KHÔNG tự ghi completed; chờ final verify Phase 6/7")
+        return False
 
     return all_pass
 

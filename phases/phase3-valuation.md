@@ -71,3 +71,10 @@ nếu valuation target < 0:
 ## KHÔNG được
 - Hiển thị DCF âm (LC-005 failure) — phải dùng alternative
 - Skip sanity check output
+
+## UNIT CONTRACT + FCFF/FCFE (P0-01/P0-02 — Wave 1, BẮT BUỘC)
+- MỌI công thức tuân theo `vn-valuation-engine/references/valuation_formulas.md` UNIT CONTRACT:
+  marketCap = price × shares_tỷ (tỷ VND, KHÔNG hệ số 10); fairPrice = fairMarketCap / shares_tỷ.
+- DCF: FCFF = EBIT×(1−T)+D&A−CapEx−ΔNWC; FCFE = CFO−CapEx+Net Borrowing. KHÔNG gọi CFO−CapEx là FCFF.
+- Bridge EV→equity: EV − NetDebt = Equity Value. g_terminal phải < wacc (hard gate).
+- Mỗi output ghi rõ: loại dòng tiền, discount rate, terminal model, đơn vị.

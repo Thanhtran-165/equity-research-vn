@@ -53,7 +53,7 @@ Xem `requirements.yaml` (73 REQ — V3+V4+V5 hardening + runtime-render + no-met
 
 | v1 | v2 (này) |
 |---|---|
-| 486 dòng monolith | 80 dòng thin + 8 phase files |
+| 486 dòng monolith | 80 dòng thin + 9 phase files |
 | 1 agent giữ tất cả | Subagent per phase (context tách) |
 | Verify 1 lần cuối | Verify sau mỗi phase |
 | Bỏ sót ở handoff | Handoff qua task-state.json |
@@ -61,5 +61,5 @@ Xem `requirements.yaml` (73 REQ — V3+V4+V5 hardening + runtime-render + no-met
 ## Output
 
 1. `[TICKER]_Complete_Report.html` (22 sections canonical)
-2. `.task-state/evidence/` (67 evidence files)
+2. `.task-state/evidence/` (73 evidence files — 1 file/REQ)
 3. Vercel URL (nếu deploy pass)

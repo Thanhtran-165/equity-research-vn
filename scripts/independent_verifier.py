@@ -17,7 +17,7 @@ Usage:
 
 Exit code: 0 = all pass, 1 = any fail
 """
-import json, sys, os, re, subprocess, yaml, datetime, hashlib
+import json, sys, os, re, shlex, subprocess, yaml, datetime, hashlib
 
 TICKER = sys.argv[1] if len(sys.argv) > 1 else "UNKNOWN"
 REPORT = sys.argv[2] if len(sys.argv) > 2 else None
@@ -198,6 +198,31 @@ def verify_non_advice_check(req, html):
         "patch_note": "P5: entity-interruption-tolerant disclaimers + sentence-level negation removal + final negation guard",
     }
 
+TICKER_RE_SAFE = re.compile(r"^[A-Z][A-Z0-9]{1,9}$")
+
+def run_command_safe(cmd, ticker, report):
+    """P0-04 (Wave 1): chạy registry command KHÔNG shell.
+    - Ticker validate allowlist; report phải absolute trong work dir (realpath)
+    - Pipe đơn giản xử lý argv→argv; shell semantics khác không được diễn giải.
+    Trả về (returncode, stdout_cuối)."""
+    if not TICKER_RE_SAFE.fullmatch(ticker or ""):
+        raise ValueError(f"TICKER không hợp lệ: {ticker!r}")
+    # REPORT: không validate work-dir (verifier nhận path từ CLI — không có WORK_DIR),
+    # nhưng path có metacharacter sẽ bị shlex.split tách → không có shell semantics
+    cmd = cmd.replace("$TICKER", ticker).replace("$REPORT", report or "")
+    stderr = subprocess.DEVNULL if "2>/dev/null" in cmd else None
+    parts = [re.sub(r"\s*2>/dev/null\s*$", "", p).strip() for p in cmd.split("|")]
+    argv_parts = [shlex.split(p) for p in parts if p]
+    if not argv_parts:
+        raise ValueError(f"command rỗng: {cmd!r}")
+    prev_out = None
+    for i, argv in enumerate(argv_parts):
+        r = subprocess.run(argv, shell=False, stdout=subprocess.PIPE, text=True,
+                           input=prev_out, timeout=30,
+                           stderr=stderr if i == len(argv_parts) - 1 else subprocess.DEVNULL)
+        prev_out = r.stdout
+    return r.returncode, prev_out
+
 def verify_command(req, html):
     """Run shell command, check exit code / output."""
     cmd = req["verification"]["command"]
@@ -210,11 +235,9 @@ def verify_command(req, html):
         cmd = cmd.replace("$JS_FILE", js_file)
     else:
         cmd = cmd.replace("$JS_FILE", "/dev/null")
-    cmd = cmd.replace("$TICKER", TICKER).replace("$REPORT", REPORT or "")
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
-        output = result.stdout.strip()
-        exit_code = result.returncode
+        exit_code, _out = run_command_safe(cmd, TICKER, REPORT)
+        output = (_out or "").strip()
 
         if "expect_exit" in req["verification"]:
             passed = exit_code == req["verification"]["expect_exit"]
@@ -4265,17 +4288,21 @@ def verify_phase_completion(req, html):
     required_phases = ["phase0_sponsor", "phase1_data", "phase2_fundamental",
                        "phase3_valuation", "phase4a_tech_active",
                        "phase4b_tech_profile", "phase5_news", "phase6_dashboard"]
-    # Result keys tối thiểu mỗi phase phải có (chống status=completed + result rỗng)
-    min_result_keys = {
-        "phase0_sponsor": ["investment_amount", "fiscal_year_type"],
-        "phase1_data": ["data_source", "split_audit"],
-        "phase2_fundamental": ["eps", "roe", "cagr"],
-        "phase3_valuation": ["targets", "pe", "pb"],
-        "phase4a_tech_active": ["tech_score", "verdict"],
-        "phase4b_tech_profile": ["archetype"],
-        "phase5_news": ["sentiment"],
-        "phase6_dashboard": ["artifact_path"],
-    }
+    # P1-02 (Wave 1): min result keys đọc từ task-state.schema.json (1 nguồn duy nhất —
+    # không hardcode rải rác; schema và verifier không thể drift nhau)
+    _schema_path = os.path.join(SKILL_DIR, "task-state.schema.json")
+    _schema = None
+    if os.path.exists(_schema_path):
+        try:
+            with open(_schema_path) as _f:
+                _schema = json.load(_f)
+        except Exception:
+            _schema = None
+    min_result_keys = {}
+    if isinstance(_schema, dict):
+        min_result_keys = _schema.get("x_min_result_keys", {}) or {}
+    if not min_result_keys:
+        return False, {"error": "task-state.schema.json không đọc được x_min_result_keys — schema thiếu/hỏng"}
     issues = []
     phase_status = {}
     for pid in required_phases:
