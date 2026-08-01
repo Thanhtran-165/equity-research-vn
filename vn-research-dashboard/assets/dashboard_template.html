@@ -34,7 +34,12 @@
 html{scroll-behavior:smooth}
 body{background:var(--bg-0);color:var(--text);font-family:var(--font-sans);line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
-.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint)}
+.pos{color:var(--green)} .neg{color:var(--red)} .neu{color:var(--amber)} .blue{color:var(--blue)} .dim{color:var(--text-dim)} .faint{color:var(--text-faint);font-size:12px;line-height:1.6}
+/* Citations [ref-N]: ẩn khỏi hiển thị (meta nội bộ cho verifier) — vẫn giữ trong DOM để
+   bộ kiểm tra nguồn (REQ-029/018) đọc được file. */
+sup.cite{display:none}
+/* Ghi chú/Nguồn meta nội bộ: ẩn khỏi hiển thị, giữ trong DOM cho verifier */
+.meta-note{display:none}
 a{color:var(--blue);text-decoration:none}
 a:hover{text-decoration:underline}
 
@@ -88,6 +93,11 @@ a:hover{text-decoration:underline}
 .grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px}
 .grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px}
 .section{margin-top:56px;scroll-margin-top:60px}
+/* Block text: khoảng cách đoạn + danh sách bullet gọn (thẩm mỹ khối text) */
+.section p{margin:10px 0;line-height:1.7}
+.section ul,.section ol{margin:10px 0 10px 4px;padding-left:20px}
+.section li{margin-bottom:6px;line-height:1.65}
+.section li::marker{color:var(--amber)}
 .section-title{display:flex;align-items:center;gap:12px;margin:0 0 6px}
 .section-title .num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;padding:0 8px;border-radius:6px;background:var(--amber);color:#1a1206;font-weight:700;font-size:13px;font-family:var(--font-mono)}
 .section-title h2{font-size:22px;font-weight:700;letter-spacing:-0.3px}
@@ -111,6 +121,7 @@ a:hover{text-decoration:underline}
 .kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:28px}
 .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:border-color .2s}
 .kpi:hover{border-color:var(--border-hot)}
+.kpi-sub{font-size:11px;color:var(--text-faint)}
 .kpi-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.8px;font-weight:600}
 .kpi-value{font-size:22px;font-weight:700;margin-top:6px;font-family:var(--font-mono)}
 .kpi-delta{font-size:11px;margin-top:4px;font-weight:600}
@@ -224,6 +235,15 @@ a:hover{text-decoration:underline}
 .qlist{list-style:none!important;padding-left:0!important}
 .qlist li{display:flex;align-items:center;gap:10px}
 .qlist .qbadge{flex-shrink:0;min-width:54px;text-align:center}
+
+
+/* ---------- news list (dark theme) ---------- */
+.news-list{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.news-item{display:flex;align-items:flex-start;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;line-height:1.6;color:var(--text-dim)}
+.news-tag{flex:0 0 auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;letter-spacing:0.5px;margin-top:1px}
+.news-tag.pos{background:rgba(63,185,80,0.15);color:var(--green)}
+.news-tag.neu{background:rgba(245,166,35,0.15);color:var(--amber)}
+.news-tag.neg{background:rgba(248,81,73,0.15);color:var(--red)}
 
 /* ---------- footer ---------- */
 footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);color:var(--text-faint);font-size:11px;line-height:1.6}
@@ -347,7 +367,7 @@ a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
   .price-block{text-align:left}
 }
 
-/* ===== KDH EXTRA CSS — comprehensive coverage for generated classes (lesson 16) ===== */
+/* ===== per-ticker EXTRA CSS — comprehensive coverage for generated classes ===== */
 /* Data table (alternative to fin-table, used in some sections) */
 .data-table{width:100%;border-collapse:collapse;font-size:12.5px;font-family:var(--font-mono)}
 .data-table th,.data-table td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);border-left:1px solid var(--border)}
@@ -461,6 +481,15 @@ a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
 .verdict-card { box-shadow: var(--sh-sm) !important; }
 .stale-warning { box-shadow: var(--sh-sm) !important; }
 .toc-sidebar { box-shadow: var(--sh-md) !important; }
+
+
+/* ---------- tables (.tbl) — dark theme ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.tbl th,.tbl td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+.tbl thead th{font-size:10px;text-transform:uppercase;color:var(--text-faint);font-weight:600;letter-spacing:.04em;white-space:nowrap;border-bottom:1px solid var(--border-hot);background:var(--card-2)}
+.tbl tbody tr:hover td{background:rgba(255,255,255,0.02)}
+.tbl td b{color:var(--amber)}
+.tbl tbody tr:last-child td{border-bottom:none}
 
 </style>
 </head>
@@ -683,7 +712,7 @@ a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
 
 <script>
 
-/* ============ DATA (KDH — VND, tỷ VND unless noted) ============ */
+/* ============ DATA (per-ticker chart/financial data) ============ */
 /* ============ DATA (per-ticker chart/financial data — replace whole block) ============ */
 {{CHART_DATA_JS}}
 
@@ -757,7 +786,7 @@ document.addEventListener('DOMContentLoaded', function(){
   new Chart($('chartHistCash'), {
     type:'bar',
     data:{ labels: DATA.years, datasets:[
-      { label:'Tăng tồn kho (tỷ VND)', data: DATA.invGrowth,
+      { label:'Capex (tỷ VND)', data: DATA.capex,
         backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'),
         borderRadius:5, yAxisID:'y', order:2 },
       { label:'CFO (tỷ VND, âm)', data: DATA.cfo, type:'line',
@@ -811,8 +840,8 @@ document.addEventListener('DOMContentLoaded', function(){
       label:'Giá trị dự án (tỷ VND)', data:{{THESIS_CAPEX_DATA}},
       backgroundColor:(c)=>{
         const i = c.dataIndex;
-        const cols=['rgba(74,158,255,0.7)','rgba(245,166,35,0.8)', 'rgba(167,139,250,0.7)', 'rgba(248,81,73,0.8)', 'rgba(63,185,80,0.7)'];
-        return cols[i % cols.length];
+        const cols=['rgba(74,158,255,0.7)','rgba(245,166,35,0.8)', 'rgba(167,139,250,0.7)', RED];
+        return cols[i];
       }, borderRadius:6
     }]},
     options: baseOpts({
@@ -837,22 +866,22 @@ document.addEventListener('DOMContentLoaded', function(){
         annotation:{
           annotations:{
             avg5: { type:'line', yMin:DATA.pe5med, yMax:DATA.pe5med, borderColor:AMBER, borderDash:[6,4], borderWidth:1.5,
-                    label:{content:('5Y median ~'+DATA.pe5med+'×'),display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
+                    label:{content:'5Y median ~25×',display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
             avg10:{ type:'line', yMin:DATA.pe5avg, yMax:DATA.pe5avg, borderColor:'#a78bfa', borderDash:[6,4], borderWidth:1.5,
-                    label:{content:('5Y avg ~'+DATA.pe5avg+'×'),display:(Math.abs(DATA.pe5avg-DATA.pe5med)>0.5),position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
-            current:{ type:'point', xValue:(DATA.years[DATA.years.length-1]), yValue:DATA.pe, backgroundColor:RED, radius:6,
-                      label:{content:('Now ~'+DATA.pe+'×'),display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
+                    label:{content:'5Y avg ~68× (bị kéo bởi FY24)',display:true,position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
+            current:{ type:'point', xValue:'FY25', yValue:24.1, backgroundColor:RED, radius:6,
+                      label:{content:'Now ~24× (FY25)',display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
           }
         }
       }
     })
   });
 
-  // --- Chart 7: Debt vs Cash (10Y) ---
+  // --- Chart 7: Nợ phải trả vs Vốn chủ sở hữu (10Y) ---
   new Chart($('chartBSDt'), {
     type:'bar',
     data:{ labels: DATA.years, datasets:[
-      { label:'Tồn kho (tỷ VND)', data: DATA.inventory,
+      { label:'Nợ phải trả (tỷ VND)', data: DATA.liabilities,
         backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.3)'), borderRadius:5, yAxisID:'y', order:2 },
       { label:'Vốn chủ sở hữu (tỷ VND)', data: DATA.equity, type:'line',
         borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
@@ -863,23 +892,43 @@ document.addEventListener('DOMContentLoaded', function(){
     })
   });
 
-  // --- Chart 8: Dividend + Buyback ---
-  new Chart($('chartBSDt2') || $('chartReturns'), {
+  // --- Chart 8: EPS & ROE (5 năm) — canvas chartBSDt2 ở section Balance Sheet.
+  //     Guard `if ($('chartBSDt2'))`: không fallback sang chartReturns (thuộc PTKT Profile).
+  if ($('chartBSDt2')) new Chart($('chartBSDt2'), {
     type:'bar',
     data:{ labels: DATA.years, datasets:[
       { label:'EPS (VND)', data: DATA.eps, backgroundColor:'rgba(63,185,80,0.7)', borderRadius:4, yAxisID:'y' },
       { label:'ROE (%)', data: DATA.roe, type:'line', borderColor: BLUE, backgroundColor: BLUE, tension:0.3, pointRadius:4, yAxisID:'y1', borderWidth:2 }
     ]},
     options: baseOpts({
-      scales:{ x: baseScales.x, y:{ ...baseScales.y, stacked:true, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
+      scales:{
+        x: baseScales.x,
+        y:{ ...baseScales.y, title:{display:true, text:'EPS (đ)', font:{size:10}, color:'#565f6b'} },
+        y1:{ position:'right', grid:{display:false}, ticks:{font:{size:10}, color:BLUE} }
+      }
+    })
+  });
+
+  // --- Chart 8b: Technical Profile — Lợi suất theo tuần (%) ---
+  new Chart($('chartReturns'), {
+    type:'line',
+    data:{ labels: DATA.techWeeks, datasets:[
+      { label:'Lợi suất 1 tuần (%)', data: DATA.ret1w, borderColor: BLUE, tension:0.3, pointRadius:0, borderWidth:1.5, yAxisID:'y' },
+      { label:'Lợi suất 4 tuần (%)', data: DATA.ret4w, borderColor: GREEN, tension:0.3, pointRadius:0, borderWidth:2, yAxisID:'y' }
+    ]},
+    options: baseOpts({
+      scales:{
+        x: baseScales.x,
+        y:{ ...baseScales.y, title:{display:true, text:'%', font:{size:10}, color:'#565f6b'} }
+      }
     })
   });
 
   // --- Chart 9: Peer scatter ---
   const peers = {
     datasets:[{
-      label:(DATA.peerLabel || 'Peer VN (P/B vs tăng trưởng, bubble=vốn hóa)'),
-      data: DATA.peers.data || DATA.peers,
+      label:'Peer VN (P/B vs P/E, bubble=vốn hóa)',
+      data: DATA.peers,
       backgroundColor:(ctx)=>{ const d=ctx.raw; return d.own ? AMBER : BLUE; },
       borderColor:'#0f1419', borderWidth:1.5
     }]
@@ -889,8 +938,8 @@ document.addEventListener('DOMContentLoaded', function(){
     data: peers,
     options: baseOpts({
       scales:{
-        x:{ ...baseScales.x, title:{display:true, text:'P/B (×)', font:{size:10}, color:'#565f6b'}, min:(DATA.peerPBMin||1), max:(DATA.peerPBMax||5) },
-        y:{ ...baseScales.y, title:{display:true, text:(DATA.peerYLabel||'CAGR NPAT 3Y (%)'), font:{size:10}, color:'#565f6b'}, min:0, max:(DATA.peerYMax||20) }
+        x:{ ...baseScales.x, title:{display:true, text:'P/B (×)', font:{size:10}, color:'#565f6b'}, min:0.5, max:2 },
+        y:{ ...baseScales.y, title:{display:true, text:'P/E (lần)', font:{size:10}, color:'#565f6b'}, min:0, max:60 }
       },
       plugins:{
         legend:{display:false},
@@ -936,7 +985,7 @@ document.addEventListener('DOMContentLoaded', function(){
     ]},
     options: baseOpts({
       scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'VND / cổ phiếu', font:{size:10}, color:'#565f6b'} } },
-      plugins:{ legend:{labels:{usePointStyle:true, boxWidth:8}}, annotation:{ annotations:{ support:{type:'line', yMin:DATA.tech52wLow, yMax:DATA.tech52wLow, borderColor:GREEN, borderDash:[6,4], borderWidth:1, label:{content:('Hỗ trợ ~'+DATA.tech52wLow.toLocaleString()+' VND (52W low)'), display:true, position:'start', backgroundColor:'rgba(63,185,80,0.85)', font:{size:9,weight:'bold'}, color:'#0f1419'}}, resist:{type:'line', yMin:DATA.techMA50val, yMax:DATA.techMA50val, borderColor:RED, borderDash:[6,4], borderWidth:1, label:{content:('Kháng cự ~'+DATA.techMA50val.toLocaleString()+' VND (MA50)'), display:true, position:'end', backgroundColor:'rgba(248,81,73,0.85)', font:{size:9,weight:'bold'}, color:'#fff'}} } } }
+      plugins:{ legend:{labels:{usePointStyle:true, boxWidth:8}}, annotation:{ annotations:{ support:{type:'line', yMin: DATA.tech52wLow, yMax: DATA.tech52wLow, borderColor:GREEN, borderDash:[6,4], borderWidth:1, label:{content:'52W low (hỗ trợ)', display:true, position:'start', backgroundColor:'rgba(63,185,80,0.85)', font:{size:9,weight:'bold'}, color:'#0f1419'}}, resist:{type:'line', yMin: DATA.techMA50val, yMax: DATA.techMA50val, borderColor:RED, borderDash:[6,4], borderWidth:1, label:{content:'MA50 (kháng cự)', display:true, position:'end', backgroundColor:'rgba(248,81,73,0.85)', font:{size:9,weight:'bold'}, color:'#fff'}} } } }
     })
   });
 
@@ -1044,59 +1093,4 @@ document.addEventListener('DOMContentLoaded', function(){
 
 </script>
 </body>
-
-<!-- 
-=== TOKENS TO FILL (complete list) ===
-Template: dashboard_template.html — 22 sections, Chart.js 4.4.1 framework sẵn sàng.
-Agent chỉ cần fill các token dưới đây. GIỮ NGUYÊN: CSS, <section> ids, canvas ids, nav links, Chart.js setup.
-
---- Identity / meta ---
-{{TICKER}} — mã cổ phiếu (vd KDH, HPG, FPT)
-{{COMPANY_NAME}} — tên công ty tiếng Việt (vd Nhà Khang Điền)
-{{EXCHANGE}} — sàn giao dịch (vd HOSE, HNX, UPCOM)
-{{PRICE_DATE}} — ngày giá đóng cửa gần nhất (vd 08/07/2026)
-{{CAPITAL_LENS_AMOUNT}} — số vốn cho góc nhìn khoản đầu tư (vd 800 triệu VND)
-{{SOURCES_SUMMARY}} — tóm tắt nguồn dữ liệu (vd vnstock (VCI), BCTC kiểm toán, báo chí...)
-{{CITATION_COUNT}} — số citation trong báo cáo (vd 16)
-
---- Section body HTML (mỗi token = toàn bộ nội dung HTML bên trong section, giữa section-title và </section>) ---
-{{SEC_HERO_HTML}} — HTML body cho section hero + KPI strip
-{{SEC_EXEC_HTML}} — HTML body cho section executive summary (4 callout + plain)
-{{SEC_BIZ_HTML}} — HTML body cho section business 101
-{{SEC_INDUSTRY_HTML}} — HTML body cho section industry position / value chain
-{{SEC_HISTORY_HTML}} — HTML body cho section financial history table + analysis
-{{SEC_SEGMENT_HTML}} — HTML body cho section segment analysis
-{{SEC_THESIS_HTML}} — HTML body cho section investment thesis + đúng/sai + KPI watchlist
-{{SEC_VALUATION_HTML}} — HTML body cho section valuation P/E P/B + NAV
-{{SEC_PEER_HTML}} — HTML body cho section peer comparison
-{{SEC_BS_HTML}} — HTML body cho section balance sheet & FCF
-{{SEC_RISK_HTML}} — HTML body cho section risk matrix table
-{{SEC_CAPITAL_LENS_HTML}} — HTML body cho section capital lens (800tr) lump sum/DCA/drawdown/checklist
-{{SEC_SCENARIO_HTML}} — HTML body cho section scenario bull/base/bear
-{{SEC_CHECKLIST_HTML}} — HTML body cho section final investment checklist 5 nhóm
-{{SEC_INSIGHT_1_HTML}} — HTML body cho section special insight 1 full body
-{{SEC_INSIGHT_2_HTML}} — HTML body cho section special insight 2 full body
-{{SEC_INSIGHT_3_HTML}} — HTML body cho section special insight 3 full body
-{{SEC_TECH_HTML}} — HTML body cho section technical ACTIVE (score/MA/RSI/MACD/pattern)
-{{SEC_TECH_PROFILE_HTML}} — HTML body cho section technical PROFILE (return/drawdown/tail/non-advice)
-{{SEC_ANALYST_HTML}} — HTML body cho section analyst synthesis (consensus/target/bull-bear)
-{{SEC_GLOSSARY_HTML}} — HTML body cho section glossary
-{{SEC_SOURCE_HTML}} — HTML body cho section source appendix + data quality matrix + refs
-
---- Insights (subtitle + TOC label) ---
-{{INSIGHT_1_SUBTITLE}} — tiêu đề h2 insight 1 (đặc thù ticker)
-{{INSIGHT_2_SUBTITLE}} — tiêu đề h2 insight 2 (đặc thù ticker)
-{{INSIGHT_3_SUBTITLE}} — tiêu đề h2 insight 3 (đặc thù ticker)
-{{INSIGHT_1_SHORT_LABEL}} — nhãn TOC ngắn cho insight 1 (vd "Tồn kho")
-{{INSIGHT_2_SHORT_LABEL}} — nhãn TOC ngắn cho insight 2 (vd "CFO âm")
-{{INSIGHT_3_SHORT_LABEL}} — nhãn TOC ngắn cho insight 3 (vd "Mả Lặng")
-
---- Chart data (JS) ---
-{{CHART_DATA_JS}} — block JS "const DATA = {...}" chứa mọi mảng cho Chart.js (years, revenue, netIncome, grossProfit, inventory, cfo, equity, totalAssets, eps, roe, peHist, pbHist, bvps, peers, techWeeks/Price/MA10/MA20/MA50/RSI, ddMonths/Values, distBins/Counts, segMix, invGrowth) — đơn vị tỷ VND / VND / %
-{{THESIS_CAPEX_LABELS}} — JS array nhãn cho chart Thesis Capex (vd ["FY25 thực tế","FY26 dự phóng","FY27 dự phóng","Dự án lớn (toàn dự án)"])
-{{THESIS_CAPEX_DATA}} — JS array số liệu cho chart Thesis Capex (vd [4651, 7000, 9000, 16369])
-
-Lưu ý: {{CHART_DATA_JS}} là biến của const DATA object — tất cả canvas đều đọc từ DATA.years/revenue/... .
-Đừng hardcode số liệu trong Chart setup; tham chiếu DATA.xxx thay thế.
--->
 </html>
