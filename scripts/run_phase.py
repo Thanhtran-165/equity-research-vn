@@ -51,12 +51,43 @@ def save_state(state):
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
 
+def mark_phase_completed(phase_id):
+    """P4 (review V4 Flash): run_phase tự ghi status=completed sau verify PASS —
+    không phụ thuộc agent tự ghi. REQ-068 phase_completion_check đọc giá trị này."""
+    import datetime
+    state = load_state()
+    if not state:
+        return
+    phases = state.setdefault("phases", {})
+    phases.setdefault(phase_id, {})
+    phases[phase_id]["status"] = "completed"
+    phases[phase_id]["completed"] = datetime.datetime.now().isoformat()
+    state["last_updated"] = datetime.datetime.now().isoformat()
+    save_state(state)
+
 def read_phase_prompt(prompt_path):
     full_path = os.path.join(SKILL_DIR, prompt_path)
     if not os.path.exists(full_path):
         return f"Phase prompt not found: {full_path}"
     with open(full_path) as f:
-        return f.read()
+        prompt = f.read()
+    # P1 (review V4 Flash): phase 6 có placeholder __TEMPLATE_INLINE_PLACEHOLDER__
+    # nhưng không code nào inject → chạy qua run_phase = "cửa tử" (agent tự bịa 22
+    # sections). Inject dashboard_template.html thật vào đây.
+    if "__TEMPLATE_INLINE_PLACEHOLDER__" in prompt:
+        template_candidates = [
+            os.path.join(os.path.expanduser("~/.zcode/skills/vn-research-dashboard/assets/dashboard_template.html")),
+            os.path.join(SKILL_DIR, "..", "vn-research-dashboard", "assets", "dashboard_template.html"),
+        ]
+        for tc in template_candidates:
+            if os.path.exists(tc):
+                with open(tc) as tf:
+                    prompt = prompt.replace("__TEMPLATE_INLINE_PLACEHOLDER__", tf.read())
+                break
+        else:
+            print("⚠️ WARNING: __TEMPLATE_INLINE_PLACEHOLDER__ trong prompt phase6 nhưng "
+                  "không tìm thấy dashboard_template.html — agent phải tự đọc file.")
+    return prompt
 
 def verify_phase(phase_id):
     """Run verifier for specific phase REQs."""
@@ -153,7 +184,8 @@ def run_single_phase(phase_id, prompt_path):
     passed = verify_phase(phase_id)
 
     if passed:
-        print(f"\n✅ Phase {phase_id} VERIFIED — ready for next phase")
+        mark_phase_completed(phase_id)  # P4: tự ghi status (không phụ thuộc agent)
+        print(f"\n✅ Phase {phase_id} VERIFIED + marked completed — ready for next phase")
         return True
     else:
         print(f"\n❌ Phase {phase_id} FAILED — fix before proceeding")

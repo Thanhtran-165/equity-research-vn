@@ -1118,12 +1118,48 @@ def verify_price_source(req, html):
         else:
             issues.append(f"price={price_val} không có price_fetched_at hoặc API source reference")
 
+    # P2 (review V4 Flash): giá cũ vẫn PASS nếu chỉ check field tồn tại. Parse ngày
+    # price_fetched_at — nếu >7 ngày so với hôm nay → FAIL "giá không fresh".
+    # Kịch bản lọt: agent giữ timestamp 3 tháng trước + giá cũ → 67/67 PASS oan.
+    # Check TẤT CẢ nguồn (data/overview.json, financials.json, task-state, HTML) —
+    # bất kỳ nguồn nào cũ → FAIL (chống agent cập nhật 1 file, để file khác cũ).
+    import datetime as _dt
+    ts_candidates = []
+    for src in ("data/overview.json", "data/financials.json"):
+        d = _load_json_rel(src)
+        if d and isinstance(d, dict):
+            cand = (d.get("overview", {}) or {}).get("price_fetched_at") or d.get("price_fetched_at")
+            if cand:
+                ts_candidates.append((src, str(cand)))
+    ts_state = _load_json_rel(".task-state/task-state.json")
+    if ts_state:
+        p1 = (ts_state.get("phases", {}).get("phase1_data", {}) or {}).get("result") or {}
+        if p1.get("price_fetched_at"):
+            ts_candidates.append(("task-state", str(p1["price_fetched_at"])))
+    ts_html = re.search(r'price_fetched_at["\']?\s*[:=]\s*["\']?(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2})', html or "")
+    if ts_html:
+        ts_candidates.append(("html", ts_html.group(1)))
+    evidence_fresh = {"sources_checked": [s[0] for s in ts_candidates]}
+    if ts_candidates:
+        for source, ts_str in ts_candidates:
+            try:
+                fetched = _dt.datetime.fromisoformat(ts_str[:19].replace(" ", "T"))
+                age_days = (_dt.datetime.now() - fetched).days
+                if age_days > 7:
+                    issues.append(f"price_fetched_at ({source}) = {ts_str} cũ {age_days} ngày (>7) — giá không fresh")
+                evidence_fresh.setdefault("per_source", {})[source] = {"ts": ts_str, "age_days": age_days, "fresh": age_days <= 7}
+            except (ValueError, TypeError):
+                evidence_fresh.setdefault("per_source", {})[source] = {"ts": ts_str, "parsed": False}
+        per_src = evidence_fresh.get("per_source", {})
+        evidence_fresh["any_fresh"] = any(v.get("fresh") for v in per_src.values()) if per_src else False
+
     passed = len(issues) == 0
     evidence = {
         "price_value": price_val,
         "has_price_fetched_at": has_timestamp,
         "has_api_source_reference": has_api_source,
         "is_round_number": is_round,
+        "freshness": evidence_fresh,
         "issues": issues,
     }
     return passed, evidence
@@ -3865,6 +3901,38 @@ def verify_fiscal_year(req, html):
     passed = len(issues) == 0
     return passed, {"issues": issues, "fiscal_year_type": fyt}
 
+def verify_phase_completion(req, html):
+    """REQ-068 (P3 — review V4 Flash): mọi phase 0–6 phải status=completed + có
+    result keys tối thiểu. Chống agent bỏ qua phase 2 (DuPont) hoặc 4b (profile)
+    mà verifier không biết (verifier không đọc phase statuses trước đây).
+
+    Verifier đọc task-state.json phases[*].status — thiếu completed/result → FAIL.
+    """
+    ts = _load_json_rel(".task-state/task-state.json")
+    if not ts or not isinstance(ts, dict):
+        return False, {"error": "task-state.json không tìm thấy — không verify được phase completion"}
+    phases = ts.get("phases", {}) or {}
+    # REQ-068 chỉ verify phase 0–6 (phase 7 = deploy, chạy sau verify)
+    required_phases = ["phase0_sponsor", "phase1_data", "phase2_fundamental",
+                       "phase3_valuation", "phase4a_tech_active",
+                       "phase4b_tech_profile", "phase5_news", "phase6_dashboard"]
+    issues = []
+    phase_status = {}
+    for pid in required_phases:
+        ph = phases.get(pid, {})
+        status = ph.get("status")
+        phase_status[pid] = status
+        if status != "completed":
+            issues.append(f"{pid}: status='{status}' (cần 'completed') — agent có thể đã bỏ qua phase này")
+    passed = len(issues) == 0
+    return passed, {
+        "phases_checked": len(required_phases),
+        "phase_status": phase_status,
+        "issues": issues[:8],
+        "note": "P3 — chống skip phase: verifier không đọc statuses trước đây → bỏ phase 2/4b vẫn 67/67 PASS",
+    }
+
+
 # ═══════════════════════════════════════════════════════════════
 # DISPATCH TABLE (FIX-5 — review V4 Pro: thay elif-chain 54 nhánh + skip-list
 # thủ công bằng dict duy nhất). Thêm verify method mới = thêm 1 entry ở đây.
@@ -3924,6 +3992,7 @@ METHODS = {
     "verdict_consistency_check": verify_verdict_consistency,
     "api_fallback_check": verify_api_fallback,
     "fiscal_year_check": verify_fiscal_year,
+    "phase_completion_check": verify_phase_completion,
 }
 
 # ═══════════════════════════════════════════════════════════════

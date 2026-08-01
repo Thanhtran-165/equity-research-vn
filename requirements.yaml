@@ -770,6 +770,17 @@ requirements:
     rules:
     - fiscal_year_type phải tồn tại trong task-state (calendar|custom)
     - custom → narrative phải mention "năm tài chính/fiscal/niên độ"
+- id: REQ-068
+  text: 'Phase completion: mọi phase 0–6 phải status=completed trong task-state.json. KHÔNG skip phase (DuPont, profile, news) mà vẫn PASS. (P3 — review V4 Flash: verifier không đọc phase statuses trước đây → agent bỏ phase 2/4b không ai biết.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-02
+  case_ref: review-tongquan-flash
+  verification:
+    method: phase_completion_check
+    rules:
+    - Mọi phase 0–6 phải status=completed
+    - Thiếu status/result → FAIL
 - id: REQ-021
   text: KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.
   type: mandatory
@@ -777,7 +788,7 @@ requirements:
   failure_mode: FM-05
   verification:
     method: all_requirements_pass
-total: 67
+total: 68
 critical:
 - REQ-001
 - REQ-002
@@ -830,6 +841,7 @@ high:
 - REQ-063
 - REQ-064
 - REQ-066
+- REQ-068
 medium:
 - REQ-008
 - REQ-015

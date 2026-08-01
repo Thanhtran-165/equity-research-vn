@@ -9,7 +9,6 @@ Tạo structure:
   [WORK_DIR]/
     .task-state/
       task-state.json      — trạng thái tổng (phase, progress)
-      requirements.yaml    — copy từ skill (REQ-001→027)
       evidence/
         REQ-001.json       — evidence per requirement
         REQ-002.json
@@ -18,8 +17,11 @@ Tạo structure:
       unresolved.md        — blocker chưa giải
 
 Usage: python3 init_task_state.py MSN /path/to/working/dir
+
+ARC-5/G8: đồng bộ với run_phase.py — 9 phase (phase7_deploy, không tách verify/deploy).
+REQ-068 phase_completion_check đọc status của 9 phase này.
 """
-import json, sys, os, shutil, datetime
+import json, sys, os, datetime
 
 TICKER = sys.argv[1] if len(sys.argv) > 1 else "UNKNOWN"
 WORK_DIR = sys.argv[2] if len(sys.argv) > 2 else "."
@@ -31,18 +33,16 @@ EVIDENCE_DIR = os.path.join(STATE_DIR, "evidence")
 # Create structure
 os.makedirs(EVIDENCE_DIR, exist_ok=True)
 
-# Copy requirements.yaml
-req_src = os.path.join(SKILL_DIR, "requirements.yaml")
-req_dst = os.path.join(STATE_DIR, "requirements.yaml")
-if os.path.exists(req_src):
-    shutil.copy(req_src, req_dst)
+# ARC-7 (review V4 Pro): bỏ copy requirements.yaml vào work dir — verifier đọc
+# từ SKILL_DIR, không từ WORK_DIR → artifact thừa.
 
 # task-state.json
 task_state = {
     "ticker": TICKER,
     "created_at": datetime.datetime.now().isoformat(),
     "last_updated": datetime.datetime.now().isoformat(),
-    "phase": "init",  # init → data → fundamental → valuation → technical → news → dashboard → verify → deploy
+    "phase": "init",
+    # ARC-5: 9 phase — đồng bộ run_phase.py PHASES list (phase7_deploy gộp verify+deploy)
     "phases": {
         "phase0_sponsor": {"status": "pending", "started": None, "completed": None},
         "phase1_data": {"status": "pending", "started": None, "completed": None},
@@ -52,8 +52,7 @@ task_state = {
         "phase4b_tech_profile": {"status": "pending", "started": None, "completed": None},
         "phase5_news": {"status": "pending", "started": None, "completed": None},
         "phase6_dashboard": {"status": "pending", "started": None, "completed": None},
-        "phase7_verify": {"status": "pending", "started": None, "completed": None},
-        "phase8_deploy": {"status": "pending", "started": None, "completed": None},
+        "phase7_deploy": {"status": "pending", "started": None, "completed": None},
     },
     "requirements": {},  # REQ-001 → {status: pending/pass/fail, evidence_file, verified_at}
     "artifact_path": None,  # path to output HTML
@@ -61,10 +60,11 @@ task_state = {
     "blockers": [],
 }
 
-# Init all requirements as pending
+# Init all requirements as pending (đọc từ SKILL_DIR, không copy)
 import yaml
-if os.path.exists(req_dst):
-    with open(req_dst) as f:
+req_src = os.path.join(SKILL_DIR, "requirements.yaml")
+if os.path.exists(req_src):
+    with open(req_src) as f:
         req_data = yaml.safe_load(f) or {}
     for req in req_data.get("requirements", []):
         task_state["requirements"][req["id"]] = {
