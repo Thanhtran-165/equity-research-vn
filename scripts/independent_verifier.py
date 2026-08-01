@@ -3906,7 +3906,8 @@ def verify_phase_completion(req, html):
     result keys tối thiểu. Chống agent bỏ qua phase 2 (DuPont) hoặc 4b (profile)
     mà verifier không biết (verifier không đọc phase statuses trước đây).
 
-    Verifier đọc task-state.json phases[*].status — thiếu completed/result → FAIL.
+    Vòng 2 (nghiệm thu Flash): ngoài status, còn check result keys tối thiểu —
+    chống agent đánh dấu completed mà result rỗng (skip thực).
     """
     ts = _load_json_rel(".task-state/task-state.json")
     if not ts or not isinstance(ts, dict):
@@ -3916,6 +3917,17 @@ def verify_phase_completion(req, html):
     required_phases = ["phase0_sponsor", "phase1_data", "phase2_fundamental",
                        "phase3_valuation", "phase4a_tech_active",
                        "phase4b_tech_profile", "phase5_news", "phase6_dashboard"]
+    # Result keys tối thiểu mỗi phase phải có (chống status=completed + result rỗng)
+    min_result_keys = {
+        "phase0_sponsor": ["investment_amount", "fiscal_year_type"],
+        "phase1_data": ["data_source", "split_audit"],
+        "phase2_fundamental": ["eps", "roe", "cagr"],
+        "phase3_valuation": ["targets", "pe", "pb"],
+        "phase4a_tech_active": ["tech_score", "verdict"],
+        "phase4b_tech_profile": ["archetype"],
+        "phase5_news": ["sentiment"],
+        "phase6_dashboard": ["artifact_path"],
+    }
     issues = []
     phase_status = {}
     for pid in required_phases:
@@ -3924,12 +3936,20 @@ def verify_phase_completion(req, html):
         phase_status[pid] = status
         if status != "completed":
             issues.append(f"{pid}: status='{status}' (cần 'completed') — agent có thể đã bỏ qua phase này")
+            continue
+        # vòng 2: check result keys tối thiểu
+        result = ph.get("result") or {}
+        if not isinstance(result, dict):
+            result = {}
+        missing_keys = [k for k in min_result_keys.get(pid, []) if k not in result]
+        if missing_keys:
+            issues.append(f"{pid}: status=completed NHƯNG result thiếu keys {missing_keys} — nghi skip thực (chỉ đánh dấu)")
     passed = len(issues) == 0
     return passed, {
         "phases_checked": len(required_phases),
         "phase_status": phase_status,
         "issues": issues[:8],
-        "note": "P3 — chống skip phase: verifier không đọc statuses trước đây → bỏ phase 2/4b vẫn 67/67 PASS",
+        "note": "P3 + vòng-2: status=completed AND result keys tối thiểu",
     }
 
 

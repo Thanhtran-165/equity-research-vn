@@ -115,11 +115,15 @@ task_state = {
     "fiscal_year_type": "calendar",
     "phases": {
         "phase0_sponsor": {"status": "completed", "result": {"tier": "golden", "periods": 41, "sponsor_ok": True,
+                                                             "investment_amount": 800000000, "fiscal_year_type": "calendar",
                                                              "api_source": "vnstock_data_sponsor_gold", "version": "vnstock==3.5.1"}},
         "phase1_data": {"status": "completed", "result": {"data_source": "sponsor", "periods": 41,
                                                           "years": [2021, 2022, 2023, 2024, 2025],
                                                           "price_fetched_at": f"{TODAY.isoformat()}T09:00:00",
-                                                          "fiscal_year_type": "calendar"}},
+                                                          "fiscal_year_type": "calendar",
+                                                          "split_audit": {"cp_consistent": True, "method": "back-calc CP=LNST/EPS"}}},
+        "phase2_fundamental": {"status": "completed", "result": {"eps": fin["eps_vnd"]["2025"], "roe": round(ROE25, 2),
+                                                                  "cagr": round(CAGR, 1)}},
         "phase3_valuation": {"status": "completed", "result": {
             "pe": round(PE, 2), "pb": round(PB, 2), "ev_ebitda": None, "ps": None, "pcf": None,
             "dcf_per_share": 82000, "dcf_note": None, "graham_number": round(GRAHAM, 0),
@@ -127,8 +131,11 @@ task_state = {
             "targets": {"pe_method": 85000, "pb_method": 80000, "analyst": 82000, "dcf_alt": 82000}}},
         "phase4a_tech_active": {"status": "completed", "result": {"tech_score": 3, "verdict": "BUY",
                                                                   "last_close": PRICE, "rsi14": None, "ma50": None}},
+        "phase4b_tech_profile": {"status": "completed", "result": {"archetype": "cyclical_contractor",
+                                                                   "volatility": "medium", "drawdown_52w": -28.5}},
         "phase5_news": {"status": "completed", "result": {"total_news": 3, "sentiment": {"positive": 2, "negative": 0, "neutral": 1},
                                                           "sentiment_score": 67, "categories": {"biz": 1, "sector": 1, "disclosure": 1}}},
+        "phase6_dashboard": {"status": "completed", "result": {"artifact_path": FIX + "/CTD_Complete_Report.html"}},
     },
     "artifact_path": FIX + "/CTD_Complete_Report.html",
 }
