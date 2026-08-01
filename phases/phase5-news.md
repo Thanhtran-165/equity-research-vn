@@ -11,7 +11,11 @@ Bạn là subagent Phase 5. Context tách biệt.
 2. WebSearch bổ sung tin ngành/vĩ mô (chỉ nếu vnstock thiếu)
 3. Phân loại 5 nhóm: biz, sector, macro, disclosure, analyst
 4. Sentiment score (-100 → +100) + category breakdown
-5. Timeline + key takeaways
+5. **Thesis alignment (BẮT BUỘC)**: mỗi tin top-10 đánh dấu supports/threatens/neutral
+   so với luận điểm đầu tư (bull/bear từ phase 2/3)
+6. **Catalyst detection (BẮT BUỘC)**: 3-5 sự kiện 30-90 ngày tới kèm ngày + tác động kỳ vọng
+   + lý do (nguồn: Company.events + tin kế hoạch); không có → ghi [] không bịa
+7. Timeline + key takeaways
 
 ## Yêu cầu bắt buộc (REQ-044)
 - **Mỗi article phải có URL gốc** (field `url`) hoặc `source_name` (tên báo)

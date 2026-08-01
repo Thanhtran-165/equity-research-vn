@@ -28,6 +28,12 @@ Bạn là subagent Phase 3. Context tách biệt.
    - Reverse DCF
 3. Target price analyst từ `Company.overview()` — tham khảo
 4. Hội tụ → median + dải P25-P75 → khuyến nghị
+5. **Ma trận nhạy cảm**: 1 PP chủ đạo theo ngành × 2 biến quan trọng → bảng giá 3×3,
+   xác định biến nhạy nhất (để tập trung kiểm chứng)
+6. **Kịch bản xác suất**: bi quan/cơ sở/tích cực, mỗi kịch bản có FV + xác suất + điều kiện
+   kích hoạt (tổng = 100%) → expected value; thiếu cơ sở → cơ sở 100% + ghi rõ
+7. **Giải thích chiết khấu/phần bù**: 1-2 câu "vì sao rẻ/đắt" so median 5 năm + peer
+   (dùng chất lượng lợi nhuận từ phase 2: cash conversion, CCC, đòn bẩy)
 
 ## SANITY CHECK BẮT BUỘC (học từ LC-005)
 ```

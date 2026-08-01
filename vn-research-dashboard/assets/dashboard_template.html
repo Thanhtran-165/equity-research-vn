@@ -573,6 +573,7 @@ a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
 <section id="sec-valuation" class="section">
   <div class="section-title aos"><span class="num">8</span><h2>Valuation — P/E & P/B vs lịch sử</h2><div class="divider"></div></div>
   {{SEC_VALUATION_HTML}}
+  {{EQ_SECTION_HTML}}
 </section>
 
 <!-- ============ SECTION 9: PEER COMPARISON ============ -->
@@ -616,6 +617,7 @@ a.xref:hover{background:var(--blue-soft);border-bottom-style:solid}
 <section id="sec-insight-1" class="section">
   <div class="section-title aos"><span class="num" style="background:linear-gradient(135deg,#f5a623,#4a9eff);color:#0f1419">★</span><h2>Special Insight 1 — {{INSIGHT_1_SUBTITLE}}</h2><div class="divider"></div></div>
   {{SEC_INSIGHT_1_HTML}}
+  {{CATALYST_SECTION_HTML}}
 </section>
 <!-- SECTION 16: SPECIAL INSIGHT 2 -->
 <section id="sec-insight-2" class="section">
@@ -852,11 +854,11 @@ document.addEventListener('DOMContentLoaded', function(){
         annotation:{
           annotations:{
             avg5: { type:'line', yMin:DATA.pe5med, yMax:DATA.pe5med, borderColor:AMBER, borderDash:[6,4], borderWidth:1.5,
-                    label:{content:'5Y median ~25×',display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
+                    label:{content:'5Y median',display:true,position:'end',backgroundColor:'rgba(245,166,35,0.85)',font:{size:9,weight:'bold'},color:'#1a1206'}},
             avg10:{ type:'line', yMin:DATA.pe5avg, yMax:DATA.pe5avg, borderColor:'#a78bfa', borderDash:[6,4], borderWidth:1.5,
-                    label:{content:'5Y avg ~68× (bị kéo bởi FY24)',display:true,position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
-            current:{ type:'point', xValue:'FY25', yValue:24.1, backgroundColor:RED, radius:6,
-                      label:{content:'Now ~24× (FY25)',display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
+                    label:{content:'5Y avg (có thể bị méo bởi đáy chu kỳ)',display:true,position:'end',backgroundColor:'rgba(167,139,250,0.85)',font:{size:9,weight:'bold'},color:'#0f1419'}},
+            current:{ type:'point', xValue:'FY' + DATA.years[DATA.years.length-1], yValue:DATA.pe, backgroundColor:RED, radius:6,
+                      label:{content:'P/E hiện tại',display:true,position:'start',backgroundColor:RED,font:{size:9,weight:'bold'},color:'#fff'}}
           }
         }
       }
@@ -892,6 +894,21 @@ document.addEventListener('DOMContentLoaded', function(){
         y:{ ...baseScales.y, title:{display:true, text:'EPS (đ)', font:{size:10}, color:'#565f6b'} },
         y1:{ position:'right', grid:{display:false}, ticks:{font:{size:10}, color:BLUE} }
       }
+    })
+  });
+
+  // --- Chart 8c: Earnings quality — CFO vs LNST (guard: canvas chartEQ do builder tạo) ---
+  if ($('chartEQ')) new Chart($('chartEQ'), {
+    type:'bar',
+    data:{ labels: DATA.years, datasets:[
+      { label:'CFO (tỷ VND)', data: DATA.cfo,
+        backgroundColor:(c)=>grad(c,'rgba(74,158,255,0.85)','rgba(74,158,255,0.25)'), borderRadius:5, yAxisID:'y' },
+      { label:'LNST (tỷ VND)', data: DATA.netProfit, type:'line',
+        borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
+        pointBackgroundColor:'#0f1419', pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
+    ]},
+    options: baseOpts({
+      scales:{ x: baseScales.x, y:{ ...baseScales.y, title:{display:true, text:'tỷ VND', font:{size:10}, color:'#565f6b'}} }
     })
   });
 
