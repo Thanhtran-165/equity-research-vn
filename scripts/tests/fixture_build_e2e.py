@@ -166,7 +166,8 @@ hero = sec("sec-hero", "Hero",
     "<p>CTD — Coteccons Construction | Giá hiện tại <b>71.700 VND</b> (theo vnstock) | "
     "Doanh thu: <b>30.699 tỷ</b> (năm 2025, theo BCTC) | Vốn hóa <b>8.018 tỷ</b> (theo giá đóng cửa)</p>")
 exec_ = sec("sec-exec", "TL;DR",
-    "<p>Doanh thu đạt <b>30.699 tỷ đồng</b> trong năm 2025, tăng 34% so với năm 2024 (theo BCTC kiểm toán). "
+    "<p>Split-adjusted: Bẫy 5B đã được cross-check — cổ phiếu lưu hành nhất quán (theo BCTC). "
+    "Doanh thu đạt <b>30.699 tỷ đồng</b> trong năm 2025, tăng 34% so với năm 2024 (theo BCTC kiểm toán). "
     "Lợi nhuận sau thuế đạt <b>781 tỷ đồng</b> trong năm 2025 (theo BCTC). ROE <b>8.3%</b> (tính từ BCTC). "
     "P/E <b>9.3x</b>, P/B <b>0.85x</b> (theo vnstock). EPS đạt <b>7.736 đồng</b> (năm 2025, theo BCTC). "
     "Triển vọng tích cực và khả quan nhờ hồi phục ngành xây dựng, kỳ vọng tăng trưởng doanh thu tiếp tục nhờ đầu tư công.</p>")

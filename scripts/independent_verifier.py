@@ -2045,7 +2045,9 @@ def verify_industry_claim(req, html):
 
     industry_kws = [
         r"thị phần", r"quy mô thị trường", r"tăng trưởng ngành", r"toàn ngành",
-        r"thị trường\s+(?:xây dựng|bán lẻ|ngân hàng|thép|bất động sản|chứng khoán|sữa|vàng|dược)",
+        r"thị trường\s+(?:xây dựng|bán lẻ|ngân hàng|thép|bất động sản|sữa|vàng|dược)",
+        # Batch-4: bỏ "chứng khoán" — "thị trường chứng khoán" thường chỉ sàn giao dịch
+        # chung (nơi niêm yết), không phải claim quy mô ngành → FP trên sec-peer
         r"market share", r"industry growth", r"market size",
     ]
     source_kws = [
@@ -2692,13 +2694,15 @@ def verify_comparison_baseline(req, html):
             if not has_baseline and not has_cite:
                 issues.append(f"so sánh '{m.group(0)}' không có số baseline: ...{ctx.strip()[:100]}...")
 
-    # Medium severity → WARN only (always PASS, but note issues)
-    passed = True  # medium — không block deploy
+    # Batch-4 (nghiệm thu V4 Flash): bỏ hardcode return True — main() xử lý
+    # priority=advisory → WARN không block. passed = kết quả thật để "1 nguồn sự thật":
+    # đổi YAML priority thành high sẽ làm REQ này block deploy.
+    passed = len(issues) == 0
     return passed, {
         "comparative_claims_found": found,
         "missing_baseline": len(issues),
         "warnings": issues[:5],
-        "note": "MEDIUM — WARN only, không block deploy",
+        "note": "advisory — main() WARN không block deploy",
     }
 
 
@@ -2773,9 +2777,12 @@ def verify_liquidity(req, html):
             for d in price_data[:5]
         )
 
+    # Batch-4 (nghiệm thu V4 Flash): bỏ hardcode — main() xử lý advisory.
+    # passed = kết quả thật. Nếu source có volume data mà dashboard thiếu liquidity
+    # → missing (advisory sẽ WARN, không block).
     if has_volume_data and not has_liquidity:
-        return True, {"warning": "source pack has volume data but dashboard missing liquidity info",
-                      "note": "MEDIUM — WARN, không block deploy"}
+        return False, {"warning": "source pack has volume data but dashboard missing liquidity info",
+                      "note": "advisory — main() WARN không block deploy"}
 
     return True, {
         "has_liquidity_info": has_liquidity,
@@ -2913,12 +2920,13 @@ def verify_vague_language(req, html):
     for h in hedging:
         count += len(re.findall(h, text, re.I))
 
-    # Always PASS (medium severity) but WARN if >15
-    passed = True
+    # Batch-4 (nghiệm thu V4 Flash): bỏ hardcode return True — main() xử lý advisory.
+    # passed = count <= threshold (đổi YAML priority thành high sẽ block deploy).
+    passed = count <= 15
     evidence = {
         "hedging_phrase_count": count,
         "threshold": 15,
-        "note": f"{'WARN: excessive vague language' if count > 15 else 'OK'} — MEDIUM, không block deploy",
+        "note": f"{'WARN: excessive vague language' if count > 15 else 'OK'} — advisory, main() WARN không block deploy",
     }
     return passed, evidence
 
