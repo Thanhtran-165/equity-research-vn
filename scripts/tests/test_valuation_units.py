@@ -69,6 +69,12 @@ def run():
     if not (15000 <= p <= 30000):
         fails.append(f"DCF price ngoài khoảng hợp lý: {p:.0f} (nghi lỗi đơn vị /1000 cũ)")
 
+    # Pro review: identity chặt — nợ=0 + không lãi vay → FCFF (chiết khấu wacc) PHẢI ≈ FCFE (chiết khấu ke=wacc)
+    identity = dcf_price([2000, 2100, 2200, 2300, 2400], 0.10, 0.03, 0, 1.0)
+    identity2 = fcfe_price([2000, 2100, 2200, 2300, 2400], 0.10, 0.03, 1.0)
+    if abs(identity - identity2) / identity > 0.02:
+        fails.append(f"FCFF/FCFE identity (nợ=0) lệch >2%: {identity:.1f} vs {identity2:.1f}")
+
     if fails:
         print("❌ VALUATION UNITS FAIL:")
         for f in fails:

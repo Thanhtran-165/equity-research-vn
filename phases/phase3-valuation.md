@@ -78,3 +78,16 @@ nếu valuation target < 0:
 - DCF: FCFF = EBIT×(1−T)+D&A−CapEx−ΔNWC; FCFE = CFO−CapEx+Net Borrowing. KHÔNG gọi CFO−CapEx là FCFF.
 - Bridge EV→equity: EV − NetDebt = Equity Value. g_terminal phải < wacc (hard gate).
 - Mỗi output ghi rõ: loại dòng tiền, discount rate, terminal model, đơn vị.
+
+## APPLICABILITY FILTER (W2-3/W2-4 — Wave 2, BẮT BUỘC)
+- Đọc `vn-valuation-engine/references/sector_method_registry.md` — lọc phương pháp theo ngành
+  TRƯỚC khi tính median: method eligible=✗ → LOẠI + ghi `excluded: [method, reason]` trong output
+- Ngân hàng/TCNH: KHÔNG dùng FCFF/WACC corporate, CCC, EV/EBITDA → cost of equity/residual income/DDM/P/B
+- WACC/cost of equity theo `wacc_estimates.md` ESTIMATION PROTOCOL: mỗi input có ngày + nguồn,
+  beta từ phase 4a (cửa sổ/index ghi rõ, có shrinkage Blume), ghi `as_of` trong output
+
+## FORECAST-ERROR TRACKING (W3-3 — Wave 3)
+- Mỗi target sinh ra phải ghi `target_as_of` (ngày quyết định) + `target_horizon` (tháng)
+- Lưu vào task-state `valuation_forecasts: [{target_id, ticker, target_price, as_of, horizon}]`
+  — để phiên sau đối chiếu với giá thực hiện (realized) và theo dõi error/bias theo ngành
+- KHÔNG dùng dữ liệu công bố sau as_of để "làm khớp" target (point-in-time — data_dictionary.md PIT)

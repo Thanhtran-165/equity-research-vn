@@ -125,3 +125,16 @@ cho người đọc cuối — mâu thuẫn "nội bộ vs người đọc". T�
 - Đoạn văn >250 ký tự → tách bullet (`<ul>`) hoặc đánh số (`<ol>`); mỗi ý 1 dòng, số liệu `<b>`.
 - Class chữ phụ `.faint` chỉ đổi màu → phải kèm font-size (12px) — nếu không chữ phụ
   to bằng chữ chính, phá thứ bậc thông tin.
+
+## 15. Residual dữ liệu mã khác khi copy báo cáo (cohort V5 2026-08-01)
+
+- Copy HTML báo cáo ticker khác (vd CTD) rồi thay số → **số cũ còn sót ở context khác**
+  (CSS, chart label, narrative, insight, risk table): HPG chứa PE 7.9 / ROE 8.3% /
+  CAGR -18.2% / upside 35% / "114M cp" / "Coteccons" của CTD → fail 9 REQ (63/74).
+- Mỗi lần `replace` 1 số tạo residual mới: thay 7.9→11.0 ở chỗ này, số 7.9 vẫn còn ở
+  chỗ kia (verifier vẫn tìm thấy → REQ-060/061 fail dai dẳng).
+- **Luật:** KHÔNG bao giờ dùng báo cáo mã khác làm template — build từ
+  `dashboard_template.html` TRẮNG + fill data đúng ticker (phase6-dashboard.md mục
+  "CẤM COPY BÁO CÁO MÃ KHÁC"). Sau build, grep ticker cũ + số đặc trưng của nó.
+- Residual nguy hiểm nhất khi **trùng số ngẫu nhiên** (2 mã cùng PE ~7.9) → verifier
+  không bắt được → dữ liệu sai lẫn mà vẫn PASS. Phòng bằng quy trình, không dựa vào verifier.

@@ -55,7 +55,7 @@ print(f'OK: api_source={api_source}, periods={periods}')
    - Nếu "ngoại trừ" / "không chấp nhận" / "từ chối" / "qualified" / "adverse" → lưu vào task-state
    - Phase 6 sẽ cần disclaimer trong dashboard
 
-7. **FISCAL YEAR DETECTION (REQ-051)** — phát hiện năm tài chính:
+7. **FISCAL YEAR DETECTION (REQ-067)** — phát hiện năm tài chính (Pro review Wave 4: trước ghi nhầm REQ-051 — REQ-051 là unit consistency):
    - Đọc fiscal_year_end từ company_profile
    - Nếu không phải 31/12 → lưu `fiscal_year_type: "custom"` + `fiscal_year_end: "MM/DD"`
    - Cảnh báo nếu so sánh với peer khác FY

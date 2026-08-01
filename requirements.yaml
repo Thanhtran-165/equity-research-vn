@@ -843,6 +843,17 @@ requirements:
     rules:
     - Đoạn <p> trực tiếp trong section (không trong ul/ol/table) có text >300 ký tự → FAIL
     - Chỉ áp dụng cho các section narrative chính (CLAIM_SECTIONS)
+- id: REQ-074
+  text: 'P/E chuẩn hóa cho cổ phiếu chu kỳ: khi EPS 5 năm biến động mạnh (CV > 30%) và EPS hiện tại đang dưới đỉnh 5 năm ≥20%, P/E raw (giá/EPS năm cuối) bị bóp méo bởi chu kỳ — report PHẢI trình bày cả P/E raw lẫn P/E chuẩn hóa (giá/median EPS 5 năm); verifier tự tính lại, lệch > tolerance → FAIL. Học từ HPG cohort V2: P/E raw 11,0× vs chuẩn hóa 8,06× (lệch 27%). Không kích hoạt khi EPS đang ở gần đỉnh (tăng trưởng, không phải chu kỳ đi xuống).'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: hpg-cohort-v2-pe-normalized
+  verification:
+    method: pe_normalized_check
+    cv_threshold: 0.30
+    peak_discount: 0.80
+    tolerance_pct: 10
 - id: REQ-021
   text: KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.
   type: mandatory
@@ -850,7 +861,7 @@ requirements:
   failure_mode: FM-05
   verification:
     method: all_requirements_pass
-total: 73
+total: 74
 critical:
 - REQ-001
 - REQ-002
@@ -908,6 +919,7 @@ high:
 - REQ-071
 - REQ-072
 - REQ-069
+- REQ-074
 medium:
 - REQ-008
 - REQ-015

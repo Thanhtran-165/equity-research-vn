@@ -46,6 +46,11 @@
 - Bài học đã đóng vào skill: cấm copy báo cáo mã khác (Lesson #17), pitfalls mục 15, CFO 3 tên cột, bank gate, rate limit, P/E chuẩn hóa (REQ-074)
 - Token/mã đo thật: ~55-70K → **VN100 ≈ 6-7M token**
 
+## Lệnh đang chạy
+
+- `LENH-VN100-CHO-GLM.md` — **VN100: 100 mã, 5 đợt × 20 mã** (tracker /tmp/vn100_tracker.json, report /tmp/vn100_reports/, báo cáo /tmp/VN100-REPORT.md)
+- Đã commit + push `da7856212` (docs/evidence/lệnh) — skill nằm ngoài git (cần quyết định backup riêng)
+
 ## Backlog tiềm năng giao GLM (khi cần)
 
 - Chạy lại CTD theo pipeline đã nâng cấp (nằm trong cohort)

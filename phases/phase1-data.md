@@ -19,8 +19,28 @@ Bạn là subagent Phase 1. Context tách biệt.
      }}}}
      ```
    - Report mention "split-adjusted/Bẫy 5B/cross-check" là điều kiện phụ — nhưng chỉ log mới là nguồn sự thật
-2. Fetch BCTC 5 năm qua `vnstock_data` (sponsor, 40+ kỳ):
+2. **SECTOR DETECT — BANK GATE (Lesson cohort 8/2026 — VCB)**:
+   - Phát hiện sớm từ phase 1, TRƯỚC khi tính bất kỳ chỉ số nào:
+     - Tín hiệu 1: income statement KHÔNG có `Net sales`/`Revenue` nhưng có **`Total Operating Income`** (NII + thu nhập khác) → bank
+     - Tín hiệu 2: sector từ company_profile ∈ {Ngân hàng, Banks, Financial Services - Banks}
+   - **Column names ngân hàng (sponsor) thường IN HOA** (`TOTAL ASSETS`, `"OWNER'S EQUITY"`) và kèm đơn vị (`Total Assets (VND)`) — LUÔN chuẩn hóa qua `vn-financial-data-collector/implementation/normalization/headers.py` (resolve_field: case-insensitive + bỏ token đơn vị) thay vì so chuỗi trực tiếp
+   - Nếu detect bank → **LOG BẮT BUỘC** vào task-state phase1 result:
+     ```json
+     "sector_applicability": {
+       "sector": "bank",
+       "reason": "Total Operating Income thay cho Net sales (hoặc sector=Ngân hàng)",
+       "skipped_metrics": ["ccc", "accrual_cfo", "fcff", "wacc_corporate"],
+       "use_metrics": ["cost_of_equity_capm", "pb", "ddm"]
+     }
+     ```
+   - Hệ quả: revenue = `Total Operating Income`; KHÔNG tính CCC (ngân hàng không có inventory), KHÔNG dùng accrual CFO-based; phase 3 dùng cost of equity + P/B + DDM (xem `sector_method_registry.md`)
+3. Fetch BCTC 5 năm qua `vnstock_data` (sponsor, 40+ kỳ):
    - Income statement, Balance sheet, Cash flow
+   - **CFO 3 TÊN CỘT KHÁC NHAU THEO NGÀNH (Lesson cohort V2 8/2026)** — thử lần lượt:
+     `'Cash flows from operating activities'` (công ty thường) →
+     `'Net cash from operating activities'` (ngân hàng VCB) →
+     `'Net cash inflows/(outflows) from operating activities'` (thép HPG)
+     — cột nào có data thì dùng; lưu tên cột thật vào `raw_field_name`
    - **BALANCE SHEET CHI TIẾT (Lesson #16 — phiên CTD chỉ lưu 3 dòng tổng → chart tồn kho
      toàn 0, không vẽ được nợ vay/tiền mặt)**: ngoài `Total Assets` / `Owner's Equity` /
      `Liabilities`, BẮT BUỘC lưu thêm vào `data/balance_sheet.json`:

@@ -47,7 +47,7 @@ python3 scripts/independent_verifier.py [TICKER] [OUTPUT].html
 
 ## Requirements
 
-Xem `requirements.yaml` (73 REQ — V3+V4+V5 hardening + runtime-render + no-meta + zero-data + S/R realistic + text-structure). Mỗi REQ mapped tới 1 phase trong `requirements-phase-map.yaml`.
+Xem `requirements.yaml` (73 REQ — index tự sinh tại `references/req_index.md`, KHÔNG copy tay). Mỗi REQ mapped tới 1 phase trong `requirements-phase-map.yaml`.
 
 ## Khác v1
 

@@ -43,6 +43,16 @@ __TEMPLATE_INLINE_PLACEHOLDER__
 > KHÔNG copy template ra ngoài (/tmp, work dir) để sửa — mọi thay đổi phải vào file gốc,
 > nếu không fix sẽ "bay hơi" (phiên CTD: CSS bảng/sup bị sửa nhầm bản copy → 2 lượt review mới phát hiện).
 
+> **CẤM COPY BÁO CÁO MÃ KHÁC (Lesson #17 — cohort V5 2026-08-01)**: TUYỆT ĐỐI KHÔNG
+> copy HTML báo cáo của ticker khác (vd CTD) rồi thay số — mỗi lần thay 1 số, các số
+> cũ của ticker kia vẫn còn ở context khác (CSS, chart label, narrative) → báo cáo
+> "lai" dữ liệu 2 công ty (V5: HPG chứa PE 7.9/ROE 8.3/CAGR -18.2% của CTD, fail 9 REQ).
+> PHẢI build từ TEMPLATE TRẮNG (`dashboard_template.html`) + fill dữ liệu của ĐÚNG
+> ticker này. Sau khi build, grep các số đặc trưng của mọi ticker khác từng chạy
+> (pe, roe, cagr, upside, tên công ty, ticker khác) — nếu còn sót → xóa.
+> Verifier bắt residual KHÔNG phải là lý do để để sót — residual trùng số mã khác
+> có thể lọt qua verifier.
+
 ### Token fill rules
 - `{{SEC_XXX_HTML}}` — HTML content cho section đó (≥ min chars per spec; bao gồm canvas elements)
 - Canvas ids bắt buộc: `chartHistRev, chartBSDt, chartHistCash, chartPeerScatter, chartProfileDD, chartProfileDist, chartReturns, chartSegMix, chartTechPrice, chartTechRSI, chartThesisCapex, chartThesisRPO, chartValPE`

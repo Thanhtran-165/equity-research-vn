@@ -49,6 +49,25 @@ def sgr(roe, dividends, npat):
     payout = min(max(dividends / npat, 0), 1)
     return round(roe * (1 - payout), 4)
 
+
+def avg_balance_roe(npat, equity_begin, equity_end):
+    """ROE với vốn bình quân (W2-2): year0 dùng equity_end (thiếu begin)."""
+    out = []
+    for i, n in enumerate(npat):
+        eq = (equity_begin[i] + equity_end[i]) / 2 if equity_begin[i] is not None else equity_end[i]
+        out.append(round(n / eq * 100, 2) if eq else None)
+    return out
+
+def accrual_ratio(npat, cfo, total_assets_avg):
+    """(LNST − CFO) / Tổng TS bình quân — None nếu thiếu data."""
+    out = []
+    for i in range(len(npat)):
+        if total_assets_avg[i] is None:
+            out.append(None)
+            continue
+        out.append(round((npat[i] - cfo[i]) / total_assets_avg[i], 4))
+    return out
+
 def run():
     fails = []
 
@@ -103,6 +122,27 @@ def run():
     if sg_nodata is not None:
         fails.append("thiếu cổ tức: SGR phải null nhưng tính ra")
 
+    # W2-2: average balances — ROE bình quân khác ROE cuối kỳ khi vốn biến động
+    eq_b = [100, 110, 120, 130, 140]
+    eq_e = [110, 120, 130, 140, 150]
+    roe_avg = avg_balance_roe([11, 12, 13, 14, 15], eq_b, eq_e)
+    # year0: (100+110)/2=105 → 11/105 = 10.48%; year1: (110+120)/2=115 → 12/115 = 10.43%
+    # (khác ROE cuối kỳ: 11/110=10.0%, 12/120=10.0% — bình quân nhạy hơn với vốn biến động)
+    if abs(roe_avg[0] - 10.48) > 0.01 or abs(roe_avg[1] - 10.43) > 0.01:
+        fails.append(f"average-balance ROE sai: {roe_avg}")
+    if roe_avg[0] == 10.0:
+        fails.append("ROE vẫn dùng số dư cuối kỳ (không phải bình quân)")
+    # W2-2: accrual — nhà thầu (LNST > CFO → accrual dương), thép (CFO > LNST → âm)
+    acc_bank = accrual_ratio([5600], [5800], [90000])
+    if acc_bank[0] is None or abs(acc_bank[0] - (-0.0022)) > 0.001:
+        fails.append(f"accrual ngân hàng sai: {acc_bank}")
+    acc_ctd = accrual_ratio([781], [-831], [34442])
+    if acc_ctd[0] is None or acc_ctd[0] < 0.03:
+        fails.append(f"accrual nhà thầu phải dương (LNST > CFO): {acc_ctd}")
+    acc_nodata = accrual_ratio([781], [-831], [None])
+    if acc_nodata[0] is not None:
+        fails.append("accrual thiếu data phải null")
+
     if fails:
         print("❌ FAIL:", *fails, sep="\n  - ")
         sys.exit(1)
@@ -110,6 +150,7 @@ def run():
     print("   - cash conversion: ngân hàng ~1.0 ✓, nhà thầu thấp/âm ✓, thép ≥0.8 ✓")
     print("   - CCC: ngân hàng null ✓, nhà thầu thiếu-data null ✓, thép tính đúng ✓")
     print("   - DuPont 5 + SGR: đủ data tính, thiếu data null (không bịa) ✓")
+    print("   - W2-2: average-balance ROE ✓, accrual ratio (ngân hàng âm, nhà thầu dương) ✓")
 
 if __name__ == "__main__":
     run()

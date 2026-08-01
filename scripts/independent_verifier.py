@@ -63,6 +63,40 @@ def _narrative_text(html):
     cleaned = re.sub(r"<script[^>]*>.*?</script>", " ", cleaned, flags=re.DOTALL)
     return extract_all_text(cleaned)
 
+def _ci_find(lst, name):
+    """Tìm phần tử khớp case-insensitive (FIX cohort V2 8/2026 — VCB):
+    API bank trả cột IN HOA ('TOTAL ASSETS', \"OWNER'S EQUITY\") còn code cũ
+    so Title Case chính xác → equity rỗng. Trả phần tử gốc trong lst."""
+    target = str(name).strip().lower()
+    for x in lst or []:
+        if str(x).strip().lower() == target:
+            return x
+    return None
+
+def _dict_get_ci(d, key):
+    """d.get() không phân biệt hoa/thường — data file do agent ghi có thể
+    giữ nguyên key từ API (UPPERCASE). Ưu tiên key chính xác trước."""
+    if not isinstance(d, dict):
+        return None
+    if key in d:
+        return d[key]
+    target = str(key).lower()
+    for k, v in d.items():
+        if str(k).lower() == target:
+            return v
+    return None
+
+def _strip_vi_diacritics(s):
+    """Bỏ toàn bộ dấu tiếng Việt (NFD → loại combining marks) + đ→d.
+    'chuẩn hóa'/'chuẩn hoá'/'chuan hoa' → 'chuan hoa' — khớp từ khóa không
+    phụ thuộc biến thể dấu (bug regex Unicode cohort V3: 'ẩ' U+1EA9 nằm
+    ngoài [âa])."""
+    import unicodedata
+    s = unicodedata.normalize("NFD", str(s))
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    s = unicodedata.normalize("NFC", s)
+    return s.replace("đ", "d").replace("Đ", "D")
+
 # ═══════════════════════════════════════════════════════════════
 # VERIFICATION METHODS (data-driven from requirements.yaml)
 # ═══════════════════════════════════════════════════════════════
@@ -288,6 +322,35 @@ def verify_artifact_check(req, html):
             if not cp_ok:
                 return False, {"found": report_mentions, "split_audit": audit,
                                "error": "task-state split_audit có cp_consistent != true — audit split không đạt"}
+            # W4 (Flash review): recompute CP = LNST/EPS độc lập — chống self-attestation.
+            # Lệch >20% so issue_share → cảnh báo; phân biệt SPLIT (phải restate — FAIL)
+            # vs DILUTION/phát hành thêm (không bắt buộc restate theo chuẩn — advisory).
+            fin = _load_json_rel("data/financials.json")
+            ov = _load_json_rel("data/overview.json")
+            cp_warn = None
+            if fin and ov:
+                issue = ov.get("issue_share")
+                eps = fin.get("eps_vnd") or {}
+                npat = fin.get("npatmi_ty") or {}
+                if issue and eps and npat:
+                    for y in sorted(eps.keys()):
+                        if eps[y] and npat.get(y):
+                            cp = npat[y] * 1e9 / eps[y]
+                            diff = abs(cp - issue) / issue
+                            if diff > 0.20:
+                                cp_warn = f"{y}: CP back-calc {cp/1e6:.0f}M vs issue_share {issue/1e6:.0f}M (lệch {diff*100:.0f}%) — xác nhận split hay dilution trước khi so P/E lịch sử"
+                                break
+            if cp_warn:
+                cause = str(audit.get("cp_variation_cause", "") or "").lower()
+                if "dilution" in cause or "phát hành" in cause or "issue" in cause:
+                    # Dilution (phát hành thêm) — EPS lịch sử theo BCTC là chuẩn kế toán,
+                    # KHÔNG bắt buộc restate. Chấp nhận + cảnh báo rõ để người đọc biết.
+                    return True, {"found": report_mentions, "split_audit": audit,
+                                  "independent_cp_warning": cp_warn,
+                                  "note": "CP lệch >20% do dilution đã ghi rõ cause — EPS lịch sử giữ theo BCTC (đúng chuẩn); so P/E lịch sử cần chú ý"}
+                return False, {"found": report_mentions, "split_audit": audit,
+                               "independent_cp_warning": cp_warn,
+                               "error": f"REQ-003: {cp_warn} — nếu là split phải restate EPS lịch sử; nếu là dilution ghi rõ cp_variation_cause trong task-state"}
             if not report_mentions:
                 return False, {"found": False, "split_audit": audit,
                                "error": "split_audit OK nhưng report không mention 'split-adjusted/Bẫy 5B/cross-check EPS'"}
@@ -558,7 +621,7 @@ def verify_data_accuracy(req, html):
         tolerance = field.get("tolerance_pct", 5)
 
         # Get ground truth value
-        gt_val = ground_truth.get(key)
+        gt_val = _dict_get_ci(ground_truth, key)
         if gt_val is None:
             continue
 
@@ -699,6 +762,11 @@ def _extract_primary_multiple(text, label_pattern, computed_val, tolerance_pct):
         gap_text = text[m.start()+2:m.start()+len(m.group(0))].lower()  # text after "P/B"
         if other_label in gap_text:
             continue  # cross-contaminated match — the number belongs to the other multiple
+        # FIX V6 (HPG cohort 2026-08-01): "PB method (chuẩn hóa 1.0x)" — tên phương pháp
+        # trong bảng định giá bị nhầm thành P/B multiple → tạo candidate 1.0 giả → mâu
+        # thuẫn với P/B thật 1.30 → AMBIGUOUS → fail oan. Tên cột phương pháp → skip.
+        if "method" in gap_text:
+            continue
         # v0.14.5: handle Vietnamese decimal notation (4,8 = 4.8, not 48)
         raw_orig = m.group(1)
         # If comma is followed by exactly 1-2 digits at the end → decimal separator
@@ -1208,8 +1276,10 @@ def verify_drawdown_source(req, html):
     issues = []
 
     # Find drawdown claims: "drawdown X%" or "giảm X%" or "mất X triệu"
+    # FIX cohort V4 (HPG): (1) chặn bắt nhầm "Max drawdown 52 tuần: -22,3%" —
+    #     số "52" (tuần) từng bị bắt làm value; (2) cho phép dấu âm -22,3%.
     drawdown_patterns = [
-        r'(?:drawdown|sụt giảm|giảm(?:\s+xuống)?)[^.]{0,30}?(\d+(?:[.,]\d+)?)\s*%',
+        r'(?:drawdown|sụt giảm|giảm(?:\s+xuống)?)[^.]{0,30}?(-?\d+(?:[.,]\d+)?)(?!\s*tuần)\s*%',
         r'(?:mất|tổn\s*thất)[^.]{0,30}?(\d+(?:[.,]\d+)?)\s*(?:%|triệu|tỷ)',
         r'(?:có\s*thể\s*giảm|rủi\s*ro\s*giảm)[^.]{0,30}?(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*%',
     ]
@@ -1239,7 +1309,7 @@ def verify_drawdown_source(req, html):
     # hoặc data file — dùng để so khớp claim, không chỉ "có data" là đủ.
     # Lưu ý: ".{0,60}?" vượt qua số trung gian ("52 tuần") — [^0-9] sẽ kẹt.
     dd_value = None
-    m_dd = re.search(r'max[_\s]*drawdown.{0,60}?(\d+(?:[.,]\d+)?)\s*%', narrative_lower)
+    m_dd = re.search(r'max[_\s]*drawdown.{0,60}?(-?\d+(?:[.,]\d+)?)\s*%', narrative_lower)
     if m_dd:
         try:
             dd_value = float(m_dd.group(1).replace(',', '.'))
@@ -1263,11 +1333,13 @@ def verify_drawdown_source(req, html):
         # FIX-3a: claim có số phải KHỚP dd_value thật (±15pp) — "có data ở đâu đó
         # trong report" không còn đủ. Report sạch có "max drawdown 52 tuần của 33%"
         # nhưng claim "sụt giảm 30-50%" bịa vẫn phải bị bắt.
+        # FIX V4: so theo TRỊ TUYỆT ĐỐI — dd_value có thể âm (-40.6%), claim "giảm 50%"
+        # dương; so dấu trực tiếp làm claim hợp lệ thành fail (bug phá golden CTD).
         matches_dd = False
         if dd_value is not None:
             try:
                 claim_val = float(claim['value'].replace(',', '.'))
-                matches_dd = abs(claim_val - dd_value) <= 15
+                matches_dd = abs(abs(claim_val) - abs(dd_value)) <= 15
             except ValueError:
                 matches_dd = False
         if not has_drawdown_data and not has_uncertainty:
@@ -1505,7 +1577,9 @@ def _find_numeric_claims(text, keywords, window=120):
     """Find (keyword, value, context) claims: keyword then number within window."""
     claims = []
     for kw in keywords:
-        pat = re.compile(re.escape(kw) + r"[^0-9%]{0," + str(window) + r"}?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|m|%)?", re.I)
+        # FIX V6 (HPG cohort 2026-08-01): nhận dấu âm — "CAGR lợi nhuận đạt -18.2%"
+        # bị bắt thành 18.2 dương (pattern bắt đầu bằng \d) → mismatch 36.4pp.
+        pat = re.compile(re.escape(kw) + r"[^0-9%]{0," + str(window) + r"}?(-?\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|m|%)?", re.I)
         for m in pat.finditer(text):
             val = _normalize_number(m.group(1))
             if val is None:
@@ -1516,7 +1590,7 @@ def _find_numeric_claims(text, keywords, window=120):
             if not unit and 1900 <= val <= 2100:
                 look = text[m.end():m.end()+window]
                 replaced = False
-                for lm in re.finditer(r"(\d[\d.,]*)\s*(%|nghìn tỷ|tỷ|tỉ|triệu|tr|m)?", look):
+                for lm in re.finditer(r"(-?\d[\d.,]*)\s*(%|nghìn tỷ|tỷ|tỉ|triệu|tr|m)?", look):
                     nv = _normalize_number(lm.group(1))
                     if nv is None or (1900 <= nv <= 2100 and not lm.group(2)):
                         continue
@@ -1924,7 +1998,7 @@ def verify_segment_check(req, html):
         return False, {"error": "no html"}
     seg_text = extract_section_text(html, "sec-segment")
     if not seg_text:
-        return True, {"note": "no sec-segment — nothing to check"}
+        return False, {"error": "sec-segment rỗng/không tồn tại — REQ-009 yêu cầu section canonical, không thể vacuous pass"}, {"note": "no sec-segment — nothing to check"}
 
     # Quantitative segment claims?
     has_numbers = bool(re.search(r"\d[\d.,]*\s*(?:%|tỷ|tỉ|triệu)", seg_text))
@@ -3179,7 +3253,7 @@ def verify_period_integrity(req, html):
     """
     vdd = _load_json_rel("verified-dashboard-data.json")
     if not vdd or not isinstance(vdd, dict):
-        return True, {"note": "no verified-dashboard-data.json — period integrity cannot be verified"}
+        return False, {"error": "thiếu verified-dashboard-data.json — period integrity không verify được (W4-4: không vacuous pass)"}
 
     fin = vdd.get("financials", {})
     if not fin:
@@ -3290,15 +3364,26 @@ def verify_period_integrity(req, html):
                 continue
 
             # Find column
+            # FIX V7 (HPG cohort 2026-08-01): "sales" substring match trúng
+            # "Sales deductions" (cột âm) trước "Net sales" → raw sai 2.6×.
+            # Ưu tiên: (1) alias dài nhất trước, (2) exact match trước substring.
             col = None
-            for h in rows[0].keys():
-                hl = h.lower()
-                for a in aliases:
-                    if a in hl:
+            aliases_sorted = sorted(aliases, key=len, reverse=True)
+            for a in aliases_sorted:
+                for h in rows[0].keys():
+                    if h.lower().strip() == a:
                         col = h
                         break
                 if col:
                     break
+            if not col:
+                for a in aliases_sorted:
+                    for h in rows[0].keys():
+                        if a in h.lower():
+                            col = h
+                            break
+                    if col:
+                        break
             if not col:
                 per_field[canonical] = {"skipped": "no_column"}
                 continue
@@ -3389,6 +3474,16 @@ def verify_data_provenance(req, html):
     if not fin:
         return False, {"error": "data/financials.json not found"}
     issues = []
+
+    # W4-4 (Wave 4): cash_flow.json phải có dòng CFO — mutation "missing CFO" từng lọt,
+    # REQ-059 không đọc cash_flow chi tiết. Chống data khuyết im lặng.
+    cf = _load_json_rel("data/cash_flow.json")
+    if not cf:
+        issues.append("data/cash_flow.json không tìm thấy — không verify được CFO")
+    else:
+        cfo_rows = [k for k in cf.keys() if "operating" in str(k).lower()]
+        if not cfo_rows:
+            issues.append("cash_flow.json thiếu dòng CFO (operating activities) — phase 2/3 cần CFO")
     spots = {}  # fin_key → (value, desc, tolerance_pct)
 
     # G1 (review V4 Flash): trước đây chỉ spot-check revenue → bịa NPAT/EPS/Total
@@ -3396,21 +3491,22 @@ def verify_data_provenance(req, html):
     # Mở rộng sang 4 field; luôn ưu tiên fetch live khi API sống.
     # (fin_key, income_cols, balance_cols, divisor, tol%)
     _field_specs = [
-        ("revenue_ty",  ("Net sales", "Sales", "Doanh thu", "Revenue"), (), 1e9, 10),
+        ("revenue_ty",  ("Net sales", "Sales", "Doanh thu", "Revenue", "Total operating income", "Operating income"), (), 1e9, 10),
         ("npatmi_ty",   ("Attributable to parent company", "Net profit", "Lợi nhuận sau thuế", "LNST"), (), 1e9, 10),
         ("Total Assets", (), ("Total assets", "Total Assets", "Tổng tài sản"), 1e9, 10),
         ("eps_vnd",     ("EPS basic", "EPS"), (), 1, 15),  # EPS basic, VND/share; tol 15% do diluted
     ]
 
     def _csv_last_annual(path, col):
-        """Lấy giá trị annual mới nhất của cột trong CSV (dòng 'year'/'FY')."""
+        """Lấy giá trị annual mới nhất của cột trong CSV (dòng 'year'/'FY').
+        Khớp cột case-insensitive (VCB: 'TOTAL ASSETS' thay cho 'Total assets')."""
         try:
             with open(path) as f:
                 rows = list(_csv.reader(f))
             header = [h.strip() for h in rows[0]]
-            if col not in header:
+            ci = header.index(_ci_find(header, col)) if _ci_find(header, col) else None
+            if ci is None:
                 return None
-            ci = header.index(col)
             last = None
             for r in rows[1:]:
                 if len(r) <= ci:
@@ -3458,7 +3554,8 @@ def verify_data_provenance(req, html):
         annual = df[df['report_period'] == 'year'] if 'report_period' in df.columns else df
         col_map = {"revenue_ty": "Net sales", "npatmi_ty": "Attributable to parent company", "eps_vnd": "EPS basic"}
         for fk, col in col_map.items():
-            if col not in annual.columns:
+            resolved = _ci_find(list(annual.columns), col)
+            if resolved is None:
                 continue
             best_yr, best_val = None, None
             for idx in annual.index:
@@ -3466,26 +3563,27 @@ def verify_data_provenance(req, html):
                     yv = int(str(idx)[:4])
                 except Exception:
                     continue
-                v = float(annual.loc[idx, col])
+                v = float(annual.loc[idx, resolved])
                 if best_yr is None or yv > best_yr:
                     best_yr, best_val = yv, v
             if best_val is not None:
-                api_spots[fk] = (best_val / (1e9 if fk != "eps_vnd" else 1), f"API vnstock live ({col} {best_yr})", 10 if fk != "eps_vnd" else 15)
+                api_spots[fk] = (best_val / (1e9 if fk != "eps_vnd" else 1), f"API vnstock live ({resolved} {best_yr})", 10 if fk != "eps_vnd" else 15)
         # balance sheet → Total assets
         bdf = fapi.balance_sheet()
         bannual = bdf[bdf['report_period'] == 'year'] if 'report_period' in bdf.columns else bdf
-        if "Total assets" in bannual.columns:
+        ta_col = _ci_find(list(bannual.columns), "Total assets")
+        if ta_col is not None:
             best_yr, best_val = None, None
             for idx in bannual.index:
                 try:
                     yv = int(str(idx)[:4])
                 except Exception:
                     continue
-                v = float(bannual.loc[idx, "Total assets"])
+                v = float(bannual.loc[idx, ta_col])
                 if best_yr is None or yv > best_yr:
                     best_yr, best_val = yv, v
             if best_val is not None:
-                api_spots["Total Assets"] = (best_val / 1e9, f"API vnstock live (Total assets {best_yr})", 10)
+                api_spots["Total Assets"] = (best_val / 1e9, f"API vnstock live ({ta_col} {best_yr})", 10)
     except Exception as e:
         if not spots:
             issues.append(f"API spot-check lỗi: {str(e)[:60]}")
@@ -3512,9 +3610,9 @@ def verify_data_provenance(req, html):
             continue
         gt_val, desc, tol = spots[fin_key]
         # ground truth từ financials.json (dict năm) hoặc balance_sheet.json ("Total Assets")
-        gt = fin.get(fin_key) if isinstance(fin.get(fin_key), dict) else None
-        if gt is None and bal and isinstance(bal.get(fin_key), dict):
-            gt = bal.get(fin_key)
+        gt = _dict_get_ci(fin, fin_key) if isinstance(fin, dict) else None
+        if not isinstance(gt, dict) and bal:
+            gt = _dict_get_ci(bal, fin_key)
         if not gt:
             issues.append(f"{fin_key}: spot-check có ({desc} = {gt_val:,.1f}) nhưng data file thiếu field — data không có nguồn đối chiếu")
             continue
@@ -3688,7 +3786,7 @@ def verify_derived_metrics_recompute(req, html):
     # ROA = NPAT / total assets (balance_sheet.json, VND → tỷ)
     ta = {}
     if isinstance(bs, dict):
-        d = bs.get("Total Assets")
+        d = _dict_get_ci(bs, "Total Assets")
         if isinstance(d, dict):
             ta = {str(k): v for k, v in d.items()}
     # GAP-1 FIX: same optional year prefix as ROE ("ROA (2025) X%")
@@ -3835,6 +3933,14 @@ def verify_trend_consistency(req, html):
     if not fin:
         return False, {"error": "data/financials.json not found"}
     text = _narrative_text(html)
+    # FIX V6 (HPG cohort 2026-08-01): cắt phần glossary/footer trước khi quét —
+    # "CAGR — tốc độ tăng trưởng gộp hàng năm..." trong mục giải thích thuật ngữ
+    # nằm trong cửa sổ 180 ký tự sau "lợi nhuận" → false positive trend.
+    for marker in ("Giải thích thuật ngữ", "THUẬT NGỮ", "Glossary", "DISCLAIMER", "Disclaimer"):
+        idx = text.find(marker)
+        if idx > 0:
+            text = text[:idx]
+            break
     issues = []
     for metric, labels, series_key, display in [
         ("revenue", ["doanh thu", "revenue"], "revenue_ty", "doanh thu"),
@@ -3850,7 +3956,7 @@ def verify_trend_consistency(req, html):
                 pre = text[max(0, m.start()-30):m.end()+10]
                 if re.search(r"biên lợi nhuận|margin|lợi nhuận gộp|gross", pre, re.I):
                     continue  # biên/gộp ≠ chuỗi dữ liệu ròng
-                ctx = text[max(0, m.start()-40):m.end()+140]
+                ctx = text[max(0, m.start()-30):m.end()+60]
                 tm = re.search(r"(tăng trưởng|tăng đều|đi lên|phục hồi|tăng|giảm|sụt giảm|suy giảm|đi xuống|sụt|lao dốc|co lại)", ctx, re.I)
                 if not tm:
                     continue
@@ -3865,6 +3971,16 @@ def verify_trend_consistency(req, html):
                     continue
                 word = tm.group(1).lower()
                 claim_sign = 1 if any(w in word for w in ["tăng", "đi lên", "phục hồi"]) else -1
+                # FIX V6.2 (HPG cohort 2026-08-01): claim đi kèm SỐ % cụ thể là YoY
+                # (vd "LNST 15,453.3 tỷ (tăng 28.5%)" = 2025 vs 2024, ĐÚNG) — nếu khớp
+                # YoY recompute năm cuối → hợp lệ; không so với overall 5 năm
+                # (34,478 → 15,453 = giảm → false positive trước đây).
+                pct_m = re.search(r"(-?\d[\d.,]*)\s*%", ctx)
+                if pct_m and len(yrs) >= 2:
+                    claimed_pct = _normalize_number(pct_m.group(1))
+                    yoy_pct = (float(series[str(yrs[-1])]) / float(series[str(yrs[-2])]) - 1) * 100
+                    if claimed_pct is not None and abs(claimed_pct - yoy_pct) <= 10:
+                        continue  # claim YoY khớp → hợp lệ, bỏ qua
                 ym = re.search(r"(20\d\d)", ctx)
                 if ym and ym.group(1) in series:
                     y = int(ym.group(1))
@@ -4039,7 +4155,11 @@ def verify_runtime_render(req, html):
                     break
             i += 1
         try:
-            data_obj = json.loads(html[start:i+1])
+            raw_obj = html[start:i + 1]
+            # Chấp nhận JS object với keys UNQUOTED (revenue: [...]) — chuẩn
+            # builder tạo ra; JSON yêu cầu quoted keys (bug cohort V4: HPG)
+            raw_obj = re.sub(r'([{,]\s*)([A-Za-z_$][A-Za-z0-9_$]*)(\s*:)', r'\1"\2"\3', raw_obj)
+            data_obj = json.loads(raw_obj)
             refs = set(re.findall(r"DATA\.([A-Za-z_][A-Za-z0-9_]*)", html))
             missing_keys = sorted(k for k in refs if k not in data_obj)
             if missing_keys:
@@ -4316,7 +4436,12 @@ def verify_phase_completion(req, html):
         result = ph.get("result") or {}
         if not isinstance(result, dict):
             result = {}
-        missing_keys = [k for k in min_result_keys.get(pid, []) if k not in result]
+        # W4 (Pro review): không chỉ check tồn tại key — value rỗng (None/"") vẫn là completed giả.
+        # Ngoại lệ null hợp lệ: investment_amount (null = dùng 3 mức mặc định theo phase 0)
+        NULLABLE_KEYS = {"investment_amount"}
+        missing_keys = [k for k in min_result_keys.get(pid, [])
+                        if k not in result
+                        or (result[k] in (None, "", [], {}) and k not in NULLABLE_KEYS)]
         if missing_keys:
             issues.append(f"{pid}: status=completed NHƯNG result thiếu keys {missing_keys} — nghi skip thực (chỉ đánh dấu)")
     passed = len(issues) == 0
@@ -4326,6 +4451,111 @@ def verify_phase_completion(req, html):
         "issues": issues[:8],
         "note": "P3 + vòng-2: status=completed AND result keys tối thiểu",
     }
+
+
+def verify_pe_normalized(req, html):
+    """REQ-074 — P/E chuẩn hóa cho cổ phiếu chu kỳ (HPG cohort V2 8/2026).
+
+    Kích hoạt khi: CV(EPS 5 năm) > cv_threshold (EPS biến động mạnh) VÀ
+    EPS hiện tại < peak_discount × max(EPS 5 năm) (đang trong pha đi xuống/
+    hồi phục chưa hết của chu kỳ — HPG: EPS 2021 đỉnh, 2023 đáy, 2025 vẫn
+    dưới đỉnh). Khi kích hoạt: P/E raw bị bóp méo bởi chu kỳ → report PHẢI
+    trình bày cả P/E raw lẫn P/E chuẩn hóa (giá / median EPS 5 năm); verifier
+    tự tính lại, lệch > tolerance_pct → FAIL.
+
+    Không kích hoạt khi EPS đang ở gần đỉnh (tăng trưởng dốc, VD CTD) — median
+    5 năm pha loãng tốc độ tăng trưởng, P/E chuẩn hóa sẽ vô nghĩa.
+    """
+    import json as _json, statistics as _stats
+    work_dir = os.path.dirname(REPORT) if REPORT else "."
+    fin_path = os.path.join(work_dir, "data/financials.json")
+    if not os.path.exists(fin_path):
+        return False, {"error": "financials.json not found"}
+    with open(fin_path) as f:
+        fin = _json.load(f)
+
+    eps = fin.get("eps_vnd") or {}
+    vals = [(str(k), float(v)) for k, v in sorted(eps.items())
+            if str(k).isdigit() and v is not None]
+    if len(vals) < 4:
+        return True, {"status": "SKIP",
+                      "reason": f"chỉ {len(vals)} năm EPS — chưa đủ 5 năm để xác định chu kỳ"}
+    _, eps_vals = zip(*vals)
+    if _stats.mean(eps_vals) <= 0:
+        return True, {"status": "SKIP", "reason": "EPS trung bình ≤ 0 (công ty lỗ) — P/E chuẩn hóa không áp dụng"}
+    cv = _stats.stdev(eps_vals) / abs(_stats.mean(eps_vals))
+    peak = max(eps_vals)
+    last = eps_vals[-1]
+    cv_th = float(req["verification"].get("cv_threshold", 0.30))
+    peak_disc = float(req["verification"].get("peak_discount", 0.80))
+    tol = float(req["verification"].get("tolerance_pct", 10))
+
+    if cv <= cv_th:
+        return True, {"status": "PASS_NOT_APPLICABLE",
+                      "reason": f"EPS ổn định CV={cv:.2f} ≤ {cv_th:.2f} — P/E raw đại diện",
+                      "cv": round(cv, 3)}
+    if last >= peak_disc * peak:
+        return True, {"status": "PASS_NOT_APPLICABLE",
+                      "reason": (f"EPS đang ở gần đỉnh ({last:,.0f} ≥ {peak_disc:.0%} "
+                                 f"đỉnh {peak:,.0f}) — pha tăng trưởng, không phải chu kỳ đi xuống"),
+                      "cv": round(cv, 3)}
+
+    # KÍCH HOẠT: bắt buộc cả 2 số
+    price = (fin.get("overview") or {}).get("current_price")
+    if not price:
+        return False, {"error": "thiếu overview.current_price — không tính được P/E"}
+    median_eps = _stats.median(eps_vals)
+    pe_raw, pe_norm = price / last, price / median_eps
+
+    full_text = extract_all_text(html) if html else ""
+    val_text_parts = []
+    for sec_id in ["sec-valuation", "sec-hero", "sec-exec"]:
+        st = extract_section_text(html, sec_id) if html else ""
+        if st:
+            val_text_parts.append(st)
+    val_text = "\n".join(val_text_parts) if val_text_parts else full_text
+
+    norm_found = norm_ok = raw_found = raw_ok = False
+    # Loại cụm năm trước khi trích số: "median 5 năm", "2021-2025" chứa số
+    # làm regex bắt nhầm (vd "P/E chuẩn hóa theo median 5 năm = 11.0×" → bắt 5)
+    scan_text = re.sub(r"\d{4}\s*-\s*\d{4}", "YEAR-RANGE", val_text)
+    scan_text = re.sub(r"\d+\s*năm", "NY", scan_text)
+    for m in re.finditer(r"(?:P\s*[/／]\s*E|P\s*E)\b[^0-9]{0,40}?(\d[\d.,]*)", scan_text, re.I):
+        num = _normalize_number(m.group(1))
+        if num is None:
+            continue
+        # Phân loại raw vs normalized bằng đoạn GIỮA từ khóa P/E và số
+        # (không lấy context sau — "P/E 8.8 — ... P/E chuẩn hóa = 11.0" làm 8.8
+        # dính từ khóa phía sau → phân loại nhầm, cohort V2 debug)
+        # Strip dấu tiếng Việt trước khi khớp từ khóa — "chuẩn hóa"/"chuẩn hoá"
+        # ("ẩ" U+1EA9 nằm ngoài [âa]) lọt regex Unicode (bug cohort V3)
+        mid = m.group(0)
+        pre = scan_text[max(0, m.start() - 40):m.start()]
+        kw_text = _strip_vi_diacritics(mid + " " + pre)
+        if re.search(r"chuan hoa|normalized|median|dieu chinh|adjusted", kw_text, re.I):
+            norm_found = True
+            norm_ok = abs(num - pe_norm) / max(pe_norm, 0.001) * 100 <= tol
+        else:
+            raw_found = True
+            raw_ok = abs(num - pe_raw) / max(pe_raw, 0.001) * 100 <= tol
+
+    issues = []
+    if not norm_found:
+        issues.append(f"Thiếu P/E chuẩn hóa — EPS chu kỳ (CV={cv:.2f}, EPS {last:,.0f} < "
+                      f"{peak_disc:.0%} đỉnh {peak:,.0f}), phải trình bày giá/median EPS = {pe_norm:.2f}× "
+                      "bên cạnh P/E raw")
+    elif not norm_ok:
+        issues.append(f"P/E chuẩn hóa trong report ≠ recompute {pe_norm:.2f}× (±{tol:.0f}%)")
+    if not raw_found:
+        issues.append("Thiếu P/E raw")
+    elif not raw_ok:
+        issues.append(f"P/E raw trong report ≠ recompute {pe_raw:.2f}× (±{tol:.0f}%)")
+
+    if issues:
+        return False, {"status": "FAIL", "issues": issues, "cv": round(cv, 3),
+                       "pe_raw": round(pe_raw, 2), "pe_norm": round(pe_norm, 2)}
+    return True, {"status": "PASS", "cv": round(cv, 3),
+                  "pe_raw": round(pe_raw, 2), "pe_norm": round(pe_norm, 2)}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -4393,6 +4623,7 @@ METHODS = {
     "no_zero_dataset_check": verify_no_zero_datasets,
     "realistic_sr_check": verify_realistic_sr,
     "paragraph_structure_check": verify_paragraph_structure,
+    "pe_normalized_check": verify_pe_normalized,
 }
 
 # ═══════════════════════════════════════════════════════════════
