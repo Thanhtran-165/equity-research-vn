@@ -809,6 +809,40 @@ requirements:
     - Narrative section chứa tên file dữ liệu (\w+\.json, \w+\.md) → FAIL
     - Narrative section chứa từ nội bộ (task-state, investment_amount, technical_active, news_digest, wacc_estimates, sector_insights, company_profile, price_weekly, price_daily, cash_flow, balance_sheet, financials, peers\.json) → FAIL
     - Miễn trừ: các mục nguồn (id="ref-N") và thẻ sup ẩn không tính là narrative
+- id: REQ-071
+  text: 'Không dataset biểu đồ toàn 0: mọi array số trong const DATA phải có ≥1 giá trị khác 0. Chống "chart vẽ rỗng" khi data thiếu (phiên CTD: balance_sheet không có tồn kho → inventory/invGrowth toàn 0 → cột chart biến mất nhưng verifier cú pháp vẫn PASS).'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: ctd-v4flash-zero-data
+  verification:
+    method: no_zero_dataset_check
+    rules:
+    - Array numeric trong const DATA mà toàn bộ phần tử = 0 → FAIL
+    - Chuỗi ngày/nhãn (non-numeric) và array null-only được bỏ qua
+- id: REQ-072
+  text: 'Mức Hỗ trợ/Kháng cự thực tế (technical_active.json): kháng cự phải nằm trong [giá hiện tại, giá×1.30], hỗ trợ trong [giá×0.70, giá]; mức ngoài khoảng phải vào far_levels (mốc xa) thay vì xếp R/S; phân loại đúng hướng (kháng cự > giá, hỗ trợ < giá). (Phiên CTD: "52W high 92,750" xếp kháng cự khi giá 61,000 — cách +52%, phi thực tế.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: ctd-v4flash-sr-realistic
+  verification:
+    method: realistic_sr_check
+    rules:
+    - Mức resistance ≤ giá hiện tại hoặc > giá×1.30 → FAIL
+    - Mức support ≥ giá hiện tại hoặc < giá×0.70 → FAIL
+    - Thiếu support_resistance trong technical_active.json → bỏ qua (advisory)
+- id: REQ-073
+  text: 'Cấu trúc đoạn văn: narrative các section chính không được có đoạn <p> quá dài (text >300 ký tự) không nằm trong danh sách (ul/ol). Chống "bức tường chữ" — phiên review UI CTD: các đoạn 300-400 ký tự dày đặc phải tách bullet/đoạn ngắn.'
+  type: advisory
+  priority: advisory
+  failure_mode: FM-05
+  case_ref: ctd-v4flash-text-structure
+  verification:
+    method: paragraph_structure_check
+    rules:
+    - Đoạn <p> trực tiếp trong section (không trong ul/ol/table) có text >300 ký tự → FAIL
+    - Chỉ áp dụng cho các section narrative chính (CLAIM_SECTIONS)
 - id: REQ-021
   text: KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.
   type: mandatory
@@ -816,7 +850,7 @@ requirements:
   failure_mode: FM-05
   verification:
     method: all_requirements_pass
-total: 70
+total: 73
 critical:
 - REQ-001
 - REQ-002
@@ -871,6 +905,8 @@ high:
 - REQ-066
 - REQ-068
 - REQ-070
+- REQ-071
+- REQ-072
 medium:
 - REQ-008
 - REQ-015

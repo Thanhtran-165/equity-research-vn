@@ -4120,6 +4120,135 @@ def verify_no_internal_meta(req, html):
                     "note": "narrative không chứa tên phase/file/từ nội bộ (ref list miễn trừ)"}
 
 
+
+
+def verify_no_zero_datasets(req, html):
+    """REQ-071 (V4 Flash, phiên CTD 2026-08-01): không dataset biểu đồ toàn 0.
+    Chống "chart vẽ rỗng": data thiếu (balance_sheet chỉ 3 dòng tổng → inventory
+    toàn 0) làm cột chart biến mất nhưng verifier cú pháp vẫn PASS. Check STATIC:
+    mọi array numeric trong const DATA phải có ít nhất 1 phần tử khác 0.
+    Null/nullable (chuỗi ngày, MA có null đầu) được bỏ qua; chỉ bắt array mà
+    toàn bộ phần tử số = 0.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    m = re.search(r"const DATA\s*=\s*(\{.*?\})\s*;", html, re.DOTALL)
+    if not m:
+        return False, {"error": "const DATA không tìm thấy"}
+    try:
+        data = json.loads(m.group(1))
+    except Exception as e:
+        return False, {"error": f"DATA parse lỗi: {e}"}
+
+    issues = []
+    checked = 0
+    for key, val in data.items():
+        if not isinstance(val, list) or not val:
+            continue
+        # chỉ xét array có phần tử số (bỏ qua dates/labels chuỗi)
+        nums = [v for v in val if isinstance(v, (int, float)) and v is not None]
+        if not nums:
+            continue
+        checked += 1
+        if all(v == 0 for v in nums):
+            issues.append(f"dataset '{key}' toàn 0 — chart vẽ rỗng (data thiếu hoặc key sai)")
+            if len(issues) >= 10:
+                break
+
+    passed = len(issues) == 0
+    return passed, {"datasets_checked": checked, "issues": issues[:10],
+                    "note": "mọi dataset numeric phải có ≥1 giá trị khác 0 (chống chart vẽ rỗng)"}
+
+
+
+
+def verify_realistic_sr(req, html):
+    """REQ-072 (V4 Flash, phiên CTD 2026-08-01): mức Hỗ trợ/Kháng cự thực tế.
+    Phiên CTD: "52W high 92,750" xếp làm kháng cự khi giá 61,000 (cách +52%) —
+    phi thực tế cho giao dịch ngắn hạn. Check data/technical_active.json:
+    kháng cự ∈ [giá, giá×1.30], hỗ trợ ∈ [giá×0.70, giá]; mức ngoài khoảng phải
+    vào far_levels. Thiếu file/field → advisory (không FAIL).
+    """
+    if not html:
+        return False, {"error": "no html"}
+    ta = _load_json_rel("data/technical_active.json")
+    if not ta or not isinstance(ta, dict):
+        return True, {"note": "technical_active.json không có — bỏ qua (advisory)"}
+    sr = ta.get("support_resistance")
+    if not sr or not isinstance(sr, list):
+        return True, {"note": "support_resistance không có trong technical_active.json — bỏ qua (advisory)"}
+    last = ta.get("last_close")
+    if not last:
+        return True, {"note": "thiếu last_close — bỏ qua (advisory)"}
+
+    issues = []
+    for m in sr:
+        lvl = m.get("level")
+        typ = m.get("type")
+        if lvl is None or typ not in ("support", "resistance"):
+            continue
+        if typ == "resistance":
+            if lvl <= last:
+                issues.append(f"kháng cự {lvl} ≤ giá hiện tại {last} — phân loại sai hướng")
+            elif lvl > last * 1.30:
+                issues.append(f"kháng cự {lvl} cách giá {last} >30% ({lvl/last*100-100:.0f}%) — phi thực tế, nên vào far_levels")
+        else:  # support
+            if lvl >= last:
+                issues.append(f"hỗ trợ {lvl} ≥ giá hiện tại {last} — phân loại sai hướng")
+            elif lvl < last * 0.70:
+                issues.append(f"hỗ trợ {lvl} cách giá {last} >30% — phi thực tế, nên vào far_levels")
+        if len(issues) >= 10:
+            break
+
+    passed = len(issues) == 0
+    return passed, {"last_close": last, "sr_levels": len(sr), "issues": issues[:10],
+                    "note": "S/R phải trong ±30% giá và đúng hướng; mức xa → far_levels"}
+
+
+
+
+def verify_paragraph_structure(req, html):
+    """REQ-073 (V4 Flash, phiên review UI CTD 2026-08-01): narrative không có
+    "bức tường chữ" — đoạn <p> trực tiếp trong section quá dài (>300 ký tự text)
+    mà không nằm trong ul/ol phải tách. Chỉ áp cho các section narrative chính.
+    Ghi chú/ngoại lệ: ghi chú nhỏ (faint/meta-note) và thẻ p trong callout không tính.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    CLAIM_SECTIONS = {
+        "sec-hero", "sec-exec", "sec-biz", "sec-industry", "sec-history",
+        "sec-segment", "sec-thesis", "sec-valuation", "sec-bs",
+        "sec-risk", "sec-scenario", "sec-insight-1", "sec-insight-2", "sec-insight-3",
+    }
+    section_ids = set(re.findall(r'<section[^>]*id="(sec-[a-z0-9-]+)"', html)) & CLAIM_SECTIONS
+    MAX_LEN = 300
+
+    issues = []
+    total_p = 0
+    for sid in sorted(section_ids):
+        m_sec = re.search(r'<section[^>]*id="' + sid + r'".*?</section>', html, re.DOTALL)
+        if not m_sec:
+            continue
+        sec_html = m_sec.group(0)
+        # Tách từng <p>...</p> không nằm trong ul/ol/table/callout (loại bỏ các block đó trước)
+        sec_no_lists = re.sub(r'<ul>.*?</ul>|<ol>.*?</ol>|<table.*?</table>|'
+                              r'<div class="callout[^"]*".*?</div>', ' ', sec_html, flags=re.DOTALL)
+        for m in re.finditer(r'<p(?![^>]*class=[^>]*faint)[^>]*>(.*?)</p>', sec_no_lists, re.DOTALL):
+            text = re.sub(r'<[^>]+>', ' ', m.group(1))
+            text = re.sub(r'\s+', ' ', text).strip()
+            total_p += 1
+            if len(text) > MAX_LEN:
+                issues.append(f"{sid}: đoạn {len(text)} ký tự (> {MAX_LEN}) — nên tách bullet/đoạn ngắn: {text[:60]}...")
+                if len(issues) >= 10:
+                    break
+        if len(issues) >= 10:
+            break
+
+    passed = len(issues) == 0
+    return passed, {"paragraphs_scanned": total_p, "issues": issues[:10],
+                    "note": "đoạn narrative >300 ký tự → tách bullet (chống bức tường chữ)"}
+
+
 def verify_phase_completion(req, html):
     """REQ-068 (P3 — review V4 Flash): mọi phase 0–6 phải status=completed + có
     result keys tối thiểu. Chống agent bỏ qua phase 2 (DuPont) hoặc 4b (profile)
@@ -4234,6 +4363,9 @@ METHODS = {
     "phase_completion_check": verify_phase_completion,
     "runtime_render_check": verify_runtime_render,
     "no_internal_meta_check": verify_no_internal_meta,
+    "no_zero_dataset_check": verify_no_zero_datasets,
+    "realistic_sr_check": verify_realistic_sr,
+    "paragraph_structure_check": verify_paragraph_structure,
 }
 
 # ═══════════════════════════════════════════════════════════════

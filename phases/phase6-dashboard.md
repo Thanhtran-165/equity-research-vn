@@ -38,6 +38,11 @@ __TEMPLATE_INLINE_PLACEHOLDER__
 
 (Separator trên là đánh dấu; runner sẽ inject template thực vào đây trước khi gửi prompt cho model.)
 
+> **QUY TẮC TEMPLATE 1 NGUỒN (Lesson #12)**: runner inject template từ
+> `~/.zcode/skills/vn-research-dashboard/assets/dashboard_template.html` — file DUY NHẤT.
+> KHÔNG copy template ra ngoài (/tmp, work dir) để sửa — mọi thay đổi phải vào file gốc,
+> nếu không fix sẽ "bay hơi" (phiên CTD: CSS bảng/sup bị sửa nhầm bản copy → 2 lượt review mới phát hiện).
+
 ### Token fill rules
 - `{{SEC_XXX_HTML}}` — HTML content cho section đó (≥ min chars per spec; bao gồm canvas elements)
 - Canvas ids bắt buộc: `chartHistRev, chartBSDt, chartHistCash, chartPeerScatter, chartProfileDD, chartProfileDist, chartReturns, chartSegMix, chartTechPrice, chartTechRSI, chartThesisCapex, chartThesisRPO, chartValPE`

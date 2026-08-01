@@ -113,6 +113,9 @@ cho người đọc cuối — mâu thuẫn "nội bộ vs người đọc". T�
   vẽ key khác có thật (ví dụ: nợ phải trả = tổng tài sản − vốn chủ sở hữu) hoặc bỏ chart.
 - Fallback id cũ trong template (`$('chartBSDt2') || $('chartReturns')`) có thể đổ chart
   nhầm section khi canvas không tồn tại → dùng guard `if ($('id'))` cho canvas tùy chọn.
+- **Annotation tĩnh trong template** (chartjs-plugin-annotation với yMin/yMax hardcode —
+  ví dụ 'Hỗ trợ ~21,000' còn sót từ mã KDH cũ) → vẽ đường S/R sai hoàn toàn cho ticker mới.
+  Luật: annotation PHẢI dùng DATA.<key> (tech52wLow, techMA50val), không hardcode số.
 
 ## 14. Thẩm mỹ khối text (phiên review UI 2026-08-01)
 
