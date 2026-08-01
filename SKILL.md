@@ -5,7 +5,7 @@ description: "Phân tích equity research đầy đủ cho cổ phiếu Việt N
 
 # equity-research-vn [TICKER]
 
-## Pipeline (8 phases, chạy tuần tự)
+## Pipeline (9 phases, chạy tuần tự — phase 4 tách 4a/4b, FIX-12)
 
 ```
 Phase 0: Sponsor detection     → phases/phase0-sponsor.md

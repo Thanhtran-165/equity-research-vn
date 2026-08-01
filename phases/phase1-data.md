@@ -7,10 +7,18 @@ Bạn là subagent Phase 1. Context tách biệt.
 - Sub-skill: `vn-financial-data-collector/SKILL.md` + `references/`
 
 ## Nhiệm vụ
-1. **AUDIT SPLIT (Bẫy 5B) BẮT BUỘC ĐẦU TIÊN**:
+1. **AUDIT SPLIT (Bẫy 5B) BẮT BUỘC ĐẦU TIÊN** (REQ-003 — G13: phải log vào task-state):
    - Back-calc `CP = LNST/EPS` từng năm
    - Nếu CP mismatch >5% → adjust EPS/BVPS về cùng base với giá
    - Verify: PE_pre-split = PE_post-split
+   - **LOG BẮT BUỘC vào task-state** (G13 — verifier giờ đọc từ đây, không tin chữ trong report):
+     ```json
+     "phases": {"phase1_data": {"result": {"split_audit": {
+       "cp_consistent": true, "method": "back-calc CP=LNST/EPS, so issue_share",
+       "periods_checked": 5
+     }}}}
+     ```
+   - Report mention "split-adjusted/Bẫy 5B/cross-check" là điều kiện phụ — nhưng chỉ log mới là nguồn sự thật
 2. Fetch BCTC 5 năm qua `vnstock_data` (sponsor, 40+ kỳ):
    - Income statement, Balance sheet, Cash flow
 3. Fetch giá: weekly 52 tuần + daily ~2 năm (cho Phase 4). **PRICE REAL-TIME (Lesson Learned #6)**:
@@ -42,7 +50,7 @@ Bạn là subagent Phase 1. Context tách biệt.
    - Nếu API không có peer data → ghi `peers.json` với `"status": "unavailable"` → Phase 6 sẽ BỎ scatter chart
 6. **LIQUIDITY DATA (REQ-052)**: fetch KLGD trung bình 10 phiên, GTGD trung bình, free float % nếu có
    - Lưu vào `data/liquidity.json` hoặc `overview.json`
-7. **FISCAL YEAR DETECT (REQ-051)**: đọc `fiscal_year_type` từ company_profile; nếu custom → log cảnh báo
+7. **FISCAL YEAR DETECT (REQ-067 — G8 fix: trước ghi nhầm REQ-051)**: đọc `fiscal_year_type` từ company_profile; nếu custom → log cảnh báo
 8. **PRE-CHECK SOURCE PACK (Lesson Learned #2)**:
    - Nếu chạy từ source pack (không phải fetch trực tiếp): verify đủ fields
    - Required: revenue, net_profit, **equity**, total_assets, cost_of_sales cho mỗi năm

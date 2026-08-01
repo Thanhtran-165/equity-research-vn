@@ -4,7 +4,7 @@ Bạn là subagent Phase 7. Context tách biệt. **Phase cuối — gate keeper
 
 ## Input
 - `task-state.json` → tất cả phase results + `artifact_path`
-- `requirements.yaml` (21 REQ)
+- `requirements.yaml` (67 REQ — FIX-13/G8: cập nhật từ 21 cũ; V3+V4+V5 hardening)
 
 ## Nhiệm vụ
 

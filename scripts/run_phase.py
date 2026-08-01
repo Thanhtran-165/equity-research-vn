@@ -76,6 +76,27 @@ def verify_phase(phase_id):
     state = load_state()
     artifact = state.get("artifact_path") if state else None
 
+    # G9 (review V4 Flash): trước đây phase 6 cũng chỉ chạy command → mọi artifact check
+    # SKIP → "verify per-phase" là hình thức. Phase 6 đã có artifact đầy đủ (dashboard
+    # build xong) → gọi verifier chính, lọc theo phase map.
+    if phase_id == "phase6_dashboard" and artifact and os.path.exists(artifact):
+        import sys as _sys
+        verifier_path = os.path.join(SKILL_DIR, "scripts", "independent_verifier.py")
+        r = subprocess.run([_sys.executable, verifier_path, TICKER, artifact],
+                           capture_output=True, text=True, timeout=300)
+        # Lọc output chỉ lấy REQ thuộc phase này
+        phase_set = set(phase_reqs)
+        full_pass = True
+        for line in r.stdout.splitlines():
+            for rid in phase_set:
+                if rid in line and ("PASS" in line or "FAIL" in line or "ADVISORY" in line):
+                    print(f"  {line.strip()}")
+                    if "FAIL" in line:
+                        full_pass = False
+                    break
+        # advisory (WARN) không block deploy → vẫn pass
+        return full_pass
+
     # For pre-deploy phases (0-5), artifact may not exist yet
     # Run command-based REQs only
     req_file = os.path.join(SKILL_DIR, "requirements.yaml")

@@ -13,11 +13,15 @@ Bạn là subagent Phase 3. Context tách biệt.
    - EV/EBITDA
    - P/CF, P/S
    - DCF (3 kịch bản) — **SANITY CHECK: nếu FCF0 < 0 → flag + dùng EV/EBITDA-implied thay thế**
-   - **DCF ASSUMPTIONS TABLE (REQ-045, REQ-048)**: bắt buộc bảng assumptions với source cho mỗi assumption:
+   - **DCF ASSUMPTIONS TABLE (REQ-045 forecast source + REQ-048 management claim)**: bắt buộc bảng assumptions với source cho mỗi assumption:
      - Risk-free rate (Rf): nguồn (TPCP 10Y, NHNN...)
      - Equity Risk Premium (ERP): nguồn (Damodaran, ước tính...)
-     - Beta: tính từ 2 năm weekly returns vs VN-Index (REQ-050)
+     - Beta: tính từ 2 năm weekly returns vs VN-Index (G8: trước ghi REQ-050 — đó là comparison baseline, không phải beta; beta cần source tính toán)
      - Terminal growth rate: assumption + rationale
+   - **REQ-063 valuation methods completeness**: mỗi method (DCF, PE, PB, EV/EBITDA, Graham) phải có giá trị hoặc N/A có lý do — không để trống
+   - **REQ-060 internal identity**: PE×EPS≈giá, PB×BVPS≈giá (cross-footing)
+   - **REQ-061 derived metrics**: ROE/ROA/margin recompute từ financials
+   - **REQ-065 verdict consistency**: tone kết luận cùng dấu với upside từ targets
    - KHÔNG tự ý chọn assumption không có basis
    - DDM (nếu trả cổ tức)
    - Graham Number

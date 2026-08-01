@@ -951,6 +951,36 @@ def verify_div_balance(req, html):
     return passed, {"opens": opens, "closes": closes}
 
 
+def _check_claim_citation(text, claim_patterns, source_kws, window=150, uncertainty_kws=None):
+    """FIX-6/G14 (review V4 Pro + V4 Flash) — helper citation dùng chung.
+
+    5 hàm kiểm tra (REQ-029 source, REQ-038 claim basis, REQ-039 industry,
+    REQ-047 macro, REQ-054 causal) chia sẻ cùng pattern: quét claim → check
+    source keyword trong cửa sổ. Hiện tại các hàm đó vẫn giữ code riêng (rủi ro
+    phá 67/67 nếu refactor nội dung), nhưng helper này là cơ sở để gộp trong
+    refactor tương lai — ưu tiên thấp theo cả 2 review.
+
+    Args:
+      text: narrative text (đã strip script/style qua _narrative_text)
+      claim_patterns: list regex — mẫu claim cần kiểm tra
+      source_kws: list str — keyword nguồn hợp lệ (named, không generic)
+      window: số chars quanh claim để tìm source
+      uncertainty_kws: list str — marker ước tính (claim có marker → OK)
+    Returns: (issues, checked) — issues list, số claim đã check
+    """
+    issues = []
+    checked = 0
+    for pat in claim_patterns:
+        for m in re.finditer(pat, text, re.I):
+            checked += 1
+            ctx = text[max(0, m.start() - 60):m.end() + window].lower()
+            has_source = any(kw in ctx for kw in source_kws)
+            has_uncert = uncertainty_kws and any(kw in ctx for kw in uncertainty_kws)
+            if not has_source and not has_uncert:
+                issues.append(f"claim '{m.group(0)}' không có named source trong ±{window} chars")
+    return issues, checked
+
+
 def verify_source_citation(req, html):
     """REQ-029: Source citation check — mọi số liệu trong narrative phải có nguồn.
 
@@ -1371,7 +1401,13 @@ def _normalize_number(tok):
     """'12.345,6' / '12,345' / '9,078' / '12345' → float. VN thousands='.', decimal=','.
     Heuristic VN tiền tệ: 3 chữ số sau dấu phẩy = nghìn separator (9,078 = 9078);
     1-2 chữ số sau dấu phẩy = decimal (1,5 = 1.5). Dấu chấm luôn là nghìn separator
-    khi có 3 chữ số sau (12.345 = 12345), nếu không (1.5) là decimal."""
+    khi có 3 chữ số sau (12.345 = 12345), nếu không (1.5) là decimal.
+
+    FIX-9 (review V4 Pro): heuristic này ĐÃ phân biệt đúng '1,5 tỷ' (=1.5 tỷ, 1 digit
+    sau phẩy → decimal) vs '1,500 tỷ' (=1500 tỷ, 3 digits sau phẩy → thousands).
+    Bổ sung guard: nếu kết quả thousands-parse > 10^9 và không có dấu chấm nghìn đi kèm
+    → khả năng cao là decimal bị hiểu nhầm → vẫn giữ thousands (VN tiền tệ ước lớn bình
+    thường) nhưng note trong caller nếu cần. Không đổi logic."""
     tok = tok.strip().replace(" ", "").replace("đ", "")
     if not tok:
         return None
@@ -3830,6 +3866,67 @@ def verify_fiscal_year(req, html):
     return passed, {"issues": issues, "fiscal_year_type": fyt}
 
 # ═══════════════════════════════════════════════════════════════
+# DISPATCH TABLE (FIX-5 — review V4 Pro: thay elif-chain 54 nhánh + skip-list
+# thủ công bằng dict duy nhất). Thêm verify method mới = thêm 1 entry ở đây.
+# ═══════════════════════════════════════════════════════════════
+METHODS = {
+    "command": verify_command,
+    "artifact_check": verify_artifact_check,
+    "section_map_check": verify_section_map,
+    "count_check": verify_count_check,
+    "content_depth_check": verify_content_depth,
+    "section_content_check": verify_section_content,
+    "canvas_check": verify_canvas_check,
+    "div_balance_check": verify_div_balance,
+    "valuation_sanity_check": verify_valuation_sanity,
+    "data_accuracy_check": verify_data_accuracy,
+    "capex_accuracy_check": verify_capex_accuracy,
+    "valuation_recompute_check": verify_valuation_recompute,
+    "chart_data_accuracy_check": verify_chart_data_accuracy,
+    "external_claim_flag_check": verify_external_claim_flag,
+    "chart_runtime_check": verify_chart_runtime_check,
+    "source_citation_check": verify_source_citation,
+    "price_source_check": verify_price_source,
+    "drawdown_source_check": verify_drawdown_source,
+    "peer_provenance_check": verify_peer_provenance,
+    "cross_section_consistency_check": verify_cross_section_consistency,
+    "temporal_alignment_check": verify_temporal_alignment,
+    "segment_check": verify_segment_check,
+    "cagr_recompute_check": verify_cagr_recompute,
+    "tech_recompute_check": verify_tech_recompute,
+    "claim_basis_check": verify_claim_basis,
+    "industry_claim_check": verify_industry_claim,
+    "identity_check": verify_identity,
+    "news_window_check": verify_news_window,
+    "investment_amount_check": verify_investment_amount,
+    "source_freshness_check": verify_source_freshness,
+    "news_authenticity_check": verify_news_authenticity,
+    "forecast_source_check": verify_forecast_source,
+    "technical_indicator_verify": verify_technical_indicator,
+    "macro_data_citation_check": verify_macro_data_citation,
+    "management_claim_check": verify_management_claim,
+    "historical_return_verify": verify_historical_return,
+    "comparison_baseline_check": verify_comparison_baseline,
+    "unit_consistency_check": verify_unit_consistency,
+    "liquidity_check": verify_liquidity,
+    "audit_opinion_check": verify_audit_opinion,
+    "causal_chain_evidence_check": verify_causal_chain,
+    "vague_language_check": verify_vague_language,
+    "timeframe_consistency_check": verify_timeframe_consistency,
+    "dividend_claim_check": verify_dividend_claim,
+    "support_resistance_method_check": verify_support_resistance_method,
+    "period_integrity_check": verify_period_integrity,
+    "data_provenance_check": verify_data_provenance,
+    "internal_identity_check": verify_internal_identity,
+    "derived_metrics_recompute_check": verify_derived_metrics_recompute,
+    "valuation_methods_check": verify_valuation_methods,
+    "trend_consistency_check": verify_trend_consistency,
+    "verdict_consistency_check": verify_verdict_consistency,
+    "api_fallback_check": verify_api_fallback,
+    "fiscal_year_check": verify_fiscal_year,
+}
+
+# ═══════════════════════════════════════════════════════════════
 # MAIN VERIFIER
 # ═══════════════════════════════════════════════════════════════
 
@@ -3866,51 +3963,10 @@ def main():
         priority = req.get("priority", "medium")
 
         # Skip artifact checks if no report
-        if not html and method in ("artifact_check", "section_map_check", "count_check",
-                                    "content_depth_check", "section_content_check",
-                                    "canvas_check", "div_balance_check", "valuation_sanity_check",
-                                    "data_accuracy_check", "capex_accuracy_check",
-                                    "valuation_recompute_check", "chart_data_accuracy_check",
-                                    "external_claim_flag_check",
-                                    "source_citation_check",
-                                    "price_source_check",
-                                    "drawdown_source_check",
-                                    "peer_provenance_check",
-                                    "cross_section_consistency_check",
-                                    "temporal_alignment_check",
-                                    "segment_check",
-                                    "cagr_recompute_check",
-                                    "tech_recompute_check",
-                                    "claim_basis_check",
-                                    "industry_claim_check",
-                                    "identity_check",
-                                    "news_window_check",
-                                    "investment_amount_check",
-                                    "source_freshness_check",
-                                    "news_authenticity_check",
-                                    "forecast_source_check",
-                                    "technical_indicator_verify",
-                                    "macro_data_citation_check",
-                                    "management_claim_check",
-                                    "historical_return_verify",
-                                    "comparison_baseline_check",
-                                    "unit_consistency_check",
-                                    "liquidity_check",
-                                    "audit_opinion_check",
-                                    "causal_chain_evidence_check",
-                                    "vague_language_check",
-                                    "timeframe_consistency_check",
-                                    "dividend_claim_check",
-                                    "support_resistance_method_check",
-                                    "period_integrity_check",
-                                    "data_provenance_check",
-                                    "internal_identity_check",
-                                    "derived_metrics_recompute_check",
-                                    "valuation_methods_check",
-                                    "trend_consistency_check",
-                                    "verdict_consistency_check",
-                                    "api_fallback_check",
-                                    "fiscal_year_check"):
+        # FIX-5 (review V4 Pro): trước đây skip-list dài ~45 method strings maintain
+        # bằng tay. Giờ derive từ METHODS dict — thêm method mới tự động được skip khi
+        # không có artifact (mọi verify_* trừ verify_command đều cần html).
+        if not html and method in METHODS and method != "command":
             results["skip"] += 1
             print(f"  ⏭️  {rid} [{priority:8}] SKIP (no artifact)")
             continue
@@ -3921,118 +3977,15 @@ def main():
         evidence = {}
 
         try:
-            if method == "command":
-                passed, evidence = verify_command(req, html)
-            elif method == "artifact_check":
-                passed, evidence = verify_artifact_check(req, html)
-            elif method == "section_map_check":
-                passed, evidence = verify_section_map(req, html)
-            elif method == "count_check":
-                passed, evidence = verify_count_check(req, html)
-            elif method == "content_depth_check":
-                passed, evidence = verify_content_depth(req, html)
-            elif method == "section_content_check":
-                passed, evidence = verify_section_content(req, html)
-            elif method == "canvas_check":
-                passed, evidence = verify_canvas_check(req, html)
-            elif method == "div_balance_check":
-                passed, evidence = verify_div_balance(req, html)
-            elif method == "valuation_sanity_check":
-                passed, evidence = verify_valuation_sanity(req, html)
-            elif method == "data_accuracy_check":
-                passed, evidence = verify_data_accuracy(req, html)
-            elif method == "capex_accuracy_check":
-                passed, evidence = verify_capex_accuracy(req, html)
-            elif method == "valuation_recompute_check":
-                passed, evidence = verify_valuation_recompute(req, html)
-            elif method == "chart_data_accuracy_check":
-                passed, evidence = verify_chart_data_accuracy(req, html)
-            elif method == "external_claim_flag_check":
-                passed, evidence = verify_external_claim_flag(req, html)
-            elif method == "chart_runtime_check":
-                passed, evidence = verify_chart_runtime_check(req, html)
-            elif method == "source_citation_check":
-                passed, evidence = verify_source_citation(req, html)
-            elif method == "price_source_check":
-                passed, evidence = verify_price_source(req, html)
-            elif method == "drawdown_source_check":
-                passed, evidence = verify_drawdown_source(req, html)
-            elif method == "peer_provenance_check":
-                passed, evidence = verify_peer_provenance(req, html)
-            elif method == "cross_section_consistency_check":
-                passed, evidence = verify_cross_section_consistency(req, html)
-            elif method == "temporal_alignment_check":
-                passed, evidence = verify_temporal_alignment(req, html)
-            elif method == "segment_check":
-                passed, evidence = verify_segment_check(req, html)
-            elif method == "cagr_recompute_check":
-                passed, evidence = verify_cagr_recompute(req, html)
-            elif method == "tech_recompute_check":
-                passed, evidence = verify_tech_recompute(req, html)
-            elif method == "claim_basis_check":
-                passed, evidence = verify_claim_basis(req, html)
-            elif method == "industry_claim_check":
-                passed, evidence = verify_industry_claim(req, html)
-            elif method == "identity_check":
-                passed, evidence = verify_identity(req, html)
-            elif method == "news_window_check":
-                passed, evidence = verify_news_window(req, html)
-            elif method == "investment_amount_check":
-                passed, evidence = verify_investment_amount(req, html)
-            elif method == "source_freshness_check":
-                passed, evidence = verify_source_freshness(req, html)
-            elif method == "news_authenticity_check":
-                passed, evidence = verify_news_authenticity(req, html)
-            elif method == "forecast_source_check":
-                passed, evidence = verify_forecast_source(req, html)
-            elif method == "technical_indicator_verify":
-                passed, evidence = verify_technical_indicator(req, html)
-            elif method == "macro_data_citation_check":
-                passed, evidence = verify_macro_data_citation(req, html)
-            elif method == "management_claim_check":
-                passed, evidence = verify_management_claim(req, html)
-            elif method == "historical_return_verify":
-                passed, evidence = verify_historical_return(req, html)
-            elif method == "comparison_baseline_check":
-                passed, evidence = verify_comparison_baseline(req, html)
-            elif method == "unit_consistency_check":
-                passed, evidence = verify_unit_consistency(req, html)
-            elif method == "liquidity_check":
-                passed, evidence = verify_liquidity(req, html)
-            elif method == "audit_opinion_check":
-                passed, evidence = verify_audit_opinion(req, html)
-            elif method == "causal_chain_evidence_check":
-                passed, evidence = verify_causal_chain(req, html)
-            elif method == "vague_language_check":
-                passed, evidence = verify_vague_language(req, html)
-            elif method == "timeframe_consistency_check":
-                passed, evidence = verify_timeframe_consistency(req, html)
-            elif method == "dividend_claim_check":
-                passed, evidence = verify_dividend_claim(req, html)
-            elif method == "support_resistance_method_check":
-                passed, evidence = verify_support_resistance_method(req, html)
-            elif method == "period_integrity_check":
-                passed, evidence = verify_period_integrity(req, html)
-            elif method == "data_provenance_check":
-                passed, evidence = verify_data_provenance(req, html)
-            elif method == "internal_identity_check":
-                passed, evidence = verify_internal_identity(req, html)
-            elif method == "derived_metrics_recompute_check":
-                passed, evidence = verify_derived_metrics_recompute(req, html)
-            elif method == "valuation_methods_check":
-                passed, evidence = verify_valuation_methods(req, html)
-            elif method == "trend_consistency_check":
-                passed, evidence = verify_trend_consistency(req, html)
-            elif method == "verdict_consistency_check":
-                passed, evidence = verify_verdict_consistency(req, html)
-            elif method == "api_fallback_check":
-                passed, evidence = verify_api_fallback(req, html)
-            elif method == "fiscal_year_check":
-                passed, evidence = verify_fiscal_year(req, html)
-            elif method == "all_requirements_pass":
+            if method == "all_requirements_pass":
                 # Special: checked at end
                 results["skip"] += 1
                 continue
+            # FIX-5 (review V4 Pro): dispatch qua METHODS dict thay vì elif-chain
+            # 54 nhánh. Thêm method mới chỉ cần 1 entry trong METHODS.
+            handler = METHODS.get(method)
+            if handler is not None:
+                passed, evidence = handler(req, html)
             else:
                 evidence = {"error": f"unknown method: {method}"}
         except Exception as e:
@@ -4061,7 +4014,10 @@ def main():
             # Advisory (batch-3, đề xuất V4 Flash): priority=advisory từ YAML là 1 nguồn
             # sự thật — check fail KHÔNG block deploy (WARN-only), không đếm vào fail
             results["skip"] += 1
-            status_color = YELLOW + f"⚠️ ADVISORY ({len(evidence.get('issues', []))} issue)" + NC
+            # Cosmetic (batch-5): một số advisory method dùng key 'warnings'/'note' thay
+            # vì 'issues' → hiển thị số warning thật thay vì luôn "0 issue"
+            warn_count = len(evidence.get("issues") or evidence.get("warnings") or [])
+            status_color = YELLOW + f"⚠️ ADVISORY ({warn_count} issue)" + NC
         else:
             results["fail"] += 1
             status_color = RED + "❌ FAIL" + NC
