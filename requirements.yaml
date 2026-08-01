@@ -360,7 +360,7 @@ requirements:
     - Nếu KHÔNG có data drawdown → claim phải ghi "chưa có data, ước tính dựa trên ngành"
     - KHÔNG được ghi số cụ thể (%) nếu không có source
 - id: REQ-032
-  text: 'Peer provenance: mọi số liệu peer trong narrative (tên DN cùng ngành + giá trị so sánh) phải lấy từ peers.json HOẶC verified-dashboard-data.json. KHÔNG bịa peer data từ bộ nhớ. (Lesson Learned #4: agent bịa "peer" data.)'
+  text: 'Peer provenance: mọi số liệu peer trong narrative (tên DN cùng ngành + giá trị so sánh) phải lấy từ peers.json HOẶC verified-dashboard-data.json. KHÔNG bịa peer data từ bộ nhớ. (Lesson Learned #4: agent bịa "peer" data.) GAP-2 FIX (V4 Flash): report không có sec-peer → quét narrative chung (ticker lạ + số + unit, stoplist chỉ số của chính CTD); có peer claim mà không có peers.json → FAIL, KHÔNG vacuous pass.'
   type: mandatory
   priority: critical
   failure_mode: FM-05
@@ -695,7 +695,7 @@ requirements:
     - EPS(2025) ≈ npatmi(2025)×1e9 / shares ±15% (EPS có thể tính theo diluted/CP bình quân; lệch >15% → data tự mâu thuẫn)
     - contract price vs financials price ±5%
 - id: REQ-061
-  text: 'Derived metrics recompute: mọi claim ROE/ROA/net margin/tăng trưởng YoY/vốn hóa phải recompute được từ financials.json + balance_sheet.json (±5% tương đối hoặc ±1pp tuyệt đối). Chống "ROE 24%" bịa khi data cho ROE 8%.'
+  text: 'Derived metrics recompute: mọi claim ROE/ROA/net margin/tăng trưởng YoY/vốn hóa phải recompute được từ financials.json + balance_sheet.json (±5% tương đối hoặc ±1pp tuyệt đối). Chống "ROE 24%" bịa khi data cho ROE 8%. GAP-1 FIX (V4 Flash): kể cả dạng "ROE (2025) X%" — năm trong ngoặc giữa keyword và số (pattern cũ kẹt ở "(2025)").'
   type: mandatory
   priority: high
   failure_mode: FM-05
@@ -738,7 +738,7 @@ requirements:
     - Sign claim phải khớp sign data (có năm → theo năm đó; không → overall)
     - Loại trừ biên lợi nhuận/lợi nhuận gộp (chuỗi khác); phủ định "không tăng" bỏ qua
 - id: REQ-065
-  text: 'Verdict consistency: tone kết luận (sec-exec/sec-thesis) phải cùng dấu với upside/downside trung bình từ valuation targets. Chống "kết luận tích cực" trong khi mọi phương pháp cho giá hợp lý thấp hơn giá thị trường >5%.'
+  text: 'Verdict consistency: tone kết luận (sec-exec/sec-thesis) phải cùng dấu với upside/downside trung bình từ valuation targets. Chống "kết luận tích cực" trong khi mọi phương pháp cho giá hợp lý thấp hơn giá thị trường >5%. GAP-3 FIX (V4 Flash): claim "Upside X%" trong narrative phải khớp recompute median(targets)/price - 1 (±5pp); lệch >5pp → FAIL.'
   type: mandatory
   priority: medium
   failure_mode: FM-05

@@ -1523,21 +1523,41 @@ def verify_peer_provenance(req, html):
     if not html:
         return False, {"error": "no html"}
     peer_text = extract_section_text(html, "sec-peer")
+    fallback_narrative = False
     if not peer_text:
-        return True, {"note": "no sec-peer section — nothing to check"}
+        # GAP-2 FIX (V4 Flash, đợt so sánh 31-vs-68): report không có sec-peer → KHÔNG
+        # vacuous pass. Quét narrative chung tìm peer claim (ticker lạ + số + unit).
+        # Trước đây `return True` → peer claim bịa ở section khác (sec-biz/thesis) lọt.
+        peer_text = _narrative_text(html)
+        fallback_narrative = True
+        if not peer_text:
+            return True, {"note": "no narrative text — nothing to check"}
 
     # Find quantitative peer claims (number near ticker/company or P/E P/B x-value)
     claims = []
     # pattern 1: ticker + number nearby (e.g. "HBC P/E 8x", "SSI vốn hóa 50.000 tỷ")
-    for m in re.finditer(r"\b([A-Z]{3})\b[^.%0-9]{0,60}?(\d[\d.,]*)\s*(x|tỷ|tỉ|triệu|nghìn tỷ)?", peer_text):
+    # GAP-2 FIX: chế độ fallback siết hơn — bắt buộc unit (x|tỷ|tỉ|triệu|nghìn tỷ) sau số
+    # + stoplist: EPS/ROE/CFO/DCF/DDM/ROS/RSI... là chỉ số của CHÍNH CTD, không phải peer
+    # ticker; không siết thì "ROE 8.65%", "EPS 6,987x", "CFO 421" thành peer claim giả.
+    ticker_pat = (r"\b([A-Z]{3})\b[^.%0-9]{0,60}?(\d[\d.,]*)\s*(x|tỷ|tỉ|triệu|nghìn tỷ)"
+                  if fallback_narrative
+                  else r"\b([A-Z]{3})\b[^.%0-9]{0,60}?(\d[\d.,]*)\s*(x|tỷ|tỉ|triệu|nghìn tỷ)?")
+    FALLBACK_STOPLIST = {"JSC", "VND", "USD", "EUR", "JPY", "GBP", "HKD", "CNY", "KRW",
+                         "HNX", "HSX", "OTC", "IPO", "EPS", "ROE", "ROA", "CFO", "DCF",
+                         "DDM", "DPS", "ROS", "RSI", "YTD", "EBITDA", "BVPS"}
+    for m in re.finditer(ticker_pat, peer_text):
         ticker = m.group(1)
         # Skip if ticker is the target TICKER itself
         if ticker.upper() == TICKER.upper():
             continue
+        if fallback_narrative and ticker.upper() in FALLBACK_STOPLIST:
+            continue
         claims.append({"type": "ticker_value", "ticker": ticker, "value": m.group(2), "unit": m.group(3) or ""})
     # pattern 2: P/E or P/B multiple without ticker (e.g. "P/E 5x" — must come from data)
-    for m in re.finditer(r"P/\s*[EB]\s*[^0-9]{0,10}?(\d[\d.,]*)\s*x?", peer_text, re.I):
-        claims.append({"type": "multiple", "value": m.group(1)})
+    # chỉ áp dụng trong sec-peer — narrative chung thì "P/E 10.4x" là của CTD, không phải peer
+    if not fallback_narrative:
+        for m in re.finditer(r"P/\s*[EB]\s*[^0-9]{0,10}?(\d[\d.,]*)\s*x?", peer_text, re.I):
+            claims.append({"type": "multiple", "value": m.group(1)})
 
     # Check peer data source
     peers_data = None
@@ -1623,6 +1643,7 @@ def verify_peer_provenance(req, html):
     passed = len(mismatches) == 0
     return passed, {
         "peer_data_source": "peers.json" if peers_data else "verified-dashboard-data.json",
+        "scan_source": "sec-peer" if not fallback_narrative else "narrative-fallback (no sec-peer)",
         "peer_list_structured": len(peer_list) > 0,
         "peer_claims_found": len(claims),
         "claims_verified": checked,
@@ -3620,7 +3641,10 @@ def verify_derived_metrics_recompute(req, html):
             issues.append(f"{label} claim {claimed}% ≠ recompute {computed:.1f}% (năm {_year_in(ctx, default_year)})")
 
     # ROE = NPAT / equity
-    for m in re.finditer(r"\bROE\b[^.\d]{0,30}?(\d[\d.,]*)\s*%", text, re.I):
+    # GAP-1 FIX (V4 Flash, đợt so sánh 31-vs-68): pattern cũ `[^.\d]{0,30}?` không cho
+    # phép chữ số → kẹt khi có "(2025)" giữa "ROE" và số → "ROE (2025) 24%" vô hình.
+    # Thêm optional year prefix (giống FIX-4b cho REQ-033): keyword → ... → (20xx)? → SỐ.
+    for m in re.finditer(r"\bROE\b[^0-9]{0,60}?(?:20\d\d[^0-9]{0,60}?)?(\d[\d.,]*)\s*%", text, re.I):
         claimed = _normalize_number(m.group(1))
         if claimed is None:
             continue
@@ -3637,7 +3661,8 @@ def verify_derived_metrics_recompute(req, html):
         d = bs.get("Total Assets")
         if isinstance(d, dict):
             ta = {str(k): v for k, v in d.items()}
-    for m in re.finditer(r"\bROA\b[^.\d]{0,30}?(\d[\d.,]*)\s*%", text, re.I):
+    # GAP-1 FIX: same optional year prefix as ROE ("ROA (2025) X%")
+    for m in re.finditer(r"\bROA\b[^0-9]{0,60}?(?:20\d\d[^0-9]{0,60}?)?(\d[\d.,]*)\s*%", text, re.I):
         claimed = _normalize_number(m.group(1))
         if claimed is None:
             continue
@@ -3649,7 +3674,8 @@ def verify_derived_metrics_recompute(req, html):
         _chk("ROA", claimed, float(np_ty) / (float(ta_ty) / 1e9) * 100, ctx)
 
     # Net margin = NPAT / revenue
-    for m in re.finditer(r"(?:biên lợi nhuận ròng|net margin|biên lợi nhuận sau thuế|biên LNST)[^.\d]{0,30}?(\d[\d.,]*)\s*%", text, re.I):
+    # GAP-1 FIX: same optional year prefix as ROE ("Biên LNST (2025) X%")
+    for m in re.finditer(r"(?:biên lợi nhuận ròng|net margin|biên lợi nhuận sau thuế|biên LNST)[^0-9]{0,60}?(?:20\d\d[^0-9]{0,60}?)?(\d[\d.,]*)\s*%", text, re.I):
         claimed = _normalize_number(m.group(1))
         if claimed is None:
             continue
@@ -3661,7 +3687,8 @@ def verify_derived_metrics_recompute(req, html):
         _chk("net margin", claimed, float(np_ty) / float(rev_ty) * 100, ctx)
 
     # YoY growth doanh thu
-    for m in re.finditer(r"(?:tăng trưởng doanh thu|doanh thu (?:tăng|giảm)|revenue (?:grew|growth|declined))[^.\d]{0,40}?(-?\d[\d.,]*)\s*%", text, re.I):
+    # GAP-1 FIX: same optional year prefix as ROE ("doanh thu tăng năm 2025: 34%")
+    for m in re.finditer(r"(?:tăng trưởng doanh thu|doanh thu (?:tăng|giảm)|revenue (?:grew|growth|declined))[^0-9]{0,60}?(?:20\d\d[^0-9]{0,60}?)?(-?\d[\d.,]*)\s*%", text, re.I):
         claimed = _normalize_number(m.group(1))
         if claimed is None:
             continue
@@ -3673,7 +3700,8 @@ def verify_derived_metrics_recompute(req, html):
             _chk("YoY revenue", claimed, (float(rev[y]) / float(rev[yp]) - 1) * 100, ctx)
 
     # YoY growth lợi nhuận
-    for m in re.finditer(r"(?:tăng trưởng lợi nhuận|lợi nhuận (?:tăng|giảm)|profit (?:grew|growth|declined)|npatmi (?:tăng|giảm))[^.\d]{0,40}?(-?\d[\d.,]*)\s*%", text, re.I):
+    # GAP-1 FIX: same optional year prefix as ROE ("lợi nhuận tăng 2025: 110%")
+    for m in re.finditer(r"(?:tăng trưởng lợi nhuận|lợi nhuận (?:tăng|giảm)|profit (?:grew|growth|declined)|npatmi (?:tăng|giảm))[^0-9]{0,60}?(?:20\d\d[^0-9]{0,60}?)?(-?\d[\d.,]*)\s*%", text, re.I):
         claimed = _normalize_number(m.group(1))
         if claimed is None:
             continue
@@ -3842,6 +3870,31 @@ def verify_verdict_consistency(req, html):
     if not targets or not price:
         return True, {"note": "không có targets/price để so upside — bỏ qua"}
     upside = statistics.median(targets) / float(price) - 1
+    issues = []
+    # GAP-3 FIX (V4 Flash, đợt so sánh 31-vs-68): claim "Upside X%" phải recompute được
+    # từ targets vs price (±5pp). Trước đây chỉ check tone — report ghi "Upside 13.3%"
+    # trong khi targets cho upside khác >5pp thì không REQ nào bắt.
+    # Bắt 3 dạng: "upside ... X%", "X% ... upside", "(+X% so với giá hiện tại)".
+    # Lưu ý: `issues` phải khai báo TRƯỚC block này (bản đầu để sau → crash khi có claim
+    # lệch >5pp, chỉ sạch khi không có claim nào chạm ngưỡng).
+    ntext = _narrative_text(html)
+    up_claims = []
+    for m in re.finditer(r"upside[^.%0-9]{0,30}?(-?\d[\d.,]*)\s*%", ntext, re.I):
+        v = _normalize_number(m.group(1))
+        if v is not None:
+            up_claims.append(v)
+    for m in re.finditer(r"(-?\d[\d.,]*)\s*%[^.%0-9]{0,30}?upside", ntext, re.I):
+        v = _normalize_number(m.group(1))
+        if v is not None:
+            up_claims.append(v)
+    for m in re.finditer(r"\(([+-]?\d[\d.,]*)\s*%\s*so\s*với\s*giá", ntext, re.I):
+        v = _normalize_number(m.group(1))
+        if v is not None:
+            up_claims.append(v)
+    up_pct = upside * 100
+    for v in up_claims:
+        if abs(v - up_pct) > 5.0:
+            issues.append(f"upside claim {v}% ≠ recompute {up_pct:.1f}% (median targets vs price) — lệch >5pp")
     exec_text = (extract_section_text(html, "sec-exec") or "") + " " + (extract_section_text(html, "sec-thesis") or "")
     pos_words = ["tích cực", "khả quan", "lạc quan", "hấp dẫn", "cơ hội", "tăng trưởng", "phục hồi",
                  "mạnh mẽ", "ưu việt", "undervalued", "định giá rẻ", "triển vọng", "đáng chú ý"]
@@ -3850,13 +3903,14 @@ def verify_verdict_consistency(req, html):
     low = exec_text.lower()
     pos_n = sum(low.count(w) for w in pos_words)
     neg_n = sum(low.count(w) for w in neg_words)
-    issues = []
     if upside > 0.05 and neg_n > pos_n:
         issues.append(f"upside +{upside*100:.0f}% (từ targets) nhưng exec/thesis nghiêng tiêu cực ({neg_n} âm vs {pos_n} dương)")
     if upside < -0.05 and pos_n > neg_n:
         issues.append(f"upside {upside*100:.0f}% (âm) nhưng exec/thesis nghiêng tích cực ({pos_n} dương vs {neg_n} âm)")
     passed = len(issues) == 0
-    return passed, {"issues": issues, "upside_pct": round(upside * 100, 1), "pos_words": pos_n, "neg_words": neg_n}
+    return passed, {"issues": issues, "upside_pct": round(upside * 100, 1),
+                    "upside_claims": [round(v, 1) for v in up_claims[:5]],
+                    "pos_words": pos_n, "neg_words": neg_n}
 
 
 def verify_api_fallback(req, html):
