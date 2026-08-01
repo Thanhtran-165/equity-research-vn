@@ -69,6 +69,17 @@ __TEMPLATE_INLINE_PLACEHOLDER__
 - **KHÔNG ĐƯỢC** để số liệu "trôi nổi" — nếu không có source → ghi `"ước tính"` hoặc **BỎ**
 - Verifier REQ-029 sẽ quét narrative tìm số không có source → FAIL
 
+### NO INTERNAL META RULE (REQ-070, Lesson Learned #16) — BẮT BUỘC
+- **KHÔNG viết vào narrative** bất kỳ dấu vết kỹ thuật nội bộ nào:
+  - Tên phase: `phase 3`, `phase4a`, `phase 0` → bỏ hẳn hoặc viết lại thành mô tả
+  - Tên file dữ liệu: `financials.json`, `peers.json`, `price_daily`, `cash_flow`, `balance_sheet`, `technical_active.json`, `news_digest.json`, `*.md` → viết lại thành mô tả tiếng Việt: "(theo báo cáo lưu chuyển tiền tệ)", "(theo bảng cân đối kế toán)", "(theo giá tuần)", "(theo dữ liệu peer)"
+  - Tên nội bộ khác: `task-state`, `investment_amount`, `api_source`, `tier`, `verified-dashboard-data`
+- **Citation CHỈ qua `{SRC('ref-N')}`** (render thành sup ẩn CSS) — KHÔNG viết `[ref-N]` trực tiếp vào text
+- Nếu cần ghi chú định nghĩa/nguồn cho người đọc → dùng câu tiếng Việt bình thường, không nhắc file/phase
+- Verifier REQ-070 quét narrative các section chính; danh sách nguồn cuối trang (ref list) được miễn trừ
+- Ví dụ ĐÚNG: `"CFO 2025 âm -831 tỷ (theo báo cáo lưu chuyển tiền tệ) {SRC('ref-6')}"`
+- Ví dụ SAI: `"CFO 2025 âm -831 tỷ (theo cash_flow.json) [ref-6]"`
+
 ### Keywords bắt buộc (verifier check)
 - "split-adjusted" / "Bẫy 5B" / "cross-check" (REQ-003, anywhere)
 - "sentiment" / "tích cực" / "tiêu cực" (REQ-008)

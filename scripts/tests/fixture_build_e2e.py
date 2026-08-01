@@ -289,16 +289,19 @@ for i in range(7, 11):
     charts_js += f'new Chart($("chart-{i}"), {{type: "line", data: {{labels: DATA.years, datasets: [{{label: "Series", data: DATA.revenue}}]}}}});'
 
 data_js = f"""const DATA = {{
-  years: [2021, 2022, 2023, 2024, 2025],
-  revenue: [9077.92, 14538.69, 16529.94, 22905.86, 30699.1],
-  netProfit: [24.11, 20.79, 187.92, 371.4, 781.35],
-  eps: [323, 280, 2267, 3729, 7736],
-  totalAssets: [13924.62, 18967.07, 21651.89, 27076.86, 34442.24],
-  equity: [8247.56, 8213.96, 8407.43, 8688.77, 9385.34],
-  capex: [{', '.join(str(round(CAPEX[y], 2)) for y in '2021 2022 2023 2024 2025'.split())}],
-  price: 71700,
-  price_fetched_at: "{TODAY.isoformat()}T09:00:00",
-  max_drawdown_52w: -28.5
+  "years": [2021, 2022, 2023, 2024, 2025],
+  "revenue": [9077.92, 14538.69, 16529.94, 22905.86, 30699.1],
+  "netProfit": [24.11, 20.79, 187.92, 371.4, 781.35],
+  "netIncome": [24.11, 20.79, 187.92, 371.4, 781.35],
+  "eps": [323, 280, 2267, 3729, 7736],
+  "totalAssets": [13924.62, 18967.07, 21651.89, 27076.86, 34442.24],
+  "equity": [8247.56, 8213.96, 8407.43, 8688.77, 9385.34],
+  "liabilities": [{', '.join(str(round(bs["Total Assets"][str(y)] - fin["equity_ty"][str(y)], 2)) for y in '2021 2022 2023 2024 2025'.split())}],
+  "capex": [{', '.join(str(round(CAPEX[y], 2)) for y in '2021 2022 2023 2024 2025'.split())}],
+  "price": 71700,
+  "price_fetched_at": "{TODAY.isoformat()}T09:00:00",
+  "max_drawdown_52w": -28.5,
+  "techRSI": [40, 45, 38, 52, 48, 35, 42, 50, 55, 47, 39, 44, 51, 48, 36, 43, 49, 53, 41, 46, 38, 50, 44, 37, 48, 52, 45, 40, 47, 43, 39, 51, 46, 42, 48, 55, 41, 37, 49, 44, 50, 38, 46, 43, 52, 40, 48, 35, 45, 50, 42, 47]
 }};
 document.addEventListener("DOMContentLoaded", function () {{ {charts_js} }});"""
 
@@ -308,6 +311,8 @@ html = f"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <title>CTD — Coteccons Construction | Báo cáo phân tích</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3"></script>
+<style>.tbl{{border-collapse:collapse;width:100%}}.tbl td,.tbl th{{border:1px solid #444;padding:4px}}[ref-id]{{display:none}}</style>
 </head>
 <body>
 {hero}

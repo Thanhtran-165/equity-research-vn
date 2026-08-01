@@ -1,6 +1,6 @@
 ---
 name: equity-research-vn
-description: "Phân tích equity research đầy đủ cho cổ phiếu Việt Nam — kiến trúc subagent per phase (v3.2.0). Mỗi phase chạy trong context tách biệt, giao tiếp qua task-state.json, verify per-phase. 67 REQ verification (V3+V4+V5 hardening waves). TRIGGER khi user gõ /equity-research-vn [TICKER]."
+description: "Phân tích equity research đầy đủ cho cổ phiếu Việt Nam — kiến trúc subagent per phase (v3.2.0). Mỗi phase chạy trong context tách biệt, giao tiếp qua task-state.json, verify per-phase. 70 REQ verification (V3+V4+V5 hardening + runtime-render + no-internal-meta). TRIGGER khi user gõ /equity-research-vn [TICKER]."
 ---
 
 # equity-research-vn [TICKER]
@@ -47,7 +47,7 @@ python3 scripts/independent_verifier.py [TICKER] [OUTPUT].html
 
 ## Requirements
 
-Xem `requirements.yaml` (67 REQ — V3+V4+V5 hardening waves). Mỗi REQ mapped tới 1 phase trong `requirements-phase-map.yaml`.
+Xem `requirements.yaml` (70 REQ — V3+V4+V5 hardening + runtime-render + no-internal-meta). Mỗi REQ mapped tới 1 phase trong `requirements-phase-map.yaml`.
 
 ## Khác v1
 

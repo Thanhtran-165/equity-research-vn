@@ -781,6 +781,34 @@ requirements:
     rules:
     - Mọi phase 0–6 phải status=completed
     - Thiếu status/result → FAIL
+- id: REQ-069
+  text: 'Runtime render readiness: mọi tham chiếu chart JS phải khớp cấu trúc thật — canvas id trong new Chart phải tồn tại và duy nhất; DATA.<key> trong JS phải có trong const DATA object; dataset data: DATA.<key> phải là ARRAY (không phải object); biến trần (labels:/data: không phải DATA.*) phải được khai báo const/let/var/function hoặc là global hợp lệ; dùng $() mà không khai báo $ (và không có jQuery) → FAIL. Chống "chart chết im lặng": lỗi runtime làm chart không render nhưng verifier cú pháp vẫn PASS. (V4 Flash, phiên chạy CTD 2026-08-01: DATA.peers sai shape + thiếu ddMonths/distBins/distCounts → 4/12 chart chết; fixture cũ lỗi "$ is not defined" → 0/10 chart chết.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: ctd-v4flash-runtime
+  verification:
+    method: runtime_render_check
+    rules:
+    - Canvas id trùng lặp → FAIL
+    - new Chart tham chiếu canvas không tồn tại → FAIL
+    - JS dùng DATA.<key> mà key không có trong const DATA → FAIL
+    - dataset data: DATA.<key> mà value không phải array → FAIL
+    - labels:/data: dùng biến trần không khai báo (trừ DATA + global whitelist) → FAIL
+    - Dùng $() không khai báo $ và không có jQuery → FAIL
+- id: REQ-070
+  text: 'Narrative KHÔNG chứa meta nội bộ: không có tên phase (phase 3, phase4a...), tên file dữ liệu (financials.json, peers.json, price_daily...), tên nội bộ (task-state, investment_amount, technical_active) trong nội dung các section chính. Người đọc cuối chỉ thấy mô tả nguồn tiếng Việt (theo BCTC, theo báo cáo lưu chuyển tiền tệ...). Danh sách nguồn cuối trang (li id=ref-N) được miễn trừ. (V4 Flash, phiên chạy CTD 2026-08-01: ~25 cụm "phase 3, tính từ financials.json + peers.json", "(theo cash_flow)", "(nguồn: technical_active.json...)" lộ ra trong báo cáo.)'
+  type: mandatory
+  priority: high
+  failure_mode: FM-05
+  case_ref: ctd-v4flash-no-meta
+  verification:
+    method: no_internal_meta_check
+    rules:
+    - Narrative section chứa pattern phase\s*\d → FAIL
+    - Narrative section chứa tên file dữ liệu (\w+\.json, \w+\.md) → FAIL
+    - Narrative section chứa từ nội bộ (task-state, investment_amount, technical_active, news_digest, wacc_estimates, sector_insights, company_profile, price_weekly, price_daily, cash_flow, balance_sheet, financials, peers\.json) → FAIL
+    - Miễn trừ: các mục nguồn (id="ref-N") và thẻ sup ẩn không tính là narrative
 - id: REQ-021
   text: KHÔNG deploy nếu bất kỳ REQ nào FAIL. Hook PreToolUse chặn vercel deploy.
   type: mandatory
@@ -788,7 +816,7 @@ requirements:
   failure_mode: FM-05
   verification:
     method: all_requirements_pass
-total: 68
+total: 70
 critical:
 - REQ-001
 - REQ-002
@@ -842,6 +870,7 @@ high:
 - REQ-064
 - REQ-066
 - REQ-068
+- REQ-070
 medium:
 - REQ-008
 - REQ-015

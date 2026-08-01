@@ -41,3 +41,10 @@ Bạn là subagent Phase 4a. Context tách biệt.
 - Mô phỏng data giá — data thật từ vnstock
 - Collapse 2 mode thành 1 (Phase 4b sẽ check REQ-006)
 - Claim pattern nếu data không show
+
+## REALISTIC S/R RULE (REQ-042 — Lesson #17, phiên CTD 2026-08-01)
+Khi sinh `support_resistance`:
+- Kháng cự CHỈ nằm trong [giá hiện tại, giá × 1.30]; hỗ trợ CHỈ nằm trong [giá × 0.70, giá].
+- Mức ngoài khoảng → chuyển vào `far_levels` (mốc xa — tham chiếu, KHÔNG xếp R/S).
+- Phân loại đúng hướng: kháng cự > giá, hỗ trợ < giá; mỗi mức kèm `note` = phương pháp.
+- Thiếu mức gần (cách ≤10%) → ghi `"nearest_none": true`, KHÔNG bịa mức.

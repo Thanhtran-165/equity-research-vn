@@ -21,6 +21,13 @@ Bạn là subagent Phase 1. Context tách biệt.
    - Report mention "split-adjusted/Bẫy 5B/cross-check" là điều kiện phụ — nhưng chỉ log mới là nguồn sự thật
 2. Fetch BCTC 5 năm qua `vnstock_data` (sponsor, 40+ kỳ):
    - Income statement, Balance sheet, Cash flow
+   - **BALANCE SHEET CHI TIẾT (Lesson #16 — phiên CTD chỉ lưu 3 dòng tổng → chart tồn kho
+     toàn 0, không vẽ được nợ vay/tiền mặt)**: ngoài `Total Assets` / `Owner's Equity` /
+     `Liabilities`, BẮT BUỘC lưu thêm vào `data/balance_sheet.json`:
+     `Inventories, Net` (hoặc `Inventories`), `Cash and cash equivalents` (hoặc `Cash`),
+     `Short-term borrowings`, `Long-term borrowings`, `Accounts receivable`
+     — cùng cấu trúc `{"<tên dòng>": {"<năm>": <giá trị VND>}}`
+   - Nếu API thiếu dòng nào → ghi `null` cho dòng đó (KHÔNG ghi 0 — 0 là số thật khác null)
 3. Fetch giá: weekly 52 tuần + daily ~2 năm (cho Phase 4). **PRICE REAL-TIME (Lesson Learned #6)**:
    - Giá hiện tại PHẢI fetch từ API (vnstock_data or vnstock)
    - **KHÔNG ĐƯỢC** tự điền giá tay vào overview.json

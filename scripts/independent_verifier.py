@@ -1727,10 +1727,17 @@ def verify_cross_section_consistency(req, html):
                     # FIX-4b (review V4 Pro M2): năm có thể cách claim >60 chars
                     # ("...50.000 tỷ đồng ... trong năm 2025"). Nới window ±100 và
                     # chọn năm GẦN claim nhất (trước hoặc sau) — tránh hút năm câu khác.
-                    ctx = sec_text[max(0, m.start()-100):m.end()+100]
+                    # G5 (review V4 Flash, bảng transposed sec-history): ym.start() đếm
+                    # trong ctx (0→~200) còn m.start() đếm trong sec_text (0→full) —
+                    # 2 hệ tọa độ lệch offset → "2025" cách 10 ký tự bị tính 134,
+                    # "2021" cách 123 ký tự bị tính 21 → gán nhầm năm cho claim.
+                    # Fix: cộng offset để đưa về cùng hệ tọa độ sec_text.
+                    base = max(0, m.start() - 100)
+                    ctx = sec_text[base:m.end()+100]
                     best_year, best_dist = None, None
                     for ym in re.finditer(r"20\d\d", ctx):
-                        dist = min(abs(ym.start() - m.start()), abs(ym.end() - m.start()))
+                        y_abs = base + ym.start()
+                        dist = min(abs(y_abs - m.start()), abs(y_abs + 2 - m.start()))
                         if best_year is None or dist < best_dist:
                             best_year, best_dist = ym.group(0), dist
                     year = best_year
@@ -3954,6 +3961,164 @@ def verify_fiscal_year(req, html):
             issues.append("fiscal_year_type=custom nhưng narrative không ghi rõ 'năm tài chính/niên độ'")
     passed = len(issues) == 0
     return passed, {"issues": issues, "fiscal_year_type": fyt}
+def verify_runtime_render(req, html):
+    """REQ-069: Runtime render readiness — chart JS phải khớp cấu trúc thật.
+
+    Chống "chart chết im lặng" (V4 Flash, phiên chạy CTD 2026-08-01):
+    lỗi runtime (DATA.<key> thiếu, dataset data sai shape, $ chưa khai báo)
+    làm chart không render nhưng verifier cú pháp vẫn PASS — sản phẩm của cả
+    V4 Flash (4/12 chart chết) lẫn fixture cũ (0/10, "$ is not defined") đều
+    lọt qua 68 REQ. Check STATIC (không cần browser): canvas id, DATA keys,
+    kiểu dataset data, biến trần.
+    """
+    if not html:
+        return False, {"error": "no html"}
+    issues = []
+    checked = 0
+
+    # 1. Canvas ids: duy nhất
+    canvas_ids = re.findall(r'<canvas[^>]*\bid="([^"]+)"', html)
+    dupes = sorted({c for c in canvas_ids if canvas_ids.count(c) > 1})
+    if dupes:
+        issues.append(f"canvas id trùng lặp: {dupes}")
+    checked += 1
+
+    # 2. new Chart($('id')) / $("id") refs -> canvas phải tồn tại
+    # (a) $('chartX') refs: loại guard `if ($('x'))` và OR-chain `$('a') || $('b')`
+    #     (chartBSDt2 || chartReturns, if ($('chartThesisRPO'))) — optional charts.
+    chart_refs = re.findall(r'\$\s*\(\s*["\'](chart[\w]+)["\']\s*\)', html)
+    or_chains = re.findall(r'\$\(\s*["\'](chart[\w]+)["\']\s*\)\s*\|\|\s*\$\(\s*["\'](chart[\w]+)["\']\s*\)', html)
+    or_ok = set()
+    for a, b2 in or_chains:
+        if a in canvas_ids or b2 in canvas_ids:
+            or_ok.add(a); or_ok.add(b2)
+    guarded = set(re.findall(r'if\s*\(\s*\$\(\s*["\'](chart[\w]+)["\']\s*\)', html))
+    missing_canvas = sorted({r for r in chart_refs if r not in canvas_ids
+                             and r not in or_ok and r not in guarded})
+    if missing_canvas:
+        issues.append(f"new Chart tham chiếu canvas không tồn tại: {missing_canvas}")
+
+    # 3. const DATA = {...}: parse object thật, so DATA.<key> refs
+    m = re.search(r"const\s+DATA\s*=\s*\{", html)
+    if not m:
+        issues.append("không tìm thấy const DATA = { — chart data không có nguồn")
+    else:
+        start = m.end() - 1
+        depth = 0
+        i = start
+        while i < len(html):
+            ch = html[i]
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            i += 1
+        try:
+            data_obj = json.loads(html[start:i+1])
+            refs = set(re.findall(r"DATA\.([A-Za-z_][A-Za-z0-9_]*)", html))
+            missing_keys = sorted(k for k in refs if k not in data_obj)
+            if missing_keys:
+                issues.append(f"JS tham chiếu DATA keys không có trong object: {missing_keys}")
+            # dataset data: DATA.<key> phải là ARRAY; DATA.<key>.<sub> thì check leaf
+            for mm in re.finditer(r"data:\s*DATA\.([A-Za-z_][A-Za-z0-9_]*)(?:\.([A-Za-z_][A-Za-z0-9_]*))?", html):
+                k = mm.group(1)
+                sub = mm.group(2)
+                v = data_obj.get(k)
+                if v is None:
+                    continue
+                if sub:
+                    sv = v.get(sub) if isinstance(v, dict) else None
+                    if sv is not None and not isinstance(sv, list):
+                        issues.append(f"dataset data: DATA.{k}.{sub} phải là array (hiện {type(sv).__name__})")
+                elif not isinstance(v, list):
+                    issues.append(f"dataset data: DATA.{k} phải là array (hiện {type(v).__name__})")
+            checked += 1
+        except Exception as e:
+            issues.append(f"không parse được const DATA: {str(e)[:80]}")
+
+    # 4. Biến trần (labels:/data:) phải khai báo hoặc global hợp lệ
+    declared = set(re.findall(r"\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)", html))
+    declared |= set(re.findall(r"\bfunction\s+([A-Za-z_$][\w$]*)", html))
+    globals_ok = {"DATA", "Chart", "window", "document", "Math", "JSON", "Object", "Array",
+                  "String", "Number", "Date", "RegExp", "parseInt", "parseFloat", "isNaN",
+                  "console", "setTimeout", "clearTimeout", "requestAnimationFrame", "fetch"}
+    if "jquery" in html.lower():
+        globals_ok.add("$")
+    # (c) bare-var: chỉ quét trong script block chart; skip literals
+    script_block = ""
+    m_script = re.search(r"<script>(.*?)</script>", html, re.DOTALL)
+    if m_script:
+        script_block = m_script.group(1)
+    literals = {"true", "false", "null", "undefined"}
+    for mm in re.finditer(r"(?:labels|data):\s*([A-Za-z_$][\w$]*)", script_block):
+        name = mm.group(1)
+        if name in declared or name in globals_ok or name in literals:
+            continue
+        issues.append(f"chart dùng biến '{name}' (labels:/data:) nhưng không khai báo const/let/var/function")
+
+    # 5. Dùng $() mà không khai báo $ (và không có jQuery) -> ReferenceError khi load
+    if re.search(r"\$\s*\(", html) and "$" not in declared and "$" not in globals_ok:
+        issues.append("dùng $() nhưng không khai báo $ và không có jQuery — ReferenceError khi load")
+
+    passed = len(issues) == 0
+    return passed, {"canvas_total": len(canvas_ids), "chart_refs": sorted(set(chart_refs)),
+                    "issues": issues[:8],
+                    "note": "static runtime-readiness: canvas id / DATA keys / dataset data shape / bare vars"}
+
+
+def verify_no_internal_meta(req, html):
+    """REQ-070 (V4 Flash, phiên chạy CTD 2026-08-01): narrative KHÔNG chứa meta
+    nội bộ — tên phase (phase 3 / phase4a), tên file dữ liệu (financials.json,
+    peers.json, price_daily, cash_flow...), tên nội bộ (task-state, news_digest...).
+    Người đọc cuối chỉ thấy mô tả nguồn tiếng Việt. Danh sách nguồn cuối trang
+    (li id="ref-N") và thẻ sup ẩn (citation) được miễn trừ.
+
+    Gốc rễ: phase 6 chèn dấu vết kỹ thuật để verifier đọc được nguồn, nhưng chúng
+    hiện ra cho người đọc → mâu thuẫn "nội bộ vs người đọc". Cách đúng: mô tả nguồn
+    tiếng Việt (theo BCTC) + {SRC('ref-N')} (render sup ẩn CSS).
+    """
+    if not html:
+        return False, {"error": "no html"}
+
+    # Các section narrative chính (trùng danh sách REQ-033) — ref list cuối trang không nằm trong này
+    CLAIM_SECTIONS = {
+        "sec-hero", "sec-exec", "sec-biz", "sec-industry", "sec-history",
+        "sec-segment", "sec-thesis", "sec-valuation", "sec-bs",
+        "sec-risk", "sec-scenario", "sec-insight-1", "sec-insight-2", "sec-insight-3",
+    }
+    section_ids = set(re.findall(r'<section[^>]*id="(sec-[a-z0-9-]+)"', html)) & CLAIM_SECTIONS
+
+    # Pattern meta nội bộ: phase/phase-N, tên file .json/.md, từ khoá nội bộ
+    internal_pat = re.compile(
+        r"phase\s*\d|phase\d|"
+        r"[A-Za-z_][\w]*\.(?:json|md)|"
+        r"task-state|investment_amount|technical_active|technical_profile|"
+        r"news_digest|wacc_estimates|sector_insights|company_profile|"
+        r"price_weekly|price_daily|cash_flow|balance_sheet|financials|peers\.json|"
+        r"verified-dashboard-data|init_task_state|run_phase",
+        re.I)
+
+    issues = []
+    for sid in sorted(section_ids):
+        sec_text = extract_section_text(html, sid)
+        if not sec_text:
+            continue
+        # Bỏ thẻ sup.cite (citation ẩn) khỏi text section để không tính chúng
+        sec_wo_sup = re.sub(r"<sup[^>]*class=[\"']cite[\"'][^>]*>.*?</sup>", " ", sec_text, flags=re.DOTALL)
+        for m in internal_pat.finditer(sec_wo_sup):
+            ctx = sec_wo_sup[max(0, m.start()-40):m.end()+20].strip()
+            issues.append(f"{sid}: chứa meta nội bộ '{m.group(0)}' — ctx: ...{ctx}...")
+            if len(issues) >= 10:
+                break
+        if len(issues) >= 10:
+            break
+
+    passed = len(issues) == 0
+    return passed, {"sections_scanned": len(section_ids), "issues": issues[:10],
+                    "note": "narrative không chứa tên phase/file/từ nội bộ (ref list miễn trừ)"}
+
 
 def verify_phase_completion(req, html):
     """REQ-068 (P3 — review V4 Flash): mọi phase 0–6 phải status=completed + có
@@ -4067,6 +4232,8 @@ METHODS = {
     "api_fallback_check": verify_api_fallback,
     "fiscal_year_check": verify_fiscal_year,
     "phase_completion_check": verify_phase_completion,
+    "runtime_render_check": verify_runtime_render,
+    "no_internal_meta_check": verify_no_internal_meta,
 }
 
 # ═══════════════════════════════════════════════════════════════
