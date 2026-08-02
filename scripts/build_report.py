@@ -50,15 +50,17 @@ def fetch():
         capex_col=None
     else:
         rev_col=next((c for c in inc5.columns if re.search(r'Net sales|Net revenue|Revenue|Doanh thu thuần',c,re.I)),None)
-        npat_col=next((c for c in inc5.columns if re.search(r'Net profit.*after tax|Attributable to parent',c,re.I)),None)
-        npatp_col=npat_col
+        npat_col=next((c for c in inc5.columns if re.search(r'Net profit.*(?:after tax|attributable)|Attributable to parent|Profit after tax|Net profit attributable',c,re.I)),None)
+        npatp_col=next((c for c in inc5.columns if re.search(r'Attributable to parent|Net profit attributable to shareholders|Net profit.*after tax',c,re.I)),None)
         capex_col='Purchases of fixed assets and other long term assets'
     eps_col=next((c for c in inc5.columns if re.search(r'EPS.*basic|Earning.*per.*share',c,re.I)),None)
     toi=[float(inc5[rev_col].iloc[i]) for i in range(len(inc5))] if rev_col and rev_col in inc5.columns else [0]*5
     npat=[float(inc5[npat_col].iloc[i]) for i in range(len(inc5))] if npat_col and npat_col in inc5.columns else [0]*5
     npatp=[float(inc5[npatp_col].iloc[i]) for i in range(len(inc5))] if npatp_col and npatp_col in inc5.columns else npat
     eps=[float(inc5[eps_col].iloc[i]) for i in range(len(inc5))] if eps_col and eps_col in inc5.columns else [0]*5
-    eq_col=next((c for c in bal5.columns if c.upper()=="OWNER'S EQUITY"),None)
+    # EPS fallback (HSG 2026-08-02): API trả EPS basic toàn 0 dù npat có data
+    # → back-calc EPS = npatp / shares (tính sau khi có shares ở dưới)
+    eq_col=next((c for c in bal5.columns if re.search(r"Owner'?s?'?\s*equity|Vốn chủ sở hữu", c, re.I)),None)
     as_col=next((c for c in bal5.columns if c.upper()=="TOTAL ASSETS"),None)
     equity=[float(bal5[eq_col].iloc[i]) for i in range(len(bal5))] if eq_col else [0]*5
     assets=[float(bal5[as_col].iloc[i]) for i in range(len(bal5))] if as_col else [0]*5
@@ -75,11 +77,26 @@ def fetch():
     hist=q.history(start='2020-01-01',end='2026-08-02')
     hist.to_csv(f'{WORK}/source-pack/price.csv',index=False)
     last=float(hist['close'].iloc[-1])*1000
-    # shares
-    cc=float(bal5['Charter capital'].iloc[-1]) if 'Charter capital' in bal5.columns else 0
+    # shares — VN100 fix 2026-08-02 (BVH/HSG/MIG): nhiều tầng fallback
+    # 1) Paid-in capital / Charter capital; 2) back-calc npatp/eps; 3) overview issue_share
+    cc_col=next((c for c in bal5.columns if re.search(r'Paid-in capital|Charter capital|Vốn điều lệ|Charter Capital',c,re.I)),None)
+    cc=float(bal5[cc_col].iloc[-1]) if cc_col else 0
     if cc>0: shares=cc/10000
     elif eps and eps[-1] and npatp and npatp[-1]: shares=npatp[-1]/eps[-1]
-    else: shares=0
+    else:
+        shares=0
+        try:
+            from vnstock_data import Company
+            ov=Company(symbol=TICKER,source='VCI').overview()
+            if hasattr(ov,'columns') and 'issue_share' in ov.columns and float(ov['issue_share'].iloc[0])>0:
+                shares=float(ov['issue_share'].iloc[0])
+        except Exception:
+            pass
+    # EPS back-calc khi API trả 0 (HSG): eps_i = npatp_i / shares
+    if shares > 0:
+        for i in range(len(eps)):
+            if (not eps[i] or eps[i] == 0) and npatp and npatp[i]:
+                eps[i] = float(npatp[i]) / shares
     return dict(years=years,toi=toi,npat=npat,npatp=npatp,eps=eps,equity=equity,assets=assets,cfo=cfo,capex=capex,gross=gross,liab=liab,last=last,shares=shares,periods=len(inc))
 
 # ============ TECH SCORE (REQ-005/037) ============
@@ -239,7 +256,7 @@ def build_all(D_raw, tech, news):
         "bvps":[round(b) for b in bvps_hist],"roe":[round(r,1) for r in roe_hist],
         "pe":round(pe,2),"pb":round(pb,2),"peHist":pe_hist,"pbHist":pb_hist,
         "pe5med":pe5med,"pe5avg":pe5avg,
-        "pe_normalized":round(last/eps_mean,2) if eps_cv>30 and eps[-1]<0.8*max(eps) else None,
+        "pe_normalized":round(last/statistics.median(eps),2) if eps_cv>30 and eps[-1]<0.8*max(eps) and statistics.median(eps) else None,
         "price":last,"price_fetched_at":"2026-08-02","shares":round(shares/1e9,4),"marketCap":round(last*shares/1e9,0),
         "max_drawdown_52w":round(tech['max_dd'],1),"tech52wLow":round(tech['lo52']),"tech52wHigh":round(tech['hi52']),
         "techMA10":round(tech['ma10']),"techMA20":round(tech['ma20']),"techMA50":round(tech['ma50']),
@@ -365,14 +382,14 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 <h3>Chất lượng lợi nhuận — CFO vs LNST (5 năm)</h3>
 <p>{('Ngân hàng: CFO biến động theo hoạt động tín dụng, không dùng FCFF.' if is_bank else 'CFO so với LNST đánh giá chất lượng lợi nhuận.')} (theo BCLCTT).</p>
 {CANVAS('chartEQ',label='Chất lượng lợi nhuận CFO vs LNST')}
-<p>P/E raw = {pe:.2f}× (theo BCTC kiểm toán {years[-1]}).</p>
+<p>P/E raw = {pe:.2f}× (theo BCTC kiểm toán {years[-1]}).{(' P/E chuẩn hóa = ' + f'{D["pe_normalized"]:.2f}× (giá ÷ EPS trung bình 5 năm, theo BCTC kiểm toán) — EPS biến động chu kỳ nên P/E raw có thể lệch.') if D.get('pe_normalized') else ''}</p>
 '''
     peer=f'''
 <p>Nhóm peer cùng ngành (theo peer vnstock, theo dữ liệu thị trường) — so sánh định giá {t} với các doanh nghiệp tương đồng. Vốn hóa đạt {int(mcap)} tỷ VND đặt {t} trong nhóm {'ngân hàng lớn' if is_bank else 'doanh nghiệp lớn'} (theo peer vnstock).</p>
 {CANVAS('chartPeerScatter',label='Peer scatter P/E vs P/B')}
 <table class="tbl"><thead><tr><th>Mã</th><th>P/E</th><th>P/B</th></tr></thead>
-<tbody><tr><td>{t} (chủ thể)</td><td>{pe:.2f}</td><td>{pb:.2f}</td></tr></tbody></table>
-<p>{t} ở mức P/B {pb:.2f}× và P/E {pe:.2f}× — {'ngang hàng hoặc thấp hơn peer median' if pb<1.5 else 'cao hơn peer median'} (theo peer vnstock). So sánh này giúp định vị định giá tương đối, không phải khuyến nghị (theo disclaimer). Peer data là theo dữ liệu thị trường, cần kiểm chứng thêm (theo peer vnstock).</p>
+<tbody><tr><td>{t} (chủ thể)</td><td>{('N/A' if pe<=0 else f'{pe:.2f}')}</td><td>{('N/A' if pb<=0 else f'{pb:.2f}')}</td></tr></tbody></table>
+<p>{t} ở mức {('P/E ' + f'{pe:.2f}×' if pe>0 else 'P/E không áp dụng — công ty lỗ')}{(' và P/B ' + f'{pb:.2f}×' if pb>0 else '')} — {'ngang hàng hoặc thấp hơn peer median' if pb<1.5 else 'cao hơn peer median'} (theo peer vnstock). So sánh này giúp định vị định giá tương đối, không phải khuyến nghị (theo disclaimer). Peer data là theo dữ liệu thị trường, cần kiểm chứng thêm (theo peer vnstock).</p>
 '''
     bs=f'''
 <p>Bảng cân đối kế toán {t} năm {years[-1]} (theo BCTC kiểm toán):</p>

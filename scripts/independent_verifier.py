@@ -3678,7 +3678,9 @@ def verify_data_provenance(req, html):
         candidates = [str(y) for y in years[-2:]] if years else []
         matched = None
         for yr in candidates:
-            if yr in gt and float(gt[yr]) > 0:
+            if yr in gt and float(gt[yr]) != 0:
+                # FIX VN100 (HLT 2026-08-02): bỏ guard "> 0" — công ty lỗ có npat ÂM
+                # (-18.7 tỷ) từng bị bỏ qua → spot-check fail oan (REQ-059)
                 # revenue/npatmi (financials.json) đã ở tỷ; "Total Assets" (balance_sheet.json) ở VND → chia 1e9
                 gt_ty = float(gt[yr]) / 1e9 if fin_key == "Total Assets" else float(gt[yr])
                 if abs(gt_ty - gt_val) / max(abs(gt_val), 0.001) * 100 <= tol:
@@ -3757,7 +3759,9 @@ def verify_internal_identity(req, html):
                                     ["sec-valuation", "sec-hero", "sec-exec"]] if s)
     if not val_text:
         val_text = _narrative_text(html)
-    if price and eps25:
+    if price and eps25 and eps25 > 0:
+        # FIX VN100 (HLT 2026-08-02): EPS ≤ 0 (công ty lỗ) → P/E âm — cross-footing
+        # vô nghĩa (P/E âm × EPS âm = giá dương, verifier tính sai dấu → false positive)
         pe = _extract_primary_multiple(val_text, "P/?E", None, tol)
         if pe:
             implied = float(pe) * float(eps25)
@@ -3765,7 +3769,7 @@ def verify_internal_identity(req, html):
                 issues.append(f"P/E {pe}× × EPS {eps25} = {implied:,.0f} ≠ giá {price} (lệch >{tol}%)")
 
     # 3) PB claim × BVPS ≈ price
-    if price and eq25 and shares:
+    if price and eq25 and shares and eq25 > 0:
         bvps = float(eq25) * 1e9 / float(shares)
         pb = _extract_primary_multiple(val_text, "P/?B", None, tol)
         if pb:
@@ -4541,6 +4545,10 @@ def verify_pe_normalized(req, html):
     _, eps_vals = zip(*vals)
     if _stats.mean(eps_vals) <= 0:
         return True, {"status": "SKIP", "reason": "EPS trung bình ≤ 0 (công ty lỗ) — P/E chuẩn hóa không áp dụng"}
+    median_eps = _stats.median(eps_vals)
+    if median_eps == 0:
+        # FIX VN100 (HLT 2026-08-02): median EPS = 0 → division by zero crash
+        return True, {"status": "SKIP", "reason": "median EPS = 0 — P/E chuẩn hóa không tính được"}
     cv = _stats.stdev(eps_vals) / abs(_stats.mean(eps_vals))
     peak = max(eps_vals)
     last = eps_vals[-1]
