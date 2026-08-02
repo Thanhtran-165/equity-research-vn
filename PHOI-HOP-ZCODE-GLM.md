@@ -48,8 +48,15 @@
 
 ## Lệnh đang chạy
 
-- `LENH-VN100-CHO-GLM.md` — **BẢN ĐẦY ĐỦ (1 file duy nhất)**: quy trình 100 mã + mục 5 chống bỏ cuộc + mục 7 GOAL + mục 10 file đầu ra
-- `LENH-CAI-THIEN-RENDER-V8-CHO-GLM.md` — **V8**: cải thiện vn100_render2.py (10 REQ narrative) + rebuild 73 mã KHÔNG fetch lại data → mục tiêu avg ≥60/74
+- `LENH-VN100-CHO-GLM.md` — bản đầy đủ quy trình + goal
+- `LENH-RUN-BUILDER-V9-CHO-GLM.md` — **V9**: chạy 71 mã bằng BUILDER CHUẨN (scripts/build_report.py, đã vá 3 REQ còn lại → VJC 74/74 + BID 74/74) → mục tiêu ≥60/71 mã ≥72/74 → báo cáo `/tmp/VN100-REPORT-V5.md`
+
+## KẾT QUẢ VN100 (cập nhật 2026-08-02)
+
+- Batch 1 (renderer GLM v4): avg 71.1/74, 24 mã 73/74 — nhưng chỉ 46% mã pass 3 REQ nguy hiểm (022/033/003)
+- **ZCode đã vá**: 6 fix verifier (normalize EN/VN, 022 số âm, 033 contamination/bull-bear/unit ×, 031, 048, 055) + renderer 3 REQ → **VJC 74/74, BID 74/74** (PASS hoàn toàn), golden + suite PASS
+- **BUILDER CHUẨN đã đóng vào skill**: `scripts/build_report.py` + phase6 Lesson #18 (cấm tự viết renderer)
+- Skill vẫn CHƯA commit (quyết định backup riêng đang chờ)
 
 ## KẾT QUẢ VN100 BATCH 1 (2026-08-01, GLM sess_3b54417a)
 
