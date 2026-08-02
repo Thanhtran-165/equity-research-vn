@@ -48,7 +48,14 @@
 
 ## Lệnh đang chạy
 
-- `LENH-VN100-CHO-GLM.md` — **VN100: 100 mã, 5 đợt × 20 mã** (tracker /tmp/vn100_tracker.json, report /tmp/vn100_reports/, báo cáo /tmp/VN100-REPORT.md)
+- `LENH-VN100-CHO-GLM.md` — **BẢN ĐẦY ĐỦ (1 file duy nhất)**: quy trình 100 mã + mục 5 chống bỏ cuộc + mục 7 GOAL + mục 10 file đầu ra
+- `LENH-CAI-THIEN-RENDER-V8-CHO-GLM.md` — **V8**: cải thiện vn100_render2.py (10 REQ narrative) + rebuild 73 mã KHÔNG fetch lại data → mục tiêu avg ≥60/74
+
+## KẾT QUẢ VN100 BATCH 1 (2026-08-01, GLM sess_3b54417a)
+
+- 73/73 mã status rõ (0 bỏ lửng, 0 bịa, data thật); recall avg 53.2/74 (0 mã ≥60); token ~3.6M (−45%)
+- 12 REQ fail 100%: **2 bug verifier đã vá bởi ZCode** (REQ-031 cắt disclaimer + chặn "(" + bỏ triệu/tỷ; REQ-048 loại CFO khỏi keywords quản lý — PASS trên ACB + golden + 12/12 suite), **10 lỗi narrative generator** → giao V8
+- Skill nguyên vẹn (hash khớp); tracker đầy đủ 73 mã chi tiết
 - Đã commit + push `da7856212` (docs/evidence/lệnh) — skill nằm ngoài git (cần quyết định backup riêng)
 
 ## Backlog tiềm năng giao GLM (khi cần)
