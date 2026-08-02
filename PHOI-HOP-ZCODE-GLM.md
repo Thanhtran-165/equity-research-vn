@@ -49,7 +49,15 @@
 ## Lệnh đang chạy
 
 - `LENH-VN100-CHO-GLM.md` — bản đầy đủ quy trình + goal
-- `LENH-RUN-BUILDER-V9-CHO-GLM.md` — **V9**: chạy 71 mã bằng BUILDER CHUẨN (scripts/build_report.py, đã vá 3 REQ còn lại → VJC 74/74 + BID 74/74) → mục tiêu ≥60/71 mã ≥72/74 → báo cáo `/tmp/VN100-REPORT-V5.md`
+- `LENH-RUN-BUILDER-V9-CHO-GLM.md` — V9: 71 mã builder v1 → avg 73.0, 45 mã 74/74 ✅
+- `LENH-RUN-V2-61MA-CHO-GLM.md` — **V10**: chạy lại 61 mã bằng BUILDER V2 (analytics + tiêu chí ngành + npat attributable) → đồng bộ chất lượng → báo cáo `/tmp/VN100-REPORT-V6.md`
+
+## KẾT QUẢ VN100 (cập nhật 2026-08-02)
+
+- V5: 71 mã builder v1 → avg 73.0, 45 mã 74/74, 67 ≥72
+- Vá 4 mã data: BVH 74, MIG 74, HSG 74, HLT 72 (shares 3 tầng + EPS back-calc + giá trị âm) — commit 9fb715701
+- **Builder v2** (ZCode tự làm): analytics FCF/Accrual/EV-EBITDA + tiêu chí ngành + bỏ Seg giả định + npat Attributable (MSN) → **top-10 10/10 mã 74/74** — commit 54ee32540
+- Tracker: avg 73.4, 48 mã 74/74, 71/71 ≥72 (61 mã còn lại chờ chạy v2 qua V10)
 
 ## KẾT QUẢ VN100 (cập nhật 2026-08-02)
 
@@ -64,6 +72,12 @@
 - 12 REQ fail 100%: **2 bug verifier đã vá bởi ZCode** (REQ-031 cắt disclaimer + chặn "(" + bỏ triệu/tỷ; REQ-048 loại CFO khỏi keywords quản lý — PASS trên ACB + golden + 12/12 suite), **10 lỗi narrative generator** → giao V8
 - Skill nguyên vẹn (hash khớp); tracker đầy đủ 73 mã chi tiết
 - Đã commit + push `da7856212` (docs/evidence/lệnh) — skill nằm ngoài git (cần quyết định backup riêng)
+
+## SECTOR PACK v3 + MỞ RỘNG VNALL (2026-08-02)
+
+- **Sector pack v3** (`references/sector_pack.md`, 12 nhóm ngành): Ngân hàng / BĐS & Xây dựng / Chu kỳ hàng hóa / Tiêu dùng & Bán lẻ / Chứng khoán / Bảo hiểm / Năng lượng & Điện / Vận tải & Cảng / Dược / Công nghệ / Nông nghiệp / Ngành khác — mỗi ngành 3 phần (đặc thù, cách đọc BCTC — bẫy số liệu, tiêu chí theo dõi), khách quan, không số liệu cụ thể (tránh verifier false positive)
+- **Builder v3** (`scripts/build_report.py`): tự đọc pack theo sector → sinh section "Phân tích ngành" trong báo cáo. Test 4 ngành đại diện **4/4 mã 74/74**: ACB (banking), HPG (steel), VIC (realestate), MWG (retail)
+- **Lệnh mở rộng toàn thị trường**: `LENH-VNALL-CHO-GLM.md` — HOSE+HNX ~700 + UPCOM lọc (vốn hóa ≥500 tỷ hoặc thanh khoản ≥1 tỷ/phiên) ~300 → **~1.000 mã, 5 đợt × ~200**, tracker `/tmp/vnall_tracker.json`, builder chuẩn v3 bắt buộc, cấm tự viết renderer, báo cáo từng đợt → dừng chờ ZCode duyệt giữa đợt 1 và 2
 
 ## Backlog tiềm năng giao GLM (khi cần)
 

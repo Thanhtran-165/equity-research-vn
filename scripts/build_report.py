@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""VN100 v2: fetch + build + render + verify với 10 REQ fix.
+"""Builder chuẩn v3 (2026-08-02): fetch + build + render + verify.
+v3: + sector pack v3 (references/sector_pack.md) → section "Phân tích ngành".
+v2: peer THẬT cùng ICB cấp 3; tech score thật; analytics; tiêu chí ngành.
 Fix: REQ-003 (split_audit cp_back_calc), 005/037 (tech_score thật),
 008 (news fetch), 013 (section ≥200), 024 (capex array), 029 (cite cùng câu),
 033/034/036 (format số), 069 (DATA keys + canvas match).
-Usage: python3 vn100_v2.py <TICKER> [SECTOR]
+Usage: python3 build_report.py <TICKER> [SECTOR]
 """
 import sys, json, os, re, statistics, traceback, subprocess, math
 from datetime import datetime, timedelta
@@ -17,6 +19,52 @@ IS_BANK = TICKER in BANKS or SECTOR == 'banking'
 os.makedirs(f'{WORK}/data', exist_ok=True)
 os.makedirs(f'{WORK}/source-pack', exist_ok=True)
 os.makedirs(f'{WORK}/.task-state', exist_ok=True)
+
+# ============ SECTOR PACK v3 ============
+# Builder đọc references/sector_pack.md → sinh section "Phân tích ngành"
+PACK_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'references', 'sector_pack.md')
+SECTOR_MAP = {
+    'banking':'1. NGÂN HÀNG', 'bank':'1. NGÂN HÀNG', 'ngân hàng':'1. NGÂN HÀNG',
+    'realestate':'2. BẤT ĐỘNG SẢN & XÂY DỰNG', 'bds':'2. BẤT ĐỘNG SẢN & XÂY DỰNG', 'property':'2. BẤT ĐỘNG SẢN & XÂY DỰNG',
+    'construction':'2. BẤT ĐỘNG SẢN & XÂY DỰNG', 'xây dựng':'2. BẤT ĐỘNG SẢN & XÂY DỰNG', 'nhà thầu':'2. BẤT ĐỘNG SẢN & XÂY DỰNG',
+    'steel':'3. CHU KỲ HÀNG HÓA', 'thép':'3. CHU KỲ HÀNG HÓA', 'materials':'3. CHU KỲ HÀNG HÓA',
+    'hóa chất':'3. CHU KỲ HÀNG HÓA', 'phân bón':'3. CHU KỲ HÀNG HÓA', 'dầu khí':'3. CHU KỲ HÀNG HÓA',
+    'than':'3. CHU KỲ HÀNG HÓA', 'xi măng':'3. CHU KỲ HÀNG HÓA',
+    'retail':'4. TIÊU DÙNG & BÁN LẺ', 'bán lẻ':'4. TIÊU DÙNG & BÁN LẺ', 'consumer':'4. TIÊU DÙNG & BÁN LẺ',
+    'thực phẩm':'4. TIÊU DÙNG & BÁN LẺ', 'đồ uống':'4. TIÊU DÙNG & BÁN LẺ', 'dệt may':'4. TIÊU DÙNG & BÁN LẺ',
+    'securities':'5. CHỨNG KHOÁN & QUỸ', 'chứng khoán':'5. CHỨNG KHOÁN & QUỸ', 'finance':'5. CHỨNG KHOÁN & QUỸ',
+    'insurance':'6. BẢO HIỂM', 'bảo hiểm':'6. BẢO HIỂM',
+    'energy':'7. NĂNG LƯỢNG & ĐIỆN', 'điện':'7. NĂNG LƯỢNG & ĐIỆN', 'power':'7. NĂNG LƯỢNG & ĐIỆN',
+    'gas':'7. NĂNG LƯỢNG & ĐIỆN', 'khí':'7. NĂNG LƯỢNG & ĐIỆN',
+    'transport':'8. VẬN TẢI & CẢNG', 'vận tải':'8. VẬN TẢI & CẢNG', 'cảng':'8. VẬN TẢI & CẢNG',
+    'hàng không':'8. VẬN TẢI & CẢNG', 'logistics':'8. VẬN TẢI & CẢNG',
+    'pharma':'9. DƯỢC PHẨM & Y TẾ', 'dược':'9. DƯỢC PHẨM & Y TẾ', 'y tế':'9. DƯỢC PHẨM & Y TẾ',
+    'tech':'10. CÔNG NGHỆ & VIỄN THÔNG', 'công nghệ':'10. CÔNG NGHỆ & VIỄN THÔNG', 'viễn thông':'10. CÔNG NGHỆ & VIỄN THÔNG',
+    'thủy sản':'11. NÔNG NGHIỆP & CHẾ BIẾN', 'cao su':'11. NÔNG NGHIỆP & CHẾ BIẾN',
+    'đường':'11. NÔNG NGHIỆP & CHẾ BIẾN', 'gỗ':'11. NÔNG NGHIỆP & CHẾ BIẾN', 'nông':'11. NÔNG NGHIỆP & CHẾ BIẾN',
+    'general':'12. NGÀNH KHÁC',
+}
+
+def load_sector_pack(sector):
+    """Đọc pack ngành cho sector — trả dict(group, peculiar[], traps[], criteria[]) hoặc None."""
+    key = (sector or '').lower().strip()
+    group = SECTOR_MAP.get(key) or next((v for k, v in SECTOR_MAP.items() if k and k in key), '12. NGÀNH KHÁC')
+    try:
+        txt = open(PACK_PATH, encoding='utf-8').read()
+    except Exception:
+        return None
+    m = re.search(r'^## ' + re.escape(group) + r'.*?(?=^## |\Z)', txt, re.M | re.S)
+    if not m:
+        return None
+    block = m.group(0)
+    out = {'group': group}
+    for sub, name in [('Đặc thù', 'peculiar'), ('Cách đọc', 'traps'), ('Tiêu chí', 'criteria')]:
+        sm = re.search(r'^### ' + sub + r'.*?(?=^### |\Z)', block, re.M | re.S)
+        if sm:
+            items = [l.strip('- ').strip() for l in sm.group(0).splitlines()
+                     if l.strip().startswith('- ')]
+            out[name] = items
+    return out if (out.get('peculiar') or out.get('traps') or out.get('criteria')) else None
 
 def fv(x):
     if x is None: return 'n/a'
@@ -376,9 +424,22 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 <p>{('Cơ cấu doanh thu: NII ~58%, phí & ngoại hối ~22%, đầu tư ~12%, khác ~8% — phản ánh mô hình ngân hàng bán lẻ.' if is_bank else 'Cơ cấu doanh thu theo mảng hoạt động chính của doanh nghiệp.')}</p>
 <p>Tổng tài sản năm {years[-1]} đạt {ft(assets[-1])} tỷ VND, vốn chủ sở hữu {ft(eq[-1])} tỷ VND (theo BCTC kiểm toán).</p>
 </div>'''
+    sp = load_sector_pack(SECTOR)
+    def md_clean(s):
+        return re.sub(r'[`*_]', '', s) if s else s
+    if sp:
+        pec = md_clean(' '.join(sp.get('peculiar', [])[:2]))
+        traps = md_clean(' '.join(sp.get('traps', [])[:2]))
+        crit = md_clean(' '.join(sp.get('criteria', [])[:1]))
+    else:
+        pec = traps = crit = ''
     industry=f'''<div class="card">
 <p>{t} nằm trong nhóm {('ngân hàng thương mại lớn tại Việt Nam' if is_bank else 'doanh nghiệp lớn trong ngành '+SECTOR)}, cạnh tranh với các peer (theo bối cảnh ngành). Vốn hóa đạt {int(mcap)} tỷ VND (theo vnstock Quote).</p>
 <p>Ngành {('ngân hàng chịu điều tiết của NHNN (tỷ lệ an toàn vốn, room tín dụng, nợ xấu)' if is_bank else SECTOR+' chịu biến động chu kỳ kinh doanh')} (theo bối cảnh ngành). Mô hình kinh doanh của {t} có {('thiên về bán lẻ' if is_bank else 'đặc thù riêng')} (theo bối cảnh ngành).</p>
+{('<h3>Phân tích ngành — '+sp['group']+' (khái niệm ngành chuẩn, theo bối cảnh ngành)</h3>'
+ '<p><strong>Đặc thù ngành</strong>: '+pec+'.</p>'
+ '<p><strong>Cách đọc BCTC — bẫy số liệu</strong>: '+traps+'.</p>'
+ '<p><strong>Tiêu chí theo dõi</strong>: '+crit+'.</p>') if sp and (pec or traps or crit) else ''}
 </div>'''
     hist_rows=''
     for i,y in enumerate(years):
