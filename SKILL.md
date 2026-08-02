@@ -1,9 +1,16 @@
 ---
 name: equity-research-vn
-description: "Phân tích equity research đầy đủ cho cổ phiếu Việt Nam — kiến trúc subagent per phase (v3.2.0). Mỗi phase chạy trong context tách biệt, giao tiếp qua task-state.json, verify per-phase. 73 REQ verification (V3+V4+V5 hardening + runtime-render + no-meta + zero-data + S/R + text-structure). TRIGGER khi user gõ /equity-research-vn [TICKER]."
+description: "Phân tích equity research đầy đủ cho cổ phiếu Việt Nam — kiến trúc subagent per phase (v3.2.0). Mỗi phase chạy trong context tách biệt, giao tiếp qua task-state.json, verify per-phase. 74 REQ verification (V3+V4+V5 hardening + VN100 cohort: runtime-render, no-meta, zero-data, S/R, text-structure, P/E chuẩn hóa). TRIGGER khi user gõ /equity-research-vn [TICKER]."
 ---
 
 # equity-research-vn [TICKER]
+
+## ĐỊNH VỊ (bắt buộc đọc trước — v3.2.0, cập nhật 2026-08-02)
+
+Skill tạo **bằng chứng phân tích khách quan (evidence pack)** từ dữ liệu công khai —
+**KHÔNG khuyến nghị mua/bán**. Mọi số liệu có nguồn (BCTC kiểm toán / vnstock / báo cáo
+ngành), mọi claim bị verifier độc lập kiểm chứng 74 REQ. Quyết định đầu tư và trách
+nhiệm thuộc về nhà đầu tư. Xem `DISCLAIMER.md`.
 
 ## Pipeline (9 phases, chạy tuần tự — phase 4 tách 4a/4b, FIX-12)
 
