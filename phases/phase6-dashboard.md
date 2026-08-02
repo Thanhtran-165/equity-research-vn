@@ -53,6 +53,15 @@ __TEMPLATE_INLINE_PLACEHOLDER__
 > Verifier bắt residual KHÔNG phải là lý do để để sót — residual trùng số mã khác
 > có thể lọt qua verifier.
 
+> **BUILDER CHUẨN BẮT BUỘC (Lesson #18 — VN100 2026-08-02)**: dùng
+> `scripts/build_report.py <TICKER> [SECTOR]` — builder duy nhất đã được verify
+> (VJC 74/74, BID 74/74, HPG 71/74, CTD 72/74). **CẤM tự viết renderer/narrative
+> generator riêng** — mỗi agent tự viết lại = đoán lại format = vòng lặp
+> "thêm-sai-thêm" (V1→V7: recall 44→71 chỉ vì format). Builder lo: fetch data,
+> tech score thật (MA/RSI/MACD), split audit log, DATA 67 keys, narrative đầy đủ
+> nguồn, format số verifier-friendly (raw không separator). Agent CHỈ cần: chạy
+> builder → verify → nếu fail đọc evidence sửa data files → chạy lại builder.
+
 ### Token fill rules
 - `{{SEC_XXX_HTML}}` — HTML content cho section đó (≥ min chars per spec; bao gồm canvas elements)
 - Canvas ids bắt buộc: `chartHistRev, chartBSDt, chartHistCash, chartPeerScatter, chartProfileDD, chartProfileDist, chartReturns, chartSegMix, chartTechPrice, chartTechRSI, chartThesisCapex, chartThesisRPO, chartValPE`

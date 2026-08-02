@@ -569,7 +569,7 @@ def _context_anchored_match(text, anchor_label, gt_val, tolerance_pct, fallback_
         positions = [0]
     for a in positions:
         seg = text[max(0, a-window):a+window]
-        for num_str in re.findall(r'([\d.,]+)', seg):
+        for num_str in re.findall(r'(-?\d[\d.,]+)', seg):
             if within_tol(parse_num(num_str)):
                 return True
     return False
@@ -1272,16 +1272,27 @@ def verify_drawdown_source(req, html):
     text_html = re.sub(r'<script[^>]*>.*?</script>', '', text_html, flags=re.DOTALL)
     text = re.sub(r'<[^>]+>', ' ', text_html)
     text = re.sub(r'\s+', ' ', text).strip()
+    # FIX VN100 (ACB 2026-08-02): cắt disclaimer/glossary trước khi quét —
+    # "Cổ phiếu có thể giảm 30–50%" (disclaimer chuẩn mọi report) từng bị bắt
+    # là drawdown claim → fail 71/71 mã. Claim trong disclaimer không phải phân tích.
+    for marker in ("Giải thích thuật ngữ", "THUẬT NGỮ", "Glossary", "DISCLAIMER", "Disclaimer"):
+        idx = text.find(marker)
+        if idx > 0:
+            text = text[:idx]
+            break
 
     issues = []
 
     # Find drawdown claims: "drawdown X%" or "giảm X%" or "mất X triệu"
     # FIX cohort V4 (HPG): (1) chặn bắt nhầm "Max drawdown 52 tuần: -22,3%" —
     #     số "52" (tuần) từng bị bắt làm value; (2) cho phép dấu âm -22,3%.
+    # FIX VN100 (ACB): chặn "(" trước số — "giảm mạnh (>3%)" (ngưỡng tần suất,
+    #     không phải drawdown); pattern 2 chỉ còn "%" (drawdown đo bằng %,
+    #     "mất 50 triệu" không so được với max_drawdown → false positive).
     drawdown_patterns = [
-        r'(?:drawdown|sụt giảm|giảm(?:\s+xuống)?)[^.]{0,30}?(-?\d+(?:[.,]\d+)?)(?!\s*tuần)\s*%',
-        r'(?:mất|tổn\s*thất)[^.]{0,30}?(\d+(?:[.,]\d+)?)\s*(?:%|triệu|tỷ)',
-        r'(?:có\s*thể\s*giảm|rủi\s*ro\s*giảm)[^.]{0,30}?(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*%',
+        r'(?:drawdown|sụt giảm|giảm(?:\s+xuống)?)[^.(%0-9]{0,30}?(-?\d+(?:[.,]\d+)?)(?!\s*tuần)\s*%',
+        r'(?:mất|tổn\s*thất)[^.(%0-9]{0,30}?(-?\d+(?:[.,]\d+)?)(?!\s*tuần)\s*%',
+        r'(?:có\s*thể\s*giảm|rủi\s*ro\s*giảm)[^.(%0-9]{0,30}?(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*%',
     ]
 
     drawdown_claims = []
@@ -1542,9 +1553,17 @@ def _normalize_number(tok):
     tok = tok.strip().replace(" ", "").replace("đ", "")
     if not tok:
         return None
-    # Both separators → dot = thousands, comma = decimal
+    # Both separators → phải phân biệt format (FIX VN100 v4 2026-08-02, bug GLM
+    # tìm thấy: "33,797.9" từng parse thành 33.7979):
+    #   VN: dot=thousands, comma=decimal   ("12.345,6"  → 12345.6)
+    #   EN: comma=thousands, dot=decimal   ("33,797.9"  → 33797.9)
+    # Heuristic: nhóm sau COMMA — 3 digits → EN (comma=thousand); 1-2 → VN.
     if "." in tok and "," in tok:
-        tok = tok.replace(".", "").replace(",", ".")
+        after_comma = tok.split(",")[1].split(".")[0]
+        if len(after_comma) == 3:
+            tok = tok.replace(",", "")  # EN format
+        else:
+            tok = tok.replace(".", "").replace(",", ".")  # VN format
     elif "," in tok:
         after = tok.split(",")[1]
         if len(after) == 3:
@@ -1792,7 +1811,7 @@ def verify_cross_section_consistency(req, html):
                 # ăn "2025" (năm) làm số trước, rồi skip year → số THẬT phía sau
                 # ("Doanh thu thuần năm 2025 đạt 50,000 tỷ") không bao giờ capture.
                 # Thêm optional year prefix: keyword → ... → (năm)? → ... → SỐ.
-                pat = re.compile(kw + r"[^0-9]{0,60}?(?:20\d\d[^0-9]{0,60}?)?(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|x|%)?", re.I)
+                pat = re.compile(kw + r"[^0-9]{0,60}?(?:20\d\d[^0-9]{0,60}?)?(-?\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|x|%)?", re.I)
                 for m in pat.finditer(sec_text):
                     val = _normalize_number(m.group(1))
                     if val is None:
@@ -1801,7 +1820,7 @@ def verify_cross_section_consistency(req, html):
                     # Fallback dự phòng: nếu bắt được năm-as-value (regex không ăn
                     # optional year vì lý do nào đó) → quét số kế tiếp trong 60 chars
                     if 2000 <= val <= 2099 and not unit:
-                        nxt = re.search(r"(\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|x|%)?", sec_text[m.end():m.end()+60])
+                        nxt = re.search(r"(-?\d[\d.,]*)\s*(nghìn tỷ|tỷ|tỉ|triệu|tr|x|%)?", sec_text[m.end():m.end()+60])
                         if nxt:
                             val = _normalize_number(nxt.group(1))
                             unit = nxt.group(2) or ""
@@ -1810,11 +1829,26 @@ def verify_cross_section_consistency(req, html):
                     if unit == "%" and metric in NO_PCT_UNIT:
                         continue
                     between = sec_text[m.start():m.start(1)]
+                    # VN100 v4 (VJC 2026-08-02): số đầu tiên sau kw trong 60 chars có
+                    # thể thuộc CLAIM KHÁC — "LNST ... P/E raw = 33.53×" (33.53 là P/E)
+                    # và "EPS × BVPS) ... P/E 33.53" bị gán nhầm metric → false
+                    # inconsistency. between chứa nhãn metric khác = contamination.
+                    if re.search(r"P\s*/\s*E|P\s*E\b|P\s*/\s*B|P\s*B\b|ROE\b|ROA\b|Graham|BVPS|WACC|Tech\s*Score", between, re.I):
+                        continue
                     # G4 (review V4 Flash): "P/E trung bình ngành 12x" là claim NGÀNH,
                     # không phải claim của CTD → exclude ngữ cảnh này
+                    # VN100 v4 (2026-08-02, VJC): thêm expand/co/bull/bear — P/E của
+                    # KỊCH BẢN khác nhau (bull expand 170.8× vs bear co 23.5×) là thiết
+                    # kế, không phải internal inconsistency.
                     if re.search(r"cagr|tăng trưởng|growth|biên|margin|ngành|thị trường|"
                                  r"trung bình|median|bình quân|5\s*năm|5y|peer|dự phóng|"
-                                 r"forward|target|ước tính|khoảng", between, re.I):
+                                 r"forward|target|ước tính|khoảng|expand|co\s+về|co\s+lại|"
+                                 r"bull|bear", between, re.I):
+                        continue
+                    # VN100 v4 (VJC): P/E/P/B phải có đơn vị × — "P/E (peer median)
+                    # 636,742" (giá trị VND của phương pháp) bị bắt nhầm thành P/E
+                    # value → so với "P/E 33.53×" → false mismatch.
+                    if metric in ("pe", "pb") and unit not in ("x", "×"):
                         continue
                     scaled = _scale_to_tỷ(val, unit)
                     if 2000 <= scaled <= 2099 and not unit:
@@ -2790,15 +2824,27 @@ def verify_management_claim(req, html):
 
     mgmt_kws = [
         r"\b(?:ông|bà)\s+[A-Z][a-zà-ỹ]+\s+[A-Z][a-zà-ỹ]+",
-        r"CEO", r"Chủ tịch\s+HĐQT", r"Tổng\s+giám\s+đốc", r"CFO",
+        r"CEO", r"Chủ tịch\s+HĐQT", r"Tổng\s+giám\s+đốc", r"Giám\s+đốc\s+tài\s+chính",
         r"cổ đông lớn", r"sở hữu\s+\d+%", r"ban\s+lãnh\s+đạo",
     ]
+    # Lưu ý VN100 (2026-08-02): "CFO" đã BỊ LOẠI khỏi keywords quản lý — trong báo cáo
+    # VN "CFO" gần như luôn = Cash Flow from Operations (dòng tiền hoạt động), còn giám
+    # đốc tài chính được viết đầy đủ "Giám đốc tài chính" (có ở trên). Trước đây fail
+    # 71/71 mã: "CFO biến động theo hoạt động" + mô tả meta "…inventory, cfo…" bị bắt.
     issues = []
     found = 0
     for kw in mgmt_kws:
         for m in re.finditer(kw, text, re.I):
             found += 1
             ctx = text[max(0, m.start() - 100):m.end() + 200]
+            # FIX VN100 (ACB 2026-08-02): "CFO" trong tài chính VN = cash flow from
+            # operations (dòng tiền hoạt động), KHÔNG phải Chief Financial Officer —
+            # context ±60 có dấu hiệu dòng tiền → bỏ qua, không coi là claim quản lý
+            # (trước đây fail 71/71 mã: "CFO biến động theo hoạt động" bị bắt).
+            if m.group(0).upper() == "CFO" and re.search(
+                    r"dòng tiền|cash flow|hoạt động kinh doanh|lưu chuyển|thanh khoản|biến động|dương|âm",
+                    text[max(0, m.start() - 60):m.end() + 60], re.I):
+                continue
             # Known name from company_profile → PASS
             if profile and any(n in ctx.lower() for n in known_names if len(n) > 3):
                 continue
@@ -3106,24 +3152,36 @@ def verify_vague_language(req, html):
         return False, {"error": "no html"}
     text = _narrative_text(html)
 
+    # FIX VN100 v4 (2026-08-02): tách 2 nhóm — trước đây gộp "hedging mơ hồ" với
+    # "từ nhận định" (hấp dẫn/cơ hội/điểm sáng...) làm báo cáo nghiên cứu chuẩn
+    # (vốn PHẢI có nhận định) bị đếm là vague → fail 71/71 mã (advisory).
+    # Chỉ đếm hedging THẬT (không cam kết, mơ hồ); opinion words không bị phạt.
     hedging = [
         r"có thể", r"dự kiến", r"khoảng", r"ước tính", r"tiềm năng",
-        r"trong tầm ngắm", r"đáng chú ý", r"ấn tượng", r"khả quan",
-        r"tích cực", r"hấp dẫn", r"đáng quan tâm", r"cơ hội",
-        r"điểm sáng", r"nổi bật", r"hứa hẹn",
+        r"trong tầm ngắm",
+    ]
+    opinion_words = [
+        r"đáng chú ý", r"ấn tượng", r"khả quan", r"tích cực", r"hấp dẫn",
+        r"đáng quan tâm", r"cơ hội", r"điểm sáng", r"nổi bật", r"hứa hẹn",
     ]
 
     count = 0
     for h in hedging:
         count += len(re.findall(h, text, re.I))
+    opinion_count = 0
+    for h in opinion_words:
+        opinion_count += len(re.findall(h, text, re.I))
 
     # Batch-4 (nghiệm thu V4 Flash): bỏ hardcode return True — main() xử lý advisory.
-    # passed = count <= threshold (đổi YAML priority thành high sẽ block deploy).
-    passed = count <= 15
+    # VN100 v4 (2026-08-02): ngưỡng 15 → 25 — sau khi tách opinion words, 6 từ hedging
+    # thật trên narrative VN ~4-5K ký tự thường 15-20 lần (đa số "ước tính" KÈM SỐ =
+    # estimate hợp lệ, không phải lỏng lẻo). >25 mới là narrative mơ hồ thật sự.
+    passed = count <= 25
     evidence = {
         "hedging_phrase_count": count,
-        "threshold": 15,
-        "note": f"{'WARN: excessive vague language' if count > 15 else 'OK'} — advisory, main() WARN không block deploy",
+        "opinion_word_count": opinion_count,
+        "threshold": 25,
+        "note": f"{'WARN: excessive vague language' if count > 25 else 'OK'} — advisory, main() WARN không block deploy; từ nhận định (hấp dẫn/cơ hội...) không tính là vague",
     }
     return passed, evidence
 
