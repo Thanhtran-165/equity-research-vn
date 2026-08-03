@@ -155,7 +155,7 @@ def fetch():
             ebit_last = float(inc5[ebit_col].iloc[-1])
             da_col = next((c for c in cf5.columns if re.search(r'Depreciation|Khấu hao', c, re.I)), None)
             da_last = float(cf5[da_col].iloc[-1]) if da_col and cf5[da_col].iloc[-1] else 0
-            net_debt = max(assets[-1] - equity[-1], 0)
+            net_debt = max(assets[-1] - equity[-1], 0) / 1e9
             ev_ebitda = round((last*shares/1e9 + net_debt) / ((ebit_last + da_last)/1e9), 1) if (ebit_last + da_last) else None
     return dict(years=years,toi=toi,npat=npat,npatp=npatp,eps=eps,equity=equity,assets=assets,cfo=cfo,capex=capex,gross=gross,liab=liab,last=last,shares=shares,periods=len(inc),ev_ebitda=ev_ebitda)
 
@@ -685,7 +685,7 @@ def task_state(D,cagr,roe_hist,cp_back,cp_consistent,news):
         "phase0_sponsor":{"status":"completed","result":{"investment_amount":None,"fiscal_year_type":"calendar","tier":"golden","periods":42,"sponsor_ok":True,"api_source":"vnstock_data_sponsor_gold","version":"vnstock==3.5.1"}},
         "phase1_data":{"status":"completed","result":{"data_source":"vnstock_data_sponsor_gold (VCI)","split_audit":{"cp_consistent":cp_consistent,"method":"back-calc CP=LNST/EPS so issue_share","periods_checked":len(years),"cp_back_calc_m":cp_back,"cp_variation_cause":"dilution/bonus issue (EPS restated per period — no historical restatement needed, data from sponsor per-period BCTC)"},"fiscal_year_type":"calendar","fiscal_year_end":"12/31","periods":42,"years":years}},
         "phase2_fundamental":{"status":"completed","result":{"eps":fin['eps_vnd'][str(years[-1])],"roe":round(roe_hist[-1],2),"cagr":round(cagr,2),"npat_ty":fin['npatmi_ty'][str(years[-1])],"revenue_ty":fin['revenue_ty'][str(years[-1])],"equity_ty":round(fin['equity_ty'][str(years[-1])],2),"sector":SECTOR,"dupont_done":True}},
-        "phase3_valuation":{"status":"completed","result":{"targets":{"bull":round(D.get('pe5med',D['pe'])*fin['eps_vnd'][str(years[-1])],0),"base":D['price'],"bear":round(max(D['pe']*0.7,3)*fin['eps_vnd'][str(years[-1])]*0.9,0)},"pe":D['pe'],"pb":D['pb'],"pe5med":D.get('pe5med',D['pe']),"graham_number":round(graham,0),"dcf_per_share":None,"dcf_reason":"N/A — FCF data insufficient from sponsor API"}},
+        "phase3_valuation":{"status":"completed","result":{"targets":{"bull":round(D.get('pe5med',D['pe'])*fin['eps_vnd'][str(years[-1])],0),"base":D['price'],"bear":round(max(D['pe']*0.7,3)*fin['eps_vnd'][str(years[-1])]*0.9,0)},"pe":D['pe'],"pb":D['pb'],"pe5med":D.get('pe5med',D['pe']),"graham_number":round(graham,0),"ev_ebitda":D.get('ev_ebitda'),"ps":None,"pcf":None,"dcf_per_share":None,"dcf_reason":"N/A — FCF data insufficient from sponsor API"}},
         "phase4a_tech_active":{"status":"completed","result":{"tech_score":D['tech_score'],"verdict":D['verdict'],"ma20":D['techMA20'],"rsi":D['rsi14'],"max_drawdown_52w":D['max_drawdown_52w']}},
         "phase4b_tech_profile":{"status":"completed","result":{"archetype":D['verdict'],"drawdown":D['max_drawdown_52w']}},
         "phase5_news":{"status":"completed","result":{"sentiment":D.get('news_sentiment') or {"positive":0,"negative":0,"neutral":0},"news_count":D.get('news_count',0)}},

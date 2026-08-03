@@ -55,7 +55,7 @@
 ### Cách đọc từ BCTC (bẫy)
 - **Luôn dùng P/E chuẩn hóa** (giá ÷ median EPS 5 năm) bên cạnh P/E raw (REQ-074 bắt buộc khi chu kỳ)
 - CAGR đỉnh-đáy thấp/âm — so sánh đỉnh-đỉnh hoặc đáy-đáy mới có nghĩa
-- EV/EBITDA phù hợp hơn P/E; kiểm biên gộp theo chu kỳ (mở rộng/co lại khi giá đổi chiều)
+- So sánh định giá theo chu kỳ; kiểm biên gộp khi giá đổi chiều
 - Đòn bẩy: công ty chu kỳ vay nặng khi mở rộng — xem nợ/EBITDA qua chu kỳ
 
 ### Tiêu chí theo dõi
@@ -66,14 +66,14 @@
 ## 4. TIÊU DÙNG & BÁN LẺ
 
 ### Đặc thù
-- Doanh thu phụ thuộc sức mua nội địa (GDP tiêu dùng) — tăng trưởng tương đối ổn định nhưng cạnh tranh cao
+- Doanh thu phụ thuộc sức mua nội địa (GDP tiêu dùng) — nhu cầu tương đối ổn định nhưng cạnh tranh cao
 - Bán lẻ: chuỗi cửa hàng (diện tích, SSSG), tồn kho, vòng quay vốn lưu động
 - FMCG: thương hiệu, phân phối, chi phí bán hàng cao
 
 ### Cách đọc từ BCTC (bẫy)
 - CCC (DIO+DSO−DPO) quan trọng — bán lẻ tồn kho lớn, vòng quay nhanh là tốt
-- Biên gộp theo mặt hàng; chi phí bán hàng & quản lý (SG&A) / doanh thu — xu hướng mở rộng chuỗi làm SG&A tăng trước khi doanh thu kịp
-- Mở rộng nhanh → CFO có thể âm (vốn lưu động) dù lợi nhuận tăng
+- Biên gộp theo mặt hàng; chi phí bán hàng & quản lý (SG&A) / doanh thu — mở rộng chuỗi làm chi phí quản lý đội lên trước khi doanh thu kịp theo
+- Mở rộng nhanh → CFO có thể âm (vốn lưu động) dù lợi nhuận tốt
 
 ### Tiêu chí theo dõi
 - SSSG (doanh thu cùng cửa hàng), số cửa hàng mới, tồn kho/doanh thu, biên gộp, SG&A/doanh thu
@@ -100,7 +100,7 @@
 
 ### Đặc thù
 - Kinh doanh rủi ro: doanh thu phí bảo hiểm + thu nhập đầu tư từ dự phòng phí
-- Lợi nhuận trễ: nhận phí trước, chi trả bồi thường sau — dòng tiền âm khi tăng trưởng nhanh là bình thường
+- Lợi nhuận trễ: nhận phí trước, chi trả bồi thường sau — dòng tiền âm khi mở rộng nhanh là bình thường
 - Yêu cầu vốn theo quy định (vốn khả dụng, biên khả năng thanh toán)
 
 ### Cách đọc từ BCTC (bẫy)
@@ -123,7 +123,7 @@
 ### Cách đọc từ BCTC (bẫy)
 - Thủy điện: so sánh sản lượng với trung bình nhiều năm (năm hạn/mưa lệch lớn)
 - Nhiệt điện: biên theo giá than/khí — xem cơ chế giá điện (điều chỉnh giá)
-- Đòn bẩy cao đặc trưng (tài sản lớn, vay dài hạn) — dùng EV/EBITDA, DSCR (khả năng trả nợ)
+- Đòn bẩy cao đặc trưng (tài sản lớn, vay dài hạn) — dùng DSCR (khả năng trả nợ), tỷ lệ nợ
 
 ### Tiêu chí theo dõi
 - Giá dầu/khí/than, sản lượng, giá điện điều chỉnh (EVN), thủy văn, tồn kho khí/LPG
@@ -138,7 +138,7 @@
 - Vận tải đường bộ/logistics: biên mỏng, phụ thuộc giá nhiên liệu
 
 ### Cách đọc từ BCTC (bẫy)
-- Hàng không: chi phí nhiên liệu + chi phí thuê/bảo dưỡng máy bay ngoại tệ → lợi nhuận dễ lỗ khi dầu tăng/tỷ giá lên
+- Hàng không: chi phí nhiên liệu + chi phí thuê/bảo dưỡng máy bay ngoại tệ → lợi nhuận dễ lỗ khi giá nhiên liệu leo thang, tỷ giá bất lợi
 - Cảng: tài sản cố định lớn, khấu hao cao — EBIT/EBITDA chứ không chỉ LNST
 - CCC: cảng/logistics vốn lưu động lớn
 
@@ -160,7 +160,7 @@
 - CCC + biên gộp là chỉ số chính; ROE ổn định cao là điểm tích cực
 
 ### Tiêu chí theo dõi
-- Tăng trưởng doanh thu theo kênh, biên gộp, vòng quay tồn kho, chính sách giá/đấu thầu
+- Doanh thu theo kênh, biên gộp, vòng quay tồn kho, chính sách giá/đấu thầu
 
 ---
 
@@ -174,10 +174,10 @@
 ### Cách đọc từ BCTC (bẫy)
 - Doanh thu dịch vụ thường ghi nhận theo tiến độ — kiểm hợp đồng dài hạn (backlog số hóa)
 - CCC: ít tồn kho, phải thu lớn (B2B, chính phủ) — DSO quan trọng
-- Định giá: P/E tăng trưởng (PEG), EV/EBITDA cho viễn thông (khấu hao mạng lưới lớn)
+- Định giá: PEG (P/E theo mức mở rộng) cho phần mềm, EBITDA-based cho viễn thông (khấu hao mạng lưới lớn)
 
 ### Tiêu chí theo dõi
-- Tăng trưởng doanh thu dịch vụ, DSO, tỷ lệ hợp đồng định kỳ (recurring revenue), đầu tư R&D
+- Doanh thu dịch vụ, DSO, tỷ lệ hợp đồng định kỳ (recurring revenue), đầu tư R&D
 
 ---
 
@@ -204,10 +204,10 @@
 
 ### Cách đọc từ BCTC (bẫy)
 - Luôn kiểm: doanh thu = gì (hàng hóa/dịch vụ/tài chính), CCC có áp dụng không, P/E có ý nghĩa không (lỗ/chu kỳ)
-- Cảnh giác P/E âm hoặc EPS biến động mạnh → P/E chuẩn hóa + EV/EBITDA thay thế
+- Cảnh giác P/E âm hoặc EPS biến động mạnh → P/E chuẩn hóa thay thế
 
 ### Tiêu chí theo dõi
-- Tăng trưởng doanh thu, biên gộp, ROE, dòng tiền hoạt động — xu hướng 5 năm
+- Doanh thu, biên gộp, ROE, dòng tiền hoạt động — xu hướng 5 năm
 
 ---
 
