@@ -700,15 +700,39 @@ def task_state(D,cagr,roe_hist,cp_back,cp_consistent,news):
     json.dump(ts,open(f'{WORK}/.task-state/task-state.json','w'),indent=2,ensure_ascii=False)
 
 # ============ MAIN ============
+REUSE = '--reuse' in sys.argv
 try:
     print(f'=== {TICKER} ({SECTOR}, bank={IS_BANK}) ===')
-    D_raw=fetch()
-    print(f'  fetched: {D_raw["periods"]} periods, price {D_raw["last"]} VND, shares {D_raw["shares"]/1e9:.3f} tỷ')
-    tech=tech_score(D_raw)
-    print(f'  tech: score {tech["score"]:+d} {tech["verdict"]}, RSI {tech["rsi14"]:.1f}, max_dd {tech["max_dd"]:.1f}%')
-    news=fetch_news()
-    real_peers=fetch_peers()
-    D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med=build_all(D_raw,tech,news,real_peers)
+    reuse_file = f'{WORK}/verified-dashboard-data.json'
+    D_raw = None; tech = None
+    if REUSE and os.path.exists(reuse_file) and os.path.exists(f'{WORK}/data/financials.json'):
+        # --reuse: KHÔNG gọi API tài chính — đọc data đã fetch lần trước, chỉ đổi
+        # SECTOR → render + verify. Dùng để gắn ngành thật cho batch đã chạy
+        # (VNALL 1.000 mã) không tốn API. Mọi chỉ số lấy THẲNG từ D (khớp bản gốc
+        # 100% — tránh lệch do làm tròn khi tính lại từ financials.json).
+        D = json.load(open(reuse_file)); D['sector'] = SECTOR
+        D['_provenance']['sector'] = SECTOR
+        years = D.get('years') or sorted(int(y) for y in json.load(open(f'{WORK}/data/financials.json'))['revenue_ty'].keys() if str(y).isdigit())
+        cagr = D.get('cagr') or 0
+        npat_growth = D.get('npat_growth') or 0
+        roe_hist = D.get('roe') or [0]*len(years)
+        pe5med = D.get('pe5med', D['pe'])
+        eps_last = (D.get('eps') or [0])[-1] or 0
+        bvps_last = (D.get('bvps') or [0])[-1] or 0
+        graham = (22.5*eps_last*bvps_last) ** 0.5 if eps_last > 0 and bvps_last > 0 else 0
+        cp_back = D.get('split_audit', {}).get('cp_back_calc_m')
+        cp_consistent = D.get('split_audit', {}).get('cp_consistent')
+        news = fetch_news()  # vẫn fetch news (REQ-008) — 1 call/mã
+        real_peers = None
+        print(f'  REUSE: {years[0]}-{years[-1]}, price {D["price"]} VND, sector->{SECTOR}')
+    else:
+        D_raw = fetch()
+        print(f'  fetched: {D_raw["periods"]} periods, price {D_raw["last"]} VND, shares {D_raw["shares"]/1e9:.3f} tỷ')
+        tech = tech_score(D_raw)
+        print(f'  tech: score {tech["score"]:+d} {tech["verdict"]}, RSI {tech["rsi14"]:.1f}, max_dd {tech["max_dd"]:.1f}%')
+        news = fetch_news()
+        real_peers = fetch_peers()
+        D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med=build_all(D_raw,tech,news,real_peers)
     print(f'  DATA: pe={D["pe"]}, pb={D["pb"]}, mcap={D["marketCap"]} tỷ, capex_arr={len(D.get("capex",[]))}')
     task_state(D,cagr,roe_hist,cp_back,cp_consistent,news)
     out=render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
@@ -727,7 +751,7 @@ try:
                 except: pass
     fails=list(dict.fromkeys(fails))
     print(f'  VERIFY: {recall}/74, fails={len(fails)}: {fails[:8]}')
-    json.dump({'ticker':TICKER,'sector':SECTOR,'recall':recall,'fails':fails,'price':D_raw['last'],'mcap':D['marketCap'],'tech_score':tech['score'],'verdict':tech['verdict']},open(f'{WORK}/result.json','w'),indent=2,ensure_ascii=False)
+    json.dump({'ticker':TICKER,'sector':SECTOR,'recall':recall,'fails':fails,'price':D_raw['last'] if D_raw else D['price'],'mcap':D['marketCap'],'tech_score':D.get('tech_score'),'verdict':D.get('verdict')},open(f'{WORK}/result.json','w'),indent=2,ensure_ascii=False)
 except Exception as e:
     traceback.print_exc()
     print(f'ERROR {TICKER}: {e}')
