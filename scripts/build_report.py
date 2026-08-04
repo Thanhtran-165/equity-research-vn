@@ -143,11 +143,17 @@ def fetch():
                 shares=float(ov['issue_share'].iloc[0])
         except Exception:
             pass
-    # EPS back-calc khi API trả 0 (HSG): eps_i = npatp_i / shares
+    # EPS back-calc khi API trả 0 (HSG) hoặc mâu thuẫn nội tại >15% (REQ-060 — BMI
+    # bảo hiểm: EPS API tính trên cổ phiếu bình quân, shares cuối kỳ → lệch ~16%):
+    # eps_i = npatp_i / shares giữ data tự khớp (REQ-003 split audit cũng dùng chuẩn này)
     if shares > 0:
         for i in range(len(eps)):
             if (not eps[i] or eps[i] == 0) and npatp and npatp[i]:
                 eps[i] = float(npatp[i]) / shares
+            elif eps[i] and npatp and npatp[i]:
+                back = float(npatp[i]) / shares
+                if abs(back - eps[i]) / eps[i] > 0.15:
+                    eps[i] = back
     ev_ebitda = None
     if not IS_BANK:
         ebit_col = next((c for c in inc5.columns if re.search(r'Operating profit|EBIT', c, re.I)), None)
