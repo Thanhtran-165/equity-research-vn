@@ -211,6 +211,22 @@
 
 ---
 
+## 13. CÔNG NGHIỆP & SẢN XUẤT
+
+### Đặc thù
+- Sản xuất & gia công (cơ khí, nhựa, bao bì, linh kiện, điện tử gia dụng) — biên gộp theo giá nguyên liệu + hiệu suất nhà máy
+- Khách hàng chủ yếu doanh nghiệp (B2B/OEM) — đơn hàng theo hợp đồng, phụ thuộc chu kỳ công nghiệp
+
+### Cách đọc từ BCTC (bẫy)
+- CCC quan trọng: tồn kho + phải thu lớn (B2B) — so vòng quay theo thời gian
+- Biên gộp theo giá nguyên liệu đầu vào (nhựa, thép, giấy, hóa chất) — xem xu hướng, không chỉ 1 năm
+- Nhà máy mới: khấu hao cao giai đoạn đầu — lợi nhuận thấp là đặc trưng, chưa phải dấu hiệu kém
+
+### Tiêu chí theo dõi
+- Giá nguyên liệu đầu vào, đơn hàng/backlog, tồn kho, biên gộp, công suất nhà máy
+
+---
+
 ## MAP NGÀNH → PACK (builder dùng)
 
 | Sector (từ tracker/vnstock) | Nhóm pack |
@@ -227,4 +243,5 @@
 | pharma, dược, y tế | 9. DƯỢC PHẨM |
 | tech, công nghệ, viễn thông | 10. CÔNG NGHỆ |
 | thủy sản, cao su, đường, gỗ, nông | 11. NÔNG NGHIỆP |
+| industrial, công nghiệp, sản xuất, cơ khí, nhựa, bao bì | 13. CÔNG NGHIỆP & SẢN XUẤT |
 | *(khác)* | 12. NGÀNH KHÁC |

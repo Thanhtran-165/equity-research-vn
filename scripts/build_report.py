@@ -42,6 +42,7 @@ SECTOR_MAP = {
     'tech':'10. CÔNG NGHỆ & VIỄN THÔNG', 'công nghệ':'10. CÔNG NGHỆ & VIỄN THÔNG', 'viễn thông':'10. CÔNG NGHỆ & VIỄN THÔNG',
     'thủy sản':'11. NÔNG NGHIỆP & CHẾ BIẾN', 'cao su':'11. NÔNG NGHIỆP & CHẾ BIẾN',
     'đường':'11. NÔNG NGHIỆP & CHẾ BIẾN', 'gỗ':'11. NÔNG NGHIỆP & CHẾ BIẾN', 'nông':'11. NÔNG NGHIỆP & CHẾ BIẾN',
+    'industrial':'13. CÔNG NGHIỆP & SẢN XUẤT', 'công nghiệp':'13. CÔNG NGHIỆP & SẢN XUẤT', 'sản xuất':'13. CÔNG NGHIỆP & SẢN XUẤT',
     'general':'12. NGÀNH KHÁC',
 }
 
