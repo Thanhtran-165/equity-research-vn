@@ -1845,9 +1845,13 @@ def _verify_history_table(html, fin):
                     continue
                 gt_scaled = float(gt) * scale
                 denom = max(abs(gt_scaled), abs(cell), 0.001)
-                if abs(cell - gt_scaled) / denom * 100 > tol:
+                # P0 (CB-2 REQ-033 2026-08-08): bảng hiển thị 1 decimal — giá trị nhỏ
+                # (npat 0.02 tỷ → "0.0") bị false mismatch. Tolerance động theo sai số
+                # hiển thị tối đa (0.05 tỷ = nửa bước 0.1).
+                tol_dyn = max(tol, 0.06 / max(abs(gt_scaled), 0.001) * 100)
+                if abs(cell - gt_scaled) / denom * 100 > tol_dyn:
                     issues.append(
-                        f"BẢNG history: {col_key} {y} cell={cell:,.0f} ≠ data {gt_scaled:,.0f} (lệch >{tol}%)")
+                        f"BẢNG history: {col_key} {y} cell={cell:,.2f} ≠ data {gt_scaled:,.2f} (lệch >{tol_dyn:.1f}%)")
     return issues
 
 
