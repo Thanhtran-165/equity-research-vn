@@ -37,6 +37,9 @@ def main():
     if os.path.exists(TRACKER):
         tracker = json.load(open(TRACKER))  # nối tiếp nếu crash giữa chừng
 
+    # CIRCUIT BREAKER (LENH-VNALL-P0-REBUILD-V2 §4b): auto-stop cơ bản trong script
+    consec_fail = 0   # mã liên tiếp không đạt (exit != 0) — gần CB-2
+    consec_err = 0    # lỗi kỹ thuật liên tiếp (timeout/exception) — gần CB-4
     for it in items:
         tk = it['ticker']; sec = it.get('sector', 'general')
         wd = os.path.join(STAGE, tk)
@@ -81,12 +84,37 @@ def main():
                               'note': 'không có result.json — builder crash/API fail',
                               'tail': out[-500:]})
             print(f"{tk} ({sec}): exit={r.returncode} -> {entry.get('status')} recall={entry.get('recall')}")
+            # CB: cập nhật bộ đếm
+            if entry.get('status') == 'done':
+                consec_fail = 0; consec_err = 0
+            elif entry.get('status') == 'NO_DATA':
+                consec_fail += 1; consec_err += 1
+            else:
+                consec_fail += 1; consec_err = 0
+            if consec_fail >= 5:
+                print(f'\n⚠️ CIRCUIT BREAKER (CB-2): {consec_fail} mã liên tiếp không đạt — DỪNG. '
+                      f'Báo ZCode, không tự vá.')
+                break
+            if consec_err >= 5:
+                print(f'\n⚠️ CIRCUIT BREAKER (CB-4): {consec_err} lỗi kỹ thuật liên tiếp — DỪNG. '
+                      f'Báo ZCode, không tự vá.')
+                break
         except subprocess.TimeoutExpired:
             entry.update({'status': 'NO_DATA', 'note': 'timeout 900s'})
+            consec_err += 1
             print(f"{tk}: TIMEOUT")
+            if consec_err >= 5:
+                print(f'\n⚠️ CIRCUIT BREAKER (CB-4): 5 lỗi kỹ thuật liên tiếp — DỪNG. Báo ZCode.')
+                json.dump(tracker, open(TRACKER, 'w'), ensure_ascii=False, indent=1)
+                break
         except Exception as e:
             entry.update({'status': 'NO_DATA', 'note': f'exception: {e}'})
+            consec_err += 1
             print(f"{tk}: ERROR {e}")
+            if consec_err >= 5:
+                print(f'\n⚠️ CIRCUIT BREAKER (CB-4): 5 lỗi kỹ thuật liên tiếp — DỪNG. Báo ZCode.')
+                json.dump(tracker, open(TRACKER, 'w'), ensure_ascii=False, indent=1)
+                break
         json.dump(tracker, open(TRACKER, 'w'), ensure_ascii=False, indent=1)
         time.sleep(sleep_s)
 
