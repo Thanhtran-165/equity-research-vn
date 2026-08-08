@@ -3584,7 +3584,11 @@ def verify_period_integrity(req, html):
                 match = False
                 if raw_scaled is not None and contract_val is not None:
                     denom = max(abs(raw_scaled), abs(contract_val), 0.001)
-                    match = abs(raw_scaled - contract_val) / denom <= 0.01  # 1% tolerance
+                    # P0 (CB-2 2026-08-08): builder làm tròn contract 2 decimal — với giá trị
+                    # NHỎ (<~0.5 tỷ) sai số làm tròn vượt 1% → false mismatch. Tolerance động:
+                    # tối thiểu 1%, cộng sai số làm tròn tối đa (0.006 ≈ nửa bước 0.01 + lề).
+                    tol = max(0.01, 0.006 / max(abs(contract_val), 0.001))
+                    match = abs(raw_scaled - contract_val) / denom <= tol
 
                 per_year_results[y_str] = {
                     "raw_value": raw_val,
