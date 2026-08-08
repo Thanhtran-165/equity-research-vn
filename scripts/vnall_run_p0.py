@@ -49,6 +49,10 @@ def main():
                  'status': 'running', 'run_id': RUN_ID, 'ts': datetime.datetime.utcnow().isoformat()}
         tracker[tk] = entry
         json.dump(tracker, open(TRACKER, 'w'), ensure_ascii=False, indent=1)
+        # P0 (Sol checkpoint 2): DỌN /tmp/vn100_<ticker> trước build — tránh copy
+        # state cũ của lần chạy trước khi builder crash giữa chừng.
+        import shutil as _sh0
+        _sh0.rmtree(f'/tmp/vn100_{tk}', ignore_errors=True)
         try:
             r = subprocess.run(['python3', BUILDER, tk, sec], cwd=wd,
                                capture_output=True, text=True, timeout=900)

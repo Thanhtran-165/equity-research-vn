@@ -143,6 +143,10 @@ def fetch():
     hist=q.history(start='2020-01-01',end='2026-08-02')
     hist.to_csv(f'{WORK}/source-pack/price.csv',index=False)
     last=float(hist['close'].iloc[-1])*1000
+    try:
+        as_of_date = str(hist['time'].iloc[-1])[:10]
+    except Exception:
+        as_of_date = 'N/A'
     # shares — VN100 fix 2026-08-02 (BVH/HSG/MIG): nhiều tầng fallback
     # 1) Paid-in capital / Charter capital; 2) back-calc npatp/eps; 3) overview issue_share
     cc_col=next((c for c in bal5.columns if re.search(r'Paid-in capital|Charter capital|Vốn điều lệ|Charter Capital',c,re.I)),None)
@@ -169,7 +173,7 @@ def fetch():
     ev_ebitda = None  # P0-6 (Sol 2026-08-08): EV/EBITDA gỡ khỏi output — net_debt trước
     # đây tính bằng tổng liabilities (sai khái niệm: phải nợ vay chịu lãi − tiền);
     # mapping nợ/cash đúng sẽ được xác minh rồi mới bật lại.
-    return dict(years=years,toi=toi,npat=npat,npatp=npatp,eps=eps,equity=equity,assets=assets,cfo=cfo,capex=capex,gross=gross,liab=liab,inventory=inventory,last=last,shares=shares,periods=len(inc),ev_ebitda=ev_ebitda)
+    return dict(years=years,toi=toi,npat=npat,npatp=npatp,eps=eps,equity=equity,assets=assets,cfo=cfo,capex=capex,gross=gross,liab=liab,inventory=inventory,last=last,shares=shares,periods=len(inc),ev_ebitda=ev_ebitda,as_of_date=as_of_date)
 
 # ============ TECH SCORE (REQ-005/037) ============
 def tech_score(D_raw):
@@ -379,7 +383,9 @@ def build_all(D_raw, tech, news, real_peers=None):
         "pe":round(pe,2),"pb":round(pb,2),"peHist":pe_hist,"pbHist":pb_hist,
         "pe5med":pe5med,"pe5avg":pe5avg,
         "pe_normalized":round(last/statistics.median(eps),2) if eps_cv>30 and eps[-1]<0.8*max(eps) and statistics.median(eps) else None,
-        "price":last,"price_fetched_at":"2026-08-02","shares":round(shares/1e9,4),"marketCap":round(last*shares/1e9,0),
+        "price":last,"price_fetched_at":(D_raw.get('as_of_date') if isinstance(D_raw, dict) else None),
+        "exchange":None,"as_of_date":(D_raw.get('as_of_date') if isinstance(D_raw, dict) else None),
+        "shares":round(shares/1e9,4),"marketCap":round(last*shares/1e9,0),
         "max_drawdown_52w":round(tech['max_dd'],1),"tech52wLow":round(tech['lo52']),"tech52wHigh":round(tech['hi52']),
         "techMA10":round(tech['ma10']),"techMA20":round(tech['ma20']),"techMA50":round(tech['ma50']),
         "techRSI":tech['rsi_w'],"techWeeks":tech['weeks'],"techPrice":tech['techPrice'],
@@ -387,7 +393,7 @@ def build_all(D_raw, tech, news, real_peers=None):
         "ddMonths":tech['dd_months'],"ddValues":tech['dd_values'],"distBins":tech['bins'],"distCounts":tech['counts'],
         "segMix":[],  # không bịa cơ cấu mảng khi data sponsor thiếu (VN100 v2)
         "peers":[{"label":p["ticker"],"x":p["pb"],"y":p["pe"]} for p in peers['peers']],
-        "_provenance":{"built_at":"2026-08-02","source":"vnstock sponsor","sector":SECTOR},
+        "_provenance":{"built_at":(D_raw.get('as_of_date') if isinstance(D_raw, dict) else None),"source":"vnstock sponsor","sector":SECTOR},
         "sector":SECTOR,"company_name":TICKER,
         "tech_score":tech['score'],"verdict":tech['verdict'],"rsi14":round(tech['rsi14'],1),
         "news_sentiment":{"positive":sum(1 for a in (news or {}).get('articles',[]) if a.get('sentiment')=='positive'),"negative":sum(1 for a in (news or {}).get('articles',[]) if a.get('sentiment')=='negative'),"neutral":sum(1 for a in (news or {}).get('articles',[]) if a.get('sentiment')=='neutral')} if news else None,
@@ -451,7 +457,7 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 </div>'''
     biz=f'''<div class="card">
 <p><strong>{t}</strong> hoạt động {('trong ngành ngân hàng thương mại cổ phần' if is_bank else 'trong ngành '+SECTOR)}. Nguồn doanh thu chính là <strong>{rev_label}</strong> (theo BCTC kiểm toán). Năm {years[-1]}, {rev_label} đạt {ft(rev_last)} tỷ VND (theo BCTC kiểm toán).</p>
-<p>{('Cơ cấu doanh thu: NII ~58%, phí & ngoại hối ~22%, đầu tư ~12%, khác ~8% — phản ánh mô hình ngân hàng bán lẻ.' if is_bank else 'Cơ cấu doanh thu theo mảng hoạt động chính của doanh nghiệp.')}</p>
+<p>{('Cơ cấu doanh thu theo mảng: phân bổ chi tiết không có trong data sponsor — xem BCTC đầy đủ (theo BCTC kiểm toán).' if is_bank else 'Cơ cấu doanh thu theo mảng hoạt động chính của doanh nghiệp.')}</p>
 <p>Tổng tài sản năm {years[-1]} đạt {ft(assets[-1])} tỷ VND, vốn chủ sở hữu {ft(eq[-1])} tỷ VND (theo BCTC kiểm toán).</p>
 </div>'''
     sp = load_sector_pack(SECTOR)
@@ -679,10 +685,10 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 <li id="ref-7"><strong>[ref-7]</strong> Bối cảnh ngành — {('ngân hàng VN, điều tiết NHNN' if is_bank else SECTOR)} (theo bối cảnh ngành).</li>
 <li id="ref-8"><strong>[ref-8]</strong> Peer comparison — advisory estimate (theo peer vnstock).</li>
 <li id="ref-9"><strong>[ref-9]</strong> Cơ cấu doanh thu ước tính (theo hồ sơ công ty).</li>
-<li id="ref-10"><strong>[ref-10]</strong> WACC ước tính — Rf 3,25%, ERP 7,5%, g 2,5% (theo WACC ước tính).</li>
+<li id="ref-10"><strong>[ref-10]</strong> {('Định giá ngân hàng — P/B, ROE, DDM / cost-of-equity (theo bối cảnh ngành).' if is_bank else 'WACC ước tính — Rf 3,25%, ERP 7,5%, g 2,5% (theo WACC ước tính).')}</li>
 </ol>
 '''
-    subs={'TICKER':t,'COMPANY_NAME':cn,'EXCHANGE':'HOSE','PRICE_DATE':'2026-08-02','CAPITAL_LENS_AMOUNT':'(ba mức)','CITATION_COUNT':'10','SOURCES_SUMMARY':src,'THESIS_CAPEX_DATA':json.dumps(capex_arr),'THESIS_CAPEX_LABELS':json.dumps([str(y) for y in years]),
+    subs={'TICKER':t,'COMPANY_NAME':cn,'EXCHANGE':(D.get('exchange') or '—'),'PRICE_DATE':(D.get('as_of_date') or '—'),'CAPITAL_LENS_AMOUNT':'(ba mức)','CITATION_COUNT':'10','SOURCES_SUMMARY':src,'THESIS_CAPEX_DATA':json.dumps(capex_arr),'THESIS_CAPEX_LABELS':json.dumps([str(y) for y in years]),
         'INSIGHT_1_SUBTITLE':f'Chu kỳ LN FY{years[0]}–{years[-1]}','INSIGHT_2_SUBTITLE':'Định giá P/B','INSIGHT_3_SUBTITLE':'Drawdown',
         'INSIGHT_1_SHORT_LABEL':'Chu kỳ LN','INSIGHT_2_SHORT_LABEL':'Định giá','INSIGHT_3_SHORT_LABEL':'Drawdown',
         'SEC_HERO_HTML':hero,'SEC_EXEC_HTML':exec_html,'SEC_BIZ_HTML':biz,'SEC_INDUSTRY_HTML':industry,

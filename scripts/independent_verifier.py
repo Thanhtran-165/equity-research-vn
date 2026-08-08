@@ -943,24 +943,45 @@ def verify_chart_data_accuracy(req, html):
             gt = list(fin.get("npatmi_ty", {}).values())
         elif arr_name == "eps":
             gt = list(fin.get("eps_vnd", {}).values())
+        elif arr_name == "cfo":
+            gt = list(fin.get("cfo_ty", {}).values())
+        elif arr_name == "inventory":
+            # inventory thật không nằm trong financials.json — dùng contract financials
+            # (key JS chart là "inventory", ground truth là contract financials.inventory_fin)
+            vdd = _load_json_rel("verified-dashboard-data.json")
+            gt = ((vdd or {}).get("financials") or {}).get("inventory_fin", [])
         else:
             continue
 
-        # Get report JS value — v0.14.0: support negative numbers (airlines, cyclicals)
-        # v0.14.1: support both quoted ("revenue") and unquoted (revenue) key formats
-        # v0.14.6: add - to character class for negative values after commas
-        js_match = re.search(rf'["\']?{arr_name}["\']?\s*:\s*\[(-?[\d.,\s-]+)\]', html or "")
+        # Get report JS value — P0 (Sol checkpoint 2): hỗ trợ null (cfo/inventory thiếu)
+        js_match = re.search(rf'["\']?{arr_name}["\']?\s*:\s*\[([^\]]+)\]', html or "")
         if not js_match:
             mismatches.append(f"{arr_name}: not found in JS DATA")
             continue
 
-        report_vals = [float(x.strip()) for x in js_match.group(1).split(",") if x.strip()]
+        report_vals = []
+        for x in js_match.group(1).split(","):
+            x = x.strip()
+            if x in ("null", "None", ""):
+                report_vals.append(None)
+            else:
+                try:
+                    report_vals.append(float(x))
+                except ValueError:
+                    report_vals.append(None)
 
-        # Compare arrays (allow length diff but values should match)
+        # Compare arrays — P0 (Sol checkpoint 2): mutation mảng CFO/inventory phải bị bắt;
+        # None vs số = mismatch; số lệch >5% = mismatch
         min_len = min(len(gt), len(report_vals))
         for i in range(min_len):
-            if gt[i] and abs(report_vals[i] - gt[i]) / max(abs(gt[i]), 0.001) * 100 > 5:
-                mismatches.append(f"{arr_name}[{i}]: gt={gt[i]:.0f} vs report={report_vals[i]:.0f}")
+            g, r = gt[i], report_vals[i]
+            if g is None and r is None:
+                continue
+            if g is None or r is None:
+                mismatches.append(f"{arr_name}[{i}]: gt={g} vs report={r} (null mismatch)")
+                continue
+            if abs(r - g) / max(abs(g), 0.001) * 100 > 5:
+                mismatches.append(f"{arr_name}[{i}]: gt={g:.0f} vs report={r:.0f}")
 
     passed = len(mismatches) == 0
     return passed, {"checked_arrays": check_arrays, "mismatches": mismatches[:5]}
@@ -3509,33 +3530,17 @@ def verify_period_integrity(req, html):
             if canonical == "inventory" and "bank" in sector_cfg.lower():
                 per_field[canonical] = {"not_applicable": "banking — không có hàng tồn kho"}
                 continue
-            candidates = []
-            for h in rows[0].keys():
-                hl = h.lower().strip()
-                for a in aliases:
-                    if hl == a or a in hl:
-                        candidates.append(h)
-                        break
-            best_col, best_score = None, -1
-            arr_cfg = fin.get(arr_key, [])
-            if candidates and isinstance(arr_cfg, list):
-                for h in candidates:
-                    score = 0
-                    for yi, y in enumerate(years_int):
-                        y_str = str(y)
-                        row_y = next((r for r in rows if str(r.get("period", "")).strip() == y_str), None)
-                        cv = arr_cfg[yi] if yi < len(arr_cfg) else None
-                        if row_y is None or cv is None:
-                            continue
-                        try:
-                            rv = float(row_y.get(h, 0)) * scale
-                        except (ValueError, TypeError):
-                            continue
-                        if abs(rv - cv) / max(abs(rv), abs(cv), 0.001) <= 0.02:
-                            score += 1
-                    if score > best_score:
-                        best_score, best_col = score, h
-            col = best_col
+            # P0 (Sol checkpoint 2): chọn cột theo ALIAS ƯU TIÊN CỐ ĐỊNH (thứ tự danh
+            # sách, exact trước substring) — KHÔNG dùng contract làm oracle (tránh
+            # oracle vòng tròn: contract tự chứng cho cột được chọn).
+            col = None
+            for a in aliases:
+                col = next((h for h in rows[0].keys() if h.lower().strip() == a), None)
+                if col:
+                    break
+                col = next((h for h in rows[0].keys() if a in h.lower()), None)
+                if col:
+                    break
             if not col:
                 # P0-C: field bắt buộc mà không tìm thấy cột → FAIL
                 if canonical in REQUIRED_FIELDS:
@@ -3602,6 +3607,12 @@ def verify_period_integrity(req, html):
                 pv_pairs_ok = False
                 failures.append({"code": "NO_YEAR_ROWS", "field": canonical,
                                  "detail": f"CSV không có dòng năm nào khớp contract years {years_int}"})
+            # P0 (Sol checkpoint 2): thiếu riêng 1 năm raw → FAIL (không âm thầm bỏ qua)
+            if canonical in REQUIRED_FIELDS and per_year_results and len(per_year_results) < len(years_int):
+                pv_pairs_ok = False
+                missing = [y for y in years_int if str(y) not in per_year_results]
+                failures.append({"code": "MISSING_YEAR_IN_CSV", "field": canonical,
+                                 "detail": f"CSV thiếu năm {missing} trong contract {years_int}"})
 
             # Check latest/oldest
             if latest_period in per_year_results and not per_year_results[latest_period].get("match"):
