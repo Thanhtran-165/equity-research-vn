@@ -3315,7 +3315,8 @@ def verify_period_integrity(req, html):
 
     fin = vdd.get("financials", {})
     if not fin:
-        return True, {"note": "no financials in contract — nothing to verify"}
+        # P0-5 (Sol 2026-08-08): fail-closed — critical/high KHÔNG được PASS rỗng
+        return False, {"error": "contract thiếu financials — fail-closed (không vacuous pass)"}
 
     years = fin.get("years", [])
     expected_count = 5
@@ -3454,11 +3455,15 @@ def verify_period_integrity(req, html):
             per_year_results = {}
             for yi, y in enumerate(years_int):
                 y_str = str(y)
-                if yi >= len(rows):
+                # P0 (Sol 2026-08-08): CSV rows có thể bắt đầu sớm hơn contract (vd 2018 vs
+                # 2021) — PHẢI match theo cột năm, không lấy theo index (bug vacuous pass
+                # trước đây che giấu: REQ-062 chưa từng chạy thật).
+                row_y = next((r for r in rows if str(r.get("period", "")).strip() == y_str), None)
+                if row_y is None:
                     continue
                 raw_val = None
                 try:
-                    raw_val = float(rows[yi].get(col, 0))
+                    raw_val = float(row_y.get(col, 0))
                 except (ValueError, TypeError):
                     pass
 
@@ -3747,12 +3752,15 @@ def verify_internal_identity(req, html):
     eq25 = (fin.get("equity_ty") or {}).get("2025")
     np25 = (fin.get("npatmi_ty") or {}).get("2025")
 
-    # 1) EPS ≈ NPAT / shares (data self-consistency) — tolerance rộng 15% vì EPS có thể
-    #    tính theo diluted shares / CP bình quân, không phải issue_share cuối kỳ
+    # 1) EPS ≈ NPAT / shares — P0-6 (Sol 2026-08-08): theo IAS 33, EPS reported dùng
+    #    cổ phiếu BÌNH QUÂN (weighted-average) và earnings attributable — không được
+    #    ép khớp bằng ending shares. Lệch chỉ là cảnh báo (note), KHÔNG fail; EPS bịa
+    #    vẫn bị REQ-033 (cross-section narrative vs data) bắt.
+    eps_note = ""
     if eps25 and np25 is not None and shares:
         eps_calc = float(np25) * 1e9 / float(shares)
         if abs(eps_calc - float(eps25)) / max(abs(float(eps25)), 0.001) * 100 > eps_tol:
-            issues.append(f"EPS {eps25} ≠ NPAT/shares {eps_calc:,.0f} (lệch >{eps_tol}%) — data files tự mâu thuẫn")
+            eps_note = f"EPS {eps25} ≠ NPAT/shares {eps_calc:,.0f} (lệch {abs(eps_calc-float(eps25))/max(abs(float(eps25)),0.001)*100:.0f}% > {eps_tol}% — EPS reported theo cổ phiếu bình quân, chấp nhận, không ép)"
 
     # 2) PE claim × EPS ≈ price
     val_text = " ".join(s for s in [extract_section_text(html, x) for x in
@@ -3799,7 +3807,7 @@ def verify_internal_identity(req, html):
 
     passed = len(issues) == 0
     return passed, {"issues": issues[:8], "price": price, "eps_2025": eps25,
-                    "note": "no price/eps data to cross-foot" if not price or not eps25 else ""}
+                    "note": eps_note or ("no price/eps data to cross-foot" if not price or not eps25 else "")}
 
 
 def verify_derived_metrics_recompute(req, html):
