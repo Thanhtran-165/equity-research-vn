@@ -95,7 +95,7 @@ Làm:
    ghi `~/ZCodeProject/data/vnall/preflight_p0_sector_fix.json`); AGG→realestate, BMI→insurance đã nhúng sẵn.
 3. **Fail-closed do script**: `general > 10%` hoặc mã pilot (AAA/ACB/BMI/FPT/AGG/SGR)
    còn `needs_human` → script `exit 1` — phải xử lý tay rồi chạy lại, KHÔNG tự đoán.
-4. Artifact: `/tmp/vnall_p0_sectors.json` `{TICKER: sector}` → merge vào 7 batch files
+4. Artifact: `~/ZCodeProject/data/vnall/preflight_p0_sectors.json` `{TICKER: sector}` → merge vào 7 batch files
    (đoạn mã §3a). Báo cáo số mã hiệu chỉnh trong báo cáo cuối.
 
 ## 4b. CIRCUIT BREAKER — NGẮT MẠCH KHI PHÁT HIỆN VẤN ĐỀ KHÔNG TỰ VÁ ĐƯỢC (BẮT BUỘC)
@@ -115,7 +115,7 @@ luật ngắt mạch bằng số — vi phạm luật nào là DỪNG + báo cá
 
 **Khi ngắt mạch (CB-1→CB-5):**
 1. Ghi trạng thái hiện tại vào tracker (không xóa gì).
-2. Tạo `/tmp/VNALL-CIRCUIT-BREAK-<MÃ LỆNH>.md`: luật nào bị vi phạm + mã + bằng chứng
+2. Tạo `~/ZCodeProject/data/vnall/reports_p0/VNALL-CIRCUIT-BREAK-<MÃ LỆNH>.md`: luật nào bị vi phạm + mã + bằng chứng
    (stack trace/trích dẫn) + số liệu tới điểm dừng.
 3. **DỪNG HOÀN TOÀN** — không chạy lô khác, không tự vá, không thử lại sau 10 phút.
 4. Báo ZCode (qua chủ đầu tư) kèm file báo cáo. Chờ lệnh tiếp.
