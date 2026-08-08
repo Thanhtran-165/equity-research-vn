@@ -497,7 +497,7 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 '''
     seg=f'''<p>Cơ cấu nguồn thu {t} năm {years[-1]}: {rev_label} đạt {ft(rev_last)} tỷ VND (theo BCTC kiểm toán). Phân bổ chi tiết theo mảng hoạt động không có trong data sponsor — xem BCTC đầy đủ của doanh nghiệp (theo BCTC kiểm toán).</p>
 <p><strong>Tiêu chí theo dõi ngành {SECTOR}</strong> (khái niệm ngành chuẩn, theo hồ sơ công ty): {('NIM (biên lãi thuần), CASA (tiền gửi không kỳ hạn), nợ xấu NPL, tỷ lệ an toàn vốn CAR, room tín dụng NHNN' if IS_BANK else 'sản lượng tiêu thụ, giá bán, biên lợi nhuận gộp, hàng tồn kho, dòng tiền hoạt động')}. Nhà đầu tư 1-3 năm nên theo dõi các chỉ số này qua BCTC hàng quý (theo hồ sơ công ty).</p>
-{CANVAS('chartSegMix',label='Cơ cấu doanh thu')}
+{('' if not (D.get('segMix') or []) else CANVAS('chartSegMix',label='Cơ cấu doanh thu'))}
 <p>{('Phân bổ chi tiết theo mảng không có trong data sponsor — xem BCTC đầy đủ của doanh nghiệp (theo BCTC kiểm toán).' if is_bank else 'Mảng phụ bổ sung.')} (ước tính theo hồ sơ công ty).</p>
 <p>{('' if is_bank else 'Đa dạng hóa vừa phải.')} (ước tính theo hồ sơ công ty).</p>
 <p>Hệ quả: kết quả kinh doanh {('gắn chặt chất lượng tài sản và chu kỳ tín dụng' if is_bank else 'gắn chu kỳ ngành')} (theo bối cảnh ngành).</p>

@@ -4364,6 +4364,12 @@ def verify_runtime_render(req, html):
         if a in canvas_ids or b2 in canvas_ids:
             or_ok.add(a); or_ok.add(b2)
     guarded = set(re.findall(r'if\s*\(\s*\$\(\s*["\'](chart[\w]+)["\']\s*\)', html))
+    # P0-F (Sol checkpoint 3): chart có GUARD DỮ LIỆU — `if (DATA.segMix && ...length) {`
+    # chỉ vẽ khi có data thật; segMix rỗng → canvas không bắt buộc.
+    data_guarded = set(re.findall(r'if\s*\(\s*DATA\.([\w]+)[^)]*\)\s*\{\s*new\s+Chart\s*\(\s*\$\s*\(\s*["\'](chart[\w]+)["\']\s*\)', html))
+    for _dk, _ck in data_guarded:
+        if re.search(r'["\']?' + _dk + r'["\']?\s*:\s*\[\s*\]', html):
+            guarded.add(_ck)  # data rỗng → guard false → không cần canvas
     missing_canvas = sorted({r for r in chart_refs if r not in canvas_ids
                              and r not in or_ok and r not in guarded})
     if missing_canvas:

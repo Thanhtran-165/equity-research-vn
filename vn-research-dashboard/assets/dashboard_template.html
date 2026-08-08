@@ -754,14 +754,11 @@ document.addEventListener('DOMContentLoaded', function(){
     })
   });
 
-  // --- Chart 2: Capex vs FCF (10Y) ---
+  // --- Chart 2: Dòng tiền hoạt động (CFO) — P0-F (Sol): chỉ CFO thật, bỏ dataset tồn kho rỗng ---
   new Chart($('chartHistCash'), {
     type:'bar',
     data:{ labels: DATA.years, datasets:[
-      { label:'Tăng tồn kho (tỷ VND)', data: DATA.invGrowth,
-        backgroundColor:(c)=>grad(c,'rgba(248,81,73,0.85)','rgba(248,81,73,0.25)'),
-        borderRadius:5, yAxisID:'y', order:2 },
-      { label:'CFO (tỷ VND, âm)', data: DATA.cfo, type:'line',
+      { label:'Dòng tiền hoạt động (tỷ VND)', data: DATA.cfo, type:'line',
         borderColor: GREEN, backgroundColor: GREEN, tension:0.35, pointRadius:4,
         pointBackgroundColor:(ctx)=> ctx.parsed.y < 0 ? RED : '#0f1419',
         pointBorderWidth:2, yAxisID:'y', order:1, borderWidth:2.5 }
@@ -775,6 +772,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // --- Chart 3: Segment mix (doughnut) ---
+  if (DATA.segMix && DATA.segMix.length) {
   new Chart($('chartSegMix'), {
     type:'doughnut',
     data:{ labels: DATA.segMix.labels, datasets:[{
@@ -790,6 +788,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }
   });
+  }
 
   // --- Chart 4: Land bank / inventory accumulation (tỷ VND) ---
   if ($('chartThesisRPO')) new Chart($('chartThesisRPO'), {
