@@ -1768,6 +1768,68 @@ def verify_peer_provenance(req, html):
     }
 
 
+def _verify_history_table(html, fin):
+    """P0-A (Sol checkpoint 2026-08-08): parse BẢNG 5 năm trong report và đối chiếu
+    TỪNG CELL (năm, cột) với financials.json — mutation 1 ô trong bảng phải FAIL.
+    Bảng dạng: Năm | {rev_label} (tỷ VND) | Lợi nhuận (tỷ VND) | EPS (VND) | ROE (%) | VCSH (tỷ VND)."""
+    issues = []
+    if not html or not fin:
+        return issues
+    # tìm bảng có header Năm + cột tỷ VND
+    for tbl in re.finditer(r"<table[^>]*class=\"tbl\"[^>]*>(.*?)</table>", html, re.DOTALL | re.I):
+        body = tbl.group(1)
+        if "Năm" not in body or "tỷ VND" not in body:
+            continue
+        headers = re.findall(r"<th[^>]*>(.*?)</th>", body, re.I)
+        headers = [re.sub(r"<[^>]+>", "", h).strip().lower() for h in headers]
+        # headers dạng: năm, doanh thu thuần (tỷ vnd), lợi nhuận (tỷ vnd), eps (vnd), roe (%), vcsh (tỷ vnd)
+        col_map = {}
+        for i, h in enumerate(headers):
+            if h == "năm":
+                col_map["year"] = i
+            elif "doanh thu" in h or "operating income" in h:
+                col_map["revenue"] = i
+            elif "lợi nhuận" in h or "profit" in h:
+                col_map["npat"] = i
+            elif h.startswith("eps"):
+                col_map["eps"] = i
+            elif "vcsh" in h or "equity" in h:
+                col_map["equity"] = i
+        if "year" not in col_map or "revenue" not in col_map:
+            continue
+        for row_m in re.finditer(r"<tr[^>]*>(.*?)</tr>", body, re.DOTALL | re.I):
+            cells = re.findall(r"<td[^>]*>(.*?)</td>", row_m.group(1), re.I)
+            if len(cells) <= col_map.get("year", 99):
+                continue
+            y = re.sub(r"<[^>]+>", "", cells[col_map["year"]]).strip()
+            if not re.match(r"^20\d\d$", y):
+                continue
+            def cellval(idx):
+                if idx is None or idx >= len(cells):
+                    return None
+                v = re.sub(r"<[^>]+>", "", cells[idx]).strip().replace(",", "")
+                try:
+                    return float(v)
+                except ValueError:
+                    return None
+            checks = [("revenue", "revenue_ty", 1.0, 2.0), ("npat", "npatmi_ty", 1.0, 2.0),
+                      ("eps", "eps_vnd", 1.0, 2.0), ("equity", "equity_ty", 1.0, 2.0)]
+            for col_key, fin_key, scale, tol in checks:
+                idx = col_map.get(col_key)
+                if idx is None:
+                    continue
+                gt = (fin.get(fin_key) or {}).get(y)
+                cell = cellval(idx)
+                if gt is None or cell is None:
+                    continue
+                gt_scaled = float(gt) * scale
+                denom = max(abs(gt_scaled), abs(cell), 0.001)
+                if abs(cell - gt_scaled) / denom * 100 > tol:
+                    issues.append(
+                        f"BẢNG history: {col_key} {y} cell={cell:,.0f} ≠ data {gt_scaled:,.0f} (lệch >{tol}%)")
+    return issues
+
+
 def verify_cross_section_consistency(req, html):
     """REQ-033: Cùng 1 số liệu key ở nhiều section phải khớp (±5%).
 
@@ -1917,6 +1979,12 @@ def verify_cross_section_consistency(req, html):
                     + "; ".join(f"{g['section']}: {g['value']:,.1f}" for g in group)
                 )
 
+    # P0-A (Sol checkpoint 2026-08-08): đối chiếu TỪNG CELL bảng history với financials —
+    # mutation 1 ô trong bảng phải FAIL (trước đây chỉ DATA JS + prose được so).
+    fin_tbl = _load_json_rel("data/financials.json")
+    if fin_tbl:
+        issues += _verify_history_table(html, fin_tbl)
+
     passed = len(issues) == 0
     return passed, {
         "sections_scanned": len(section_ids),
@@ -1924,7 +1992,7 @@ def verify_cross_section_consistency(req, html):
         "pairs_compared": checked_pairs,
         "internal_inconsistencies": internal_issues[:5],
         "issues": issues[:5],
-        "note": "V3: thêm internal section consistency check cho unanchored claims",
+        "note": "V3: thêm internal section consistency check cho unanchored claims; P0-A: table cells vs financials",
     }
 
 
@@ -3397,14 +3465,20 @@ def verify_period_integrity(req, html):
         sub_checks["period_order_detected"] = False
 
     # Per-field cross-check against CSVs
+    # P0-C (Sol checkpoint 2026-08-08): thêm cfo + inventory là field BẮT BUỘC; thêm
+    # alias ngân hàng 'total operating income' cho revenue.
     field_csv_map = [
-        ("revenue", "income", ["sales", "net sales", "revenue"], "revenue", 1e-9),
+        ("revenue", "income", ["total operating income", "net sales", "net revenue", "sales", "revenue"], "revenue", 1e-9),
         ("net_profit", "income", ["attributable to parent company", "net profit", "profit after tax"], "netProfit", 1e-9),
         ("eps", "income", ["eps basic", "earnings per share"], "eps", 1.0),
         ("total_assets", "balance", ["total assets"], "totalAssets", 1e-9),
-        ("total_equity", "balance", ["owner's equity", "owners equity", "total equity"], "equity", 1e-9),
+        ("total_equity", "balance", ["owner's equity", "owners' equity", "owners equity", "total equity"], "equity", 1e-9),
         ("capex", "cash", ["purchases of fixed assets", "capex"], "capex", 1e-9),
+        ("cfo", "cash", ["net cash inflows/(outflows) from operating activities", "net cash from operating activities", "net cash.*operating"], "cfo", 1e-9),
+        ("inventory", "balance", ["inventories, net", "net inventories", "inventories", "inventory", "hàng tồn kho"], "inventory_fin", 1e-9),
     ]
+    # P0-C: field bắt buộc — bị skipped (thiếu cột/array/CSV) phải FAIL, không PASS ngầm
+    REQUIRED_FIELDS = {"revenue", "net_profit", "eps", "total_assets", "total_equity", "cfo", "inventory"}
 
     pv_pairs_ok = True
     latest_ok = True
@@ -3419,36 +3493,64 @@ def verify_period_integrity(req, html):
             entry = csv_data.get(stmt_key)
             rows = entry["rows"] if isinstance(entry, dict) else (entry or [])
             if not rows:
+                # P0-C: field bắt buộc mà thiếu CSV → FAIL (không skip ngầm)
+                if canonical in REQUIRED_FIELDS:
+                    pv_pairs_ok = False
+                    failures.append({"code": "NO_CSV", "field": canonical, "detail": "không tìm thấy CSV nguồn"})
                 per_field[canonical] = {"skipped": "no_csv", "path": entry.get("path") if isinstance(entry, dict) else None}
                 continue
 
-            # Find column
-            # FIX V7 (HPG cohort 2026-08-01): "sales" substring match trúng
-            # "Sales deductions" (cột âm) trước "Net sales" → raw sai 2.6×.
-            # Ưu tiên: (1) alias dài nhất trước, (2) exact match trước substring.
-            col = None
-            aliases_sorted = sorted(aliases, key=len, reverse=True)
-            for a in aliases_sorted:
-                for h in rows[0].keys():
-                    if h.lower().strip() == a:
-                        col = h
+            # Find column — P0-C (Sol checkpoint 2026-08-08): chọn cột theo ĐỘ KHỚP
+            # với contract (match-based), không chỉ theo alias dài nhất — tránh chọn
+            # sai cột khi CSV có nhiều cột cùng dạng (vd bảo hiểm: "Net sales from
+            # insurance business" vs "Net revenue of insurance premium").
+            # Rule not_applicable: ngân hàng không có inventory (không có hàng tồn kho).
+            sector_cfg = str(vdd.get("sector") or "")
+            if canonical == "inventory" and "bank" in sector_cfg.lower():
+                per_field[canonical] = {"not_applicable": "banking — không có hàng tồn kho"}
+                continue
+            candidates = []
+            for h in rows[0].keys():
+                hl = h.lower().strip()
+                for a in aliases:
+                    if hl == a or a in hl:
+                        candidates.append(h)
                         break
-                if col:
-                    break
+            best_col, best_score = None, -1
+            arr_cfg = fin.get(arr_key, [])
+            if candidates and isinstance(arr_cfg, list):
+                for h in candidates:
+                    score = 0
+                    for yi, y in enumerate(years_int):
+                        y_str = str(y)
+                        row_y = next((r for r in rows if str(r.get("period", "")).strip() == y_str), None)
+                        cv = arr_cfg[yi] if yi < len(arr_cfg) else None
+                        if row_y is None or cv is None:
+                            continue
+                        try:
+                            rv = float(row_y.get(h, 0)) * scale
+                        except (ValueError, TypeError):
+                            continue
+                        if abs(rv - cv) / max(abs(rv), abs(cv), 0.001) <= 0.02:
+                            score += 1
+                    if score > best_score:
+                        best_score, best_col = score, h
+            col = best_col
             if not col:
-                for a in aliases_sorted:
-                    for h in rows[0].keys():
-                        if a in h.lower():
-                            col = h
-                            break
-                    if col:
-                        break
-            if not col:
+                # P0-C: field bắt buộc mà không tìm thấy cột → FAIL
+                if canonical in REQUIRED_FIELDS:
+                    pv_pairs_ok = False
+                    failures.append({"code": "NO_COLUMN", "field": canonical,
+                                     "detail": f"không tìm thấy cột trong CSV {stmt_key}"})
                 per_field[canonical] = {"skipped": "no_column"}
                 continue
 
             arr = fin.get(arr_key, [])
             if not arr or not isinstance(arr, list):
+                # P0-C: field bắt buộc mà contract thiếu array → FAIL
+                if canonical in REQUIRED_FIELDS:
+                    pv_pairs_ok = False
+                    failures.append({"code": "NO_CONTRACT_ARRAY", "field": canonical, "detail": arr_key})
                 per_field[canonical] = {"skipped": "no_contract_array"}
                 continue
 
@@ -3494,6 +3596,12 @@ def verify_period_integrity(req, html):
                     })
 
             per_field[canonical] = {"per_year": per_year_results}
+
+            # P0-C: field bắt buộc mà KHÔNG khớp được năm nào (rows thiếu năm contract) → FAIL
+            if canonical in REQUIRED_FIELDS and not per_year_results:
+                pv_pairs_ok = False
+                failures.append({"code": "NO_YEAR_ROWS", "field": canonical,
+                                 "detail": f"CSV không có dòng năm nào khớp contract years {years_int}"})
 
             # Check latest/oldest
             if latest_period in per_year_results and not per_year_results[latest_period].get("match"):
@@ -3547,6 +3655,49 @@ def verify_data_provenance(req, html):
         cfo_rows = [k for k in cf.keys() if "operating" in str(k).lower()]
         if not cfo_rows:
             issues.append("cash_flow.json thiếu dòng CFO (operating activities) — phase 2/3 cần CFO")
+        else:
+            # P0-B (Sol checkpoint 2026-08-08): key tồn tại không đủ — nếu CFO toàn null
+            # trong khi CSV nguồn CÓ giá trị thật → builder map sai cột → FAIL
+            cfo_vals = []
+            for k in cfo_rows:
+                v = cf.get(k) or {}
+                cfo_vals += [x for x in v.values() if isinstance(x, (int, float)) and x == x]
+            if not any(x not in (None, 0) for x in cfo_vals):
+                import os as _os, csv as _csv2
+                wd = _work_dir()
+                csv_path = None
+                for sub in ("", "source-pack", "data"):
+                    cand = _os.path.join(wd, sub, "cash_flow_sponsor.csv")
+                    if _os.path.exists(cand):
+                        csv_path = cand
+                        break
+                if csv_path:
+                    with open(csv_path) as f:
+                        rows = list(_csv2.DictReader(f))
+                    rows = [r for r in rows if str(r.get("report_period", "")).strip().lower() == "year"] or rows
+                    cfo_col = None
+                    for cand in ("Net cash inflows/(outflows) from operating activities", "Net cash from operating activities"):
+                        if rows and cand in rows[0].keys():
+                            cfo_col = cand
+                            break
+                    if cfo_col is None and rows:
+                        for k2 in rows[0].keys():
+                            if "net cash" in str(k2).lower() and "operating" in str(k2).lower():
+                                cfo_col = k2
+                                break
+                    if cfo_col:
+                        raw_vals = []
+                        for r in rows:
+                            v2 = r.get(cfo_col)
+                            if v2 not in (None, ""):
+                                try:
+                                    raw_vals.append(float(v2))
+                                except ValueError:
+                                    pass
+                        if any(v2 != 0 for v2 in raw_vals):
+                            issues.append(
+                                f"CFO toàn null/0 trong cash_flow.json nhưng CSV nguồn có dữ liệu thật "
+                                f"(cột '{cfo_col}') — builder map sai alias")
     spots = {}  # fin_key → (value, desc, tolerance_pct)
 
     # G1 (review V4 Flash): trước đây chỉ spot-check revenue → bịa NPAT/EPS/Total

@@ -14,7 +14,7 @@ TICKER = sys.argv[1]
 SECTOR = sys.argv[2] if len(sys.argv) > 2 else 'general'
 WORK = f'/tmp/vn100_{TICKER}'
 TEMPLATE = os.path.expanduser('~/.zcode/skills/equity-research-vn/vn-research-dashboard/assets/dashboard_template.html')
-BANKS = {'ACB','BID','CTG','TCB','HDB','MBB','STB','VPB','TPB','SHB','LPB','VCB','EIB','BVB','NVB','OCB','PGB','SGR','SSB','VAB','KLB','VIB'}
+BANKS = {'ACB','BID','CTG','TCB','HDB','MBB','STB','VPB','TPB','SHB','LPB','VCB','EIB','BVB','NVB','OCB','PGB','SSB','VAB','KLB','VIB'}
 IS_BANK = TICKER in BANKS or SECTOR == 'banking'
 os.makedirs(f'{WORK}/data', exist_ok=True)
 os.makedirs(f'{WORK}/source-pack', exist_ok=True)
@@ -117,7 +117,17 @@ def fetch():
     as_col=next((c for c in bal5.columns if c.upper()=="TOTAL ASSETS"),None)
     equity=[float(bal5[eq_col].iloc[i]) for i in range(len(bal5))] if eq_col else [0]*5
     assets=[float(bal5[as_col].iloc[i]) for i in range(len(bal5))] if as_col else [0]*5
-    cfo=[float(cf5['Net cash from operating activities'].iloc[i]) for i in range(len(cf5))] if 'Net cash from operating activities' in cf5.columns else [None]*5
+    # CFO: P0-B (Sol checkpoint 2026-08-08) — nhận MỌI alias chuẩn (exact-first):
+    # "Net cash inflows/(outflows) from operating activities" (mẫu sponsor) hoặc
+    # "Net cash from operating activities". KHÔNG dùng truthiness (CFO=0 thật phải giữ 0).
+    cfo_col = None
+    for cand in ('Net cash inflows/(outflows) from operating activities', 'Net cash from operating activities'):
+        if cand in cf5.columns:
+            cfo_col = cand
+            break
+    if cfo_col is None:
+        cfo_col = next((c for c in cf5.columns if re.search(r'net cash.*operating', c, re.I)), None)
+    cfo=[float(cf5[cfo_col].iloc[i]) if cfo_col and cf5[cfo_col].iloc[i] == cf5[cfo_col].iloc[i] else None for i in range(len(cf5))] if cfo_col else [None]*5
     capex=[float(cf5[capex_col].iloc[i]) for i in range(len(cf5))] if capex_col and capex_col in cf5.columns else []
     # inventory THẬT từ balance sheet (P0-1: cấm fallback giả lập từ gross profit)
     inv_col=next((c for c in bal5.columns if re.search(r'Inventory|Hàng tồn kho|Inventories',c,re.I)),None)
@@ -306,13 +316,13 @@ def build_all(D_raw, tech, news, real_peers=None):
          "npatmi_ty":{str(y):round(npat[i]/1e9,2) for i,y in enumerate(years)},
          "eps_vnd":{str(y):float(eps[i]) for i,y in enumerate(years)},
          "equity_ty":{str(y):round(equity[i]/1e9,2) for i,y in enumerate(years)},
-         "cfo_ty":{str(y):round(cfo[i]/1e9,2) if cfo[i] else None for i,y in enumerate(years)},
-         "overview":{"current_price":last,"issue_share":shares,"price_fetched_at":"2026-08-02T21:00:00","price_source":"vnstock Quote (VCI)"}}
+         "cfo_ty":{str(y):round(cfo[i]/1e9,2) if cfo[i] is not None else None for i,y in enumerate(years)},
+         "overview":{"current_price":last,"issue_share":shares,"price_fetched_at":"2026-08-02T21:00:00","price_source":"vnstock Quote (VCI)","sector":SECTOR}}
     json.dump(fin,open(f'{WORK}/data/financials.json','w'),indent=2,ensure_ascii=False)
     bsheet={"Total Assets":{str(y):float(assets[i]) for i,y in enumerate(years)},
             "Owner's Equity":{str(y):float(equity[i]) for i,y in enumerate(years)}}
     json.dump(bsheet,open(f'{WORK}/data/balance_sheet.json','w'),indent=2,ensure_ascii=False)
-    cflow={"Net cash from operating activities":{str(y):float(cfo[i]) if cfo[i] else None for i,y in enumerate(years)}}
+    cflow={"Net cash from operating activities":{str(y):float(cfo[i]) if cfo[i] is not None else None for i,y in enumerate(years)}}
     # P0-1 (Sol 2026-08-08): CHỈ ghi capex khi có dữ liệu THẬT — không estimate 5% gross
     if capex:
         cflow["Purchases of fixed assets and other long term assets"]={str(y):-float(capex[i]) for i,y in enumerate(years)}
@@ -324,9 +334,9 @@ def build_all(D_raw, tech, news, real_peers=None):
         peers["source"]="vnstock Listing peers (cùng ICB cấp 3)"
         peers["peers"] += [{"ticker":rp["ticker"],"pb":rp.get("pb"),"pe":rp.get("pe")} for rp in real_peers[:3]]
     else:
-        peers["peers"] += [{"ticker":"PEER1","pb":1.5,"pe":10.0},{"ticker":"PEER2","pb":1.2,"pe":8.0}]
+        pass  # P0-F (Sol): KHÔNG fallback peer giả — thiếu peer thật thì chỉ còn self-peer
     json.dump(peers,open(f'{WORK}/data/peers.json','w'),indent=2,ensure_ascii=False)
-    overview={"ticker":TICKER,"company_name":TICKER,"exchange":"HOSE","sector":SECTOR,"current_price":last,"price_fetched_at":"2026-08-02","issue_share":shares,"fiscal_year_end":"12/31","audit_opinion":"unqualified","source":"vnstock_data sponsor (VCI)"}
+    overview={"ticker":TICKER,"company_name":None,"exchange":None,"sector":SECTOR,"current_price":last,"price_fetched_at":"2026-08-02","issue_share":shares,"fiscal_year_end":None,"audit_opinion":None,"source":"vnstock_data sponsor (VCI)"}
     json.dump(overview,open(f'{WORK}/data/overview.json','w'),indent=2,ensure_ascii=False)
     # technical_active.json (REQ-005/037)
     ta={"tech_score":tech['score'],"verdict":tech['verdict'],"last_close":last,"source":"price.csv (52 tuần, vnstock)","ma10":tech['ma10'],"ma20":tech['ma20'],"ma50":tech['ma50'],"rsi14":tech['rsi14'],"macd":tech['macd'],"macd_signal":tech['macd_sig'],"bb_lower":tech['bb_lower'],"bb_upper":tech['bb_upper'],"high_52w":tech['hi52'],"low_52w":tech['lo52'],"pct_from_high":tech['pct_from_high'],"support_resistance":[{"level":tech['lo52'],"type":"support","method":"52w low"},{"level":round(last*0.92),"type":"support","method":"near support ±8%"},{"level":round(last*1.08),"type":"resistance","method":"near resistance ±8%"},{"level":tech['hi52'],"type":"resistance","method":"52w high"}]}
@@ -350,9 +360,10 @@ def build_all(D_raw, tech, news, real_peers=None):
     npat_last=npat[-1]/1e9; npat_first=npat[0]/1e9
     npat_growth=((npat_last/npat_first)-1)*100 if npat_first>0 else 0
     capex_arr=[round(abs(x)/1e9,2) for x in capex] if capex else []
-    # VN100 v2 analytics: FCF, accrual, SGR, EV/EBITDA, ROA — toàn bộ tính từ data
-    fcf_last = (cfo[-1] - abs(capex[-1])) / 1e9 if cfo and capex and cfo[-1] else None
-    accrual = (npat[-1] - cfo[-1]) / 1e9 if cfo and cfo[-1] else None
+    # VN100 v2 analytics: FCF, accrual, SGR, ROA — toàn bộ tính từ data
+    # P0-B: dùng is-not-None (CFO=0 thật không được biến thành null)
+    fcf_last = (cfo[-1] - abs(capex[-1])) / 1e9 if cfo and capex and cfo[-1] is not None else None
+    accrual = (npat[-1] - cfo[-1]) / 1e9 if cfo and cfo[-1] is not None else None
     roe_last_pct = (npat[-1]/equity[-1]*100) if equity[-1] else None
     roa_last_pct = (npat[-1]/assets[-1]*100) if assets[-1] else None
     ev_ebitda = D_raw.get('ev_ebitda') if isinstance(D_raw, dict) else None
@@ -363,7 +374,7 @@ def build_all(D_raw, tech, news, real_peers=None):
         "eps":[float(e) for e in eps],"equity":[round(x/1e9,2) for x in equity],
         "totalAssets":[round(x/1e9,2) for x in assets],"liabilities":[round(x/1e9,2) for x in liab],
         # P0-1 (Sol 2026-08-08): CFO thiếu → null — KHÔNG giả lập từ gross profit
-        "cfo":[round(x/1e9,2) if x else None for i,x in enumerate(cfo)],"capex":capex_arr,
+        "cfo":[round(x/1e9,2) if x is not None else None for i,x in enumerate(cfo)],"capex":capex_arr,
         "bvps":[round(b) for b in bvps_hist],"roe":[round(r,1) for r in roe_hist],
         "pe":round(pe,2),"pb":round(pb,2),"peHist":pe_hist,"pbHist":pb_hist,
         "pe5med":pe5med,"pe5avg":pe5avg,
@@ -384,7 +395,7 @@ def build_all(D_raw, tech, news, real_peers=None):
         "split_audit":{"cp_consistent":cp_consistent,"method":"back-calc CP=LNST/EPS","cp_back_calc_m":cp_back},
         # P0-1 (Sol 2026-08-08): inventory THẬT từ balance sheet; thiếu → null (không = gross)
         "invGrowth":[None]+[round((inventory[i]/inventory[i-1]-1)*100,1) if inventory[i] and inventory[i-1] else None for i in range(1,len(inventory))] if inventory else [None]*5,
-        "inventory":[round(x/1e9,2) if x else None for x in inventory],
+        "inventory":[round(x/1e9,2) if x is not None else None for x in inventory],
         # P0-5/REQ-062 (Sol): financials fail-closed — verifier KHÔNG PASS rỗng khi thiếu
         "financials":{"years":[str(y) for y in years],
             "revenue":[round(x/1e9,2) for x in toi],
@@ -392,10 +403,15 @@ def build_all(D_raw, tech, news, real_peers=None):
             "eps":[float(e) for e in eps],
             "totalAssets":[round(x/1e9,2) for x in assets],
             "equity":[round(x/1e9,2) for x in equity],
-            "capex":[round(abs(x)/1e9,2) for x in capex] if capex else [None]*5},
+            "capex":[round(abs(x)/1e9,2) for x in capex] if capex else [None]*5,
+            # P0-B (Sol checkpoint): cfo + inventory là field bắt buộc của REQ-062
+            "cfo":[round(x/1e9,2) if x is not None else None for x in cfo],
+            "inventory_fin":[round(x/1e9,2) if x is not None else None for x in inventory]},
         "peerLabel":"P/E","peerPBMin":0.5,"peerPBMax":3.0,"peerYLabel":"P/E","peerYMax":30,
         "cagr":round(cagr,2),"npat_growth":round(npat_growth,2),
-        "fcf_last":fcf_last,"accrual":accrual,"roe_last_pct":roe_last_pct,"roa_last_pct":roa_last_pct,"ev_ebitda":ev_ebitda,
+        # P0-F (Sol checkpoint): bank KHÔNG nhúng fcf/accrual vào DATA (narrative đã nói không áp dụng)
+        "fcf_last":(None if IS_BANK else fcf_last),"accrual":(None if IS_BANK else accrual),
+        "roe_last_pct":roe_last_pct,"roa_last_pct":roa_last_pct,"ev_ebitda":ev_ebitda,
         }
     json.dump(DATA,open(f'{WORK}/verified-dashboard-data.json','w'),indent=2,ensure_ascii=False)
     return DATA,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med
@@ -414,6 +430,8 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
     R2='BCTC'; R3='vnstock'; R4='vnstock Quote'; R5='disclaimer'; R6='BCLCTT'; R7='bối cảnh ngành'; R8='peer vnstock'; R9='hồ sơ công ty'; R10='WACC ước tính'
     capex_arr=D.get('capex',[])
     score=D['tech_score']; verdict=D['verdict']
+    # P1 (Sol 2026-08-08): nhãn kỹ thuật mô tả tín hiệu, KHÔNG dùng từ khuyến nghị BUY/SELL
+    verdict_label = {'SELL': 'tín hiệu tiêu cực', 'NEUTRAL': 'trung lập', 'BUY': 'tín hiệu tích cực'}.get(verdict, verdict)
     # number formats verifier-friendly (comma sep, 1 dec for tỷ, no trailing zero in P/B)
     hero=f'''<div class="hero-card"><div class="hero-left"><div class="hero-badge">Investment Evidence Pack · 1–3 năm</div>
 <h1 class="hero-title">{t} · {cn}</h1>
@@ -423,10 +441,10 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 <div class="kpi"><div class="kpi-label">Vốn hóa</div><div class="kpi-val mono">{int(mcap)} tỷ</div></div>
 <div class="kpi"><div class="kpi-label">P/E (vnstock)</div><div class="kpi-val mono">{pe:.2f}</div></div>
 <div class="kpi"><div class="kpi-label">P/B (vnstock)</div><div class="kpi-val mono">{pb:.2f}</div></div>
-<div class="kpi"><div class="kpi-label">Tech Score</div><div class="kpi-val mono">{score:+d} {verdict}</div></div>
+<div class="kpi"><div class="kpi-label">Tech Score</div><div class="kpi-val mono">{score:+d} {verdict_label}</div></div>
 </div></div></div>'''
     exec_html=f'''<div class="card">
-<p>Theo BCTC kiểm toán năm {years[-1]}: doanh thu {t} đạt {ft(rev_last)} tỷ VND. Lợi nhuận sau thuế năm {years[-1]} đạt {ft(npat_last)} tỷ VND (theo BCTC kiểm toán năm {years[-1]}). P/E {pe:.2f}×, P/B {pb:.2f}× (theo vnstock Quote). Tech Score {score:+d} ({verdict}).</p>
+<p>Theo BCTC kiểm toán năm {years[-1]}: doanh thu {t} đạt {ft(rev_last)} tỷ VND. Lợi nhuận sau thuế năm {years[-1]} đạt {ft(npat_last)} tỷ VND (theo BCTC kiểm toán năm {years[-1]}). P/E {pe:.2f}×, P/B {pb:.2f}× (theo vnstock Quote). Tech Score {score:+d} ({verdict_label}).</p>
 <p>5 năm: CAGR doanh thu {cagr:+.1f}% (theo BCTC kiểm toán). ROE năm {years[-1]} đạt {roe_last:.1f}% (theo BCTC kiểm toán năm {years[-1]}). EPS năm {years[-1]} đạt {fv(eps_last)} VND/cp (theo BCTC kiểm toán năm {years[-1]}).</p>
 <p>Mọi số liệu tài chính được cross-check theo bẫy 5B (back-calc CP = LNST/EPS, split-adjusted khi cần) — {t} không có split trong 5 năm, EPS lịch sử giữ theo báo cáo (theo BCTC kiểm toán).</p>
 <p><strong>Tech Score {score:+d} — {verdict}</strong> (theo vnstock Quote, MA/RSI/MACD weekly 52 tuần). Max drawdown 52 tuần theo vnstock Quote, {max_dd:.1f}% (theo vnstock Quote). Đây là bằng chứng đầu tư, không phải khuyến nghị giao dịch.</p>
@@ -440,7 +458,6 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
     def md_clean(s):
         return re.sub(r'[`*_]', '', s) if s else s
     # P1 (Sol 2026-08-08): nhãn kỹ thuật mô tả tín hiệu, KHÔNG dùng từ khuyến nghị BUY/SELL
-    verdict_label = {'SELL': 'tín hiệu tiêu cực', 'NEUTRAL': 'trung lập', 'BUY': 'tín hiệu tích cực'}.get(verdict, verdict)
     if sp:
         pec = md_clean(' '.join(sp.get('peculiar', [])[:2]))
         traps = md_clean(' '.join(sp.get('traps', [])[:2]))
@@ -475,8 +492,8 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
     seg=f'''<p>Cơ cấu nguồn thu {t} năm {years[-1]}: {rev_label} đạt {ft(rev_last)} tỷ VND (theo BCTC kiểm toán). Phân bổ chi tiết theo mảng hoạt động không có trong data sponsor — xem BCTC đầy đủ của doanh nghiệp (theo BCTC kiểm toán).</p>
 <p><strong>Tiêu chí theo dõi ngành {SECTOR}</strong> (khái niệm ngành chuẩn, theo hồ sơ công ty): {('NIM (biên lãi thuần), CASA (tiền gửi không kỳ hạn), nợ xấu NPL, tỷ lệ an toàn vốn CAR, room tín dụng NHNN' if IS_BANK else 'sản lượng tiêu thụ, giá bán, biên lợi nhuận gộp, hàng tồn kho, dòng tiền hoạt động')}. Nhà đầu tư 1-3 năm nên theo dõi các chỉ số này qua BCTC hàng quý (theo hồ sơ công ty).</p>
 {CANVAS('chartSegMix',label='Cơ cấu doanh thu')}
-<p>{('Phí & ngoại hối ~22% — thẻ, thanh toán, kinh doanh ngoại hối.' if is_bank else 'Mảng phụ bổ sung.')} (ước tính theo hồ sơ công ty).</p>
-<p>{('Đầu tư ~12% — trái phiếu, chứng khoán. Khác ~8%.' if is_bank else 'Đa dạng hóa vừa phải.')} (ước tính theo hồ sơ công ty).</p>
+<p>{('Phân bổ chi tiết theo mảng không có trong data sponsor — xem BCTC đầy đủ của doanh nghiệp (theo BCTC kiểm toán).' if is_bank else 'Mảng phụ bổ sung.')} (ước tính theo hồ sơ công ty).</p>
+<p>{('' if is_bank else 'Đa dạng hóa vừa phải.')} (ước tính theo hồ sơ công ty).</p>
 <p>Hệ quả: kết quả kinh doanh {('gắn chặt chất lượng tài sản và chu kỳ tín dụng' if is_bank else 'gắn chu kỳ ngành')} (theo bối cảnh ngành).</p>
 <p>Đánh giá đa dạng hóa: {t} {('tập trung vào ngân hàng bán lẻ — thẻ tín dụng và cho vay khách hàng cá nhân là động lực chính' if is_bank else 'tập trung vào mảng hoạt động cốt lõi')} (theo hồ sơ công ty).</p>
 '''
@@ -503,7 +520,7 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 <div><h3>Bear case</h3>
 <ul>
 <li>Max drawdown 52 tuần theo vnstock Quote, {max_dd:.1f}% (theo vnstock Quote).</li>
-<li>{('Nợ xấu, room tín dụng — áp lực biên lợi nhuận' if is_bank else 'CFO biến động, vốn lưu động — rủi ro thanh khoản')} (theo bối cảnh ngành).</li><li>Tech Score {score:+d} ({verdict}) — {('tín hiệu kỹ thuật: giá đang yếu/trung lập' if score<0 else 'tín hiệu kỹ thuật tích cực')} (theo vnstock Quote).</li>
+<li>{('Nợ xấu, room tín dụng — áp lực biên lợi nhuận' if is_bank else 'CFO biến động, vốn lưu động — rủi ro thanh khoản')} (theo bối cảnh ngành).</li><li>Tech Score {score:+d} — {verdict_label} (theo vnstock Quote).</li>
 </ul></div>
 </div>
 {CANVAS('chartThesisCapex',label='Capex và dòng tiền')}
@@ -582,7 +599,7 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 <li>{'✔️' if pe<15 else '⚠️'} P/E {pe:.2f}× — {'hợp lý' if pe<15 else 'cao'} (theo vnstock Quote, giá {fv(price)} VND).</li>
 <li>{'✔️' if pb<1.5 else '⚠️'} P/B {pb:.2f}× — {'dưới 1,5' if pb<1.5 else 'trên 1,5'} (theo vnstock Quote).</li>
 <li>{'✔️' if roe_last>12 else '⚠️'} ROE {roe_last:.1f}% — {'trên 12%' if roe_last>12 else 'dưới 12%'} (theo BCTC kiểm toán).</li>
-<li>{'✔️' if score>=0 else '⚠️'} Tech Score {score:+d} — {verdict} (theo vnstock Quote, MA/RSI/MACD).</li>
+<li>{'✔️' if score>=0 else '⚠️'} Tech Score {score:+d} — {verdict_label} (theo vnstock Quote, MA/RSI/MACD).</li>
 <li>⚠️ Rủi ro {('nợ xấu' if is_bank else 'biến động')} — theo dõi định kỳ (theo bối cảnh ngành).</li>
 </ul>
 <p class="faint meta-note">Đây là checklist tự đánh giá dựa trên data công khai (theo disclaimer), không thay thế tư vấn tài chính cá nhân. Mọi số liệu có nguồn BCTC kiểm toán hoặc vnstock Quote.</p>
@@ -608,7 +625,7 @@ def render(D,cagr,npat_growth,roe_hist,cp_back,cp_consistent,graham,pe5med,news)
 </div>'''
     insight3=f'''<div class="card insight"><h3>★ Insight 3 — Rủi ro drawdown và biến động giá</h3>
 <p>Theo vnstock Quote, {t} có max drawdown 52 tuần theo vnstock Quote, {max_dd:.1f}% (theo vnstock Quote).</p>
-<p>Tech Score đạt {score:+d} ({verdict}) dựa trên MA10/20/50 trend, RSI14, MACD (theo vnstock Quote).</p>
+<p>Tech Score đạt {score:+d} — {verdict_label} dựa trên MA10/20/50 trend, RSI14, MACD (theo vnstock Quote).</p>
 <p>RSI14 đạt {D["rsi14"]:.1f} (theo vnstock Quote).</p>
 <p>MA10 đạt {fv(D['techMA10'])} VND; MA20 đạt {fv(D['techMA20'])} VND; MA50 đạt {fv(D['techMA50'])} VND (theo vnstock Quote).</p>
 <p>52-week High đạt {fv(D['tech52wHigh'])} VND; Low đạt {fv(D['tech52wLow'])} VND (theo vnstock Quote).</p>
