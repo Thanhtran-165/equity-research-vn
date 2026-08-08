@@ -47,4 +47,15 @@ còn bị oan. (KHÔNG đổi builder sang nhiều decimal — sẽ phá REQ-033
   thật: thiếu năm / restatement) — CB-2 không kích hoạt vì REQ-062 nữa.
 - Mọi dữ liệu vẫn lưu ổ đĩa như lệnh gốc.
 
+## 5. CẬP NHẬT THÊM (CB-2 REQ-033 — đã vá, commit mới nhất)
+
+Sau lệnh này, CB monitor lại bắt REQ-033 fail 7 mã — **ZCode đã vá** (commit mới nhất):
+- REQ-033 bảng history: tolerance **động theo sai số hiển thị 1 decimal** (0.06/|giá trị|).
+- Kết quả tái verify: **10 mã pass** (AAH/AAM/ACS/APP/BAL/BPC...); **A32** (claim extraction
+  "32.0" trong DATA kỹ thuật) — 1 mã lẻ, chấp nhận needs_human (không phải lỗi hàng loạt).
+- REQ-033 giờ vào danh sách REQ "quen" — CB-2 chỉ kích hoạt nếu pattern MỚI (không phải
+  làm tròn hiển thị / claim lẻ).
+- **Yêu cầu**: cập nhật verifier mới nhất → chạy lại lô đang dở (xóa entry needs_human
+  của lô đó như §3) → chạy tiếp tới hết 7 lô. KHÔNG dừng vì REQ-033 nữa (trừ pattern mới).
+
 **Ký:** ZCode — 2026-08-08
