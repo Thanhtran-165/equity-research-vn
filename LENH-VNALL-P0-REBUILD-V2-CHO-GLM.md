@@ -14,6 +14,7 @@ Từ repo `Thanhtran-165/equity-research-vn` (hoặc copy từ máy chủ):
 - `scripts/build_report.py` (P0 checkpoint: CFO alias mở rộng, verdict_label, bank gate, bỏ segment % giả)
 - `scripts/independent_verifier.py` (REQ-062 match-based + fail-closed 8 field, REQ-033 table-cell, REQ-059 CFO thật)
 - `scripts/vnall_run_p0.py` (**RUNNER MỚI — dùng cái này, không dùng vnall_run.py cũ**)
+- `scripts/vnall_sector_preflight.py` (**PREFLIGHT V2 — 3 nguồn ICB+sàn, fail-closed**)
 - `references/sector_pack.md`, `vn-research-dashboard/assets/dashboard_template.html`
 
 ## 2. PILOT 8 MÃ (bắt buộc TRƯỚC khi chạy cả 1.000 — theo gate Sol)
@@ -86,16 +87,16 @@ done
 Sector map cũ có lỗi đã biết (Sol xác nhận): AGG đang `finance` nhưng là BĐS An Gia;
 BMI đang `finance` nhưng là bảo hiểm; SGR đang `banking` nhưng không phải ngân hàng.
 Làm:
-1. Script preflight: `Listing().all_symbols()` → ticker + tên công ty + ICB → map sang
-   sector builder (đối chiếu bảng MAP trong `references/sector_pack.md`).
-2. **Tên công ty phải khớp ngành**: với mỗi mã, tra tên (organ_name) — nếu tên chứa
-   "ngân hàng"/"bank"/"chứng khoán"/"bảo hiểm"/"bất động sản"/"thép"... → kiểm tra
-   sector map có khớp không; mâu thuẫn → ghi vào `/tmp/vnall_sector_fix.json`
-   (danh sách mã cần sửa tay) và chuyển mã đó sang sector ĐÚNG.
-3. Các mã không xác định được → `general` (pack 12) — KHÔNG tự đoán.
-4. Lưu `/tmp/vnall_p0_sectors.json`: `{TICKER: sector}` cho 1.000 mã → dùng làm nguồn
-   batch files.
-5. Báo cáo trong `/tmp/VNALL-REPORT-P0.md`: số mã sector được hiệu chỉnh + danh sách.
+1. **Chạy script có sẵn** (KHÔNG tự viết lại):
+   `python3 scripts/vnall_sector_preflight.py`
+   Script join 3 nguồn vnstock: `all_symbols()` (tên) + `symbols_by_industries()`
+   (ICB — lọc quỹ QU/FU/ET/CW, lấy cấp sâu nhất) + `symbols_by_exchange()` (sàn).
+2. Script tự: đối chiếu tên công ty với từ khóa ngành (mâu thuẫn → `needs_human` +
+   ghi `/tmp/vnall_p0_sector_fix.json`); AGG→realestate, BMI→insurance đã nhúng sẵn.
+3. **Fail-closed do script**: `general > 10%` hoặc mã pilot (AAA/ACB/BMI/FPT/AGG/SGR)
+   còn `needs_human` → script `exit 1` — phải xử lý tay rồi chạy lại, KHÔNG tự đoán.
+4. Artifact: `/tmp/vnall_p0_sectors.json` `{TICKER: sector}` → merge vào 7 batch files
+   (đoạn mã §3a). Báo cáo số mã hiệu chỉnh trong báo cáo cuối.
 
 ## 4b. CIRCUIT BREAKER — NGẮT MẠCH KHI PHÁT HIỆN VẤN ĐỀ KHÔNG TỰ VÁ ĐƯỢC (BẮT BUỘC)
 
