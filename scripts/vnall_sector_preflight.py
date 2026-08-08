@@ -108,8 +108,8 @@ def main():
             sec = 'needs_human'  # mâu thuẫn → chờ người, không tự đoán
         out[tk] = sec
 
-    json.dump(out, open('/tmp/vnall_p0_sectors.json', 'w'), ensure_ascii=False)
-    json.dump(fixes, open('/tmp/vnall_p0_sector_fix.json', 'w'), ensure_ascii=False, indent=1)
+    json.dump(out, open(os.path.expanduser('~/ZCodeProject/data/vnall/preflight_p0_sectors.json'), 'w'), ensure_ascii=False)
+    json.dump(fixes, open(os.path.expanduser('~/ZCodeProject/data/vnall/preflight_p0_sector_fix.json'), 'w'), ensure_ascii=False, indent=1)
     cnt = collections.Counter(out.values())
     print('TOTAL:', len(out), '| sector phân bố:', dict(cnt.most_common(15)))
     general_n = cnt.get('general', 0)

@@ -33,6 +33,8 @@ def main():
         items = [{'ticker': t.strip(), 'sector': 'general'} for t in src.split(',') if t.strip()]
 
     os.makedirs(STAGE, exist_ok=True)
+    LOGS = os.path.join(BASE, 'logs_p0')
+    os.makedirs(LOGS, exist_ok=True)
     tracker = {}
     if os.path.exists(TRACKER):
         tracker = json.load(open(TRACKER))  # nối tiếp nếu crash giữa chừng
@@ -89,6 +91,12 @@ def main():
                               'note': 'không có result.json — builder crash/API fail',
                               'tail': out[-500:]})
             print(f"{tk} ({sec}): exit={r.returncode} -> {entry.get('status')} recall={entry.get('recall')}")
+            # LƯU TRỮ Ổ ĐĨA: log mỗi mã — máy restart giữa chừng vẫn trace được
+            try:
+                with open(os.path.join(LOGS, f'{tk}.log'), 'w') as lf:
+                    lf.write(out[-3000:])
+            except Exception:
+                pass
             # CB: cập nhật bộ đếm
             if entry.get('status') == 'done':
                 consec_fail = 0; consec_err = 0

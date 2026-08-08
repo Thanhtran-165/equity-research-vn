@@ -45,7 +45,7 @@ Lưu ý: sector trong batch files là THAM CHIẾU từ tracker cũ (có thể s
 **Sector THẬT dùng từ preflight**: sau §4, merge sector vào 7 file:
 ```python
 import json, os
-secs = json.load(open('/tmp/vnall_p0_sectors.json'))
+secs = json.load(open('/Users/bobo/ZCodeProject/data/vnall/preflight_p0_sectors.json'))
 for fn in os.listdir('/Users/bobo/ZCodeProject/data/vnall/p0_batches'):
     p = f'/Users/bobo/ZCodeProject/data/vnall/p0_batches/{fn}'
     d = json.load(open(p))
@@ -65,12 +65,12 @@ done
 - Runner tự: staging sạch, tracker sau mỗi mã, done chỉ khi exit 0 + recall ≥70,
   **bỏ qua mã đã done** (chạy lại lô → nối tiếp đúng từ mã dở).
 - **KHÔNG dừng sau mỗi lô** — trừ khi CIRCUIT BREAKER (CB-1/2/4/5) kích hoạt.
-- Mỗi lô xong: viết `/tmp/VNALL-LO-<TÊN>.md` (template §5a) — viết xong chạy lô kế
+- Mỗi lô xong: viết `~/ZCodeProject/data/vnall/reports_p0/VNALL-LO-<TÊN>.md` (template §5a) — viết xong chạy lô kế
   ngay (báo cáo lô gửi kèm báo cáo cuối, không cần chờ).
 
 ### 3c. Khi CB dừng (không tự vá được)
 
-1. Ghi trạng thái vào tracker + tạo `/tmp/VNALL-CIRCUIT-BREAK-*.md` (luật + mã + bằng chứng).
+1. Ghi trạng thái vào tracker + tạo `~/ZCodeProject/data/vnall/reports_p0/VNALL-CIRCUIT-BREAK-*.md` (luật + mã + bằng chứng).
 2. DỪNG, báo ZCode. **ZCode sẽ vá builder/verifier rồi trả lệnh "tiếp tục từ lô N".**
 3. Khi có lệnh tiếp: nếu ZCode yêu cầu chạy LẠI lô N (builder mới) → xóa entry done
    của lô N trong `vnall_tracker_p0.json` (chỉ lô N) → chạy lại file lô N → các lô
@@ -92,7 +92,7 @@ Làm:
    Script join 3 nguồn vnstock: `all_symbols()` (tên) + `symbols_by_industries()`
    (ICB — lọc quỹ QU/FU/ET/CW, lấy cấp sâu nhất) + `symbols_by_exchange()` (sàn).
 2. Script tự: đối chiếu tên công ty với từ khóa ngành (mâu thuẫn → `needs_human` +
-   ghi `/tmp/vnall_p0_sector_fix.json`); AGG→realestate, BMI→insurance đã nhúng sẵn.
+   ghi `~/ZCodeProject/data/vnall/preflight_p0_sector_fix.json`); AGG→realestate, BMI→insurance đã nhúng sẵn.
 3. **Fail-closed do script**: `general > 10%` hoặc mã pilot (AAA/ACB/BMI/FPT/AGG/SGR)
    còn `needs_human` → script `exit 1` — phải xử lý tay rồi chạy lại, KHÔNG tự đoán.
 4. Artifact: `/tmp/vnall_p0_sectors.json` `{TICKER: sector}` → merge vào 7 batch files
@@ -129,7 +129,7 @@ duyệt mới được chạy 1.000 mã. Áp dụng CB-1..CB-6 trong pilot luôn
 
 ## 5. BÁO CÁO
 
-### 5a. Báo cáo MỖI LÔ `/tmp/VNALL-LO-<TÊN>.md` (ngắn gọn — sau mỗi lô, §3b)
+### 5a. Báo cáo MỖI LÔ `~/ZCodeProject/data/vnall/reports_p0/VNALL-LO-<TÊN>.md` (ngắn gọn — sau mỗi lô, §3b)
 
 1. Bảng tóm tắt lô: số mã, done, needs_human, NO_DATA, 74/74, avg recall.
 2. **Top-5 REQ fail CỦA LÔ** + phân loại: lỗi data thật / nghi lỗi hệ thống theo ngành
@@ -137,7 +137,7 @@ duyệt mới được chạy 1.000 mã. Áp dụng CB-1..CB-6 trong pilot luôn
 3. Mã cần xem (needs_human): từng mã + lý do + bằng chứng.
 4. **Nghi lỗi ngành?** (yes/no + lý do) — nếu nghi, dừng và ghi rõ.
 
-### 5b. Báo cáo CUỐI `/tmp/VNALL-REPORT-P0.md` (sau lô cuối)
+### 5b. Báo cáo CUỐI `~/ZCodeProject/data/vnall/reports_p0/VNALL-REPORT-P0.md` (sau lô cuối)
 
 1. Pilot 8 mã: bảng (ticker, sector, status, recall, exit) + xác nhận AGG/BMI/SGR đúng.
 2. Toàn bộ: 1.000 mã → done/needs_human/NO_DATA, 74/74, avg recall.
@@ -148,6 +148,24 @@ duyệt mới được chạy 1.000 mã. Áp dụng CB-1..CB-6 trong pilot luôn
    (5 mã: ngân hàng/industrial/materials/insurance/tech).
 7. File tracker mới: `~/ZCodeProject/data/vnall/vnall_tracker_p0.json` (GHI ĐÈ sau
    khi audit bản cũ — giữ bản cũ nhãn `invalid` trước).
+
+## 5c. LƯU TRỮ — TẤT CẢ VÀO Ổ ĐĨA, CẤM /tmp CHO DỮ LIỆU QUAN TRỌNG (bắt buộc)
+
+Bài học 2026-08-08: /tmp bị mất sạch 2 lần khi máy khởi động lại. Quy tắc:
+
+| Dữ liệu | Nơi lưu (Ổ ĐĨA) |
+|---|---|
+| Tracker (nguồn sự thật) | `~/ZCodeProject/data/vnall/vnall_tracker_p0.json` (ghi sau MỖI mã) |
+| Staging mỗi mã (data + report) | `~/ZCodeProject/data/vnall/work_p0/<TICKER>/` (copy sau mỗi mã xong) |
+| Log mỗi mã | `~/ZCodeProject/data/vnall/logs_p0/<TICKER>.log` |
+| Báo cáo lô / cuối / circuit-break | `~/ZCodeProject/data/vnall/reports_p0/` |
+| Preflight artifact | `~/ZCodeProject/data/vnall/preflight_p0_*.json` |
+
+- `/tmp` CHỈ là vùng trung gian tạm của builder (`/tmp/vn100_<TICKER>`) — mọi thứ quan
+  trọng PHẢI được copy về ổ đĩa ngay sau mỗi mã (runner P0 đã tự làm).
+- **Máy restart giữa chừng KHÔNG mất gì**: chạy lại lệnh runner cho lô đang dở →
+  tracker nối tiếp (skip mã đã done), mã đang chạy dở sẽ build lại từ đầu.
+- Cuối mỗi lô: kiểm tra file báo cáo lô tồn tại trên ổ đĩa TRƯỚC khi chạy lô kế.
 
 ## 6. LƯU Ý
 
