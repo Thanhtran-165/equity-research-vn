@@ -99,7 +99,7 @@ def main():
         ind = (icb.get(tk) or (None, ''))[1]
         exch = exch_map.get(tk, '')
         sec = map_icb_to_sector(ind) or 'general'
-        known = {'AGG': 'realestate', 'BMI': 'insurance'}  # fix biết trước (Sol xác nhận)
+        known = {'AGG': 'realestate', 'BMI': 'insurance', 'SGR': 'realestate'}  # fix biết trước (Sol xác nhận; SGR có Sales/Gross Profit — không phải ngân hàng)
         if tk in known:
             sec = known[tk]
         conflict = name_conflict(tk, name, sec)
