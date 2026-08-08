@@ -42,6 +42,11 @@ def main():
     consec_err = 0    # lỗi kỹ thuật liên tiếp (timeout/exception) — gần CB-4
     for it in items:
         tk = it['ticker']; sec = it.get('sector', 'general')
+        # nối tiếp: bỏ qua mã đã done (chạy lại lô sau khi ZCode vá → xóa entry done
+        # của lô đó trước khi chạy lại)
+        if tk in tracker and tracker[tk].get('status') == 'done':
+            print(f'{tk}: đã done — skip')
+            continue
         wd = os.path.join(STAGE, tk)
         # 3) staging phải SẠCH — xóa nếu tồn tại từ lần chạy trước (chưa promote)
         if os.path.exists(wd):

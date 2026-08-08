@@ -26,48 +26,60 @@ từ danh sách, note lý do chọn). Kiểm tra:
 - ACB (bank) KHÔNG còn FCF/WACC/Graham/segment % trong HTML.
 Pilot sạch → mới chạy toàn bộ.
 
-## 3. CHẠY THEO LÔ NGÀNH (tuần tự — mỗi lô xong DỪNG chờ ZCode rà)
+## 3. CHẠY TUẦN TỰ 7 LÔ (ZCode ĐÃ PHÂN SẴN — không dừng giữa lô, chỉ dừng khi CIRCUIT BREAKER)
 
-**KHÔNG chạy trộn 5 batch 200 mã.** Chia theo NHÓM NGÀNH — lỗi hệ thống thường lộ
-theo đặc thù ngành (vd bảo hiểm nhiều cột doanh thu, ngân hàng không inventory, BĐS
-ghi nhận theo dự án) → chạy hết 1 ngành, bắt lỗi + ZCode vá 1 lần → các mã còn lại
-cùng ngành đều được lợi.
+### 3a. 7 LÔ ĐÃ CHỐT (file trong repo: `data/vnall/p0_batches/`)
 
-### 3a. Chia lô (theo sector từ preflight §4)
+| Thứ tự | File | Nhóm | Số mã |
+|---|---|---|---|
+| 1 | `lot1_finance.json` | banking + insurance + finance | 143 |
+| 2 | `lot2_materials.json` | materials | 119 |
+| 3 | `lot3_consumer.json` | consumer + retail | 240 |
+| 4 | `lot4_industrial_a.json` | industrial (A–L) | 171 |
+| 5 | `lot5_industrial_b.json` | industrial (M–Z) | 172 |
+| 6 | `lot6_energy.json` | energy | 87 |
+| 7 | `lot7_pharma_tech.json` | pharma + tech + securities + còn lại | 68 |
 
-| Lô | Nhóm ngành (sector builder) | Khoảng số mã |
-|---|---|---|
-| 1 | banking + insurance | ~30 |
-| 2 | realestate | ~80 |
-| 3 | materials (thép/phân bón/xi măng/hóa chất) | ~120 |
-| 4 | consumer + retail | ~240 |
-| 5 | industrial (phần 1) | ~170 |
-| 6 | industrial (phần 2) | ~170 |
-| 7 | energy | ~90 |
-| 8 | securities + pharma + tech + transport + nông + general | ~100 |
+Lưu ý: sector trong batch files là THAM CHIẾU từ tracker cũ (có thể sai — AGG/BMI-type).
+**Sector THẬT dùng từ preflight**: sau §4, merge sector vào 7 file:
+```python
+import json, os
+secs = json.load(open('/tmp/vnall_p0_sectors.json'))
+for fn in os.listdir('/Users/bobo/ZCodeProject/data/vnall/p0_batches'):
+    p = f'/Users/bobo/ZCodeProject/data/vnall/p0_batches/{fn}'
+    d = json.load(open(p))
+    for it in d['tickers']:
+        it['sector'] = secs.get(it['ticker'], 'general')
+    json.dump(d, open(p, 'w'), ensure_ascii=False)
+```
+(Mã `needs_human` từ preflight — sector giữ nguyên gốc, ghi chú.)
 
-(Số mã thực tế theo `/tmp/vnall_p0_sectors.json` — chia lại cho khớp, mỗi lô ≤250 mã.)
+### 3b. Chạy TUẦN TỰ liên tục (KHÔNG dừng giữa lô)
 
-### 3b. Quy trình mỗi lô
+```bash
+for f in lot1_finance lot2_materials lot3_consumer lot4_industrial_a lot5_industrial_b lot6_energy lot7_pharma_tech; do
+  python3 scripts/vnall_run_p0.py data/vnall/p0_batches/$f.json --sleep 60
+done
+```
+- Runner tự: staging sạch, tracker sau mỗi mã, done chỉ khi exit 0 + recall ≥70,
+  **bỏ qua mã đã done** (chạy lại lô → nối tiếp đúng từ mã dở).
+- **KHÔNG dừng sau mỗi lô** — trừ khi CIRCUIT BREAKER (CB-1/2/4/5) kích hoạt.
+- Mỗi lô xong: viết `/tmp/VNALL-LO-<TÊN>.md` (template §5a) — viết xong chạy lô kế
+  ngay (báo cáo lô gửi kèm báo cáo cuối, không cần chờ).
 
-1. Tạo `/tmp/vnall_p0_batches/<LO>.json` (vd `batch_banking.json`) — chỉ mã thuộc lô đó.
-2. Chạy: `python3 scripts/vnall_run_p0.py <file lô> --sleep 60`
-   (runner tự: staging sạch, tracker sau mỗi mã, done chỉ khi exit 0 + recall ≥70,
-   crash giữa chừng → chạy lại lệnh, tracker nối tiếp).
-3. **XONG LÔ → DỪNG** → viết `/tmp/VNALL-LO-<TÊN LÔ>.md` (template §5b) → gửi ZCode rà.
-4. **Chờ ZCode OK mới chạy lô kế.** Không tự ý nối tiếp dù lô sạch.
+### 3c. Khi CB dừng (không tự vá được)
 
-### 3c. Kỳ vọng theo ngành (để so sánh khi báo cáo)
+1. Ghi trạng thái vào tracker + tạo `/tmp/VNALL-CIRCUIT-BREAK-*.md` (luật + mã + bằng chứng).
+2. DỪNG, báo ZCode. **ZCode sẽ vá builder/verifier rồi trả lệnh "tiếp tục từ lô N".**
+3. Khi có lệnh tiếp: nếu ZCode yêu cầu chạy LẠI lô N (builder mới) → xóa entry done
+   của lô N trong `vnall_tracker_p0.json` (chỉ lô N) → chạy lại file lô N → các lô
+   sau chạy tiếp bình thường.
 
-- banking/insurance: ≥90% done (đặc thù đã test ACB/BMI)
-- materials/energy/industrial: ≥85% done
-- consumer/retail/realestate: ≥80% (data phức tạp hơn)
-- Nếu lô nào tụt dưới 70% done → nghi lỗi ngành → CB-3 xem xét.
+### 3d. Kỳ vọng theo lô (so sánh khi báo cáo)
 
-### 3d. Lưu ý
-
-- Mã `NO_DATA`/`needs_human` → ghi đúng, KHÔNG dừng giữa lô (trừ CB-1/2/4/5).
-- Lỗi phát hiện ở lô N → ZCode vá → **chỉ chạy lại lô N**, không đụng lô khác.
+- lot1 (tài chính) ≥90% done · lot2/6 (materials/energy) ≥85% · lot3 (consumer) ≥80%
+- lot4/5 (industrial) ≥80% · lot7 (misc) ≥75%
+- Lô nào done < 70% → nghi lỗi ngành (CB-3) → báo ZCode.
 
 ## 4. PREFLIGHT SECTOR (bắt buộc — P0-E)
 
